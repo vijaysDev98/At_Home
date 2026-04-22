@@ -77,14 +77,14 @@
 //                      style={styles.logo}
 //                      resizeMode='cover'
 //                    />
-//           <AppText 
+//           <AppText
 //           size={getScaleSize(24)}
 //           font={FONTS.Inter.Bold}
 //           color={COLORS.primary}
 //           >
 //             Welcome Back
 //           </AppText>
-//           <AppText 
+//           <AppText
 //           size={getScaleSize(14)}
 //           font={FONTS.Inter.SemiBold}
 //           color={COLORS.primaryMuted}
@@ -112,7 +112,7 @@
 //               <AppText style={styles.fieldLabel} weight="700" size={13} color={COLORS.slate900}>
 //                 Password
 //               </AppText>
-//               <TouchableOpacity 
+//               <TouchableOpacity
 //               onPress={()=>{
 //                 navigation.navigate("ForgotPassword")
 //               }}
@@ -137,11 +137,11 @@
 //             disabled={isDisabled}
 //             onPress={onSubmit}
 //             activeOpacity={0.85}
-//             style={[styles.button, 
+//             style={[styles.button,
 //               isDisabled && styles.buttonDisabled
 //             ]}
 //           >
-//             <AppText 
+//             <AppText
 //             size={getScaleSize(16)}
 //             color={COLORS.white}
 //             >
@@ -302,20 +302,27 @@
 
 // export default LoginScreen;
 
-
 import React, { useMemo, useState } from 'react';
 import {
   Image,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { AppSafeAreaView, AppText, Input } from '../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  Input,
+  PrimaryButton,
+} from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { COLORS, FONTS, REGEX } from '../../utils';
 import { IMAGES } from '../../assets/images';
+import { STRING } from '../../constant/strings';
+import NavigationService from '../../navigation/NavigationService';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -333,7 +340,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const isDisabled = useMemo(
     () => email.trim() === '' || password.trim() === '',
-    [email, password]
+    [email, password],
   );
 
   const onSubmit = () => {
@@ -347,181 +354,161 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     // ✅ Email validation
     if (!trimmedEmail) {
-      setError(prev => ({ ...prev, email: 'Email is required' }));
+      setError(prev => ({ ...prev, email: STRING.emailRequired }));
       isValid = false;
-    } else if (REGEX.EMAIL_RE.test(trimmedEmail)) {
-      setError(prev => ({ ...prev, email: 'Please enter a valid email' }));
+    } else if (!REGEX.EMAIL_RE.test(trimmedEmail)) {
+      setError(prev => ({ ...prev, email: STRING.invalidEmail }));
       isValid = false;
     }
 
     // ✅ Password validation
     if (!trimmedPassword) {
-      setError(prev => ({ ...prev, password: 'Password is required' }));
+      setError(prev => ({ ...prev, password: STRING.passwordRequired }));
       isValid = false;
     }
 
     if (!isValid) return;
 
-    // ✅ SUCCESS FLOW
-    console.log('Login success');
-
-    // navigation.navigate('ProviderBottomTabs');
+    // ✅ Mock failure for demonstration (matching the reference image error)
+    if (trimmedPassword !== 'correctpassword') {
+      setError(prev => ({
+        ...prev,
+        password: STRING.incorrectPassword,
+      }));
+      return;
+    }
   };
 
   return (
-    <AppSafeAreaView
-      style={{
-        backgroundColor: COLORS._E5E7EB,
-        paddingHorizontal: getScaleSize(16),
-        flex: 1,
-      }}
-    >
-      {/* HEADER */}
-      <View style={styles.hero}>
-        <Image
-          source={IMAGES.logo}
-          style={styles.logo}
-          resizeMode="cover"
-        />
+    <AppSafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HEADER */}
+        <View style={styles.hero}>
+          <Image
+            source={IMAGES.logo}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-        <AppText
-          size={getScaleSize(24)}
-          font={FONTS.Inter.Bold}
-          color={COLORS.primary}
-        >
-          Welcome Back
-        </AppText>
-
-        <AppText
-          size={getScaleSize(14)}
-          font={FONTS.Inter.SemiBold}
-          color={COLORS.primaryMuted}
-          style={{ marginTop: getScaleSize(16) }}
-        >
-          Sign in to your account
-        </AppText>
-      </View>
-
-      {/* FORM CARD */}
-      <View style={styles.card}>
-        {/* EMAIL */}
-        <Input
-          value={email}
-          onChangeText={text => {
-            setEmail(text);
-            setError(prev => ({ ...prev, email: '' }));
-          }}
-          placeholder="name@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          label="Email Address"
-          error={error?.email || ''}
-        />
-
-        {/* PASSWORD LABEL */}
-        <View style={styles.labelRow}>
           <AppText
-            style={styles.fieldLabel}
-            weight="700"
-            size={13}
-            color={COLORS.slate900}
+            size={getScaleSize(32)}
+            font={FONTS.Inter.Bold}
+            color={COLORS.primary}
+            align="center"
           >
-            Password
+            {STRING.welcomeBack}
           </AppText>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
-            activeOpacity={0.7}
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Regular}
+            color={COLORS.primaryMuted}
+            style={{ marginTop: getScaleSize(12) }}
+            align="center"
           >
+            {STRING.welcomeBackMessage}{' '}
+          </AppText>
+        </View>
+
+        {/* FORM CARD */}
+        <View style={styles.card}>
+          {/* EMAIL */}
+          <Input
+            value={email}
+            onChangeText={text => {
+              setEmail(text);
+              setError(prev => ({ ...prev, email: '' }));
+            }}
+            placeholder={STRING.enterEmailAddress}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            label={STRING.emailAddress}
+            error={error?.email || ''}
+            style={styles.field}
+            containerBackgroundColor={COLORS._F8F9FA}
+          />
+
+          {/* PASSWORD */}
+          <Input
+            value={password}
+            onChangeText={text => {
+              setPassword(text);
+              setError(prev => ({ ...prev, password: '' }));
+            }}
+            placeholder={STRING.enterPassword}
+            label={STRING.password}
+            containerBackgroundColor={COLORS._F8F9FA}
+            error={error?.password || ''}
+            secureTextEntry={true}
+            isPasswordVisible={isPasswordVisible}
+            handlePasswordVisibility={() => setIsPasswordVisible(prev => !prev)}
+            style={styles.field}
+          />
+
+          {/* LOGIN BUTTON */}
+          <PrimaryButton
+            title={STRING.login}
+            onPress={onSubmit}
+            disabled={isDisabled}
+            style={{ marginTop: getScaleSize(12) }}
+          />
+
+          {/* SECURITY ROW */}
+          <View style={styles.securityRow}>
+            <Image
+              source={IMAGES.securityIcon}
+              style={{ width: 14, height: 14, tintColor: COLORS.primaryMuted }}
+            />
             <AppText
-              style={styles.forgot}
-              weight="700"
-              size={13}
+              size={getScaleSize(13)}
+              color={COLORS.primaryMuted}
+              font={FONTS.Inter.Medium}
+            >
+              {STRING.secureEncryptedConnection}
+            </AppText>
+          </View>
+        </View>
+
+        {/* REGISTER FOOTER */}
+        <View style={styles.footer}>
+          <View style={styles.registerRow}>
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Regular}
               color={COLORS.primaryMuted}
             >
-              Forgot?
+              {STRING.dontHaveAnAccount}{' '}
             </AppText>
-          </TouchableOpacity>
-        </View>
 
-        {/* PASSWORD INPUT */}
-        <Input
-          value={password}
-          onChangeText={text => {
-            setPassword(text);
-            setError(prev => ({ ...prev, password: '' }));
-          }}
-          placeholder="Enter your password"
-          error={error?.password || ''}
-          secureTextEntry={true} // ✅ FIXED
-          isPasswordVisible={!isPasswordVisible}
-          handlePasswordVisibility={() =>
-            setIsPasswordVisible(prev => !prev)
-          }
-        />
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => NavigationService.navigate('DoctorBottomTabs')}
+            >
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS.primary}
+                font={FONTS.Inter.SemiBold}
+              >
+                {STRING.registerHere}
+              </AppText>
+            </TouchableOpacity>
+          </View>
 
-        {/* LOGIN BUTTON */}
-        <TouchableOpacity
-          disabled={isDisabled}
-          onPress={onSubmit}
-          activeOpacity={0.85}
-          style={[
-            styles.button,
-            isDisabled && styles.buttonDisabled,
-          ]}
-        >
           <AppText
-            size={getScaleSize(16)}
-            color={COLORS.white}
-          >
-            Login
-          </AppText>
-        </TouchableOpacity>
-
-
-        <View style={styles.securityRow}>
-          <Image
-            source={IMAGES.securityIcon}
-            style={{ width: 13, height: 13 }}
-          />
-          <AppText
-            size={getScaleSize(12)}
-            color={COLORS.primary}
+            size={getScaleSize(13)}
             font={FONTS.Inter.Medium}
+            color={COLORS.primaryMuted}
+            align="center"
+            style={styles.adminNote}
           >
-            Secure, encrypted connection
+            {STRING.logInMessage}
           </AppText>
         </View>
-
-      </View>
-
-      {/* SECURITY */}
-
-
-      {/* REGISTER */}
-      <View style={styles.registerRow}>
-        <AppText
-          size={getScaleSize(14)}
-          font={FONTS.Inter.Regular}
-          color={COLORS.slate600}
-        >
-          Don't have an account?
-        </AppText>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Register')}
-        >
-          <AppText
-            size={getScaleSize(16)}
-            color={COLORS.primary}
-            font={FONTS.Inter.SemiBold}
-          >
-            Register here
-          </AppText>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </AppSafeAreaView>
   );
 };
@@ -529,77 +516,60 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS._F9FAFB,
+  },
+  scrollContent: {
+    paddingBottom: getScaleSize(40),
+  },
   hero: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginTop: getScaleSize(60),
+    marginBottom: getScaleSize(32),
+    paddingHorizontal: getScaleSize(24),
   },
   logo: {
-    width: 192,
-    height: 192,
+    width: getScaleSize(96),
+    height: getScaleSize(96),
+    marginBottom: getScaleSize(24),
   },
   card: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: getScaleSize(24),
+    padding: getScaleSize(25),
+    marginHorizontal: getScaleSize(24),
     borderWidth: 1,
-    borderColor: COLORS.slate200,
+    borderColor: '#e2e8f0', // Very light border like in screenshot
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-    gap: 18,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forgot: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  button: {
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-    backgroundColor: COLORS.slate400,
+  field: {
+    paddingHorizontal: 0,
+    marginBottom: getScaleSize(20),
   },
   securityRow: {
-    marginTop: 24,
+    marginTop: getScaleSize(20),
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
-  securityIcon: {
-    fontSize: 13,
-  },
-  securityText: {
-    fontSize: 12,
+  footer: {
+    marginTop: getScaleSize(40),
+    paddingHorizontal: getScaleSize(24),
+    alignItems: 'center',
   },
   registerRow: {
-    marginTop: 32,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+    marginBottom: getScaleSize(12),
   },
-  registerText: {
-    fontSize: 14,
-  },
-  registerLink: {
-    fontSize: 14,
-    fontWeight: '700',
+  adminNote: {
+    lineHeight: 20,
+    width: '80%',
   },
 });

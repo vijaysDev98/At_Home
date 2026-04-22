@@ -12,6 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
+import { IMAGES } from '../../../assets/images';
+import { PrimaryButton } from '../../../components';
+import { STRING } from '../../../constant/strings';
 
 const chips = ['All', 'Active', 'New', 'Needs Follow-up'];
 
@@ -74,62 +79,75 @@ const PatientsScreen: React.FC = () => {
 
   const filteredPatients = useMemo(() => {
     if (selectedChip === 'All') return patients;
-    return patients.filter((p) => p.status.toLowerCase() === selectedChip.toLowerCase());
+    return patients.filter(
+      p => p.status.toLowerCase() === selectedChip.toLowerCase(),
+    );
   }, [selectedChip]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Patients</Text>
-          <TouchableOpacity activeOpacity={0.8} style={styles.sortButton}>
-            <Text style={styles.sortIcon}>⇅</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Search */}
-        <View style={styles.searchWrapper}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            placeholder="Search patients..."
-            placeholderTextColor="#6F767E"
-            style={styles.searchInput}
-          />
-        </View>
+          {/* Search */}
+          <View style={styles.searchWrapper}>
+            <Image source={IMAGES.search} style={styles.searchIcon} />
+            <TextInput
+              placeholder="Search patients..."
+              placeholderTextColor="#6F767E"
+              style={styles.searchInput}
+            />
+          </View>
 
-        {/* Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}
-        >
-          {chips.map((chip, idx) => (
-            <TouchableOpacity
-              key={chip}
-              activeOpacity={0.8}
-              style={[
-                styles.chip,
-                selectedChip === chip ? styles.chipActive : styles.chipInactive,
-              ]}
-              onPress={() => setSelectedChip(chip)}
-            >
-              <Text style={selectedChip === chip ? styles.chipTextActive : styles.chipText}>
-                {chip}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+          {/* Filter Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsRow}
+          >
+            {chips.map((chip, idx) => (
+              <TouchableOpacity
+                key={chip}
+                activeOpacity={0.8}
+                style={[
+                  styles.chip,
+                  selectedChip === chip
+                    ? styles.chipActive
+                    : styles.chipInactive,
+                ]}
+                onPress={() => setSelectedChip(chip)}
+              >
+                <Text
+                  style={
+                    selectedChip === chip
+                      ? styles.chipTextActive
+                      : styles.chipText
+                  }
+                >
+                  {chip}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Patient list */}
         <ScrollView
+          style={{ marginTop: getScaleSize(16) }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         >
-          {filteredPatients.map((p) => (
-            <TouchableOpacity 
-            onPress={() => navigation.navigate('PatientDetail', { id: p.id } as any)}
-            key={p.id} activeOpacity={0.9} style={styles.card}>
+          {filteredPatients.map(p => (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('PatientDetail', { id: p.id } as any)
+              }
+              key={p.id}
+              activeOpacity={0.9}
+              style={styles.card}
+            >
               <View style={styles.cardLeft}>
                 <View style={styles.avatarWrapper}>
                   {p.avatar ? (
@@ -143,36 +161,29 @@ const PatientsScreen: React.FC = () => {
                 <View>
                   <Text style={styles.name}>{p.name}</Text>
                   <View style={styles.phoneRow}>
-                    <Text style={styles.phoneIcon}>📞</Text>
+                    <Image source={IMAGES.phone} style={styles.phoneIcon} />
                     <Text style={styles.phone}>{p.phone}</Text>
                   </View>
                 </View>
               </View>
               <View style={styles.cardRight}>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: p.statusBg },
-                  ]}
-                >
+                {/* <View style={[styles.badge, { backgroundColor: p.statusBg }]}>
                   <Text style={[styles.badgeText, { color: p.statusColor }]}>
                     {p.status.toUpperCase()}
                   </Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
+                </View> */}
+                <Image source={IMAGES.arrow_bottom} style={styles.rightIcon} />
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* FAB */}
-        <TouchableOpacity
-          style={styles.fab}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('AddPatient')}
-        >
-          <Text style={styles.fabIcon}>＋</Text>
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <PrimaryButton
+            title={STRING.addPatient}
+            onPress={() => navigation.navigate('AddPatient' as any)}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -181,19 +192,16 @@ const PatientsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS._E5E7EB,
   },
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS._E5E7EB,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: '#EFEFEF',
     shadowColor: '#000',
@@ -202,9 +210,10 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1A1D1F',
+    fontSize: getScaleSize(20),
+    marginTop: getScaleSize(25),
+    fontFamily: FONTS.Inter.Bold,
+    color: COLORS._1A1D1F,
   },
   sortButton: {
     width: 32,
@@ -219,40 +228,38 @@ const styles = StyleSheet.create({
     color: '#1A1D1F',
   },
   searchWrapper: {
-    marginHorizontal: 20,
     marginTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F0F2F4',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 44,
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(16),
+    height: getScaleSize(40),
+    gap: getScaleSize(10),
   },
   searchIcon: {
-    fontSize: 16,
-    color: '#6F767E',
-    marginRight: 8,
+    width: getScaleSize(14),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#1A1D1F',
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS._1A1D1F,
   },
   chipsRow: {
-    paddingHorizontal: 16,
-    gap: 8,
-    height:50,
-    alignItems:'center',
-    marginTop:12
+    gap: getScaleSize(8),
+    alignItems: 'center',
+    marginTop: getScaleSize(12),
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: getScaleSize(22),
+    borderRadius: getScaleSize(25),
     borderWidth: 1,
-    height:45,
-    alignItems:'center',
-    justifyContent:'center'
+    height: getScaleSize(45),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipActive: {
     backgroundColor: '#526674',
@@ -263,19 +270,19 @@ const styles = StyleSheet.create({
     borderColor: '#EFEFEF',
   },
   chipTextActive: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+    color: COLORS.white,
+    fontSize: getScaleSize(13),
+    fontFamily: FONTS.Inter.Medium,
   },
   chipText: {
-    color: '#6F767E',
-    fontSize: 13,
-    fontWeight: '600',
+    color: COLORS._6F767E,
+    fontSize: getScaleSize(13),
+    fontFamily: FONTS.Inter.Medium,
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-    gap: 12,
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(120),
+    gap: getScaleSize(12),
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -332,12 +339,21 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   phoneIcon: {
-    fontSize: 12,
-    color: '#6F767E',
+    height: getScaleSize(15),
+    width: getScaleSize(10),
+    resizeMode: 'contain',
+  },
+  rightIcon: {
+    height: getScaleSize(18),
+    width: getScaleSize(8),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+    transform: [{ rotate: '270deg' }],
   },
   phone: {
-    fontSize: 13,
-    color: '#6F767E',
+    fontFamily: FONTS.Inter.Regular,
+    fontSize: getScaleSize(13),
+    color: COLORS._6F767E,
   },
   cardRight: {
     alignItems: 'flex-end',
@@ -357,24 +373,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#6F767E',
   },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 32,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#526674',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  fabIcon: {
-    fontSize: 22,
-    color: '#FFFFFF',
+  footer: {
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(20),
+    backgroundColor: COLORS._E5E7EB,
   },
 });
 

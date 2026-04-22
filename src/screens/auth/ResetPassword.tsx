@@ -1,12 +1,30 @@
-import React, { useMemo, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  ScrollView,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { COLORS, FONTS } from '../../utils';
+import {
+  AppSafeAreaView,
+  AppText,
+  Header,
+  Input,
+  PrimaryButton,
+} from '../../components';
+import { IMAGES } from '../../assets/images';
+import { getScaleSize } from '../../utils/scaleSize';
+import { STRING } from '../../constant/strings';
+import { useMemo, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export type ResetPasswordProps = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>;
-
-const LOGO_URI = 'https://firebasestorage.googleapis.com/v0/b/uxpilot-auth.appspot.com/o/15291b70-179f-4318-ae20-681b9e102f9e.png?alt=media&token=c5602d33-149b-4654-8e4a-4643f8e5d0a6';
+export type ResetPasswordProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ResetPassword'
+>;
 
 const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
   const [password, setPassword] = useState('');
@@ -39,108 +57,130 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
   const meterColors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backIcon}>‹</Text>
-          </TouchableOpacity>
-        </View>
+    <SafeAreaView
+      style={styles.safe}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          <Header isBack />
 
-        <View style={styles.logoWrap}>
-          <Image source={{ uri: LOGO_URI }} style={styles.logo} />
-        </View>
+          <View style={styles.logoWrap}>
+            <Image source={IMAGES.logo} style={styles.logo} />
+          </View>
 
-        <View style={styles.textBlock}>
-          <Text style={styles.title}>Reset Password</Text>
-          <Text style={styles.subtitle}>Create a new, strong password for your account.</Text>
-        </View>
+          <View style={styles.textBlock}>
+            <AppText
+              size={getScaleSize(24)}
+              color={COLORS._1E293B}
+              font={FONTS.Inter.Bold}
+              align="center"
+            >
+              {STRING.resetPassword}
+            </AppText>
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._64748B}
+              align="center"
+              style={{ marginTop: getScaleSize(10) }}
+            >
+              {STRING.resetPasswordMessage}
+            </AppText>
+          </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>New Password</Text>
-          <View style={styles.inputWrapper}>
-            <Text style={styles.leading}>🔒</Text>
-            <TextInput
-              style={styles.input}
+          <View style={styles.form}>
+            <Input
+              label={STRING.newPassword}
               placeholder="••••••••"
-              placeholderTextColor="#9ca3af"
               secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
-              autoCapitalize="none"
+              leftIcon={IMAGES.lock}
+              isPasswordVisible={showPass}
+              handlePasswordVisibility={() => setShowPass(p => !p)}
+              containerBackgroundColor={COLORS._F8F9FA}
+              style={styles.inputField}
             />
-            <TouchableOpacity onPress={() => setShowPass((p) => !p)} activeOpacity={0.8}>
-              <Text style={styles.toggle}>{showPass ? '🙈' : '👁️'}</Text>
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.strengthRow}>
-            <Text style={styles.strengthLabel}>Password Strength</Text>
             <View style={styles.meterRow}>
-              {[0, 1, 2, 3].map((i) => (
+              {[0, 1, 2, 3].map(i => (
                 <View
                   key={i}
                   style={[
                     styles.meterBar,
-                    strengthLevel > i ? { backgroundColor: meterColors[i] } : null,
+                    strengthLevel > i
+                      ? { backgroundColor: COLORS.primary }
+                      : null,
                   ]}
                 />
               ))}
             </View>
-          </View>
 
-          <View style={styles.requirements}>
-            {[
-              { text: 'At least 8 characters', met: reqs.hasLength },
-              { text: 'Contains uppercase letter', met: reqs.hasUpper },
-              { text: 'Contains number', met: reqs.hasNumber },
-              { text: 'Contains special character', met: reqs.hasSpecial },
-            ].map((item) => (
-              <View key={item.text} style={styles.reqRow}>
-                <Text style={[styles.reqDot, item.met ? styles.reqMetDot : null]}>•</Text>
-                <Text style={[styles.reqText, item.met ? styles.reqMetText : null]}>{item.text}</Text>
-              </View>
-            ))}
-          </View>
+            <View style={styles.strengthHeader}>
+              <AppText
+                size={12}
+                color={COLORS.primaryMuted}
+                font={FONTS.Inter.SemiBold}
+              >
+                {STRING.passwordStrength}
+              </AppText>
+            </View>
 
-          <Text style={[styles.label, styles.confirmLabel]}>Confirm Password</Text>
-          <View style={styles.inputWrapper}>
-            <Text style={styles.leading}>🛡️</Text>
-            <TextInput
-              style={styles.input}
+            <View style={styles.requirements}>
+              {[
+                { text: STRING.atLeast8Chars, met: reqs.hasLength },
+                { text: STRING.containsUpper, met: reqs.hasUpper },
+                { text: STRING.containsNumber, met: reqs.hasNumber },
+                { text: STRING.containsSpecial, met: reqs.hasSpecial },
+              ].map(item => (
+                <View key={item.text} style={styles.reqRow}>
+                  <View
+                    style={[styles.reqDot, item.met ? styles.reqMetDot : null]}
+                  />
+                  <AppText
+                    size={13}
+                    font={item.met ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+                    color={item.met ? COLORS._1E293B : COLORS._64748B}
+                  >
+                    {item.text}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+
+            <Input
+              label={STRING.confirmPassword}
               placeholder="••••••••"
-              placeholderTextColor="#9ca3af"
               secureTextEntry={!showConfirm}
               value={confirm}
               onChangeText={setConfirm}
-              autoCapitalize="none"
+              leftIcon={IMAGES.securityIcon} // Fallback for help_icon
+              isPasswordVisible={showConfirm}
+              handlePasswordVisibility={() => setShowConfirm(p => !p)}
+              containerBackgroundColor={COLORS._F8F9FA}
+              style={styles.inputField}
+              error={
+                !isMatch && confirm.length > 0
+                  ? 'Passwords do not match.'
+                  : undefined
+              }
             />
-            <TouchableOpacity onPress={() => setShowConfirm((p) => !p)} activeOpacity={0.8}>
-              <Text style={styles.toggle}>{showConfirm ? '🙈' : '👁️'}</Text>
-            </TouchableOpacity>
           </View>
-          {!isMatch && confirm.length > 0 ? (
-            <Text style={styles.errorText}>Passwords do not match.</Text>
-          ) : null}
-        </View>
 
-        <View style={styles.flexSpacer} />
-
-        <View style={styles.ctaBar}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.ctaButton, !canSubmit && styles.ctaDisabled]}
-            disabled={!canSubmit}
-            onPress={onSubmit}
-          >
-            <Text style={styles.ctaText}>Reset Password</Text>
-          </TouchableOpacity>
+          <View style={styles.ctaBar}>
+            <PrimaryButton
+              title={STRING.resetPassword}
+              onPress={onSubmit}
+              disabled={!canSubmit}
+              style={{ marginTop: getScaleSize(40) }}
+            />
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -148,169 +188,79 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 24,
-    paddingTop: 28,
-  },
-  header: {
-    width: '100%',
-    alignItems: 'flex-start',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 18,
-    color: '#526674',
-    fontWeight: '700',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: getScaleSize(24),
+    paddingTop: getScaleSize(20),
   },
   logoWrap: {
     alignItems: 'center',
-    marginTop: 32,
-    marginBottom: 32,
+    marginTop: getScaleSize(32),
+    marginBottom: getScaleSize(32),
   },
   logo: {
-    width: 96,
-    height: 96,
+    width: getScaleSize(96),
+    height: getScaleSize(96),
     resizeMode: 'contain',
   },
   textBlock: {
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 28,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#526674',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 20,
+    marginBottom: getScaleSize(32),
   },
   form: {
-    gap: 12,
+    gap: getScaleSize(16),
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1f2937',
+  inputField: {
+    paddingHorizontal: 0,
   },
-  confirmLabel: {
-    marginTop: 8,
-  },
-  inputWrapper: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+  strengthHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  leading: {
-    fontSize: 16,
-    color: '#94a3b8',
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1f2937',
-  },
-  toggle: {
-    fontSize: 15,
-    color: '#94a3b8',
-  },
-  strengthRow: {
-    marginTop: 6,
-    marginBottom: 6,
-  },
-  strengthLabel: {
-    fontSize: 12,
-    color: '#94a3b8',
-    textAlign: 'right',
-    marginBottom: 6,
+    justifyContent: 'flex-end',
+    marginBottom: getScaleSize(-8),
+    marginTop: getScaleSize(8),
   },
   meterRow: {
     flexDirection: 'row',
-    gap: 6,
-    height: 6,
+    gap: getScaleSize(8),
+    height: getScaleSize(6),
   },
   meterBar: {
     flex: 1,
-    borderRadius: 999,
-    backgroundColor: '#e2e8f0',
+    borderRadius: getScaleSize(10),
+    backgroundColor: COLORS._E5E7EB,
   },
   requirements: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: COLORS._F8F9FA,
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(16),
+    gap: getScaleSize(12),
+    marginBottom: getScaleSize(8),
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    gap: 8,
+    borderColor: COLORS._E5E7EB,
   },
   reqRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: getScaleSize(12),
   },
   reqDot: {
-    fontSize: 12,
-    color: '#94a3b8',
-  },
-  reqText: {
-    fontSize: 13,
-    color: '#475569',
+    width: getScaleSize(6),
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: COLORS._64748B,
   },
   reqMetDot: {
-    color: '#10b981',
-  },
-  reqMetText: {
-    color: '#0f172a',
-    fontWeight: '700',
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  flexSpacer: {
-    flex: 1,
+    backgroundColor: COLORS.primary,
   },
   ctaBar: {
-    paddingVertical: 12,
-    paddingBottom: 8,
-  },
-  ctaButton: {
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#9ca3af',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaDisabled: {
-    opacity: 0.6,
-  },
-  ctaText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
+    marginTop: 'auto',
+    paddingBottom: getScaleSize(32),
   },
 });
 

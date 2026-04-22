@@ -1,5 +1,14 @@
 import React, { ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity, ViewStyle, StyleProp, View, TextStyle, Image } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  ViewStyle,
+  StyleProp,
+  View,
+  TextStyle,
+  Image,
+} from 'react-native';
 import AppText from './AppText';
 import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
@@ -41,7 +50,7 @@ const AppButton: React.FC<AppButtonProps> = ({
   textStyle,
   textProps,
   textSize,
-  textFont
+  textFont,
 }) => {
   const isDisabled = disabled || loading;
 
@@ -50,22 +59,23 @@ const AppButton: React.FC<AppButtonProps> = ({
       activeOpacity={0.85}
       onPress={onPress}
       disabled={isDisabled}
-      style={[styles.button, { backgroundColor, opacity: isDisabled ? 0.7 : 1 }, style]}
+      style={[
+        styles.button,
+        { backgroundColor, opacity: isDisabled ? 0.7 : 1 },
+        style,
+      ]}
     >
       <View style={[styles.content, contentStyle]}>
-        {leftIcon ? 
-        // <View style={[styles.icon, leftIconStyle]}>{leftIcon}</View>
-          <Image
-        source={leftIcon}
-        style={[styles.icon, leftIconStyle]}
-        />
-         : null}
+        {leftIcon ? (
+          // <View style={[styles.icon, leftIconStyle]}>{leftIcon}</View>
+          <Image source={leftIcon} style={[styles.icon, leftIconStyle]} />
+        ) : null}
         {loading ? (
           <ActivityIndicator color={textColor} />
         ) : (
           <AppText
-            size={ textSize?textSize: getScaleSize(16)}
-            font ={textFont ? textFont : FONTS.Inter.SemiBold}
+            size={textSize ? textSize : getScaleSize(16)}
+            font={textFont ? textFont : FONTS.Inter.SemiBold}
             style={textStyle}
             color={textColor ? textColor : COLORS.white}
             {...textProps}
@@ -73,12 +83,9 @@ const AppButton: React.FC<AppButtonProps> = ({
             {title}
           </AppText>
         )}
-        {rightIcon ?
-        <Image
-        source={rightIcon}
-        style={[styles.icon, rightIconStyle]}
-        />
-        : null}
+        {rightIcon ? (
+          <Image source={rightIcon} style={[styles.icon, rightIconStyle]} />
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -88,7 +95,7 @@ export default AppButton;
 
 const styles = StyleSheet.create({
   button: {
-    height:getScaleSize(52),
+    height: getScaleSize(52),
     borderRadius: getScaleSize(16),
     alignItems: 'center',
     justifyContent: 'center',
@@ -100,7 +107,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   icon: {
-   height:getScaleSize(16),
-   width:getScaleSize(16),
+    height: getScaleSize(16),
+    width: getScaleSize(16),
   },
 });

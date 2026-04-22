@@ -2,146 +2,239 @@ import React from 'react';
 import {
   Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { AppText } from '../../../components';
+import { COLORS, FONTS } from '../../../utils';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { IMAGES } from '../../../assets/images';
+import { STRING } from '../../../constant/strings';
 
-const avatarUri = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
+const avatarUri =
+  'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
 
 const metrics = [
   {
-    id: 'active',
-    title: 'Active Requests',
+    id: 'inprogress',
     value: '12',
-    icon: '📋',
-    bg: '#E9EDF3',
+    label: STRING.inprogress,
+    icon: IMAGES.clipboard,
   },
   {
-    id: 'forms',
-    title: 'Pending Forms',
+    id: 'submitted',
     value: '5',
-    icon: '🧾',
-    bg: '#FFF3DD',
+    label: STRING.submitted,
+    icon: IMAGES.document_icon,
+  },
+  {
+    id: 'returned',
+    value: '5',
+    label: STRING.returned,
+    icon: IMAGES.document_icon,
   },
 ];
 
-const activities = [
+const actionRequired = [
   {
-    id: 'form',
-    title: 'Form Signed',
-    subtitle: 'Sarah Jenkins • 10m ago',
-    icon: '�',
+    id: 'signature',
+    title: STRING.formAwaitingSignature,
+    value: '148',
+    icon: IMAGES.document_icon, // Fallback for document_icon
   },
   {
-    id: 'patient',
-    title: 'Patient Added',
-    subtitle: 'Michael Chen • 1h ago',
-    icon: '➕',
+    id: 'patients',
+    title: STRING.totalPatients,
+    value: '148',
+    icon: IMAGES.patients_icon, // Fallback for patients_icon
   },
 ];
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.container}>
 
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.avatarWrapper}>
-              <Image source={{ uri: avatarUri }} style={styles.avatar} />
-            </View>
+            <Image source={{ uri: avatarUri }} style={styles.avatar} />
             <View>
-              <Text style={styles.subtle}>Good morning,</Text>
-              <Text style={styles.title}>Dr. Patel</Text>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS.primaryMuted}
+              >
+                {STRING.goodMorning}
+              </AppText>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.primary}
+              >
+                Dr. Patel
+              </AppText>
             </View>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.bellButton}
-            onPress={() => navigation.navigate('DoctorNotification')}
-          >
-            <Text style={styles.bellIcon}>🔔</Text>
-            <View style={styles.bellBadge} />
+          <TouchableOpacity activeOpacity={0.7} style={styles.notificationBtn}>
+            <Image
+              source={IMAGES.notification_icon}
+              style={styles.notificationIcon}
+            />
           </TouchableOpacity>
         </View>
 
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          style={{ marginTop: getScaleSize(20) }}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* Metrics grid */}
-          <View style={styles.metricsGrid}>
-            {metrics.map((item) => (
-              <View key={item.id} style={styles.metricCard}>
-                <View style={[styles.metricIconWrap, { backgroundColor: item.bg }]}>
-                  <Text style={styles.metricIcon}>{item.icon}</Text>
-                </View>
-                <View>
-                  <Text style={styles.metricValue}>{item.value}</Text>
-                  <Text style={styles.metricLabel}>{item.title}</Text>
+          {/* Requests Overview */}
+          <View>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+              style={styles.sectionTitle}
+            >
+              {STRING.requestsOverview}
+            </AppText>
+            <View style={styles.activeContainer}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={styles.tabLabel}
+              >
+                {STRING.active}
+              </AppText>
+
+              <View style={styles.metricsList}>
+                {metrics.map(item => (
+                  <View key={item.id} style={styles.metricCard}>
+                    <Image source={item.icon} style={styles.metricIcon} />
+                    <AppText
+                      size={getScaleSize(24)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                      style={{
+                        marginTop: getScaleSize(15),
+                        marginBottom: getScaleSize(2),
+                      }}
+                    >
+                      {item.value}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                    >
+                      {item.label}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+              {/* Action Required */}
+              <View style={styles.section}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  style={styles.tabLabel}
+                >
+                  {STRING.actionRequired}
+                </AppText>
+
+                <View style={styles.actionList}>
+                  {actionRequired.map(item => (
+                    <View key={item.id} style={styles.actionItem}>
+                      <Image source={item.icon} style={styles.actionIcon} />
+                      <View style={styles.actionContent}>
+                        <AppText
+                          size={getScaleSize(14)}
+                          font={FONTS.Inter.Medium}
+                          color={COLORS._6F767E}
+                        >
+                          {item.title}
+                        </AppText>
+                        <AppText
+                          size={getScaleSize(20)}
+                          font={FONTS.Inter.Bold}
+                          color={COLORS._1A1D1F}
+                        >
+                          {item.value}
+                        </AppText>
+                      </View>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={styles.viewAllBtn}
+                      >
+                        <AppText
+                          size={getScaleSize(13)}
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS._526674}
+                        >
+                          {STRING.viewAll} {'>'}
+                        </AppText>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
                 </View>
               </View>
-            ))}
-            <View style={[styles.metricCard, styles.metricWide]}>
-              <View style={styles.metricWideLeft}>
-                <View style={[styles.metricIconWrap, { backgroundColor: '#E5F7ED' }] }>
-                  <Text style={styles.metricIcon}>👥</Text>
-                </View>
-                <View>
-                  <Text style={styles.metricLabel}>Total Patients</Text>
-                  <Text style={styles.metricValue}>148</Text>
-                </View>
-              </View>
-              <TouchableOpacity activeOpacity={0.8}>
-                <Text style={styles.link}>View All ›</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-          </View>
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity activeOpacity={0.9} style={[styles.actionCard, styles.actionPrimary]}>
-              <Text style={styles.actionIcon}>＋</Text>
-              <Text style={styles.actionTextPrimary}>New Request</Text>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.9} style={[styles.actionCard, styles.actionSecondary]}>
-              <Text style={styles.actionIconSecondary}>➕</Text>
-              <Text style={styles.actionTextSecondary}>Add Patient</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={styles.section}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+              style={styles.sectionTitle}
+            >
+              {STRING.quickActions}
+            </AppText>
 
-          {/* Recent Activity */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-          </View>
-          <View style={styles.activityCard}>
-            {activities.map((item, idx) => (
-              <View
-                key={item.id}
-                style={[styles.activityRow, idx === 0 && styles.activityRowBorder]}
+            <View style={styles.quickGrid}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={[styles.quickBtn, styles.quickBtnPrimary]}
               >
-                <View style={styles.activityLeft}>
-                  <View style={styles.activityIconWrap}>
-                    <Text style={styles.activityIcon}>{item.icon}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.activityTitle}>{item.title}</Text>
-                    <Text style={styles.activitySubtitle}>{item.subtitle}</Text>
-                  </View>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </View>
-            ))}
+                <Image
+                  source={IMAGES.new_request}
+                  style={[styles.quickActionIcon, { tintColor: COLORS.white }]}
+                />
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
+                >
+                  {STRING.newRequest}
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={[styles.quickBtn, styles.quickBtnSecondary]}
+              >
+                <Image
+                  source={IMAGES.add_patient}
+                  style={styles.quickActionIcon}
+                />
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.primary}
+                >
+                  {STRING.addPatient}
+                </AppText>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -152,312 +245,179 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: COLORS._F9FAFB,
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+  },
+  notificationIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+  },
+  quickActionIcon: {
+    height: getScaleSize(22),
+    width: getScaleSize(18),
+    resizeMode: 'contain',
+  },
+  activeContainer: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: getScaleSize(20),
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(16),
+    borderRadius: getScaleSize(20),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 0,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    paddingHorizontal: getScaleSize(24),
+    paddingVertical: getScaleSize(16),
+    backgroundColor: COLORS.white,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-  },
-  avatarWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#E8EDF1',
+    gap: getScaleSize(12),
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(24),
   },
-  subtle: {
-    fontSize: 12,
-    color: '#6F767E',
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 16,
-    color: '#1A1D1F',
-    fontWeight: '700',
-  },
-  bellButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  notificationBtn: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(22),
+    backgroundColor: COLORS._F8F9FA,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8F9FA',
   },
-  bellIcon: {
-    fontSize: 18,
+  bellPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  bellBadge: {
+  badge: {
     position: 'absolute',
-    top: 8,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: getScaleSize(12),
+    right: getScaleSize(12),
+    width: getScaleSize(8),
+    height: getScaleSize(8),
+    borderRadius: getScaleSize(4),
     backgroundColor: '#FF4D4F',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-  },
-  scroll: {
-    flex: 1,
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-    paddingTop: 16,
-    gap: 16,
+    paddingBottom: getScaleSize(100),
   },
-  metricsGrid: {
+  sectionTitle: {
+    paddingHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(20),
+  },
+  tabLabel: {
+    // paddingHorizontal: getScaleSize(24),
+    // marginBottom: getScaleSize(16),
+  },
+  metricsList: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    justifyContent: 'space-between',
+    paddingVertical: getScaleSize(12),
+    gap: getScaleSize(10),
   },
   metricCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    flex: 1,
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(20),
+    padding: getScaleSize(17),
     borderWidth: 1,
-    borderColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    width: '48%',
-    gap: 12,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 3,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
-  metricWide: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  metricIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconBox: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(12),
     alignItems: 'center',
     justifyContent: 'center',
   },
   metricIcon: {
-    fontSize: 16,
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    resizeMode: 'contain',
   },
-  metricValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1A1D1F',
+  actionList: {
+    paddingVertical: getScaleSize(12),
+    gap: getScaleSize(10),
   },
-  metricLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6F767E',
-    marginTop: 2,
-  },
-  metricWideLeft: {
+  actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(20),
+    padding: getScaleSize(17),
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  link: {
-    color: '#526674',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  sectionHeader: {
-    marginTop: 4,
-    marginBottom: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1D1F',
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
+  actionIconBox: {
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(16),
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  actionPrimary: {
-    backgroundColor: '#526674',
-  },
-  actionSecondary: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
   },
   actionIcon: {
-    fontSize: 24,
-    color: '#FFFFFF',
+    width: getScaleSize(40),
+    height: getScaleSize(40),
   },
-  actionIconSecondary: {
-    fontSize: 24,
-    color: '#526674',
+  actionContent: {
+    flex: 1,
+    marginLeft: getScaleSize(16),
+    gap: getScaleSize(2),
   },
-  actionTextPrimary: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  actionTextSecondary: {
-    color: '#526674',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  activityCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  activityRow: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  activityRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEF',
-  },
-  activityLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  activityIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8F9FA',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activityIcon: {
-    fontSize: 18,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A1D1F',
-  },
-  activitySubtitle: {
-    fontSize: 12,
-    color: '#6F767E',
-  },
-  chevron: {
-    fontSize: 18,
-    color: '#6F767E',
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 84,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-  },
-  navItem: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  navItemActive: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  navIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navIconActive: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E8EDF1',
-  },
-  navIconText: {
-    fontSize: 18,
-    color: '#526674',
-  },
-  navIconTextMuted: {
-    fontSize: 16,
-    color: '#6F767E',
-  },
-  navLabel: {
-    fontSize: 10,
-    color: '#6F767E',
-    fontWeight: '600',
-  },
-  navLabelActive: {
-    fontSize: 10,
-    color: '#526674',
-    fontWeight: '700',
-  },
-  navFab: {
-    position: 'absolute',
+  viewAllBtn: {
     alignSelf: 'center',
-    bottom: 22,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#526674',
+  },
+  quickGrid: {
+    flexDirection: 'row',
+    paddingHorizontal: getScaleSize(24),
+    gap: getScaleSize(16),
+  },
+  quickBtn: {
+    flex: 1,
+    height: getScaleSize(120),
+    borderRadius: getScaleSize(20),
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 6,
+    gap: getScaleSize(12),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  navFabIcon: {
-    fontSize: 22,
-    color: '#FFFFFF',
+  quickBtnPrimary: {
+    backgroundColor: '#526674',
+  },
+  quickBtnSecondary: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  quickIcon: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
   },
 });
 

@@ -4,33 +4,30 @@ import { IMAGES } from '../assets/images';
 import NavigationService from '../navigation/NavigationService';
 import { COLORS } from '../utils';
 
-const Header = ({ isBack = false}: { isBack?: boolean}) => {
+const Header = ({ isBack = false }: { isBack?: boolean }) => {
   return (
- <View style={styles.header}>
-          {isBack && (
-            <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.backBtn}
-            onPress={() => NavigationService.goBack()}
-          >
-            <Image
-              source={IMAGES.backIcon}
-              style={styles.backIcon}
-            />
-          </TouchableOpacity>
-        )}
-        </View>
+    <View style={styles.header}>
+      {isBack && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.backBtn}
+          onPress={() => NavigationService.goBack()}
+        >
+          <Image source={IMAGES.backIcon} style={styles.backIcon} />
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 
 export default Header;
 
-const styles= StyleSheet.create({
+const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
     paddingVertical: 12,
   },
   backBtn: {
@@ -48,4 +45,4 @@ const styles= StyleSheet.create({
     height: 24,
     resizeMode: 'contain',
   },
-})
+});

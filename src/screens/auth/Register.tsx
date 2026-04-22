@@ -1,385 +1,357 @@
-import React, { useMemo, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
 import {
-  Image,
   StyleSheet,
   Text,
+  View,
   TextInput,
   TouchableOpacity,
-  View,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
 } from 'react-native';
+import { COLORS, FONTS } from '../../utils';
+import { getScaleSize } from '../../utils/scaleSize';
+import { IMAGES } from '../../assets/images';
 import { useNavigation } from '@react-navigation/native';
+import CheckBox from '@react-native-community/checkbox';
+import { Input, PrimaryButton } from '../../components';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { STRING } from '../../constant/strings';
+import NavigationService from '../../navigation/NavigationService';
 
-const Register: React.FC = () => {
-  const navigation = useNavigation<any>();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<string>('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+// --- Sub-components ---
 
-  const isDisabled = useMemo(
-    () => !name.trim() || !email.trim() || !password.trim() || !role,
-    [name, email, password, role],
-  );
-
-  const handleSubmit = () => {
-    // if (isDisabled || submitting) return;
-    // setSubmitting(true);
-    // Simulate success flow; in real app, replace with API call
-    setTimeout(() => {
-      setSubmitting(false);
-      navigation.replace('RegisterSuccess');
-    }, 400);
-  };
-
-  return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right','bottom']}>
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              activeOpacity={0.8}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.backIcon}>‹</Text>
-            </TouchableOpacity>
-            <View style={styles.logoWrap}>
-              <Image
-                source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png' }}
-                style={styles.logo}
-              />
-            </View>
-            <View style={styles.headerSpacer} />
-          </View>
-
-          <View style={styles.intro}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join the At-Home healthcare network</Text>
-          </View>
-
-          <View style={styles.card}>
-            <Field
-              label="Full Name"
-              required
-              placeholder="John"
-              value={name}
-              onChangeText={setName}
-              icon="👤"
-            />
-            <Field
-              label="Email Address"
-              required
-              placeholder="name@example.com"
-              value={email}
-              onChangeText={setEmail}
-              icon="✉️"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Field
-              label="Password"
-              required
-              placeholder="••••••••"
-              value={password}
-              onChangeText={setPassword}
-              icon="🔒"
-              secureTextEntry={!showPassword}
-              trailingIcon={showPassword ? '🙈' : '👁️'}
-              onTrailingPress={() => setShowPassword((p) => !p)}
-              helper="Must be at least 8 characters long."
-            />
-
-            <View style={styles.divider} />
-
-            <RoleSelect label="Select Role" required value={role} onSelect={setRole} />
-          </View>
-        </ScrollView>
-
-        {/* <View style={styles.stickyBar}> */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.submitBtn, 
-              // (isDisabled || submitting) && styles.submitBtnDisabled
-            ]}
-            // disabled={isDisabled || submitting}
-            onPress={handleSubmit}
-          >
-            <Text style={styles.submitText}>{submitting ? 'Submitting...' : 'Submit Registration'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.terms}>
-            By submitting, you agree to our <Text style={styles.link}>Terms</Text> &{' '}
-            <Text style={styles.link}>Privacy Policy</Text>.
-          </Text>
-        {/* </View> */}
-      </View>
-    </SafeAreaView>
-  );
-};
-
-interface FieldProps extends React.ComponentProps<typeof TextInput> {
-  label: string;
-  required?: boolean;
-  icon?: string;
-  trailingIcon?: string;
-  onTrailingPress?: () => void;
-  helper?: string;
+interface CheckboxProps {
+  label: React.ReactNode;
+  checked: boolean;
+  onToggle: () => void;
 }
 
-const Field: React.FC<FieldProps> = ({
-  label,
-  required,
-  icon,
-  trailingIcon,
-  onTrailingPress,
-  helper,
-  style,
-  ...rest
-}) => {
+interface CheckboxProps {
+  label: React.ReactNode;
+  checked: boolean;
+  onToggle: (value: boolean) => void;
+}
+
+const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
   return (
-    <View style={styles.fieldGroup}>
-      <Text style={styles.fieldLabel}>
-        {label} {required ? <Text style={styles.required}>*</Text> : null}
-      </Text>
-      <View style={styles.inputWrapper}>
-        {icon ? <Text style={styles.leading}>{icon}</Text> : null}
-        <TextInput
-          {...rest}
-          style={[styles.input, style]}
-          placeholderTextColor="#9ca3af"
-        />
-        {trailingIcon ? (
-          <TouchableOpacity style={styles.trailing} onPress={onTrailingPress} activeOpacity={0.8}>
-            <Text style={styles.trailingText}>{trailingIcon}</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-      {helper ? <Text style={styles.helper}>{helper}</Text> : null}
+    <View style={styles.checkboxContainer}>
+      <CheckBox
+        disabled={false}
+        value={checked}
+        onValueChange={onToggle}
+        tintColors={{ true: COLORS.primary, false: COLORS.slate200 }}
+        boxType="square" // iOS specific
+        onTintColor={COLORS.primary} // iOS specific
+        onCheckColor={COLORS.white} // iOS specific
+        onFillColor={COLORS.primary} // iOS specific
+        style={styles.checkboxLib}
+      />
+      {label && (
+        <View style={styles.checkboxLabelWrapper}>
+          <Text style={styles.checkboxLabel}>{label}</Text>
+        </View>
+      )}
     </View>
   );
 };
 
-const RoleSelect: React.FC<{ label: string; required?: boolean; value: string; onSelect: (v: string) => void; }>
-  = ({ label, required, value, onSelect }) => {
+// --- Main Screen ---
+
+const Register: React.FC = () => {
+  const navigation = useNavigation();
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rpps, setRpps] = useState('');
+  const [finess, setFiness] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [placeOfPractice, setPlaceOfPractice] = useState('');
+  const [address, setAddress] = useState('');
+  const [agreed, setAgreed] = useState(false);
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const isFormValid = () => {
     return (
-      <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>
-          {label} {required ? <Text style={styles.required}>*</Text> : null}
-        </Text>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={styles.select}
-          onPress={() => onSelect(value ? '' : 'Doctor')}
-        >
-          <View style={styles.selectLeft}>
-            <Text style={styles.leading}>🩺</Text>
-            <Text style={[styles.selectText, !value && styles.placeholderText]}>
-              {value || 'Choose your role'}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>⌄</Text>
-        </TouchableOpacity>
-      </View>
+      fullName &&
+      email &&
+      password &&
+      password === confirmPassword &&
+      rpps &&
+      finess &&
+      specialty &&
+      agreed
     );
   };
 
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Frame Container (Matching Screenshot Border) */}
+          <View>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>{STRING.createYourAccount}</Text>
+              <Text style={styles.subtitle}>
+                {STRING.createAccountSubtitle}
+              </Text>
+            </View>
+
+            {/* Form Fields */}
+            <Input
+              label={STRING.fullName}
+              isMandatory
+              placeholder={STRING.enterFullName}
+              leftIcon={IMAGES.person}
+              value={fullName}
+              onChangeText={setFullName}
+              style={{ marginBottom: getScaleSize(20) }}
+            />
+
+            <Input
+              label={STRING.emailAddress}
+              isMandatory
+              placeholder={STRING.enterEmailAddress}
+              leftIcon={IMAGES.mail}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              helper="We'll send verification to this email"
+              style={{ marginBottom: getScaleSize(20) }}
+              helperStyle={{ marginTop: getScaleSize(8) }}
+            />
+
+            <Input
+              label={STRING.password}
+              isMandatory
+              placeholder={STRING.createPassword}
+              leftIcon={IMAGES.lock}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={true}
+              isPasswordVisible={showPassword}
+              handlePasswordVisibility={() => setShowPassword(!showPassword)}
+              style={{ marginBottom: getScaleSize(20) }}
+            />
+
+            <Input
+              label={STRING.rppsNumber}
+              isMandatory
+              placeholder={`${STRING.enterRppsNumber} (${STRING.elevenDigit})`}
+              leftIcon={IMAGES.card}
+              value={rpps}
+              onChangeText={setRpps}
+              keyboardType="numeric"
+              helper="Répertoire Partagé des Professionnels de Santé"
+              style={{ marginBottom: getScaleSize(20) }}
+              helperStyle={{ marginTop: getScaleSize(8) }}
+            />
+
+            <Input
+              label={STRING.finessNumber}
+              isMandatory
+              placeholder={`${STRING.enterFinessNumber} (${STRING.nineDigit})`}
+              leftIcon={IMAGES.hospital}
+              value={finess}
+              onChangeText={setFiness}
+              keyboardType="numeric"
+              helper="Facility identification number"
+              style={{ marginBottom: getScaleSize(20) }}
+              helperStyle={{ marginTop: getScaleSize(8) }}
+            />
+
+            <Input
+              label={STRING.specialty}
+              isMandatory
+              placeholder={STRING.selectYourSpecialty}
+              leftIcon={IMAGES.stethoscope}
+              value={specialty}
+              onPress={() => setSpecialty('General Practitioner')} // Mock selection
+              trailing={
+                <Image
+                  source={IMAGES.arrow_bottom}
+                  style={{
+                    width: getScaleSize(16),
+                    height: getScaleSize(16),
+                    tintColor: COLORS.slate400,
+                  }}
+                  resizeMode="contain"
+                />
+              }
+              style={{ marginBottom: getScaleSize(20) }}
+            />
+
+            <Input
+              label={STRING.placeOfPractice}
+              isMandatory
+              placeholder="9 digits"
+              value={placeOfPractice}
+              onChangeText={setPlaceOfPractice}
+              keyboardType="numeric"
+              style={{ marginBottom: getScaleSize(20) }}
+            />
+
+            <Input
+              label={STRING.address}
+              isMandatory
+              placeholder="Street address, city, postal code"
+              leftIcon={IMAGES.location_pin}
+              value={address}
+              onChangeText={setAddress}
+              style={{ marginBottom: getScaleSize(20) }}
+            />
+
+            {/* Terms Agreement */}
+            <Checkbox
+              checked={agreed}
+              onToggle={value => setAgreed(value)}
+              label={
+                <Text>
+                  I agree to the{' '}
+                  <Text
+                    style={styles.link}
+                    onPress={() => console.log('Privacy Policy')}
+                  >
+                    Privacy Policy
+                  </Text>{' '}
+                  and{' '}
+                  <Text
+                    style={styles.link}
+                    onPress={() => console.log('Terms of Service')}
+                  >
+                    Terms of Service
+                  </Text>
+                </Text>
+              }
+            />
+
+            {/* Submit Section */}
+            <View style={styles.footer}>
+              <PrimaryButton
+                title={STRING.submitRegistration}
+                icon={IMAGES.arrowRight}
+                onPress={() => console.log('LOGIN')}
+                disabled={!isFormValid()}
+              />
+
+              <TouchableOpacity
+                style={styles.signInContainer}
+                onPress={() => navigation.navigate('Login' as never)}
+              >
+                <Text style={styles.signInText}>
+                  Already have an account?{' '}
+                  <Text style={styles.signInLink}>Sign In</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#f5f7fa',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: COLORS._F9FAFB,
   },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 140,
-    gap: 24,
+  scrollContent: {
+    paddingBottom: getScaleSize(40),
   },
-  headerRow: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: getScaleSize(20),
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#e2e8f0',
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    tintColor: COLORS.primary,
   },
-  backIcon: {
-    fontSize: 18,
-    color: '#526674',
-    fontWeight: '700',
+  headerLogo: {
+    width: getScaleSize(100),
+    height: getScaleSize(40),
   },
-  logoWrap: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  intro: {
-    alignItems: 'flex-start',
-    gap: 4,
+  header: {
+    marginBottom: getScaleSize(24),
+    paddingHorizontal: getScaleSize(24),
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#526674',
+    fontSize: getScaleSize(24),
+    fontFamily: FONTS.Inter.Bold,
+    color: COLORS.slate900,
+    marginBottom: getScaleSize(8),
   },
   subtitle: {
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '600',
+    fontSize: getScaleSize(14),
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS.slate700,
   },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    gap: 16,
-  },
-  fieldGroup: {
-    gap: 8,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
+  label: {
+    fontSize: getScaleSize(14),
+    fontFamily: FONTS.Inter.SemiBold,
+    color: COLORS.slate900,
+    marginBottom: getScaleSize(8),
   },
   required: {
-    color: '#ef4444',
+    color: COLORS.error,
   },
-  inputWrapper: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+  checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    gap: 8,
+    marginTop: getScaleSize(8),
+    marginBottom: getScaleSize(32),
+    paddingHorizontal: getScaleSize(24),
   },
-  input: {
+  checkboxLib: {
+    width: getScaleSize(22),
+    height: getScaleSize(22),
+    marginRight: getScaleSize(12),
+  },
+  checkboxLabelWrapper: {
     flex: 1,
-    fontSize: 14,
-    color: '#1e293b',
   },
-  leading: {
-    fontSize: 14,
-    color: '#94a3b8',
-  },
-  trailing: {
-    paddingHorizontal: 4,
-    paddingVertical: 6,
-  },
-  trailingText: {
-    fontSize: 14,
-    color: '#94a3b8',
-  },
-  helper: {
-    fontSize: 12,
-    color: '#64748b',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    marginVertical: 4,
-  },
-  select: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-  },
-  selectLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  selectText: {
-    fontSize: 14,
-    color: '#1e293b',
-    fontWeight: '600',
-  },
-  placeholderText: {
-    color: '#94a3b8',
-    fontWeight: '500',
-  },
-  chevron: {
-    fontSize: 16,
-    color: '#94a3b8',
-  },
-  stickyBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 0,
-    backgroundColor: '#526674',
-    borderTopWidth: 0,
-    alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  submitBtn: {
-    // width: '100%',
-    height: 54,
-    backgroundColor: '#526674',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal:20,
-    borderRadius:12,
-  },
-  submitBtnDisabled: {
-    opacity: 0.65,
-  },
-  submitText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  terms: {
-    // color: '#e2e8f0',
-    fontSize: 11,
-    marginTop: 6,
-    marginBottom: 6,
-    alignItems: 'center',
-    textAlign: 'center',
+  checkboxLabel: {
+    fontSize: getScaleSize(13),
+    fontFamily: FONTS.Inter.Medium,
+    color: COLORS.slate700,
   },
   link: {
-    textDecorationLine: 'underline',
-    fontWeight: '700',
+    color: '#3b82f6',
+    fontFamily: FONTS.Inter.SemiBold,
+  },
+  footer: {
+    marginTop: getScaleSize(8),
+    paddingHorizontal: getScaleSize(24),
+  },
+
+  signInContainer: {
+    marginTop: getScaleSize(20),
+    alignItems: 'center',
+  },
+  signInText: {
+    fontSize: getScaleSize(14),
+    fontFamily: FONTS.Inter.Medium,
+    color: COLORS.slate700,
+  },
+  signInLink: {
+    color: COLORS.primary,
+    fontFamily: FONTS.Inter.Bold,
   },
 });
 

@@ -1,18 +1,34 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, TextInputKeyPressEvent } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  TextInputKeyPressEvent,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { COLORS, FONTS } from '../../utils';
-import { AppText, Header } from '../../components';
+import { AppText, Header, PrimaryButton } from '../../components';
 import { IMAGES } from '../../assets/images';
 import { getScaleSize } from '../../utils/scaleSize';
+import { STRING } from '../../constant/strings';
 
-export type OtpVerificationProps = NativeStackScreenProps<RootStackParamList, 'OtpVerification'>;
+export type OtpVerificationProps = NativeStackScreenProps<
+  RootStackParamList,
+  'OtpVerification'
+>;
 
-const LOGO_URI = 'https://firebasestorage.googleapis.com/v0/b/uxpilot-auth.appspot.com/o/15291b70-179f-4318-ae20-681b9e102f9e.png?alt=media&token=c5602d33-149b-4654-8e4a-4643f8e5d0a6';
+const LOGO_URI =
+  'https://firebasestorage.googleapis.com/v0/b/uxpilot-auth.appspot.com/o/15291b70-179f-4318-ae20-681b9e102f9e.png?alt=media&token=c5602d33-149b-4654-8e4a-4643f8e5d0a6';
 
-const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) => {
+const OtpVerification: React.FC<OtpVerificationProps> = ({
+  navigation,
+  route,
+}) => {
   const email = route.params?.email ?? 'dr.smith@example.com';
   const [code, setCode] = useState(Array(6).fill(''));
   const [touched, setTouched] = useState(false);
@@ -21,7 +37,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimer((t) => (t > 0 ? t - 1 : 0));
+      setTimer(t => (t > 0 ? t - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -53,14 +69,17 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
     inputsRef.current[focusIdx]?.focus();
   };
 
-  const isComplete = useMemo(() => code.every((c) => c.length === 1), [code]);
+  const isComplete = useMemo(() => code.every(c => c.length === 1), [code]);
   const showError = touched && !isComplete;
 
   const minutes = String(Math.floor(timer / 60)).padStart(2, '0');
   const seconds = String(timer % 60).padStart(2, '0');
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={styles.safe}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
       <View style={styles.container}>
         {/* Header */}
         <Header isBack />
@@ -69,29 +88,33 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
           <Image source={IMAGES.logo} style={styles.logo} />
         </View>
 
-      <View
-      style={styles.textBlock}
-      >
-        <AppText
-        size={getScaleSize(24)}
-        color={COLORS._1E293B}
-        font={FONTS.Inter.Bold}
-        align='center'
-        >{"Verify your email"}</AppText>
-        <AppText
-        size={getScaleSize(15)}
-        font={FONTS.Inter.Regular}
-        color={COLORS._64748B}
-        align='center'
-        style={{marginTop:getScaleSize(5)}}
-        >{"We sent a 6-digit code to "}</AppText>
-        <AppText
-        size={getScaleSize(15)}
-        font={FONTS.Inter.SemiBold}
-        color={COLORS._1E293B}
-        align='center'
-        >{email}</AppText>
-      </View>
+        <View style={styles.textBlock}>
+          <AppText
+            size={getScaleSize(24)}
+            color={COLORS._1E293B}
+            font={FONTS.Inter.Bold}
+            align="center"
+          >
+            {STRING.verifyEmail}
+          </AppText>
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._64748B}
+            align="center"
+            style={{ marginTop: getScaleSize(5) }}
+          >
+            {STRING.varifyEmailMessage}
+          </AppText>
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS._1E293B}
+            align="center"
+          >
+            {email}
+          </AppText>
+        </View>
 
         {/* OTP Inputs */}
         <View style={styles.otpWrap}>
@@ -99,13 +122,15 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
             {code.map((digit, idx) => (
               <TextInput
                 key={idx}
-                ref={(el) => {
+                ref={el => {
                   inputsRef.current[idx] = el;
                 }}
                 style={[styles.otpInput, showError && styles.otpError]}
                 value={digit}
-                onChangeText={(val) => handleChange(val, idx)}
-                onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, idx)}
+                onChangeText={val => handleChange(val, idx)}
+                onKeyPress={({ nativeEvent }) =>
+                  handleKeyPress(nativeEvent.key, idx)
+                }
                 keyboardType="number-pad"
                 maxLength={1}
                 onBlur={() => setTouched(true)}
@@ -116,36 +141,45 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
             ))}
           </View>
           {showError ? (
-            <Text style={styles.errorText}>Invalid code. Please try again.</Text>
+            <Text style={styles.errorText}>
+              Invalid code. Please try again.
+            </Text>
           ) : null}
         </View>
 
         {/* Timer */}
         <View style={styles.timerBlock}>
-          <AppText 
-          size={getScaleSize(14)}
-          color={COLORS.primaryMuted}
-          font={FONTS.Inter.Regular}
-
-          >
-            Code expires in <AppText 
+          <AppText
             size={getScaleSize(14)}
-            font={FONTS.Inter.SemiBold}
-            color={COLORS._64748B}
-            align='center'
-            >{minutes}:{seconds}</AppText>
+            color={COLORS.primaryMuted}
+            font={FONTS.Inter.Regular}
+          >
+            {STRING.codeExpiresIn + ' '}
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._64748B}
+              align="center"
+            >
+              {minutes}:{seconds}
+            </AppText>
           </AppText>
-           
+
           <TouchableOpacity
             activeOpacity={timer === 0 ? 0.7 : 1}
             disabled={timer !== 0}
           >
-           {timer == 0 && ( <AppText
-            size={getScaleSize(14)}
-            font={FONTS.Inter.SemiBold}
-            color={COLORS._64748B}
-            align='center'
-            style={[styles.resend, timer !== 0 && styles.resendDisabled]}>Resend Code</AppText>)}
+            {timer == 0 && (
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._64748B}
+                align="center"
+                style={[styles.resend, timer !== 0 && styles.resendDisabled]}
+              >
+                {STRING.resendCode}
+              </AppText>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -153,19 +187,12 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ navigation, route }) 
 
         {/* Bottom CTA */}
         <View style={styles.ctaBar}>
-          <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={[styles.ctaButton, isComplete && styles.ctaButtonDisabled]}
-                    disabled={isComplete}
-                  onPress={() => navigation.navigate('ResetPassword')}
-          >
-                  
-                    <AppText
-                      size={getScaleSize(15)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS.white}
-                    >{"Verify"}</AppText>
-                    </TouchableOpacity>
+          <PrimaryButton
+            title={STRING.verify}
+            onPress={() => navigation.navigate('ResetPassword')}
+            disabled={!isComplete}
+            style={{ marginTop: getScaleSize(80) }}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -180,8 +207,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
-    paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingHorizontal: getScaleSize(24),
+    paddingTop: getScaleSize(28),
   },
   header: {
     width: '100%',
@@ -213,8 +240,8 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   textBlock: {
-    gap:getScaleSize(5),
-    marginBottom:getScaleSize(32)
+    gap: getScaleSize(5),
+    marginBottom: getScaleSize(32),
   },
   title: {
     fontSize: 22,

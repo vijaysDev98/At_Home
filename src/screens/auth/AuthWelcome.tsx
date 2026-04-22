@@ -6,50 +6,51 @@ import { COLORS, FONTS } from '../../utils';
 import { AppButton, AppSafeAreaView, AppText } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
+import { STRING } from '../../constant/strings';
 
-export type AuthWelcomeProps = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
+export type AuthWelcomeProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Welcome'
+>;
 
 const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
   return (
     <AppSafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Image
-          source={IMAGES.logo}
-          style={styles.logo}
-          resizeMode='cover'
-        />
+        <Image source={IMAGES.logo} style={styles.logo} resizeMode="cover" />
         <AppText
           size={getScaleSize(32)}
           font={FONTS.Inter.SemiBold}
           color={COLORS.primary}
-          align='center'
-        >{"Welcome to\nAt-Home"}</AppText>
+          align="center"
+        >
+          {STRING.welcomeTitle}
+        </AppText>
         <AppText
           size={getScaleSize(15)}
-          align='center'
+          font={FONTS.Inter.Regular}
+          align="center"
           style={styles.subtitle}
           color={COLORS.primaryMuted}
-        >{"Seamless healthcare management for\n providers and patients."}</AppText>
-        <View
-          style={styles.actions}
         >
+          {STRING.welcomeSubtitle}
+        </AppText>
+        <View style={styles.actions}>
           <AppButton
-            title="Sign In"
+            title={STRING.signIn}
+            style={styles.signInButton}
             onPress={() => navigation.navigate('Login')}
             rightIcon={IMAGES.arrowRight}
-
           />
           <AppButton
-            title="Create Account"
+            title={STRING.createAccount}
             onPress={() => navigation.navigate('Register')}
-            backgroundColor={COLORS.backgroundAlt}
-            rightIcon={IMAGES.arrowRight}
+            backgroundColor={COLORS._F8F9FA}
             textColor={COLORS.primary}
+            style={styles.createAccountButton}
           />
-
         </View>
       </View>
-
     </AppSafeAreaView>
   );
 };
@@ -57,7 +58,7 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS._E5E7EB,
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
@@ -76,6 +77,16 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: getScaleSize(24),
     marginTop: getScaleSize(32),
+  },
+  signInButton: {
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(16),
+  },
+  createAccountButton: {
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(16),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
   },
 });
 
