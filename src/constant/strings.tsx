@@ -40,6 +40,7 @@ export const STRING = {
   invalidEmail: 'Please enter a valid email',
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
+  forgotQuestion: 'Forgot?',
   sendOTP: 'Send OTP / Reset Link',
   forgetPasswordMessage:
     "Enter your registered email address and we'll send you an OTP to reset your password.",
@@ -67,8 +68,12 @@ export const STRING = {
   actionRequired: 'Action Required',
   formAwaitingSignature: 'Form Awaiting Signature',
   totalPatients: 'Total Patients',
+  patients: 'Patients',
   viewAll: 'View All',
+  searchPatients: 'Search patients...',
   quickActions: 'Quick Actions',
   newRequest: 'New Request',
   addPatient: 'Add Patient',
+  enterNewPassword: 'Enter new password',
+  enterConfirmPassword: 'Enter confirm password',
 };

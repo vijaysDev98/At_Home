@@ -157,13 +157,15 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: getScaleSize(44),
     height: getScaleSize(44),
-    borderRadius: getScaleSize(25),
+    borderRadius: getScaleSize(22),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: getScaleSize(4),
+    overflow: 'hidden',
   },
   iconContainerActive: {
     backgroundColor: '#E8EDF1',
+    borderRadius: getScaleSize(22),
   },
   bar: {
     flexDirection: 'row',
@@ -192,6 +194,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
+    bottom: getScaleSize(8),
   },
   plusBtnPressed: {
     opacity: 0.85,

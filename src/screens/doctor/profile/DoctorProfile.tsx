@@ -9,8 +9,13 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NavigationService from '../../../navigation/NavigationService';
 
 const DoctorProfile: React.FC = () => {
+  const handleLogout = () => {
+    NavigationService.reset('Login');
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
@@ -83,7 +88,11 @@ const DoctorProfile: React.FC = () => {
             <RowItem label="Privacy Policy" chevron />
           </View>
 
-          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            activeOpacity={0.85}
+            onPress={handleLogout}
+          >
             <Text style={styles.logoutIcon}>↩️</Text>
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>

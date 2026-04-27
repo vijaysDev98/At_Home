@@ -95,7 +95,7 @@ const PatientsScreen: React.FC = () => {
           <View style={styles.searchWrapper}>
             <Image source={IMAGES.search} style={styles.searchIcon} />
             <TextInput
-              placeholder="Search patients..."
+              placeholder={STRING.searchPatients}
               placeholderTextColor="#6F767E"
               style={styles.searchInput}
             />
@@ -234,19 +234,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F2F4',
     borderRadius: getScaleSize(12),
     paddingHorizontal: getScaleSize(16),
-    height: getScaleSize(40),
+    height: getScaleSize(48),
     gap: getScaleSize(10),
   },
   searchIcon: {
-    width: getScaleSize(14),
-    height: getScaleSize(20),
+    width: getScaleSize(18),
+    height: getScaleSize(18),
     resizeMode: 'contain',
+    tintColor: '#6F767E',
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: getScaleSize(14),
     fontFamily: FONTS.Inter.Regular,
     color: COLORS._1A1D1F,
+    paddingVertical: 0,
   },
   chipsRow: {
     gap: getScaleSize(8),

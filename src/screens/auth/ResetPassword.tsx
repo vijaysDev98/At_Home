@@ -95,7 +95,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
           <View style={styles.form}>
             <Input
               label={STRING.newPassword}
-              placeholder="••••••••"
+              placeholder={STRING.enterNewPassword}
               secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
@@ -154,7 +154,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
 
             <Input
               label={STRING.confirmPassword}
-              placeholder="••••••••"
+              placeholder={STRING.enterConfirmPassword}
               secureTextEntry={!showConfirm}
               value={confirm}
               onChangeText={setConfirm}

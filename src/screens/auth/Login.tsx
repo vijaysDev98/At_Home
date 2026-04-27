@@ -369,14 +369,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     if (!isValid) return;
 
-    // ✅ Mock failure for demonstration (matching the reference image error)
-    if (trimmedPassword !== 'correctpassword') {
-      setError(prev => ({
-        ...prev,
-        password: STRING.incorrectPassword,
-      }));
+    // ✅ Static credentials check for demonstration
+    if (
+      trimmedEmail.toLocaleLowerCase() === 'test@gmail.com' &&
+      trimmedPassword === 'Test@123'
+    ) {
+      navigation.replace('DoctorBottomTabs');
       return;
     }
+
+    // ✅ Mock failure for demonstration (matching the reference image error)
+    setError(prev => ({
+      ...prev,
+      password: STRING.incorrectPassword,
+    }));
   };
 
   return (
@@ -441,6 +447,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             }}
             placeholder={STRING.enterPassword}
             label={STRING.password}
+            labelRight={
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ForgotPassword')}
+                activeOpacity={0.7}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS.primary}
+                  font={FONTS.Inter.SemiBold}
+                >
+                  {STRING.forgotQuestion}
+                </AppText>
+              </TouchableOpacity>
+            }
             containerBackgroundColor={COLORS._F8F9FA}
             error={error?.password || ''}
             secureTextEntry={true}
@@ -486,7 +506,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => NavigationService.navigate('DoctorBottomTabs')}
+              onPress={() => navigation.navigate('Register')}
             >
               <AppText
                 size={getScaleSize(15)}

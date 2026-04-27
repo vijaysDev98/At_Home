@@ -46,6 +46,9 @@ const actionRequired = [
     value: '148',
     icon: IMAGES.document_icon, // Fallback for document_icon
   },
+];
+
+const patientMetrics = [
   {
     id: 'patients',
     title: STRING.totalPatients,
@@ -185,17 +188,63 @@ const HomeScreen: React.FC = () => {
                     </View>
                   ))}
                 </View>
+
+                {/* Patients Section */}
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  style={[styles.tabLabel]}
+                >
+                  {STRING.patients}
+                </AppText>
+
+                <View style={styles.actionList}>
+                  {patientMetrics.map(item => (
+                    <View key={item.id} style={styles.actionItem}>
+                      <Image source={item.icon} style={styles.actionIcon} />
+                      <View style={styles.actionContent}>
+                        <AppText
+                          size={getScaleSize(14)}
+                          font={FONTS.Inter.Medium}
+                          color={COLORS._6F767E}
+                        >
+                          {item.title}
+                        </AppText>
+                        <AppText
+                          size={getScaleSize(20)}
+                          font={FONTS.Inter.Bold}
+                          color={COLORS._1A1D1F}
+                        >
+                          {item.value}
+                        </AppText>
+                      </View>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={styles.viewAllBtn}
+                      >
+                        <AppText
+                          size={getScaleSize(13)}
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS._526674}
+                        >
+                          {STRING.viewAll} {'>'}
+                        </AppText>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.section}>
+          <View>
             <AppText
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-              style={styles.sectionTitle}
+              style={[styles.sectionTitle, { marginTop: getScaleSize(24) }]}
             >
               {STRING.quickActions}
             </AppText>
@@ -314,6 +363,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     paddingHorizontal: getScaleSize(24),
     marginBottom: getScaleSize(20),
+    // marginTop: getScaleSize(24),
   },
   tabLabel: {
     // paddingHorizontal: getScaleSize(24),

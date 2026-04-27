@@ -6,10 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
@@ -70,7 +73,16 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState('');
   const [finess, setFiness] = useState('');
-  const [specialty, setSpecialty] = useState('');
+  const [specialty, setSpecialty] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    { label: 'General Practitioner', value: 'General Practitioner' },
+    { label: 'Cardiologist', value: 'Cardiologist' },
+    { label: 'Pediatrician', value: 'Pediatrician' },
+    { label: 'Neurologist', value: 'Neurologist' },
+    { label: 'Dermatologist', value: 'Dermatologist' },
+    { label: 'Ophthalmologist', value: 'Ophthalmologist' },
+  ]);
   const [placeOfPractice, setPlaceOfPractice] = useState('');
   const [address, setAddress] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -82,7 +94,7 @@ const Register: React.FC = () => {
       fullName &&
       email &&
       password &&
-      password === confirmPassword &&
+      password &&
       rpps &&
       finess &&
       specialty &&
@@ -173,26 +185,51 @@ const Register: React.FC = () => {
               helperStyle={{ marginTop: getScaleSize(8) }}
             />
 
-            <Input
-              label={STRING.specialty}
-              isMandatory
-              placeholder={STRING.selectYourSpecialty}
-              leftIcon={IMAGES.stethoscope}
-              value={specialty}
-              onPress={() => setSpecialty('General Practitioner')} // Mock selection
-              trailing={
-                <Image
-                  source={IMAGES.arrow_bottom}
-                  style={{
-                    width: getScaleSize(16),
-                    height: getScaleSize(16),
-                    tintColor: COLORS.slate400,
-                  }}
-                  resizeMode="contain"
+            {/* Specialty Dropdown */}
+            <View style={[styles.fieldWrapper, { zIndex: 1000 }]}>
+              <Text style={styles.label}>
+                {STRING.specialty} <Text style={styles.required}>*</Text>
+              </Text>
+              <View>
+                <DropDownPicker
+                  open={open}
+                  value={specialty}
+                  items={items}
+                  setOpen={setOpen}
+                  setValue={setSpecialty}
+                  setItems={setItems}
+                  placeholder={STRING.selectYourSpecialty}
+                  style={styles.dropdown}
+                  dropDownContainerStyle={styles.dropdownList}
+                  textStyle={styles.dropdownText}
+                  placeholderStyle={styles.dropdownPlaceholder}
+                  listParentContainerStyle={styles.dropdownItemContainer}
+                  listItemLabelStyle={styles.dropdownItemLabel}
+                  showArrowIcon={true}
+                  listMode="SCROLLVIEW"
+                  ArrowDownIconComponent={() => (
+                    <Image
+                      source={IMAGES.arrow_bottom}
+                      style={styles.dropdownArrow}
+                    />
+                  )}
+                  ArrowUpIconComponent={() => (
+                    <Image
+                      source={IMAGES.arrow_bottom}
+                      style={[
+                        styles.dropdownArrow,
+                        { transform: [{ rotate: '180deg' }] },
+                      ]}
+                    />
+                  )}
                 />
-              }
-              style={{ marginBottom: getScaleSize(20) }}
-            />
+                <Image
+                  source={IMAGES.stethoscope}
+                  style={styles.dropdownLeftIcon}
+                  pointerEvents="none"
+                />
+              </View>
+            </View>
 
             <Input
               label={STRING.placeOfPractice}
@@ -352,6 +389,64 @@ const styles = StyleSheet.create({
   signInLink: {
     color: COLORS.primary,
     fontFamily: FONTS.Inter.Bold,
+  },
+  fieldWrapper: {
+    paddingHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(20),
+  },
+  dropdown: {
+    borderColor: COLORS._E5E7EB,
+    borderRadius: 12,
+    height: getScaleSize(56),
+    backgroundColor: COLORS.white,
+    paddingLeft: getScaleSize(48),
+    paddingRight: getScaleSize(16),
+  },
+  dropdownList: {
+    borderColor: COLORS._E5E7EB,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  dropdownText: {
+    fontSize: getScaleSize(15),
+    fontFamily: FONTS.Inter.Medium,
+    color: COLORS.slate900,
+  },
+  dropdownPlaceholder: {
+    color: COLORS.slate400,
+    fontSize: getScaleSize(15),
+    fontFamily: FONTS.Inter.Regular,
+  },
+  dropdownItemContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.slate200,
+  },
+  dropdownItemLabel: {
+    fontSize: getScaleSize(15),
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS.slate700,
+  },
+  dropdownArrow: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.slate400,
+  },
+  dropdownLeftIcon: {
+    position: 'absolute',
+    left: getScaleSize(16),
+    top: getScaleSize(18),
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    tintColor: COLORS.slate400,
+    resizeMode: 'contain',
+    zIndex: 9999,
+    elevation: 9999,
   },
 });
 
