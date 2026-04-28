@@ -28,4 +28,10 @@ export const IMAGES = {
   tab_request: require('./tab_request.png'),
   search: require('./search.png'),
   phone: require('./phone.png'),
+  tab_filled_notification: require('./tab_filled_notification.png'),
+  tab_requests2: require('./tab_requests2.png'),
+  ic_inprogress: require('./ic_inprogress.png'),
+  ic_submitted: require('./ic_submitted.png'),
+  ic_completed: require('./ic_completed.png'),
+  arrow_right: require('./arrow_right.png'),
 };

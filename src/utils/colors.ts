@@ -26,6 +26,7 @@ const COLORS = {
   _EFEFEF: '#EFEFEF',
   _6F767E: '#6F767E',
   _526674: '#526674',
+  _6B7280: '#6B7280',
   // states
   error: '#ef4444',
   shadow: '#000000',

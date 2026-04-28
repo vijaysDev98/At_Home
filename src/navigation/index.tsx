@@ -20,6 +20,7 @@ import AddPatient from '../screens/doctor/patients/AddPatient';
 import PatientDetail from '../screens/doctor/patients/PatientDetail';
 import ProviderBottomTabs, { ProviderBottomTabParamList } from './ProviderBottomTabs';
 import ProviderAvailableRequests from '../screens/provider/home/AvailableRequest';
+import ProviderForm from '../screens/provider/forms/ProviderForm';
 import NavigationService from './NavigationService';
 
 export type RootStackParamList = {
@@ -41,6 +42,7 @@ export type RootStackParamList = {
   AddPatient: undefined;
   PatientDetail: undefined;
   SignatureForm: undefined;
+  ProviderForm: { mode: 'view' | 'update'; requestStatus: string; formStatus: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -141,6 +143,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name="SignatureForm"
           component={SignatureForm}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProviderForm"
+          component={ProviderForm}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -1,120 +1,299 @@
 import React from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation';
-import { COLORS } from '../../../utils';
+import { COLORS, FONTS } from '../../../utils';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { IMAGES } from '../../../assets/images';
+import { AppText } from '../../../components';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ProviderHome: React.FC = () => {
   const navigation = useNavigation<NavProp>();
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.profileRow}>
             <View style={styles.avatarWrap}>
               <Image
-                source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg' }}
+                source={{
+                  uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
+                }}
                 style={styles.avatar}
               />
             </View>
             <View>
-              <Text style={styles.welcome}>Welcome back,</Text>
-              <Text style={styles.name}>Sarah Jenkins</Text>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._6F767E}
+              >
+                Welcome back,
+              </AppText>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                Sarah Jenkins
+              </AppText>
             </View>
-          </View>
-          <View style={styles.bellWrap}>
-            <Text style={styles.bell}>🔔</Text>
-            <View style={styles.bellDot} />
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Overview Section */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Overview</Text>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Overview
+            </AppText>
           </View>
 
           <View style={styles.kpiGrid}>
-            <View style={styles.kpiCardBlue}>
-              <Text style={styles.kpiLabel}>Available</Text>
-              <Text style={styles.kpiValue}>12</Text>
+            <View style={styles.kpiCard}>
+              <View style={styles.kpiTopRow}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6B7280}
+                >
+                  Submitted
+                </AppText>
+                <Image source={IMAGES.ic_submitted} style={[styles.kpiIcon]} />
+              </View>
+              <AppText
+                size={getScaleSize(24)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                12
+              </AppText>
             </View>
-            <View style={styles.kpiCardOrange}>
-              <Text style={styles.kpiLabel}>In Progress</Text>
-              <Text style={styles.kpiValue}>3</Text>
-            </View>
-          </View>
 
-          <View style={styles.kpiWide}>
-            <View style={styles.kpiIconCircleSuccess}>
-              <Text style={styles.kpiIcon}>✔️</Text>
+            <View style={styles.kpiCard}>
+              <View style={styles.kpiTopRow}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6B7280}
+                >
+                  In Progress
+                </AppText>
+
+                <Image source={IMAGES.ic_inprogress} style={[styles.kpiIcon]} />
+              </View>
+              <AppText
+                size={getScaleSize(24)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                3
+              </AppText>
             </View>
-            <View>
-              <Text style={styles.kpiLabel}>Completed Today</Text>
-              <Text style={styles.kpiWideValue}>5 Services</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
           </View>
 
           <TouchableOpacity
-            style={styles.primaryCta}
-            activeOpacity={0.88}
-            onPress={() => navigation.navigate('ProviderAvailableRequests')}
+            activeOpacity={0.9}
+            style={styles.kpiWide}
+            onPress={() => navigation.navigate('Forms')}
           >
-            <Text style={styles.primaryCtaText}>View Available Requests</Text>
+            <View style={styles.kpiWideLeft}>
+              <Image
+                source={IMAGES.ic_completed}
+                style={[styles.completedIcon]}
+              />
+              <View style={{ marginLeft: getScaleSize(12) }}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                >
+                  Completed Today
+                </AppText>
+                <AppText
+                  size={getScaleSize(18)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  5 Services
+                </AppText>
+              </View>
+            </View>
+            <Image source={IMAGES.arrow_right} style={styles.chevron} />
           </TouchableOpacity>
 
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Recent Queue</Text>
-            <Text style={styles.sectionLink}>See All</Text>
+          {/* Recent Queue Section */}
+          <View style={[styles.sectionHeader, { marginTop: getScaleSize(24) }]}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Recent Queue
+            </AppText>
+            <TouchableOpacity onPress={() => {}}>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._6F767E}
+              >
+                See All
+              </AppText>
+            </TouchableOpacity>
           </View>
 
           {[
             {
               initials: 'MJ',
               name: 'Michael Johnson',
-              detail: 'Blood Draw • 2.5 miles',
+              specialty: 'Physical Therapy',
               status: 'Submitted',
-              time: 'Today, 2:00 PM',
-              action: 'Details',
-              badgeColor: COLORS.slate200,
-              badgeTextColor: COLORS.slate600,
+              requestId: 'SR-2023-10456',
+              formStatus: 'Signed',
+              badgeBg: '#E8F1FF',
+              badgeColor: '#2F80ED',
             },
             {
-              initials: 'ED',
-              name: 'Emma Davis',
-              detail: 'Wound Care • 4.1 miles',
-              status: 'In Progress',
-              time: 'Started 1h ago',
-              action: 'Resume',
-              badgeColor: '#fef3c7',
-              badgeTextColor: '#f59e0b',
+              initials: 'MJ',
+              name: 'Michael Johnson',
+              specialty: 'Physical Therapy',
+              status: 'InProgress',
+              requestId: 'SR-2023-10456',
+              formStatus: 'Signed',
+              badgeBg: '#FFF7E8',
+              badgeColor: '#F2994A',
             },
-          ].map((item) => (
-            <View key={item.name} style={styles.card}>
-              <View style={styles.cardTopRow}>
-                <View style={styles.cardLeft}>
-                  <View style={[styles.initials, { backgroundColor: COLORS.backgroundAlt }]}> 
-                    <Text style={styles.initialsText}>{item.initials}</Text>
+          ].map((item, index) => {
+            const handlePress = () => {
+              navigation.navigate('ProviderForm', {
+                mode: item.status === 'InProgress' || item.status === 'Submitted' ? 'update' : 'view',
+                requestStatus: item.status,
+                formStatus: item.formStatus,
+              });
+            };
+
+            return (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={0.9}
+                onPress={handlePress}
+                style={styles.queueCard}
+              >
+                <View style={styles.queueTopRow}>
+                  <View style={styles.queueUserInfo}>
+                    <View style={styles.initialsBox}>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._6F767E}
+                      >
+                        {item.initials}
+                      </AppText>
+                    </View>
+                    <View style={{ marginLeft: getScaleSize(12) }}>
+                      <AppText
+                        size={getScaleSize(15)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                      >
+                        {item.name}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._6F767E}
+                      >
+                        {item.specialty}
+                      </AppText>
+                    </View>
                   </View>
+                  <View
+                    style={[styles.badge, { backgroundColor: item.badgeBg }]}
+                  >
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Bold}
+                      color={item.badgeColor}
+                    >
+                      {item.status}
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.detailsRow}>
                   <View>
-                    <Text style={styles.cardName}>{item.name}</Text>
-                    <Text style={styles.cardMeta}>{item.detail}</Text>
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginBottom: getScaleSize(4) }}
+                    >
+                      Request ID
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {item.requestId}
+                    </AppText>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginBottom: getScaleSize(4) }}
+                    >
+                      Form Status
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {item.formStatus}
+                    </AppText>
                   </View>
                 </View>
-                <View style={[styles.badge, { backgroundColor: item.badgeColor }]}> 
-                  <Text style={[styles.badgeText, { color: item.badgeTextColor }]}>{item.status}</Text>
-                </View>
-              </View>
-              <View style={styles.cardBottomRow}>
-                <Text style={styles.cardTime}>🕒 {item.time}</Text>
-                <Text style={styles.cardLink}>{item.action}</Text>
-              </View>
-            </View>
-          ))}
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.startServiceBtn}
+                  onPress={handlePress}
+                >
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                  >
+                    Start a Service
+                  </AppText>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -126,239 +305,152 @@ export default ProviderHome;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: '#F9FAFB',
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundAlt,
   },
   header: {
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(16),
     backgroundColor: COLORS.white,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.slate200,
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
   },
   avatarWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    borderRadius: getScaleSize(22),
     overflow: 'hidden',
-    backgroundColor: COLORS.slate200,
+    backgroundColor: COLORS._F8F9FA,
+    marginRight: getScaleSize(12),
   },
   avatar: {
     width: '100%',
     height: '100%',
   },
-  welcome: {
-    fontSize: 12,
-    color: COLORS.primaryMuted,
-    fontWeight: '600',
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.black,
-  },
-  bellWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: COLORS.backgroundAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  bell: {
-    fontSize: 16,
-    color: COLORS.slate600,
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.error,
-    borderWidth: 1,
-    borderColor: COLORS.white,
-  },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
-    gap: 16,
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(40),
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.slate700,
-  },
-  sectionLink: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.primary,
+    marginTop: getScaleSize(20),
+    marginBottom: getScaleSize(16),
   },
   kpiGrid: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    gap: getScaleSize(12),
   },
-  kpiCardBlue: {
+  kpiCard: {
     flex: 1,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.slate200,
     backgroundColor: COLORS.white,
-  },
-  kpiCardOrange: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 14,
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS.slate200,
-    backgroundColor: COLORS.white,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  kpiLabel: {
-    fontSize: 12,
-    color: COLORS.slate600,
-    marginBottom: 8,
-  },
-  kpiValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.black,
-  },
-  kpiWide: {
+  kpiTopRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.slate200,
-    backgroundColor: COLORS.white,
-  },
-  kpiIconCircleSuccess: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#dcfce7',
+    marginBottom: getScaleSize(10),
   },
   kpiIcon: {
-    fontSize: 18,
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    resizeMode: 'contain',
   },
-  kpiWideValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.black,
+  kpiWide: {
+    marginTop: getScaleSize(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(16),
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  kpiWideLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  completedIcon: {
+    height: getScaleSize(40),
+    width: getScaleSize(40),
+    resizeMode: 'contain',
   },
   chevron: {
-    marginLeft: 'auto',
-    fontSize: 18,
-    color: COLORS.slate400,
+    width: getScaleSize(10),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
   },
-  primaryCta: {
-    marginTop: 4,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryCtaText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  card: {
+  queueCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: getScaleSize(20),
+    padding: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS.slate200,
-    gap: 10,
+    borderColor: COLORS._EFEFEF,
+    marginBottom: getScaleSize(16),
     shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.03,
-    shadowRadius: 6,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  cardTopRow: {
+  queueTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  cardLeft: {
+  queueUserInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
-  initials: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  initialsBox: {
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    borderRadius: getScaleSize(22),
+    backgroundColor: COLORS._F8F9FA,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  initialsText: {
-    fontWeight: '800',
-    color: COLORS.slate700,
-  },
-  cardName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.black,
-  },
-  cardMeta: {
-    fontSize: 12,
-    color: COLORS.slate600,
-    marginTop: 2,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(12),
   },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
+  divider: {
+    height: 1,
+    backgroundColor: COLORS._EFEFEF,
+    marginVertical: getScaleSize(16),
   },
-  cardBottomRow: {
+  detailsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: getScaleSize(16),
+  },
+  startServiceBtn: {
+    backgroundColor: COLORS._526674,
+    borderRadius: getScaleSize(12),
+    height: getScaleSize(48),
     alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.slate200,
-    paddingTop: 8,
-  },
-  cardTime: {
-    fontSize: 12,
-    color: COLORS.slate500,
-  },
-  cardLink: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
+    justifyContent: 'center',
   },
 });
