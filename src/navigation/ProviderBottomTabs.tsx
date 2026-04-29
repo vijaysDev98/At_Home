@@ -16,7 +16,7 @@ import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProviderProfile from '../screens/provider/profile/profile';
-import AvailableRequest from '../screens/provider/home/AvailableRequest';
+import AvailableRequest from '../screens/provider/request/AvailableRequest';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;

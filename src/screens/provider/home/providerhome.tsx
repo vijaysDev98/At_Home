@@ -7,18 +7,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../../../navigation';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { AppText } from '../../../components';
-
-type NavProp = NativeStackNavigationProp<RootStackParamList>;
+import LinearGradient from 'react-native-linear-gradient';
 
 const ProviderHome: React.FC = () => {
-  const navigation = useNavigation<NavProp>();
+  const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -29,7 +26,7 @@ const ProviderHome: React.FC = () => {
             <View style={styles.avatarWrap}>
               <Image
                 source={{
-                  uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
+                  uri: 'https://www.figma.com/api/mcp/asset/28aa6b07-8ea7-4df4-b030-811de0bb6c4e',
                 }}
                 style={styles.avatar}
               />
@@ -45,7 +42,7 @@ const ProviderHome: React.FC = () => {
               <AppText
                 size={getScaleSize(18)}
                 font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
+                color="#111827"
               >
                 Sarah Jenkins
               </AppText>
@@ -60,9 +57,9 @@ const ProviderHome: React.FC = () => {
           {/* Overview Section */}
           <View style={styles.sectionHeader}>
             <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color="#374151"
             >
               Overview
             </AppText>
@@ -70,41 +67,54 @@ const ProviderHome: React.FC = () => {
 
           <View style={styles.kpiGrid}>
             <View style={styles.kpiCard}>
+              <LinearGradient
+                colors={[COLORS.white, COLORS._3B82F6]}
+                start={{ x: -0.1, y: -0.7 }}
+                end={{ x: 2, y: -2 }}
+                style={styles.glowGradient}
+              />
               <View style={styles.kpiTopRow}>
                 <AppText
                   size={getScaleSize(12)}
                   font={FONTS.Inter.Medium}
-                  color={COLORS._6B7280}
+                  color={COLORS._6F767E}
                 >
                   Submitted
                 </AppText>
-                <Image source={IMAGES.ic_submitted} style={[styles.kpiIcon]} />
+                <Image source={IMAGES.ic_submitted} style={styles.kpiIcon} />
               </View>
               <AppText
                 size={getScaleSize(24)}
                 font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
+                color="#111827"
+                style={{ marginTop: getScaleSize(4) }}
               >
                 12
               </AppText>
             </View>
 
             <View style={styles.kpiCard}>
+              <LinearGradient
+                colors={[COLORS.white, COLORS._F59E0B]}
+                start={{ x: -0.1, y: -0.7 }}
+                end={{ x: 2, y: -2 }}
+                style={styles.glowGradient}
+              />
               <View style={styles.kpiTopRow}>
                 <AppText
                   size={getScaleSize(12)}
                   font={FONTS.Inter.Medium}
-                  color={COLORS._6B7280}
+                  color={COLORS._6F767E}
                 >
                   In Progress
                 </AppText>
-
-                <Image source={IMAGES.ic_inprogress} style={[styles.kpiIcon]} />
+                <Image source={IMAGES.ic_inprogress} style={styles.kpiIcon} />
               </View>
               <AppText
                 size={getScaleSize(24)}
                 font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
+                color="#111827"
+                style={{ marginTop: getScaleSize(4) }}
               >
                 3
               </AppText>
@@ -114,7 +124,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-            onPress={() => navigation.navigate('Forms')}
+            onPress={() => navigation.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -132,7 +142,7 @@ const ProviderHome: React.FC = () => {
                 <AppText
                   size={getScaleSize(18)}
                   font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
+                  color="#111827"
                 >
                   5 Services
                 </AppText>
@@ -144,17 +154,17 @@ const ProviderHome: React.FC = () => {
           {/* Recent Queue Section */}
           <View style={[styles.sectionHeader, { marginTop: getScaleSize(24) }]}>
             <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color="#374151"
             >
               Recent Queue
             </AppText>
             <TouchableOpacity onPress={() => {}}>
               <AppText
                 size={getScaleSize(12)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._6F767E}
+                font={FONTS.Inter.Medium}
+                color={COLORS._526674}
               >
                 See All
               </AppText>
@@ -184,12 +194,34 @@ const ProviderHome: React.FC = () => {
             },
           ].map((item, index) => {
             const handlePress = () => {
-              navigation.navigate('ProviderForm', {
-                mode: item.status === 'InProgress' || item.status === 'Submitted' ? 'update' : 'view',
-                requestStatus: item.status,
-                formStatus: item.formStatus,
-              });
+              navigation.navigate(
+                'ProviderForm' as never,
+                {
+                  mode:
+                    item.status === 'InProgress' || item.status === 'Submitted'
+                      ? 'update'
+                      : 'view',
+                  requestStatus: item.status,
+                  formStatus: item.formStatus,
+                } as never,
+              );
             };
+
+            const handleServicePress = () => {
+              navigation.navigate(
+                'ServiceScreen' as never,
+                {
+                  requestStatus: item.status,
+                  formStatus: item.formStatus,
+                  patientName: item.name,
+                  service: item.specialty,
+                  requestId: item.requestId,
+                } as never,
+              );
+            };
+
+            const buttonText =
+              item.status === 'InProgress' ? 'Open Service' : 'Start a Service';
 
             return (
               <TouchableOpacity
@@ -213,7 +245,7 @@ const ProviderHome: React.FC = () => {
                       <AppText
                         size={getScaleSize(15)}
                         font={FONTS.Inter.Bold}
-                        color={COLORS._1A1D1F}
+                        color="#111827"
                       >
                         {item.name}
                       </AppText>
@@ -254,7 +286,7 @@ const ProviderHome: React.FC = () => {
                     <AppText
                       size={getScaleSize(14)}
                       font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
+                      color="#1A1A1A"
                     >
                       {item.requestId}
                     </AppText>
@@ -271,7 +303,7 @@ const ProviderHome: React.FC = () => {
                     <AppText
                       size={getScaleSize(14)}
                       font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
+                      color="#1A1D1F"
                     >
                       {item.formStatus}
                     </AppText>
@@ -281,14 +313,14 @@ const ProviderHome: React.FC = () => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={styles.startServiceBtn}
-                  onPress={handlePress}
+                  onPress={handleServicePress}
                 >
                   <AppText
                     size={getScaleSize(14)}
                     font={FONTS.Inter.Bold}
                     color={COLORS.white}
                   >
-                    Start a Service
+                    {buttonText}
                   </AppText>
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -305,7 +337,7 @@ export default ProviderHome;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8FAFC',
   },
   container: {
     flex: 1,
@@ -314,17 +346,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(20),
     paddingVertical: getScaleSize(16),
     backgroundColor: COLORS.white,
+    height: getScaleSize(68),
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 0,
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatarWrap: {
-    width: getScaleSize(44),
-    height: getScaleSize(44),
-    borderRadius: getScaleSize(22),
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
     overflow: 'hidden',
-    backgroundColor: COLORS._F8F9FA,
+    backgroundColor: '#E4E9EE',
     marginRight: getScaleSize(12),
   },
   avatar: {
@@ -333,14 +372,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: getScaleSize(20),
-    paddingBottom: getScaleSize(40),
+    paddingTop: getScaleSize(20),
+    paddingBottom: getScaleSize(120),
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: getScaleSize(20),
-    marginBottom: getScaleSize(16),
+    marginBottom: getScaleSize(12),
   },
   kpiGrid: {
     flexDirection: 'row',
@@ -350,21 +389,31 @@ const styles = StyleSheet.create({
   kpiCard: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(16),
-    padding: getScaleSize(16),
+    height: getScaleSize(96),
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  glowGradient: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: getScaleSize(80),
+    height: getScaleSize(80),
+    zIndex: 0,
   },
   kpiTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: getScaleSize(10),
   },
   kpiIcon: {
     width: getScaleSize(24),
@@ -372,20 +421,20 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   kpiWide: {
-    marginTop: getScaleSize(16),
+    marginTop: getScaleSize(12),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(16),
-    padding: getScaleSize(16),
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(17),
     borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
+    borderColor: '#F3F4F6',
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   kpiWideLeft: {
     flexDirection: 'row',
@@ -397,22 +446,21 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   chevron: {
-    width: getScaleSize(10),
-    height: getScaleSize(20),
+    width: getScaleSize(9),
+    height: getScaleSize(14),
     resizeMode: 'contain',
+    tintColor: '#CBD5E1',
   },
   queueCard: {
     backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(20),
-    padding: getScaleSize(16),
-    borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
-    marginBottom: getScaleSize(16),
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(17),
+    marginBottom: getScaleSize(12),
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
   queueTopRow: {
     flexDirection: 'row',
@@ -424,17 +472,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   initialsBox: {
-    width: getScaleSize(44),
-    height: getScaleSize(44),
-    borderRadius: getScaleSize(22),
-    backgroundColor: COLORS._F8F9FA,
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: '#F4F6F8',
     alignItems: 'center',
     justifyContent: 'center',
   },
   badge: {
     paddingHorizontal: getScaleSize(12),
-    paddingVertical: getScaleSize(6),
-    borderRadius: getScaleSize(12),
+    height: getScaleSize(25),
+    borderRadius: getScaleSize(999),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   divider: {
     height: 1,
@@ -448,9 +498,14 @@ const styles = StyleSheet.create({
   },
   startServiceBtn: {
     backgroundColor: COLORS._526674,
-    borderRadius: getScaleSize(12),
-    height: getScaleSize(48),
+    borderRadius: getScaleSize(8),
+    height: getScaleSize(40),
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 0,
   },
 });

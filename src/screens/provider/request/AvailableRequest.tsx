@@ -84,6 +84,16 @@ const RequestCard = ({
     });
   };
 
+  const handleServicePress = () => {
+    navigation.navigate('ServiceScreen' as never, {
+      requestStatus: status,
+      formStatus,
+      patientName: name,
+      service,
+      requestId,
+    } as never);
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -172,7 +182,7 @@ const RequestCard = ({
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.startServiceBtn}
-          onPress={handlePress}
+          onPress={handleServicePress}
         >
           <AppText
             size={getScaleSize(14)}

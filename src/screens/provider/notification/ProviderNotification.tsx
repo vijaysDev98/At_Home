@@ -1,114 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../../../utils';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import { COLORS, FONTS } from '../../../utils';
+import { IMAGES } from '../../../assets/images';
+import { AppText, AppButton } from '../../../components';
+import { getScaleSize } from '../../../utils/scaleSize';
+import {
+  SectionHeader,
+  NotificationItem,
+} from '../../../components/NotificationComponents';
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <Text style={styles.sectionHeader}>{title.toUpperCase()}</Text>
-);
-
-const Pill = ({ text, bg, color }: { text: string; bg: string; color: string }) => (
-  <View style={[styles.pill, { backgroundColor: bg }]}> 
-    <Text style={[styles.pillText, { color }]}>{text}</Text>
-  </View>
-);
-
-const NotificationItem = ({
-  title,
-  subtitle,
-  time,
-  iconBg,
-  icon,
-  unread,
-  action,
-  actionColor,
-  highlightBg,
-  highlight,
-}: {
-  title: string;
-  subtitle: string;
-  time: string;
-  iconBg: string;
-  icon: string;
-  unread?: boolean;
-  action?: string;
-  actionColor?: string;
-  highlightBg?: string;
-  highlight?: boolean;
-}) => (
-  <View style={styles.cardWrapper}>
-    <View style={[styles.card, highlightBg ? { backgroundColor: highlightBg } : null]}>
-      <View style={styles.rowTop}>
-        <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-          <Text style={styles.iconText}>{icon}</Text>
-        </View>
-        <View style={styles.cardBody}>
-          <View style={styles.titleRow}>
-            <Text style={styles.cardTitle}>{title}</Text>
-            <Text style={styles.time}>{time}</Text>
-          </View>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-          {action ? (
-            <Pill text={action} bg={(highlight && '#fee2e2') || '#e0ecff'} color={actionColor || COLORS.primary} />
-          ) : null}
-        </View>
-        {unread ? <View style={styles.unreadDot} /> : null}
-      </View>
-    </View>
-  </View>
-);
+// Components moved to NotificationComponents.tsx
 
 const ProviderNotification: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          <Text style={styles.headerAction}>✔︎</Text>
+          <AppText
+            size={getScaleSize(18)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+          >
+            Notifications
+          </AppText>
         </View>
 
         <View style={styles.tabs}>
-          <Text style={[styles.tab, styles.tabActive]}>All</Text>
-          <View style={styles.tabUnreadWrap}>
-            <Text style={styles.tab}>Unread</Text>
+          <TouchableOpacity
+            style={styles.tabWrap}
+            activeOpacity={0.7}
+            onPress={() => setActiveTab('All')}
+          >
+            <AppText
+              size={getScaleSize(15)}
+              font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
+              color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
+            >
+              All
+            </AppText>
+            {activeTab === 'All' && <View style={styles.activeBorder} />}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tabWrap}
+            activeOpacity={0.7}
+            onPress={() => setActiveTab('Unread')}
+          >
+            <AppText
+              size={getScaleSize(15)}
+              font={
+                activeTab === 'Unread' ? FONTS.Inter.Bold : FONTS.Inter.Medium
+              }
+              color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
+            >
+              Unread
+            </AppText>
             <View style={styles.unreadBadge} />
-          </View>
+            {activeTab === 'Unread' && <View style={styles.activeBorder} />}
+          </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <SectionHeader title="New Requests" />
           <NotificationItem
             title="New Patient Assignment"
-            subtitle="You have been assigned to Michael Chen for Post-Op Care starting tomorrow."
+            subtitle="You have been assigned to John Doe for Physiotherapy."
             time="10m ago"
-            iconBg="#e0ecff"
-            icon="👤"
+            iconSource={IMAGES.alert_newPatient}
             unread
-            action="Action Required"
-            actionColor="#1d4ed8"
-            highlightBg="#e8f1ff"
-            highlight
+            action="Open Form"
           />
           <NotificationItem
-            title="Schedule Updated"
-            subtitle="New visit scheduled for Sarah Jenkins on Thursday at 2:00 PM."
+            title="Form Updated by Doctor"
+            subtitle="Physiotherapy form for John Doe has been updated."
             time="2h ago"
-            iconBg="#f1f5f9"
-            icon="📅"
+            iconSource={IMAGES.alert_formUpdate}
+            action="Start Service"
           />
-
-          <SectionHeader title="Returned Forms" />
           <NotificationItem
-            title="Form Needs Revision"
-            subtitle="Wound Care assessment for Alice Smith was returned. Missing vitals data."
-            time="Yesterday"
-            iconBg="#fee2e2"
-            icon="📄"
-            unread
-            action="Review Form"
-            actionColor="#b91c1c"
-            highlightBg="#fff4f4"
-            highlight
+            title="Service In Progress"
+            subtitle="Continue your service for John Doe."
+            time="2h ago"
+            iconSource={IMAGES.alert_serviceInProgress}
+            action="Open Service"
+          />
+          <NotificationItem
+            title="Service Completed"
+            subtitle="You completed Physiotherapy for John Doe."
+            time="2h ago"
+            iconSource={IMAGES.alert_serviceCompleted}
+            action="View Details"
           />
 
           <SectionHeader title="System Updates" />
@@ -116,8 +110,7 @@ const ProviderNotification: React.FC = () => {
             title="App Maintenance"
             subtitle="Scheduled maintenance this Sunday from 2 AM to 4 AM EST."
             time="Oct 22"
-            iconBg="#e8edf1"
-            icon="📢"
+            iconSource={IMAGES.notification_icon}
           />
         </ScrollView>
       </View>
@@ -130,144 +123,71 @@ export default ProviderNotification;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: COLORS.white,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
     backgroundColor: COLORS.white,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.slate200,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: '800',
-    color: COLORS.primary,
-  },
-  headerAction: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primary,
+    color: '#526674',
   },
   tabs: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 24,
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.slate200,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  tabWrap: {
+    position: 'relative',
+    paddingBottom: 12,
   },
   tab: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.slate600,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
   },
   tabActive: {
-    color: COLORS.primary,
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
-    paddingBottom: 6,
+    color: '#526674',
   },
-  tabUnreadWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  activeBorder: {
+    position: 'absolute',
+    bottom: -1,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: '#526674',
   },
   unreadBadge: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.error,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-    paddingTop: 8,
-    gap: 10,
-  },
-  sectionHeader: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: COLORS.slate600,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  cardWrapper: {
-    marginBottom: 8,
-  },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.slate200,
-  },
-  rowTop: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconText: {
-    fontSize: 18,
-  },
-  cardBody: {
-    flex: 1,
-    gap: 4,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.black,
-    flex: 1,
-  },
-  time: {
-    fontSize: 10,
-    color: COLORS.slate600,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: COLORS.slate600,
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  pillText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  unreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -10,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.primary,
-    marginTop: 6,
+    backgroundColor: '#EF4444',
+  },
+  scroll: {
+    flex: 1,
+    paddingTop: getScaleSize(15),
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  actionBtn: {
+    height: getScaleSize(36),
+    borderRadius: getScaleSize(8),
+    alignSelf: 'flex-start',
+    paddingHorizontal: getScaleSize(16),
   },
 });

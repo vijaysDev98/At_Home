@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Image,
   Modal,
@@ -6,15 +6,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  FlatList,
+  Platform,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DatePicker from 'react-native-date-picker';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { AppText, Input } from '../../../components';
+import { AppText, Input, WarningSheet } from '../../../components';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 
 interface RouteParams {
   mode?: 'view' | 'update';
@@ -34,7 +36,7 @@ const ProviderForm: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params as RouteParams) || {};
-  
+
   const isUpdateMode = params.mode === 'update';
   const requestStatus = params.requestStatus || 'Submitted';
   const formStatus = params.formStatus || 'Submitted';
@@ -43,18 +45,36 @@ const ProviderForm: React.FC = () => {
   const [startTime, setStartTime] = useState(new Date('2023-10-25T09:00:00'));
   const [endTime, setEndTime] = useState(new Date('2023-10-25T10:30:00'));
   const [serviceType, setServiceType] = useState('Select service type');
-  
+
   const [open, setOpen] = useState(false);
-  const [pickerType, setPickerType] = useState<'date' | 'startTime' | 'endTime' | null>(null);
+  const [pickerType, setPickerType] = useState<
+    'date' | 'startTime' | 'endTime' | null
+  >(null);
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
 
+  const warningSheetRef = useRef<ActionSheetRef>(null);
+
+  useEffect(() => {
+    // Only show warning for preview/testing
+    const timer = setTimeout(() => {
+      warningSheetRef.current?.show();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const getStatusColor = (status: string) => {
+    console.log(status);
+
     switch (status.toLowerCase()) {
       case 'returned':
-        return COLORS.error;
+        return COLORS.returned;
       case 'submitted':
       case 'signed':
-        return '#2F80ED';
+        return COLORS.submitted;
+      case 'inprogress':
+        return COLORS.inProgress;
+      case 'completed':
+        return COLORS.completed;
       default:
         return COLORS._6F767E;
     }
@@ -65,7 +85,11 @@ const ProviderForm: React.FC = () => {
   };
 
   const formatTime = (d: Date) => {
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    return d.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
   };
 
   const handleConfirm = (selectedDate: Date) => {
@@ -80,11 +104,11 @@ const ProviderForm: React.FC = () => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backBtn}
           >
-            <Image source={IMAGES.backIcon} style={styles.backIcon} />
+            <Image source={IMAGES.arrow_back} style={styles.backIcon} />
           </TouchableOpacity>
           <View style={styles.headerTitleWrap}>
             <AppText
@@ -139,7 +163,7 @@ const ProviderForm: React.FC = () => {
           {/* Patient Details Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Image source={IMAGES.person} style={styles.cardIcon} />
+              <Image source={IMAGES.ic_profile} style={styles.cardIcon} />
               <AppText
                 size={getScaleSize(14)}
                 font={FONTS.Inter.Bold}
@@ -151,22 +175,54 @@ const ProviderForm: React.FC = () => {
             <View style={styles.cardBody}>
               <View style={styles.gridRow}>
                 <View style={styles.gridItem}>
-                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>Name</AppText>
-                  <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>Alice Smith</AppText>
+                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                    Name
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    Alice Smith
+                  </AppText>
                 </View>
                 <View style={styles.gridItem}>
-                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>DOB</AppText>
-                  <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>05/12/1980</AppText>
+                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                    DOB
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    05/12/1980
+                  </AppText>
                 </View>
               </View>
               <View style={[styles.gridRow, { marginTop: getScaleSize(12) }]}>
                 <View style={styles.gridItem}>
-                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>Service Requested</AppText>
-                  <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>Post-Op Wound Care</AppText>
+                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                    Service Requested
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    Post-Op Wound Care
+                  </AppText>
                 </View>
                 <View style={styles.gridItem}>
-                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>Request ID</AppText>
-                  <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>SR-2023-10456</AppText>
+                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                    Request ID
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    SR-2023-10456
+                  </AppText>
                 </View>
               </View>
             </View>
@@ -175,7 +231,7 @@ const ProviderForm: React.FC = () => {
           {/* Service Details Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Image source={IMAGES.document_icon} style={styles.cardIcon} />
+              <Image source={IMAGES.ic_file} style={styles.cardIcon} />
               <AppText
                 size={getScaleSize(14)}
                 font={FONTS.Inter.Bold}
@@ -195,10 +251,10 @@ const ProviderForm: React.FC = () => {
                     setOpen(true);
                   }
                 }}
+                leftIcon={IMAGES.ic_calender}
                 style={styles.formInput}
-                trailing={<AppText size={16}>📅</AppText>}
               />
-              
+
               <View style={styles.inputRow}>
                 <Input
                   label="Start Time"
@@ -211,7 +267,7 @@ const ProviderForm: React.FC = () => {
                     }
                   }}
                   style={styles.halfInput}
-                  trailing={<AppText size={16}>🕒</AppText>}
+                  leftIcon={IMAGES.ic_clock}
                 />
                 <Input
                   label="End Time"
@@ -224,7 +280,7 @@ const ProviderForm: React.FC = () => {
                     }
                   }}
                   style={styles.halfInput}
-                  trailing={<AppText size={16}>🕒</AppText>}
+                  leftIcon={IMAGES.ic_clock}
                 />
               </View>
 
@@ -233,10 +289,33 @@ const ProviderForm: React.FC = () => {
                 isMandatory
                 value={serviceType}
                 onPress={() => {
-                  if (isUpdateMode) setServicePickerVisible(true);
+                  if (isUpdateMode && Platform.OS === 'ios') {
+                    setServicePickerVisible(true);
+                  }
                 }}
+                renderPicker={() =>
+                  Platform.OS === 'android' &&
+                  isUpdateMode && (
+                    <Picker
+                      selectedValue={serviceType}
+                      onValueChange={itemValue => setServiceType(itemValue)}
+                      style={styles.androidPickerOverlay}
+                      mode="dropdown"
+                      dropdownIconColor="transparent"
+                    >
+                      {SERVICE_TYPES.map(type => (
+                        <Picker.Item key={type} label={type} value={type} />
+                      ))}
+                    </Picker>
+                  )
+                }
                 style={styles.formInput}
-                trailing={<Image source={IMAGES.arrow_bottom} style={styles.arrowIcon} />}
+                trailing={
+                  <Image
+                    source={IMAGES.arrow_bottom}
+                    style={styles.arrowIcon}
+                  />
+                }
               />
 
               <AppText
@@ -266,12 +345,20 @@ const ProviderForm: React.FC = () => {
         {isUpdateMode && (
           <View style={styles.footer}>
             <TouchableOpacity style={styles.outlineBtn} activeOpacity={0.8}>
-              <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
                 Submit for review
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity style={styles.solidBtn} activeOpacity={0.8}>
-              <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS.white}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
                 Save Progress
               </AppText>
             </TouchableOpacity>
@@ -283,10 +370,10 @@ const ProviderForm: React.FC = () => {
           modal
           open={open}
           date={
-            pickerType === 'date' 
-              ? date 
-              : pickerType === 'startTime' 
-              ? startTime 
+            pickerType === 'date'
+              ? date
+              : pickerType === 'startTime'
+              ? startTime
               : endTime
           }
           mode={pickerType === 'date' ? 'date' : 'time'}
@@ -294,42 +381,44 @@ const ProviderForm: React.FC = () => {
           onCancel={() => setOpen(false)}
         />
 
-        {/* Custom Service Picker Modal */}
-        <Modal
-          visible={servicePickerVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setServicePickerVisible(false)}
-        >
-          <TouchableOpacity 
-            activeOpacity={1} 
-            onPress={() => setServicePickerVisible(false)}
-            style={styles.modalOverlay}
+        {/* Custom Service Picker Modal (iOS only) */}
+        {Platform.OS === 'ios' && (
+          <Modal
+            visible={servicePickerVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setServicePickerVisible(false)}
           >
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <AppText font={FONTS.Inter.Bold} size={getScaleSize(16)}>
-                  Select Service Type
-                </AppText>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => setServicePickerVisible(false)}
+              style={styles.modalOverlay}
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <AppText font={FONTS.Inter.Bold} size={getScaleSize(16)}>
+                    Select Service Type
+                  </AppText>
+                </View>
+                <Picker
+                  selectedValue={serviceType}
+                  onValueChange={itemValue => {
+                    setServiceType(itemValue);
+                    setServicePickerVisible(false);
+                  }}
+                  style={styles.picker}
+                >
+                  {SERVICE_TYPES.map(type => (
+                    <Picker.Item key={type} label={type} value={type} />
+                  ))}
+                </Picker>
               </View>
-              <FlatList
-                data={SERVICE_TYPES}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity 
-                    style={styles.pickerItem}
-                    onPress={() => {
-                      setServiceType(item);
-                      setServicePickerVisible(false);
-                    }}
-                  >
-                    <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>{item}</AppText>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
+            </TouchableOpacity>
+          </Modal>
+        )}
+
+        {/* Warning Bottom Sheet Modal */}
+        <WarningSheet ref={warningSheetRef} />
       </View>
     </SafeAreaView>
   );
@@ -360,6 +449,7 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     width: getScaleSize(24),
+    tintColor: COLORS._1A1A1A,
     height: getScaleSize(24),
     resizeMode: 'contain',
   },
@@ -400,7 +490,8 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: getScaleSize(16),
+    paddingVertical: getScaleSize(16),
+    marginHorizontal: getScaleSize(16),
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     gap: getScaleSize(10),
@@ -490,9 +581,37 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
   },
-  pickerItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F8F9FA',
+  picker: {
+    width: '100%',
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: getScaleSize(16),
+  },
+  warningTitle: {
+    marginLeft: getScaleSize(8),
+  },
+  warningText: {
+    textAlign: 'center',
+    lineHeight: getScaleSize(22),
+    marginBottom: getScaleSize(32),
+  },
+  warningBackBtn: {
+    width: '100%',
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  androidPickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0,
+    backgroundColor: 'transparent',
+    color: 'transparent',
+    zIndex: 10,
   },
 });

@@ -1,5 +1,12 @@
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -26,9 +33,12 @@ const FormsScreen: React.FC = () => {
         <View style={styles.errorToast}>
           <Text style={styles.errorToastIcon}>⚠️</Text>
           <View style={{ flex: 1 }}>
-            <Text style={styles.errorToastTitle}>Please fix 3 errors before submitting</Text>
+            <Text style={styles.errorToastTitle}>
+              Please fix 3 errors before submitting
+            </Text>
             <Text style={styles.errorToastBody}>
-              Required fields are missing in Diagnosis and Treatment Plan sections.
+              Required fields are missing in Diagnosis and Treatment Plan
+              sections.
             </Text>
           </View>
         </View>
@@ -42,7 +52,9 @@ const FormsScreen: React.FC = () => {
           <View style={styles.patientCard}>
             <View style={styles.patientAvatarWrap}>
               <Image
-                source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg' }}
+                source={{
+                  uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
+                }}
                 style={styles.patientAvatar}
               />
             </View>
@@ -119,18 +131,40 @@ const FormsScreen: React.FC = () => {
             </View>
             <View style={styles.rowGap}>
               <View style={styles.col2}>
-                <FormField label="Medication" placeholder="Name" value="Amoxicillin" readOnly />
+                <FormField
+                  label="Medication"
+                  placeholder="Name"
+                  value="Amoxicillin"
+                  readOnly
+                />
               </View>
               <View style={styles.col2}>
-                <FormField label="Dosage" placeholder="e.g. 50mg" value="500mg" readOnly />
+                <FormField
+                  label="Dosage"
+                  placeholder="e.g. 50mg"
+                  value="500mg"
+                  readOnly
+                />
               </View>
             </View>
             <View style={styles.rowGap}>
               <View style={styles.col2}>
-                <FormField label="Frequency" isSelect placeholder="Once" value="TID" readOnly />
+                <FormField
+                  label="Frequency"
+                  isSelect
+                  placeholder="Once"
+                  value="TID"
+                  readOnly
+                />
               </View>
               <View style={styles.col2}>
-                <FormField label="Route" isSelect placeholder="Oral" value="Oral" readOnly />
+                <FormField
+                  label="Route"
+                  isSelect
+                  placeholder="Oral"
+                  value="Oral"
+                  readOnly
+                />
               </View>
             </View>
             <TouchableOpacity style={styles.addBtn} activeOpacity={0.85}>
@@ -156,15 +190,22 @@ const FormsScreen: React.FC = () => {
 
         {/* Sticky action bar */}
         <View style={styles.actionBar}>
-          <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} activeOpacity={0.85}>
-            <Text style={[styles.actionText, styles.actionSecondaryText]}>Save Draft</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionSecondary]}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.actionText, styles.actionSecondaryText]}>
+              Save Draft
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionPrimary]}
             activeOpacity={0.85}
             onPress={() => navigation.navigate('SignatureForm')}
           >
-            <Text style={[styles.actionText, styles.actionPrimaryText]}>Submit</Text>
+            <Text style={[styles.actionText, styles.actionPrimaryText]}>
+              Submit
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -211,11 +252,23 @@ const FormField: React.FC<FormFieldProps> = ({
           readOnly ? styles.inputReadonly : null,
         ]}
       >
-        <Text style={[styles.placeholder, readOnly ? styles.placeholderReadonly : null]}>
+        <Text
+          style={[
+            styles.placeholder,
+            readOnly ? styles.placeholderReadonly : null,
+          ]}
+        >
           {value || placeholder}
         </Text>
         {isSelect ? (
-          <Text style={[styles.selectIcon, hasError ? styles.selectIconError : null]}>⌄</Text>
+          <Text
+            style={[
+              styles.selectIcon,
+              hasError ? styles.selectIconError : null,
+            ]}
+          >
+            ⌄
+          </Text>
         ) : null}
       </View>
       {hasError ? (

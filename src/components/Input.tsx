@@ -39,6 +39,8 @@ export interface InputProps extends TextInputProps {
   helperStyle?: StyleProp<TextStyle>;
   containerBackgroundColor?: string;
   labelRight?: React.ReactNode;
+  isLocked?: boolean;
+  renderPicker?: () => React.ReactNode;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -64,8 +66,18 @@ const Input: React.FC<InputProps> = ({
   helperStyle,
   containerBackgroundColor,
   labelRight,
+  isLocked = false,
+  renderPicker,
   ...rest
 }) => {
+  const { multiline } = rest;
+  // When locked: gray bg, no border colour, force non-editable
+  const lockedBg = '#F3F4F6';
+  const resolvedBg = isLocked ? lockedBg : (containerBackgroundColor || COLORS.white);
+  const resolvedBorder = isLocked ? lockedBg : COLORS._E5E7EB;
+  const resolvedTrailing = trailing || (isLocked
+    ? <Image source={IMAGES.lock} style={[styles.lockIcon, multiline && styles.lockIconTop]} />
+    : null);
   return (
     <View style={[styles.root, style]}>
       <View style={styles.labelRow}>
@@ -96,7 +108,9 @@ const Input: React.FC<InputProps> = ({
         disabled={!onPress}
         style={[
           styles.inputWrapper,
-          { backgroundColor: containerBackgroundColor || COLORS.white },
+          { backgroundColor: resolvedBg, borderColor: resolvedBorder },
+          !rest.multiline && styles.inputWrapperFixed,
+          rest.multiline && styles.inputWrapperMultiline,
           error ? styles.inputWrapperError : null,
         ]}
       >
@@ -105,8 +119,8 @@ const Input: React.FC<InputProps> = ({
 
         <TextInput
           {...rest}
-          editable={onPress ? false : rest.editable}
-          style={[styles.input, inputStyle]}
+          editable={isLocked ? false : (onPress ? false : rest.editable)}
+          style={[styles.input, isLocked && styles.inputLocked, inputStyle]}
           placeholderTextColor={COLORS._1E293B}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
         />
@@ -126,9 +140,10 @@ const Input: React.FC<InputProps> = ({
               style={styles.icon}
             />
           </TouchableOpacity>
-        ) : trailing ? (
-          <View style={styles.icon}>{trailing}</View>
+        ) : resolvedTrailing ? (
+          <View style={styles.icon}>{resolvedTrailing}</View>
         ) : null}
+        {renderPicker && renderPicker()}
       </Pressable>
 
       {error ? (
@@ -179,8 +194,15 @@ const styles = StyleSheet.create({
     borderColor: COLORS._E5E7EB,
     borderRadius: 12,
     gap: getScaleSize(8),
-    height: getScaleSize(56),
     paddingHorizontal: getScaleSize(16),
+  },
+  inputWrapperFixed: {
+    height: getScaleSize(56),
+  },
+  inputWrapperMultiline: {
+    minHeight: getScaleSize(56),
+    alignItems: 'flex-start',
+    paddingVertical: getScaleSize(14),
   },
   inputWrapperError: {
     borderColor: '#ef4444',
@@ -189,6 +211,19 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: getScaleSize(15),
     color: '#1e293b',
+  },
+  inputLocked: {
+    color: COLORS._6B7280,
+  },
+  lockIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: '#C4C8CC',
+  },
+  lockIconTop: {
+    alignSelf: 'flex-start',
+    marginTop: getScaleSize(2),
   },
   icon: {
     width: getScaleSize(20),
