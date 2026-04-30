@@ -2,20 +2,34 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { IMAGES } from '../assets/images';
 import NavigationService from '../navigation/NavigationService';
-import { COLORS } from '../utils';
+import { COLORS, FONTS } from '../utils';
+import AppText from './AppText';
+import { getScaleSize } from '../utils/scaleSize';
+import { ViewStyle } from 'react-native';
 
-const Header = ({ isBack = false }: { isBack?: boolean }) => {
+const Header = ({ isBack = false,title,backIcon ,style,leftContent}: 
+  { isBack?: boolean,title?:String,backIcon?:String,style?:ViewStyle,leftContent?:() => React.ReactNode }) => {
   return (
-    <View style={styles.header}>
+    <View style={[styles.header,style]}>
+      <View style={styles.content}>
       {isBack && (
         <TouchableOpacity
           activeOpacity={0.8}
-          style={styles.backBtn}
+          style={backIcon ? {} :styles.backBtn}
           onPress={() => NavigationService.goBack()}
         >
-          <Image source={IMAGES.backIcon} style={styles.backIcon} />
+          <Image source={backIcon ? backIcon:IMAGES.backIcon} style={styles.backIcon} />
         </TouchableOpacity>
       )}
+      {title? 
+       <AppText
+                size={getScaleSize(20)}
+          font={ FONTS.Inter.Bold}
+          color={ COLORS._1A1D1F}
+                >{title}</AppText>
+      : null}
+      </View>
+      {leftContent && leftContent()}
     </View>
   );
 };
@@ -29,6 +43,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     // paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  content:{
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
   },
   backBtn: {
     width: 40,

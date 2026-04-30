@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -8,68 +9,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { PrimaryButton } from '../../../components';
+import { AppSafeAreaView, AppText, PrimaryButton } from '../../../components';
 import { STRING } from '../../../constant/strings';
+import { SCREENS } from '../../../navigation/routes';
+import NavigationService from '../../../navigation/NavigationService';
+import { PatientListProps, patientsList } from '../../../utils/dummyData';
+import { RootStackParamList } from '../../../navigation';
 
-const chips = ['All', 'Active', 'New', 'Needs Follow-up'];
+// Define types for better type safety
+type PatientStatus = 'All' | 'Recently Added' | 'Recently Updated';
 
-const patients = [
-  {
-    id: '1',
-    name: 'Sarah Jenkins',
-    phone: '(555) 123-4567',
-    status: 'Active',
-    statusColor: '#2ECA7F',
-    statusBg: '#E5F7ED',
-    avatar:
-      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    phone: '(555) 987-6543',
-    status: 'Follow-up',
-    statusColor: '#FFB800',
-    statusBg: '#FFF4E5',
-    initials: 'MC',
-  },
-  {
-    id: '3',
-    name: 'Robert Davis',
-    phone: '(555) 456-7890',
-    status: 'New',
-    statusColor: '#526674',
-    statusBg: '#E8EDF1',
-    avatar:
-      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
-  },
-  {
-    id: '4',
-    name: 'Emily Wilson',
-    phone: '(555) 234-5678',
-    status: 'Active',
-    statusColor: '#2ECA7F',
-    statusBg: '#E5F7ED',
-    avatar:
-      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-5.jpg',
-  },
-  {
-    id: '5',
-    name: 'James Taylor',
-    phone: '(555) 876-5432',
-    status: 'Follow-up',
-    statusColor: '#FFB800',
-    statusBg: '#FFF4E5',
-    initials: 'JT',
-  },
-];
+const chips: PatientStatus[] = ['All', 'Recently Added', 'Recently Updated',];
+
+
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -77,19 +34,67 @@ const PatientsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const [selectedChip, setSelectedChip] = useState('All');
 
+  // Memoize filtered patients to avoid unnecessary recalculations
   const filteredPatients = useMemo(() => {
-    if (selectedChip === 'All') return patients;
-    return patients.filter(
+    if (selectedChip === 'All') return patientsList;
+    return patientsList.filter(
       p => p.status.toLowerCase() === selectedChip.toLowerCase(),
     );
   }, [selectedChip]);
 
+  // Extract patient item rendering to separate component for better performance
+  const PatientItem = React.memo(({ item, onPress }: { item: PatientListProps; onPress: () => void }) => (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={styles.card}
+      onPress={onPress}
+    >
+      <View style={styles.cardLeft}>
+        <View style={styles.avatarWrapper}>
+          {item.avatar ? (
+            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.initialsWrap}>
+              <Text style={styles.initials}>{item.initials}</Text>
+            </View>
+          )}
+        </View>
+        <View>
+          <Text style={styles.name}>{item.name}</Text>
+          <View style={styles.phoneRow}>
+            <Image source={IMAGES.phone} style={styles.phoneIcon} />
+            <Text style={styles.phone}>{item.phone}</Text>
+          </View>
+        </View>
+      </View>
+      {/* <View style={styles.cardRight}> */}
+      <Image source={IMAGES.forwardIcon} style={styles.rightIcon} />
+      {/* </View> */}
+    </TouchableOpacity>
+  ));
+
+  // Optimized render item function
+  const renderItem = ({ item }: { item: PatientListProps }) => (
+    <PatientItem
+      item={item}
+      onPress={() =>
+        NavigationService.navigate(SCREENS.PATIENT_DETAIL, { id: item.id } as any)
+      }
+    />
+  );
+
   return (
-    <SafeAreaView style={styles.safe} edges={['left', 'right']}>
+    <AppSafeAreaView>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Patients</Text>
+          {/* <Text style={styles.headerTitle}>Patients</Text> */}
+          <AppText
+          size={getScaleSize(20)}
+    font={ FONTS.Inter.Bold}
+    color={ COLORS._1A1D1F}
+    style={styles.headerTitle}
+          >{"Patients"}</AppText>
 
           {/* Search */}
           <View style={styles.searchWrapper}>
@@ -134,58 +139,32 @@ const PatientsScreen: React.FC = () => {
         </View>
 
         {/* Patient list */}
-        <ScrollView
-          style={{ marginTop: getScaleSize(16) }}
+        <FlatList
+          data={filteredPatients}
+          style={styles.flatListContainer}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          {filteredPatients.map(p => (
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('PatientDetail', { id: p.id } as any)
-              }
-              key={p.id}
-              activeOpacity={0.9}
-              style={styles.card}
-            >
-              <View style={styles.cardLeft}>
-                <View style={styles.avatarWrapper}>
-                  {p.avatar ? (
-                    <Image source={{ uri: p.avatar }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.initialsWrap}>
-                      <Text style={styles.initials}>{p.initials}</Text>
-                    </View>
-                  )}
-                </View>
-                <View>
-                  <Text style={styles.name}>{p.name}</Text>
-                  <View style={styles.phoneRow}>
-                    <Image source={IMAGES.phone} style={styles.phoneIcon} />
-                    <Text style={styles.phone}>{p.phone}</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.cardRight}>
-                {/* <View style={[styles.badge, { backgroundColor: p.statusBg }]}>
-                  <Text style={[styles.badgeText, { color: p.statusColor }]}>
-                    {p.status.toUpperCase()}
-                  </Text>
-                </View> */}
-                <Image source={IMAGES.arrow_bottom} style={styles.rightIcon} />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={10}
+          windowSize={10}
+          getItemLayout={(data, index) => ({
+            length: getScaleSize(80), // Approximate item height
+            offset: getScaleSize(80) * index,
+            index,
+          })}
+        />
         <View style={styles.footer}>
           <PrimaryButton
             title={STRING.addPatient}
-            onPress={() => navigation.navigate('AddPatient' as any)}
+            onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
           />
         </View>
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
@@ -199,8 +178,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._E5E7EB,
   },
   header: {
-    paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(14),
+    // paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(14),
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: '#EFEFEF',
@@ -210,10 +189,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   headerTitle: {
-    fontSize: getScaleSize(20),
+    paddingLeft: getScaleSize(20),
     marginTop: getScaleSize(25),
-    fontFamily: FONTS.Inter.Bold,
-    color: COLORS._1A1D1F,
   },
   sortButton: {
     width: 32,
@@ -236,6 +213,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(16),
     height: getScaleSize(48),
     gap: getScaleSize(10),
+    marginHorizontal: getScaleSize(20),
   },
   searchIcon: {
     width: getScaleSize(18),
@@ -254,6 +232,7 @@ const styles = StyleSheet.create({
     gap: getScaleSize(8),
     alignItems: 'center',
     marginTop: getScaleSize(12),
+    paddingHorizontal: getScaleSize(20)
   },
   chip: {
     paddingHorizontal: getScaleSize(22),
@@ -285,6 +264,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(120),
     gap: getScaleSize(12),
+  },
+  flatListContainer: {
+    paddingTop: getScaleSize(16),
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -350,7 +332,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(8),
     resizeMode: 'contain',
     tintColor: COLORS._6F767E,
-    transform: [{ rotate: '270deg' }],
+    // transform: [{ rotate: '270deg' }],
   },
   phone: {
     fontFamily: FONTS.Inter.Regular,

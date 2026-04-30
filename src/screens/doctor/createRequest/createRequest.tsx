@@ -1,71 +1,161 @@
-import React, { useMemo, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { AppSafeAreaView, AppText, Input } from '../../../components';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
+import { IMAGES } from '../../../assets/images';
+import { creatRequestPatientsList } from '../../../utils/dummyData';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 export type CreateRequestProps = NativeStackScreenProps<RootStackParamList, 'CreateRequest'>;
 
-const patients = [
-  {
-    id: 'patient_1',
-    name: 'Eleanor Pena',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-    pid: '#P-8492',
-    age: '68yo',
-  },
-  {
-    id: 'patient_2',
-    name: 'Albert Flores',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
-    pid: '#P-3310',
-    age: '42yo',
-  },
-  {
-    id: 'patient_3',
-    name: 'Kathryn Murphy',
-    avatar: null,
-    initials: 'KJ',
-    pid: '#P-9921',
-    age: '55yo',
-  },
-  {
-    id: 'patient_4',
-    name: 'Wade Warren',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
-    pid: '#P-1120',
-    age: '38yo',
-  },
-];
+// Filter Types
+type FilterType = 'all' | 'recent' | 'active';
+
+interface FilterChipProps {
+  key: string;
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}
+
+// FilterChip Component
+const FilterChip: React.FC<FilterChipProps> = React.memo(({ key, label, isActive, onPress }) => (
+  <TouchableOpacity
+    key={key}
+    activeOpacity={0.85}
+    onPress={onPress}
+    style={[styles.chip, isActive && styles.chipActive]}
+  >
+    <AppText
+      color={isActive ? COLORS.white : COLORS._6F767E}
+      size={getScaleSize(12)}
+      font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+    >
+      {label}
+    </AppText>
+  </TouchableOpacity>
+));
+
+// PatientItem Component
+interface PatientItemProps {
+  patient: any;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+const PatientItem: React.FC<PatientItemProps> = React.memo(({ patient, isSelected, onSelect }) => (
+  <TouchableOpacity
+    key={patient.id}
+    activeOpacity={0.9}
+    style={[styles.patientCard, isSelected && styles.patientCardActive]}
+    onPress={() => onSelect(patient.id)}
+  >
+    <View style={styles.avatarWrap}>
+      {patient.avatar ? (
+        <Image source={{ uri: patient.avatar }} style={styles.avatar} />
+      ) : (
+        <View style={styles.initialsWrap}>
+          <AppText
+            size={getScaleSize(16)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+          >
+            {patient.initials}
+          </AppText>
+        </View>
+      )}
+    </View>
+    <View style={styles.patientInfo}>
+      <AppText
+        size={getScaleSize(16)}
+        font={FONTS.Inter.Bold}
+        color={COLORS._1A1D1F}
+      >
+        {patient.name}
+      </AppText>
+      <AppText
+        size={getScaleSize(12)}
+        font={FONTS.Inter.Regular}
+        color={COLORS._6F767E}
+      >
+        {patient.pid} • {patient.age}
+      </AppText>
+    </View>
+    <View style={[styles.radioOuter, isSelected && styles.radioOuterActive]}>
+      {isSelected ? <View style={styles.radioInner} /> : null}
+    </View>
+  </TouchableOpacity>
+));
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState<string>('patient_1');
-  const [filter, setFilter] = useState<'all' | 'recent' | 'active'>('all');
+  const [filter, setFilter] = useState<FilterType>('all');
+
+  // Memoized values
   const canContinue = useMemo(() => !!selectedId, [selectedId]);
 
+  // Filter options
+  const filterOptions = useMemo(() => [
+    { key: 'all' as FilterType, label: 'All Patients' },
+    { key: 'recent' as FilterType, label: 'Recent' },
+    { key: 'active' as FilterType, label: 'Active Only' },
+  ], []);
+
+  // Event handlers
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handlePatientSelect = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  const handleFilterChange = useCallback((newFilter: FilterType) => {
+    setFilter(newFilter);
+  }, []);
+
+  const handleContinue = useCallback(() => {
+    NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2);
+  }, []);
+
+  const handleCreateNewPatient = useCallback(() => {
+    // TODO: Navigate to create patient screen
+    console.log('Create new patient');
+  }, []);
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+    <AppSafeAreaView style={styles.safe}>
       <View style={styles.container}>
 
         <View style={styles.header}>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-            <Text style={styles.headerIcon}>✕</Text>
+          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={handleGoBack}>
+            <Image
+              source={IMAGES.crossIcon}
+              style={styles.crossIcon}
+            />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Create Request</Text>
-            <Text style={styles.headerSubtitle}>Step 1/3: Patient</Text>
+            <AppText
+              size={getScaleSize(12)}
+              color={COLORS._1A1D1F}
+              font={FONTS.Inter.Bold}
+            >Create Request</AppText>
+            <AppText
+              size={getScaleSize(16)}
+              color={COLORS._526674}
+              font={FONTS.Inter.SemiBold}
+            >Step 1/3: Patient</AppText>
           </View>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8}>
-            <Text style={styles.headerIcon}>❔</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
@@ -74,104 +164,86 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.sectionTitle}>Select Patient</Text>
+            <AppText
+              size={getScaleSize(18)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >Select Patient</AppText>
 
-            <View style={styles.searchWrap}>
-              <Text style={styles.searchIcon}>🔍</Text>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search by name or ID..."
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
+            <Input
+              leftIcon={IMAGES.search}
+              style={styles.searchInput}
+              placeholder="Search by name or ID..."
+            />
 
             <View style={styles.filters}>
-              {(
-                [
-                  { key: 'all', label: 'All Patients' },
-                  { key: 'recent', label: 'Recent' },
-                  { key: 'active', label: 'Active Only' },
-                ] as const
-              ).map((chip) => {
-                const active = filter === chip.key;
-                return (
-                  <TouchableOpacity
-                    key={chip.key}
-                    activeOpacity={0.85}
-                    onPress={() => setFilter(chip.key)}
-                    style={[styles.chip, active && styles.chipActive]}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {filterOptions.map((option) => (
+                <FilterChip
+                  key={option.key}
+                  label={option.label}
+                  isActive={filter === option.key}
+                  onPress={() => handleFilterChange(option.key)}
+                />
+              ))}
             </View>
 
             <View style={styles.list}>
-              {patients.map((patient) => {
-                const isSelected = selectedId === patient.id;
-                return (
-                  <TouchableOpacity
-                    key={patient.id}
-                    activeOpacity={0.9}
-                    style={[styles.patientCard, isSelected && styles.patientCardActive]}
-                    onPress={() => setSelectedId(patient.id)}
-                  >
-                    <View style={styles.avatarWrap}>
-                      {patient.avatar ? (
-                        <Image source={{ uri: patient.avatar }} style={styles.avatar} />
-                      ) : (
-                        <View style={styles.initialsWrap}>
-                          <Text style={styles.initials}>{patient.initials}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.patientInfo}>
-                      <Text style={styles.patientName}>{patient.name}</Text>
-                      <View style={styles.patientMetaRow}>
-                        <Text style={styles.patientMeta}>ID: {patient.pid}</Text>
-                        <View style={styles.dot} />
-                        <Text style={styles.patientMeta}>{patient.age}</Text>
-                      </View>
-                    </View>
-                    <View style={[styles.radioOuter, isSelected && styles.radioOuterActive]}>
-                      {isSelected ? <View style={styles.radioInner} /> : null}
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+              {creatRequestPatientsList.map((patient) => (
+                <PatientItem
+                  key={patient.id}
+                  patient={patient}
+                  isSelected={selectedId === patient.id}
+                  onSelect={handlePatientSelect}
+                />
+              ))}
             </View>
 
             <View style={styles.spacer} />
           </ScrollView>
 
           <View style={styles.bottomSheet}>
-            <TouchableOpacity activeOpacity={0.85} style={styles.createPatientBtn}>
-              <Text style={styles.createPatientText}>＋ Create New Patient</Text>
+            <TouchableOpacity 
+              activeOpacity={0.85} 
+              style={styles.createPatientBtn}
+              onPress={handleCreateNewPatient}
+            >
+              <Image 
+                source={IMAGES.new_request} 
+                style={styles.newRequestIcon} 
+              />
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS._526674}
+                font={FONTS.Inter.Bold}
+              > Create New Patient</AppText>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.9}
               style={[styles.continueBtn, !canContinue && styles.continueDisabled]}
               disabled={!canContinue}
-              onPress={() => navigation.navigate('CreateRequestStep2')}
+              onPress={handleContinue}
             >
-              <Text style={styles.continueText}>Continue</Text>
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS.white}
+                font={FONTS.Inter.Bold}
+              >Continue</AppText>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   statusBar: {
     height: 44,
@@ -183,7 +255,7 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   statusIcons: {
     flexDirection: 'row',
@@ -199,9 +271,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#efefef',
+    borderBottomColor: COLORS._EFEFEF,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -216,22 +288,12 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     fontSize: 18,
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   headerCenter: {
     alignItems: 'center',
     gap: 2,
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1a1d1f',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#526674',
   },
   content: {
     flex: 1,
@@ -241,39 +303,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 160,
-    gap: 16,
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(160),
+    paddingTop: getScaleSize(20),
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1a1d1f',
-  },
-  searchWrap: {
-    marginTop: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  searchIcon: {
-    fontSize: 16,
-    color: '#94a3b8',
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1a1d1f',
+    searchInput: {
+    paddingHorizontal: 0
   },
   filters: {
     flexDirection: 'row',
@@ -285,21 +320,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS._E5E7EB,
   },
   chipActive: {
-    backgroundColor: '#526674',
-    borderColor: '#526674',
+    backgroundColor: COLORS._526674,
+    borderColor: COLORS._526674,
   },
   chipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#6f767e',
+    color: COLORS._6F767E,
   },
   chipTextActive: {
-    color: '#ffffff',
+    color: COLORS.white,
   },
   list: {
     gap: 10,
@@ -309,10 +344,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS._E5E7EB,
     padding: 14,
     shadowColor: '#000',
     shadowOpacity: 0.03,
@@ -320,15 +355,15 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   patientCardActive: {
-    borderColor: '#526674',
-    backgroundColor: '#f7f9fb',
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS._F8F9FA,
   },
   avatarWrap: {
     width: 48,
     height: 48,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#e8edf1',
+    backgroundColor: COLORS._EFEFEF,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -342,12 +377,12 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff4e5',
+    backgroundColor: COLORS._EFF6FF,
   },
   initials: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#f59e0b',
+    color: COLORS._2563EB,
   },
   patientInfo: {
     flex: 1,
@@ -356,7 +391,7 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   patientMetaRow: {
     flexDirection: 'row',
@@ -365,32 +400,32 @@ const styles = StyleSheet.create({
   },
   patientMeta: {
     fontSize: 13,
-    color: '#6f767e',
+    color: COLORS._6F767E,
   },
   dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#d1d5db',
+    backgroundColor: COLORS._E5E7EB,
   },
   radioOuter: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#d1d5db',
+    borderColor: COLORS._E5E7EB,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   radioOuterActive: {
-    borderColor: '#526674',
+    borderColor: COLORS._526674,
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#526674',
+    backgroundColor: COLORS._526674,
   },
   spacer: {
     height: 120,
@@ -402,9 +437,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: '#efefef',
+    borderTopColor: COLORS._EFEFEF,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -415,21 +450,23 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: '#526674',
+    borderColor: COLORS._526674,
     borderStyle: 'dashed',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8
   },
   createPatientText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#526674',
+    color: COLORS._526674,
   },
   continueBtn: {
     height: 56,
     borderRadius: 14,
-    backgroundColor: '#526674',
+    backgroundColor: COLORS._526674,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -439,7 +476,17 @@ const styles = StyleSheet.create({
   continueText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: COLORS.white,
+  },
+  // Inline styles moved to StyleSheet
+  crossIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+  },
+  newRequestIcon: {
+    height: getScaleSize(15),
+    width: getScaleSize(12),
+    tintColor: COLORS.primary,
   },
 });
 

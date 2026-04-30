@@ -21,6 +21,7 @@ import PatientDetail from '../screens/doctor/patients/PatientDetail';
 import ProviderBottomTabs, { ProviderBottomTabParamList } from './ProviderBottomTabs';
 import ProviderAvailableRequests from '../screens/provider/home/AvailableRequest';
 import NavigationService from './NavigationService';
+import { SCREENS } from './routes';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -52,94 +53,98 @@ export default function RootNavigation() {
         NavigationService.setTopLevelNavigator(navigationRef);
       }}
     >
-      <Stack.Navigator initialRouteName="Splash">
+      <Stack.Navigator 
+      screenOptions={{
+        headerShown:false
+      }}
+      initialRouteName={SCREENS.SPLASH}>
         <Stack.Screen
-          name="Splash"
+          name={SCREENS.SPLASH}
           component={SplashScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Welcome"
+          name={SCREENS.WELCOME}
           component={WelcomeScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Login"
+          name={SCREENS.LOGIN}
           component={LoginScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="Register"
+          name={SCREENS.REGISTER}
           component={RegisterScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="RegisterSuccess"
+          name={SCREENS.REGISTER_SUCCESS}
           component={RegisterSuccess}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ForgotPassword"
+          name={SCREENS.FORGOT_PASSWORD}
           component={ForgotPassword}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="OtpVerification"
+          name={SCREENS.OTP_VERIFICATION}
           component={OtpVerification}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ResetPassword"
+          name={SCREENS.RESET_PASSWORD}
           component={ResetPassword}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="DoctorNotification"
+          name={SCREENS.DOCTOR_NOTIFICATION}
           component={DoctorNotification}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="CreateRequest"
+          name={SCREENS.CREATE_REQUEST}
           component={CreateRequest}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="CreateRequestStep2"
+          name={SCREENS.CREATE_REQUEST_STEP2}
           component={CreateRequestStep2}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="CreateRequestStep3"
+          name={SCREENS.CREATE_REQUEST_STEP3}
           component={CreateRequestStep3}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="DoctorBottomTabs"
+          name={SCREENS.DOCTOR_BOTTOM_TABS}
           component={BottomTabs}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ProviderBottomTabs"
+          name={SCREENS.PROVIDER_BOTTOM_TABS}
           component={ProviderBottomTabs}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="ProviderAvailableRequests"
+          name={SCREENS.PROVIDER_AVAILABLE_REQUESTS}
           component={ProviderAvailableRequests}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="AddPatient"
+          name={SCREENS.ADD_PATIENT}
           component={AddPatient}
-          options={{ title: 'Add Patient' }}
+          // options={{ title: 'Add Patient' }}
         />
         <Stack.Screen
-          name="PatientDetail"
+          name={SCREENS.PATIENT_DETAIL}
           component={PatientDetail}
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="SignatureForm"
+          name={SCREENS.SIGNATURE_FORM}
           component={SignatureForm}
           options={{ headerShown: false }}
         />

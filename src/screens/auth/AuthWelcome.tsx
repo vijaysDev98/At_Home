@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -7,6 +7,9 @@ import { AppButton, AppSafeAreaView, AppText } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant/strings';
+import DiscardBottomSheet from '../../components/BottomSheets/DiscardBottomSheet';
+import { SCREENS } from '../../navigation/routes';
+import NavigationService from '../../navigation/NavigationService';
 
 export type AuthWelcomeProps = NativeStackScreenProps<
   RootStackParamList,
@@ -14,7 +17,9 @@ export type AuthWelcomeProps = NativeStackScreenProps<
 >;
 
 const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
+  const sheetRef = useRef<any>(null);
   return (
+    <>
     <AppSafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <Image source={IMAGES.logo} style={styles.logo} resizeMode="cover" />
@@ -39,12 +44,14 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
           <AppButton
             title={STRING.signIn}
             style={styles.signInButton}
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => 
+              NavigationService.navigate(SCREENS.LOGIN)
+            }
             rightIcon={IMAGES.arrowRight}
           />
           <AppButton
             title={STRING.createAccount}
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => NavigationService.navigate(SCREENS.REGISTER)}
             backgroundColor={COLORS._F8F9FA}
             textColor={COLORS.primary}
             style={styles.createAccountButton}
@@ -52,6 +59,13 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
         </View>
       </View>
     </AppSafeAreaView>
+     <DiscardBottomSheet
+            ref={sheetRef}
+            onConfirm={() => {
+              console.log('Discard confirmed');
+            }}
+          />
+          </>
   );
 };
 

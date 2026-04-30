@@ -3,10 +3,12 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../utils';
+import { PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProviderProfile from '../screens/provider/profile/profile';
+import { IMAGES } from '../assets/images';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
@@ -19,14 +21,14 @@ const Tab = createBottomTabNavigator<ProviderBottomTabParamList>();
 
 const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
   switch (name) {
-    case 'Home':
-      return '🏠';
-    case 'Forms':
-      return '📄';
-    case 'Alerts':
-      return '🔔';
-    case 'Profile':
-      return '👤';
+    case PROVIDER_TAB_SCREENS.HOME:
+     return IMAGES.tab_home;
+    case PROVIDER_TAB_SCREENS.FORMS:
+       return IMAGES.tab_request;
+    case PROVIDER_TAB_SCREENS.ALERTS:
+      return IMAGES.notification_icon;
+    case PROVIDER_TAB_SCREENS.PROFILE:
+       return IMAGES.tab_profile;
     default:
       return '•';
   }
@@ -38,10 +40,10 @@ const ProviderBottomTabs: React.FC = () => {
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tab.Screen name="Home" component={ProviderHome} />
-      <Tab.Screen name="Forms" component={FormsScreen} />
-      <Tab.Screen name="Alerts" component={ProviderNotification} />
-      <Tab.Screen name="Profile" component={ProviderProfile} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.HOME} component={ProviderHome} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.FORMS} component={FormsScreen} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.ALERTS} component={ProviderNotification} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.PROFILE} component={ProviderProfile} />
     </Tab.Navigator>
   );
 };

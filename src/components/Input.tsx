@@ -39,6 +39,7 @@ export interface InputProps extends TextInputProps {
   helperStyle?: StyleProp<TextStyle>;
   containerBackgroundColor?: string;
   labelRight?: React.ReactNode;
+  inputWrapperStyle?: StyleProp<ViewStyle>;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -64,6 +65,7 @@ const Input: React.FC<InputProps> = ({
   helperStyle,
   containerBackgroundColor,
   labelRight,
+  inputWrapperStyle,
   ...rest
 }) => {
   return (
@@ -98,6 +100,7 @@ const Input: React.FC<InputProps> = ({
           styles.inputWrapper,
           { backgroundColor: containerBackgroundColor || COLORS.white },
           error ? styles.inputWrapperError : null,
+          inputWrapperStyle
         ]}
       >
         {leftIcon && <Image source={leftIcon} style={styles.icon} />}
