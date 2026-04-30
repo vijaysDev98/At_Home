@@ -1,5 +1,8 @@
 import React from 'react';
-import { NavigationContainer, NavigatorScreenParams } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  NavigatorScreenParams,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/auth/Login';
@@ -18,8 +21,13 @@ import CreateRequestStep2 from '../screens/doctor/createRequest/createRequestSte
 import CreateRequestStep3 from '../screens/doctor/createRequest/createRequestStep3';
 import AddPatient from '../screens/doctor/patients/AddPatient';
 import PatientDetail from '../screens/doctor/patients/PatientDetail';
-import ProviderBottomTabs, { ProviderBottomTabParamList } from './ProviderBottomTabs';
-import ProviderAvailableRequests from '../screens/provider/home/AvailableRequest';
+import ProviderBottomTabs, {
+  ProviderBottomTabParamList,
+} from './ProviderBottomTabs';
+import ProviderAvailableRequests from '../screens/provider/request/AvailableRequest';
+import ProviderForm from '../screens/provider/forms/ProviderForm';
+import ServiceScreen from '../screens/provider/forms/Service';
+import ServiceCompletedScreen from '../screens/provider/forms/ServiceCompleted';
 import NavigationService from './NavigationService';
 import { SCREENS } from './routes';
 
@@ -37,11 +45,33 @@ export type RootStackParamList = {
   CreateRequestStep2: undefined;
   CreateRequestStep3: undefined;
   DoctorBottomTabs: NavigatorScreenParams<BottomTabParamList> | undefined;
-  ProviderBottomTabs: NavigatorScreenParams<ProviderBottomTabParamList> | undefined;
+  ProviderBottomTabs:
+    | NavigatorScreenParams<ProviderBottomTabParamList>
+    | undefined;
   ProviderAvailableRequests: undefined;
   AddPatient: undefined;
   PatientDetail: undefined;
   SignatureForm: undefined;
+  ProviderForm: {
+    mode: 'view' | 'update';
+    requestStatus: string;
+    formStatus: string;
+  };
+  ServiceScreen: {
+    requestStatus?: string;
+    formStatus?: string;
+    patientName?: string;
+    service?: string;
+    requestId?: string;
+  };
+  ServiceCompleted: {
+    patientName?: string;
+    requestId?: string;
+    serviceType?: string;
+    duration?: string;
+    doctorName?: string;
+    completedDate?: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,7 +79,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigation() {
   return (
     <NavigationContainer
-     ref={(navigationRef) => {
+      ref={navigationRef => {
         NavigationService.setTopLevelNavigator(navigationRef);
       }}
     >
@@ -146,6 +176,21 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.SIGNATURE_FORM}
           component={SignatureForm}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProviderForm"
+          component={ProviderForm}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ServiceScreen"
+          component={ServiceScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ServiceCompleted"
+          component={ServiceCompletedScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

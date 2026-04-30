@@ -1,52 +1,149 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { COLORS } from '../../../utils';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { COLORS, FONTS } from '../../../utils';
+import { AppText } from '../../../components';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { IMAGES } from '../../../assets/images';
 
 const ProviderProfile: React.FC = () => {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <AppText
+            size={getScaleSize(18)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+          >
+            Profile
+          </AppText>
           <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.headerAction}>Edit</Text>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._6F767E}
+            >
+              Edit
+            </AppText>
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Profile Card */}
           <View style={styles.profileCard}>
             <Image
-              source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg' }}
+              source={{
+                uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+              }}
               style={styles.avatar}
             />
-            <Text style={styles.name}>Sarah Jenkins</Text>
-            <Text style={styles.role}>Registered Nurse (RN)</Text>
+            <AppText
+              size={getScaleSize(20)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Sarah Jenkins
+            </AppText>
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._6F767E}
+            >
+              Registered Nurse (RN)
+            </AppText>
             <View style={styles.statusBadge}>
               <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Active</Text>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.SemiBold}
+                color="#15803d"
+              >
+                Active
+              </AppText>
             </View>
           </View>
 
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Contact Information</Text>
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <Text style={styles.value}>sarah.jenkins@athome.com</Text>
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Phone Number</Text>
-              <Text style={styles.value}>+1 (555) 123-4567</Text>
-            </View>
-          </View>
-
+          {/* Contact Information */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Assigned Services</Text>
-              <Text style={styles.pill}>3 Active</Text>
+              {/* <View style={styles.sectionIconWrap}> */}
+              <Image
+                source={IMAGES.ic_contactInfo}
+                style={styles.sectionIcon}
+              />
+              {/* </View> */}
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                Contact Information
+              </AppText>
             </View>
+            <View style={styles.divider} />
+            <View style={styles.fieldGroup}>
+              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                Email Address
+              </AppText>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._1A1D1F}
+              >
+                sarah.jenkins@athome.com
+              </AppText>
+            </View>
+            <View style={styles.fieldGroup}>
+              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
+                Phone Number
+              </AppText>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._1A1D1F}
+              >
+                +1 (555) 123-4567
+              </AppText>
+            </View>
+          </View>
+
+          {/* Eligible Services */}
+          <View style={styles.sectionCard}>
+            <View style={styles.servicesHeaderRow}>
+              <View style={styles.servicesHeaderLeft}>
+                {/* <View style={styles.sectionIconWrap}> */}
+                <Image source={IMAGES.ic_medKit} style={styles.sectionIcon} />
+                {/* </View> */}
+                <AppText
+                  size={getScaleSize(15)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  Eligible Services
+                </AppText>
+              </View>
+              <View style={styles.activeBadge}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                >
+                  3 Active
+                </AppText>
+              </View>
+            </View>
+            <View style={styles.divider} />
             {[
               {
                 title: 'Wound Care Management',
@@ -60,10 +157,26 @@ const ProviderProfile: React.FC = () => {
                 title: 'Vitals Monitoring',
                 desc: 'Routine check of blood pressure, heart rate, and oxygen levels.',
               },
-            ].map((item) => (
-              <View key={item.title} style={styles.serviceCard}>
-                <Text style={styles.serviceTitle}>{item.title}</Text>
-                <Text style={styles.serviceDesc}>{item.desc}</Text>
+            ].map((item, idx, arr) => (
+              <View key={item.title}>
+                <View style={styles.serviceItem}>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {item.title}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    style={{ marginTop: getScaleSize(4) }}
+                  >
+                    {item.desc}
+                  </AppText>
+                </View>
+                {idx < arr.length - 1 && <View style={styles.itemDivider} />}
               </View>
             ))}
           </View>
@@ -88,131 +201,105 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
     backgroundColor: COLORS.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.slate200,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.primary,
-  },
-  headerAction: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.primary,
+    borderBottomColor: COLORS._EFEFEF,
   },
   scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-    gap: 16,
+    paddingHorizontal: getScaleSize(16),
+    paddingBottom: getScaleSize(40),
+    paddingTop: getScaleSize(16),
+    gap: getScaleSize(12),
   },
   profileCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
+    borderRadius: getScaleSize(16),
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    paddingVertical: getScaleSize(24),
+    paddingHorizontal: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS.slate200,
-    gap: 10,
+    borderColor: COLORS._EFEFEF,
+    gap: getScaleSize(6),
   },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.black,
-  },
-  role: {
-    fontSize: 13,
-    color: COLORS.primaryMuted,
+    width: getScaleSize(84),
+    height: getScaleSize(84),
+    borderRadius: getScaleSize(42),
+    marginBottom: getScaleSize(4),
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: '#dcfce7',
+    gap: getScaleSize(5),
+    marginTop: getScaleSize(2),
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: getScaleSize(8),
+    height: getScaleSize(8),
+    borderRadius: getScaleSize(4),
     backgroundColor: '#22c55e',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#15803d',
   },
   sectionCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: getScaleSize(16),
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS.slate200,
-    gap: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderColor: COLORS._EFEFEF,
+    gap: getScaleSize(12),
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: getScaleSize(10),
+  },
+  servicesHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.slate700,
+  servicesHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
   },
-  pill: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.slate600,
+  sectionIconWrap: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(8),
     backgroundColor: COLORS.backgroundAlt,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS._EFEFEF,
   },
   fieldGroup: {
-    gap: 4,
+    gap: getScaleSize(4),
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.slate600,
+  serviceItem: {
+    paddingVertical: getScaleSize(4),
   },
-  value: {
-    fontSize: 14,
-    color: COLORS.black,
+  itemDivider: {
+    height: 1,
+    backgroundColor: COLORS._EFEFEF,
+    marginVertical: getScaleSize(10),
   },
-  serviceCard: {
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.slate200,
-    backgroundColor: COLORS.backgroundAlt,
-    gap: 4,
-  },
-  serviceTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.black,
-  },
-  serviceDesc: {
-    fontSize: 12,
-    color: COLORS.slate600,
+  activeBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(6),
   },
 });

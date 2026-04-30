@@ -345,6 +345,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 
   const onSubmit = () => {
+    navigation.replace('DoctorBottomTabs');
+    return;
     // 🔥 Reset errors
     setError({ email: '', password: '' });
 NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
@@ -476,7 +478,7 @@ NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
           <PrimaryButton
             title={STRING.login}
             onPress={onSubmit}
-            disabled={isDisabled}
+            // disabled={isDisabled}
             style={{ marginTop: getScaleSize(12) }}
           />
 

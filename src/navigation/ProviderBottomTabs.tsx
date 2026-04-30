@@ -1,14 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { COLORS } from '../utils';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { COLORS, FONTS } from '../utils';
 import { PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProviderProfile from '../screens/provider/profile/profile';
 import { IMAGES } from '../assets/images';
+import { AppText } from '../components';
+import { getScaleSize } from '../utils/scaleSize';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
@@ -30,7 +32,7 @@ const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
     case PROVIDER_TAB_SCREENS.PROFILE:
        return IMAGES.tab_profile;
     default:
-      return '•';
+      return IMAGES.tab_home;
   }
 };
 
@@ -38,7 +40,7 @@ const ProviderBottomTabs: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen name={PROVIDER_TAB_SCREENS.HOME} component={ProviderHome} />
       <Tab.Screen name={PROVIDER_TAB_SCREENS.FORMS} component={FormsScreen} />
@@ -48,14 +50,15 @@ const ProviderBottomTabs: React.FC = () => {
   );
 };
 
-const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+const CustomTabBar: React.FC<BottomTabBarProps> = ({
+  state,
+  descriptors,
+  navigation,
+}) => {
   const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView
-      edges={['bottom']}
-      style={styles.barContainer}
-    >
-      <View style={[styles.bar, { paddingBottom: (insets.bottom || 10) + 6 }]}>
+    <SafeAreaView edges={['bottom']} style={styles.barContainer}>
+      <View style={styles.bar}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const onPress = () => {
@@ -70,8 +73,13 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
             }
           };
 
-          const label = descriptors[route.key]?.options?.tabBarLabel ?? route.name;
-          const icon = iconForRoute(route.name as keyof ProviderBottomTabParamList);
+          const label =
+            route.name === 'Forms'
+              ? 'Request'
+              : descriptors[route.key]?.options?.tabBarLabel ?? route.name;
+          const icon = iconForRoute(
+            route.name as keyof ProviderBottomTabParamList,
+          );
 
           return (
             <Pressable
@@ -80,8 +88,27 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               onPress={onPress}
               style={styles.tab}
             >
-              <Text style={[styles.iconText, isFocused ? styles.iconTextActive : null]}>{icon}</Text>
-              <Text style={[styles.label, isFocused ? styles.labelActive : null]}>{label as string}</Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  isFocused ? styles.iconContainerActive : null,
+                ]}
+              >
+                <Image
+                  source={icon}
+                  style={[
+                    styles.icon,
+                    { tintColor: isFocused ? COLORS._526674 : COLORS._6F767E },
+                  ]}
+                />
+              </View>
+              <AppText
+                size={getScaleSize(11)}
+                font={isFocused ? FONTS.Inter.Bold : FONTS.Inter.Medium}
+                color={isFocused ? COLORS._526674 : COLORS._6F767E}
+              >
+                {label as string}
+              </AppText>
             </Pressable>
           );
         })}
@@ -95,49 +122,39 @@ export default ProviderBottomTabs;
 const styles = StyleSheet.create({
   barContainer: {
     backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS._EFEFEF,
+  },
+  icon: {
+    width: getScaleSize(32),
+    height: getScaleSize(27),
+    resizeMode: 'contain',
+  },
+  iconContainer: {
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    borderRadius: getScaleSize(22),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: getScaleSize(4),
+    overflow: 'hidden',
+  },
+  iconContainerActive: {
+    backgroundColor: '#E8EDF1',
+    borderRadius: getScaleSize(22),
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: 18,
-    paddingTop: 12,
+    paddingHorizontal: getScaleSize(12),
+    paddingTop: getScaleSize(12),
     backgroundColor: COLORS.white,
+    paddingBottom: getScaleSize(5),
   },
   tab: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-  },
-  iconText: {
-    fontSize: 19,
-    color: COLORS.slate400,
-  },
-  iconTextActive: {
-    color: COLORS.primary,
-  },
-  label: {
-    fontSize: 12,
-    color: COLORS.slate500,
-    fontWeight: '600',
-  },
-  labelActive: {
-    color: COLORS.primary,
-  },
-  fab: {
-    bottom: 24,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  plusBtnPressed: {
-    opacity: 0.85,
-  },
-  plusIcon: {
-    fontSize: 26,
-    color: COLORS.white,
+    flex: 1,
   },
 });
