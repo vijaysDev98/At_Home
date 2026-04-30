@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppSafeAreaView, AppText, Header, Input, PrimaryButton } from '../../../components';
+import { COLORS, FONTS } from '../../../utils';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import DiscardBottomSheet from '../../../components/BottomSheets/DiscardBottomSheet';
 
 const AddPatient: React.FC = () => {
+
+   const sheetRef = useRef<any>(null);
+
   const [fullName, setFullName] = useState('John ');
   const [dob, setDob] = useState('');
   const [phone, setPhone] = useState('');
@@ -22,7 +29,29 @@ const AddPatient: React.FC = () => {
   const nameError = fullName.trim().length < 5;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <>
+    <AppSafeAreaView>
+      <Header
+        isBack
+        title="Add Patient"
+        backIcon={IMAGES.arrowLeft}
+        style={styles.headerStyle}
+        leftContent={() => (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+          console.log('Cancel button pressed, ref:', sheetRef.current);
+          sheetRef.current?.open();
+        }}
+          >
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._6F767E}
+            >{"Cancel"}</AppText>
+          </TouchableOpacity>
+        )}
+      />
       <View style={styles.container}>
         <ScrollView
           style={styles.scroll}
@@ -31,124 +60,122 @@ const AddPatient: React.FC = () => {
         >
           {/* Personal Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Personal Information</Text>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._6F767E}
+            >Personal Information</AppText>
             <View style={styles.card}>
               <View style={styles.fieldGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <Text style={styles.required}>*</Text>
-                </View>
-                <View style={[styles.inputWrapper, nameError && styles.inputError]}>
-                  <TextInput
-                    value={fullName}
-                    onChangeText={setFullName}
-                    placeholder="e.g. John Doe"
-                    placeholderTextColor="#6F767E"
-                    style={styles.input}
-                  />
-                  {nameError ? <Text style={styles.errorIcon}>!</Text> : null}
-                </View>
-                {nameError ? (
-                  <Text style={styles.helperError}>Please enter a valid full name.</Text>
-                ) : null}
+                <Input
+                  value={fullName}
+                  onChangeText={setFullName}
+                  placeholder="e.g. John Doe"
+                  label="Full Name"
+                  isMandatory={true}
+                  error={nameError ? "Please enter a valid full name." : ""}
+                  style={styles.fieldGroup}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Date of Birth</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    value={dob}
-                    onChangeText={setDob}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#6F767E"
-                    style={styles.input}
-                  />
-                </View>
+                <Input
+                  value={dob}
+                  onChangeText={setDob}
+                  placeholder="YYYY-MM-DD"
+                  label="Date of Birth"
+                  style={styles.fieldGroup}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
             </View>
           </View>
 
           {/* Contact Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Contact Details</Text>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._6F767E}
+            >Contact Details</AppText>
             <View style={styles.card}>
               <View style={styles.fieldGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.label}>Phone Number</Text>
-                  <Text style={styles.required}>*</Text>
-                </View>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.leadingIcon}>📞</Text>
-                  <TextInput
-                    value={phone}
-                    onChangeText={setPhone}
-                    keyboardType="phone-pad"
-                    placeholder="(555) 000-0000"
-                    placeholderTextColor="#6F767E"
-                    style={styles.input}
-                  />
-                </View>
+                <Input
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  placeholder="(555) 000-0000"
+                  label="Phone Number"
+                  isMandatory={true}
+                  leftComponent={<Text style={styles.leadingIcon}>📞</Text>}
+                  style={styles.fieldGroup}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Email Address</Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.leadingIcon}>✉️</Text>
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    placeholder="patient@example.com"
-                    placeholderTextColor="#6F767E"
-                    style={styles.input}
-                  />
-                </View>
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholder="patient@example.com"
+                  label="Email Address"
+                  leftComponent={<Text style={styles.leadingIcon}>✉️</Text>}
+                  style={styles.fieldGroup}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
             </View>
           </View>
 
           {/* Address */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Address</Text>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._6F767E}
+            >Address</AppText>
             <View style={styles.card}>
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Street Address</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    value={street}
-                    onChangeText={setStreet}
-                    placeholder="123 Main St, Apt 4B"
-                    placeholderTextColor="#6F767E"
-                    style={styles.input}
-                  />
-                </View>
+                <Input
+                  value={street}
+                  onChangeText={setStreet}
+                  placeholder="123 Main St, Apt 4B"
+                  label="Street Address"
+                  style={styles.fieldGroup}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
 
               <View style={styles.rowGap}>
                 <View style={[styles.fieldGroup, styles.flex1]}>
-                  <Text style={styles.label}>City</Text>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      value={city}
-                      onChangeText={setCity}
-                      placeholder="City"
-                      placeholderTextColor="#6F767E"
-                      style={styles.input}
-                    />
-                  </View>
+                  <Input
+                    value={city}
+                    onChangeText={setCity}
+                    placeholder="City"
+                    label="City"
+                    style={[styles.fieldGroup, styles.flex1]}
+                    containerBackgroundColor={COLORS.white}
+                    labelColor={COLORS._1A1D1F}
+                  />
                 </View>
                 <View style={[styles.fieldGroup, styles.zipWidth]}>
-                  <Text style={styles.label}>Zip</Text>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      value={zip}
-                      onChangeText={setZip}
-                      placeholder="12345"
-                      placeholderTextColor="#6F767E"
-                      style={styles.input}
-                    />
-                  </View>
+                  <Input
+                    value={zip}
+                    onChangeText={setZip}
+                    placeholder="12345"
+                    label="Zip"
+                    style={[styles.fieldGroup, styles.zipWidth]}
+                    containerBackgroundColor={COLORS.white}
+                    labelColor={COLORS._1A1D1F}
+                  />
                 </View>
               </View>
             </View>
@@ -156,46 +183,60 @@ const AddPatient: React.FC = () => {
 
           {/* Medical Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Medical Information</Text>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._6F767E}
+            >Medical Information</AppText>
             <View style={styles.card}>
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Initial Notes / Allergies</Text>
-                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                  <TextInput
-                    value={notes}
-                    onChangeText={setNotes}
-                    multiline
-                    numberOfLines={4}
-                    placeholder="Enter any known allergies, chronic conditions, or important medical history..."
-                    placeholderTextColor="#6F767E"
-                    style={[styles.input, styles.textArea]}
-                  />
-                </View>
-                <Text style={styles.helperText}>Optional. Can be updated later.</Text>
+                <Input
+                  value={notes}
+                  onChangeText={setNotes}
+                  multiline
+                  numberOfLines={4}
+                  placeholder="Enter any known allergies, chronic conditions, or important medical history..."
+                  label="Initial Notes / Allergies"
+                  helper="Optional. Can be updated later."
+                  style={[styles.fieldGroup, styles.textAreaWrapper]}
+                  inputStyle={styles.textArea}
+                  containerBackgroundColor={COLORS.white}
+                  labelColor={COLORS._1A1D1F}
+                />
               </View>
             </View>
           </View>
         </ScrollView>
 
         {/* Sticky CTA */}
-        <View style={styles.ctaContainer}>
-          <TouchableOpacity style={styles.ctaButton} activeOpacity={0.85}>
-            <Text style={styles.ctaText}>Save Patient</Text>
-          </TouchableOpacity>
-        </View>
+        <PrimaryButton
+          title='Save Patient'
+          onPress={() => { }}
+          style={{ marginHorizontal: getScaleSize(20) }}
+        />
       </View>
-    </SafeAreaView>
+     
+    </AppSafeAreaView>
+     <DiscardBottomSheet
+        ref={sheetRef}
+        onConfirm={() => {
+          console.log('Discard confirmed');
+        }}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    // backgroundColor: '#F8F9FA',
+    backgroundColor: COLORS._F8F9FA
+
+  },
+  headerStyle: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: getScaleSize(20),
   },
   header: {
     height: 60,
@@ -249,13 +290,6 @@ const styles = StyleSheet.create({
   section: {
     gap: 8,
   },
-  sectionLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#6F767E',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -270,54 +304,11 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     gap: 8,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1A1D1F',
-  },
-  required: {
-    color: '#FF4D4F',
-    fontWeight: '800',
-  },
-  inputWrapper: {
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    backgroundColor: '#F8F9FA',
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputError: {
-    borderColor: '#FF4D4F',
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1A1D1F',
-    paddingVertical: 10,
+    paddingHorizontal: 0
   },
   leadingIcon: {
-    marginRight: 8,
-    fontSize: 14,
-    color: '#6F767E',
-  },
-  errorIcon: {
-    marginLeft: 8,
     fontSize: 16,
-    color: '#FF4D4F',
-  },
-  helperError: {
-    fontSize: 12,
-    color: '#FF4D4F',
-    fontWeight: '600',
+    color: '#6F767E',
   },
   rowGap: {
     flexDirection: 'row',
@@ -336,37 +327,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 120,
     textAlignVertical: 'top',
-  },
-  helperText: {
-    fontSize: 12,
-    color: '#6F767E',
-  },
-  ctaContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255,255,255,0.96)',
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-  },
-  ctaButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#526674',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  ctaText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
   },
 });
 

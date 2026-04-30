@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { AppText } from '../../../components';
+import { AppButton, AppSafeAreaView, AppText } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -61,7 +61,7 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <AppSafeAreaView>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -94,7 +94,7 @@ const HomeScreen: React.FC = () => {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          style={{ marginTop: getScaleSize(20) }}
+          style={{ paddingTop: getScaleSize(20) }}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Requests Overview */}
@@ -285,9 +285,125 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+{/* Recent Queue */}
+          <View >
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1A1A}
+              style={[styles.sectionTitle, { marginTop: getScaleSize(24) }]}
+            >
+              {STRING.recentQueue}
+            </AppText>
+            <View
+            style={{
+              borderWidth:1,
+              borderColor:COLORS._EFEFEF,
+              borderRadius:getScaleSize(16),
+              padding:getScaleSize(16),
+              backgroundColor:COLORS.white,
+              marginHorizontal:getScaleSize(24)
+            }}
+            >
+              <View style={{flexDirection:'row', alignItems:'center',
+              }}>
+               {/* <Image
+               source={IMAGES.patient}
+               style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
+               /> */}
+            <View style={{
+              alignItems:'center',
+              justifyContent:'center',
+              height:getScaleSize(40), 
+              width:getScaleSize(40), 
+              borderWidth:1,
+              borderColor:COLORS._DBEAFE,
+              backgroundColor:COLORS._EFF6FF, borderRadius:getScaleSize(20)
+              }}>
+                <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._2563EB}
+                >{"JD"}</AppText>
+            </View>
+
+            <View
+            style={{marginLeft:getScaleSize(12),flex:0.8}}
+            >
+              <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1A1A}
+              >
+                {"John Doe"}
+              </AppText>
+              <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6B7280}
+              >
+                {"Physical Therapy"}
+                </AppText>
+            </View>
+            <View style={{
+              alignItems:'center',
+              backgroundColor:COLORS._EFF6FF, borderRadius:getScaleSize(20),
+              paddingHorizontal:getScaleSize(8),
+              paddingVertical:getScaleSize(3)
+              }}>
+              <AppText
+              size={getScaleSize(11)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._2563EB}
+              >
+                {"Submitted"}
+                </AppText>
+            </View>
+              </View>
+
+              <View
+              style={{height:1,backgroundColor:COLORS._E5E7EB, marginVertical:getScaleSize(12)}}
+              />
+
+              <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+                <View>
+                  <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._6F767E}
+                  >{"Request ID"}</AppText>
+                  <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._1A1D1F}
+                  >{"#6534"}</AppText>
+                  </View>
+                  <View>
+                  <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._6F767E}
+                  >{"Form Status"}</AppText>
+                  <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._1A1D1F}
+                  >{"Submitted"}</AppText>
+                  </View>
+              </View>
+
+              <AppButton
+              title={"Update & Sign"}
+              onPress={() => {}}
+              style={{marginTop:getScaleSize(12)}}
+              />
+
+            </View>
+          </View>
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 

@@ -74,6 +74,9 @@ export const STRING = {
   quickActions: 'Quick Actions',
   newRequest: 'New Request',
   addPatient: 'Add Patient',
+  signPendingForm: 'Sign Pending Form',
   enterNewPassword: 'Enter new password',
   enterConfirmPassword: 'Enter confirm password',
+  recentActivity: 'Recent Activity',
+  recentQueue: 'Recent Queue',
 };

@@ -41,6 +41,7 @@ export interface InputProps extends TextInputProps {
   labelRight?: React.ReactNode;
   isLocked?: boolean;
   renderPicker?: () => React.ReactNode;
+  inputWrapperStyle?: StyleProp<ViewStyle>;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -68,6 +69,7 @@ const Input: React.FC<InputProps> = ({
   labelRight,
   isLocked = false,
   renderPicker,
+  inputWrapperStyle,
   ...rest
 }) => {
   const { multiline } = rest;
@@ -112,6 +114,7 @@ const Input: React.FC<InputProps> = ({
           !rest.multiline && styles.inputWrapperFixed,
           rest.multiline && styles.inputWrapperMultiline,
           error ? styles.inputWrapperError : null,
+          inputWrapperStyle
         ]}
       >
         {leftIcon && <Image source={leftIcon} style={styles.icon} />}

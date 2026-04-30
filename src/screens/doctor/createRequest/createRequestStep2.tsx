@@ -1,45 +1,46 @@
 import React, { useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { AppButton, AppSafeAreaView, AppText } from '../../../components';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { services } from '../../../utils/dummyData';
 
 export type CreateRequestStep2Props = NativeStackScreenProps<RootStackParamList, 'CreateRequestStep2'>;
-
-type Service = {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-};
-
-const services: Service[] = [
-  { id: 'wound', title: 'Wound Care', description: 'Dressing changes, cleaning, and monitoring.', icon: '🩹' },
-  { id: 'iv', title: 'IV Therapy', description: 'Intravenous fluids and medication admin.', icon: '💉' },
-  { id: 'oxygen', title: 'Oxygen Support', description: 'Respiratory therapy and monitoring.', icon: '🫁' },
-  { id: 'nursing', title: 'General Nursing', description: 'Vital signs, medication, daily care.', icon: '🩺' },
-  { id: 'physio', title: 'Physiotherapy', description: 'Rehabilitation and mobility exercises.', icon: '🏃‍♂️' },
-  { id: 'lab', title: 'Lab Collection', description: 'Blood draws and sample collection.', icon: '🧪' },
-];
 
 const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) => {
   const [selected, setSelected] = useState<string>('wound');
   const canContinue = useMemo(() => !!selected, [selected]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+    <AppSafeAreaView>
       <View style={styles.container}>
+
+
         <View style={styles.header}>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={() => navigation.goBack()}>
-            <Text style={styles.headerIcon}>←</Text>
+          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={() => NavigationService.goBack()}>
+            <Image
+              source={IMAGES.arrowLeft}
+              style={styles.crossIcon}
+            />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Create Request</Text>
-            <Text style={styles.headerSubtitle}>Step 2/3: Service</Text>
+            <AppText
+              size={getScaleSize(12)}
+              color={COLORS._1A1D1F}
+              font={FONTS.Inter.Bold}
+            >Create Request</AppText>
+            <AppText
+              size={getScaleSize(16)}
+              color={COLORS._526674}
+              font={FONTS.Inter.SemiBold}
+            >Step 2/3: Service</AppText>
           </View>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8}>
-            <Text style={styles.headerIcon}>❔</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
@@ -49,8 +50,16 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Select Service</Text>
-              <Text style={styles.sectionSubtitle}>Choose the primary service required for the patient.</Text>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >Select Service(12)</AppText>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+              >Choose the primary service required for the patient.</AppText>
             </View>
 
             <View style={styles.grid}>
@@ -64,37 +73,38 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
                     onPress={() => setSelected(service.id)}
                   >
                     <View style={styles.cardTopRow}>
-                      <View style={[styles.iconWrap, isSelected && styles.iconWrapActive]}>
-                        <Text style={styles.iconText}>{service.icon}</Text>
-                      </View>
+                      <Image
+                        source={service.icon}
+                        style={{ height: getScaleSize(40), width: getScaleSize(40) }}
+                      />
                       <View style={[styles.checkOuter, isSelected && styles.checkOuterActive]}>
                         {isSelected ? <View style={styles.checkInner} /> : null}
                       </View>
                     </View>
-                    <Text style={styles.cardTitle}>{service.title}</Text>
-                    <Text style={styles.cardDesc}>{service.description}</Text>
+                    <AppText
+                      size={getScaleSize(15)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >{service.title}</AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >{service.description}</AppText>
                   </TouchableOpacity>
                 );
               })}
             </View>
           </ScrollView>
-
-          <View style={styles.bottomBar}>
-            <TouchableOpacity activeOpacity={0.9} style={styles.backBtn} onPress={() => navigation.goBack()}>
-              <Text style={styles.backText}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.nextBtn, !canContinue && styles.nextDisabled]}
-              disabled={!canContinue}
-              onPress={() => navigation.navigate('CreateRequestStep3')}
-            >
-              <Text style={styles.nextText}>Next</Text>
-            </TouchableOpacity>
+          <View style={styles.bottomButtonContainer}>
+            <AppButton
+              title={"Continue"}
+              onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3)}
+            />
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
@@ -113,9 +123,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#efefef',
+    borderBottomColor: COLORS._EFEFEF,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   circleBtn: {
     width: 40,
@@ -132,16 +146,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1a1d1f',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#526674',
   },
   content: {
     flex: 1,
@@ -179,8 +183,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#efefef',
-    padding: 14,
+    borderColor: COLORS._EFEFEF,
+    paddingTop: getScaleSize(18),
+    paddingHorizontal: getScaleSize(16),
+    paddingBottom: getScaleSize(7),
     shadowColor: '#000',
     shadowOpacity: 0.02,
     shadowRadius: 4,
@@ -188,8 +194,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardActive: {
-    borderColor: '#526674',
-    backgroundColor: '#f3f6f8',
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS._E8EDF1,
+    borderWidth: 2
+
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -282,6 +290,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#ffffff',
+  },
+  crossIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+  },
+  bottomButtonContainer: {
+    backgroundColor: COLORS.white,
+    paddingVertical: getScaleSize(17),
+    paddingHorizontal: getScaleSize(20),
   },
 });
 

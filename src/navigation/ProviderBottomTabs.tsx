@@ -1,22 +1,16 @@
 import React from 'react';
-import {
-  createBottomTabNavigator,
-  BottomTabBarProps,
-} from '@react-navigation/bottom-tabs';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { IMAGES } from '../assets/images';
-import { getScaleSize } from '../utils/scaleSize';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, FONTS } from '../utils';
-import { AppText } from '../components';
+import { PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProviderProfile from '../screens/provider/profile/profile';
-import AvailableRequest from '../screens/provider/request/AvailableRequest';
+import { IMAGES } from '../assets/images';
+import { AppText } from '../components';
+import { getScaleSize } from '../utils/scaleSize';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
@@ -29,14 +23,14 @@ const Tab = createBottomTabNavigator<ProviderBottomTabParamList>();
 
 const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
   switch (name) {
-    case 'Home':
-      return IMAGES.tab_home;
-    case 'Forms':
-      return IMAGES.tab_requests2;
-    case 'Alerts':
-      return IMAGES.tab_filled_notification;
-    case 'Profile':
-      return IMAGES.tab_profile;
+    case PROVIDER_TAB_SCREENS.HOME:
+     return IMAGES.tab_home;
+    case PROVIDER_TAB_SCREENS.FORMS:
+       return IMAGES.tab_request;
+    case PROVIDER_TAB_SCREENS.ALERTS:
+      return IMAGES.notification_icon;
+    case PROVIDER_TAB_SCREENS.PROFILE:
+       return IMAGES.tab_profile;
     default:
       return IMAGES.tab_home;
   }
@@ -48,10 +42,10 @@ const ProviderBottomTabs: React.FC = () => {
       screenOptions={{ headerShown: false }}
       tabBar={props => <CustomTabBar {...props} />}
     >
-      <Tab.Screen name="Home" component={ProviderHome} />
-      <Tab.Screen name="Forms" component={AvailableRequest} />
-      <Tab.Screen name="Alerts" component={ProviderNotification} />
-      <Tab.Screen name="Profile" component={ProviderProfile} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.HOME} component={ProviderHome} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.FORMS} component={FormsScreen} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.ALERTS} component={ProviderNotification} />
+      <Tab.Screen name={PROVIDER_TAB_SCREENS.PROFILE} component={ProviderProfile} />
     </Tab.Navigator>
   );
 };

@@ -22,6 +22,7 @@ import { Input, PrimaryButton } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { STRING } from '../../constant/strings';
 import NavigationService from '../../navigation/NavigationService';
+import { doctorSpecialities } from '../../utils/dummyData';
 
 // --- Sub-components ---
 
@@ -75,14 +76,7 @@ const Register: React.FC = () => {
   const [finess, setFiness] = useState('');
   const [specialty, setSpecialty] = useState(null);
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    { label: 'General Practitioner', value: 'General Practitioner' },
-    { label: 'Cardiologist', value: 'Cardiologist' },
-    { label: 'Pediatrician', value: 'Pediatrician' },
-    { label: 'Neurologist', value: 'Neurologist' },
-    { label: 'Dermatologist', value: 'Dermatologist' },
-    { label: 'Ophthalmologist', value: 'Ophthalmologist' },
-  ]);
+  const [items, setItems] = useState(doctorSpecialities);
   const [placeOfPractice, setPlaceOfPractice] = useState('');
   const [address, setAddress] = useState('');
   const [agreed, setAgreed] = useState(false);
