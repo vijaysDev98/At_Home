@@ -133,13 +133,15 @@ const ProviderProfile: React.FC = () => {
                   Eligible Services
                 </AppText>
               </View>
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-              >
-                3 Active
-              </AppText>
+              <View style={styles.activeBadge}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                >
+                  3 Active
+                </AppText>
+              </View>
             </View>
             <View style={styles.divider} />
             {[
@@ -293,5 +295,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: COLORS._EFEFEF,
     marginVertical: getScaleSize(10),
+  },
+  activeBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(6),
   },
 });

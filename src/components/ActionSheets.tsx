@@ -221,7 +221,7 @@ export const ReviewRequestSheet = React.forwardRef<
               onChangeText={text =>
                 text.length <= DETAILS_MAX && setReviewDetails(text)
               }
-              placeholder="The patient details provided do not match the scheduled service requirements. Please verify the patient ID."
+              placeholder="Details"
               placeholderTextColor={COLORS._6F767E}
               multiline
               numberOfLines={4}

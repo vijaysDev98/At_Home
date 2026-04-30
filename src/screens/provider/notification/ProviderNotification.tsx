@@ -110,7 +110,7 @@ const ProviderNotification: React.FC = () => {
             title="App Maintenance"
             subtitle="Scheduled maintenance this Sunday from 2 AM to 4 AM EST."
             time="Oct 22"
-            iconSource={IMAGES.notification_icon}
+            iconSource={IMAGES.ic_announcement}
           />
         </ScrollView>
       </View>

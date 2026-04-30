@@ -344,7 +344,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 
   const onSubmit = () => {
-    navigation.replace('ProviderBottomTabs');
+    navigation.replace('DoctorBottomTabs');
     return;
     // 🔥 Reset errors
     setError({ email: '', password: '' });
