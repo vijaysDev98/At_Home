@@ -323,6 +323,7 @@ import { COLORS, FONTS, REGEX } from '../../utils';
 import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant/strings';
 import NavigationService from '../../navigation/NavigationService';
+import { SCREENS } from '../../navigation/routes';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -344,7 +345,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 
   const onSubmit = () => {
-    navigation.replace('DoctorBottomTabs');
+    NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
     return;
     // 🔥 Reset errors
     setError({ email: '', password: '' });
@@ -370,6 +371,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     }
 
     if (!isValid) return;
+
+    // ✅ Static credentials check for demonstration
+    // if (
+    //   trimmedEmail.toLocaleLowerCase() === 'test@gmail.com' &&
+    //   trimmedPassword === 'Test@123'
+    // ) {
+    //   // navigation.replace('DoctorBottomTabs');
+    //   NavigationService.navigate('DoctorBottomTabs');
+    //   return;
+    // }
 
     // ✅ Mock failure for demonstration (matching the reference image error)
     setError(prev => ({

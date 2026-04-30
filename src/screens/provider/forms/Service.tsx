@@ -22,6 +22,8 @@ import {
   CompleteServiceSheet,
 } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 interface RouteParams {
   requestStatus?: string;
@@ -56,7 +58,6 @@ const getStatusColor = (status: string) => {
 };
 
 const ServiceScreen: React.FC = () => {
-  const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params as RouteParams) || {};
 
@@ -83,7 +84,7 @@ const ServiceScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => NavigationService.goBack()}
             style={styles.backBtn}
           >
             <Image source={IMAGES.arrow_back} style={styles.backIcon} />
@@ -100,14 +101,11 @@ const ServiceScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.openFormBtn}
                 onPress={() =>
-                  navigation.navigate(
-                    'ProviderForm' as never,
-                    {
-                      mode: 'update',
-                      requestStatus,
-                      formStatus,
-                    } as never,
-                  )
+                  NavigationService.navigate(SCREENS.PROVIDER_FORM, {
+                    mode: 'update',
+                    requestStatus,
+                    formStatus,
+                  } as never)
                 }
                 activeOpacity={0.8}
               >
@@ -306,7 +304,7 @@ const ServiceScreen: React.FC = () => {
         <CompleteServiceSheet
           ref={completeSheetRef}
           onComplete={() => {
-            navigation.navigate('ServiceCompleted', {
+            NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
               patientName: route.params?.patientName,
               requestId: route.params?.requestId,
               serviceType: route.params?.service,

@@ -17,6 +17,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { AppText, Input, WarningSheet } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import NavigationService from '../../../navigation/NavigationService';
 
 interface RouteParams {
   mode?: 'view' | 'update';
@@ -33,7 +34,6 @@ const SERVICE_TYPES = [
 ];
 
 const ProviderForm: React.FC = () => {
-  const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params as RouteParams) || {};
 
@@ -105,7 +105,7 @@ const ProviderForm: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => NavigationService.goBack()}
             style={styles.backBtn}
           >
             <Image source={IMAGES.arrow_back} style={styles.backIcon} />

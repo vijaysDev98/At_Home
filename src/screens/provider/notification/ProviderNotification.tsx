@@ -9,14 +9,12 @@ import {
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { AppText, AppButton } from '../../../components';
+import { AppText } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import {
   SectionHeader,
   NotificationItem,
 } from '../../../components/NotificationComponents';
-
-// Components moved to NotificationComponents.tsx
 
 const ProviderNotification: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
@@ -24,6 +22,7 @@ const ProviderNotification: React.FC = () => {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
           <AppText
             size={getScaleSize(18)}
@@ -34,6 +33,7 @@ const ProviderNotification: React.FC = () => {
           </AppText>
         </View>
 
+        {/* Tabs */}
         <View style={styles.tabs}>
           <TouchableOpacity
             style={styles.tabWrap}
@@ -69,6 +69,7 @@ const ProviderNotification: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Notifications List */}
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
@@ -96,7 +97,7 @@ const ProviderNotification: React.FC = () => {
             time="2h ago"
             iconSource={IMAGES.alert_serviceInProgress}
             action="Open Service"
-          />
+        />
           <NotificationItem
             title="Service Completed"
             subtitle="You completed Physiotherapy for John Doe."
@@ -135,11 +136,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 24,
   },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#526674',
-  },
   tabs: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,14 +147,6 @@ const styles = StyleSheet.create({
   tabWrap: {
     position: 'relative',
     paddingBottom: 12,
-  },
-  tab: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  tabActive: {
-    color: '#526674',
   },
   activeBorder: {
     position: 'absolute',
@@ -183,11 +171,5 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 32,
-  },
-  actionBtn: {
-    height: getScaleSize(36),
-    borderRadius: getScaleSize(8),
-    alignSelf: 'flex-start',
-    paddingHorizontal: getScaleSize(16),
   },
 });
