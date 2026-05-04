@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import {
   Image,
@@ -42,7 +41,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 
   const onSubmit = () => {
-    NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
+    NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
     return;
     // 🔥 Reset errors
     setError({ email: '', password: '' });

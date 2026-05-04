@@ -1,4 +1,4 @@
-import { IMAGES } from "../assets/images";
+import { IMAGES } from '../assets/images';
 
 export const doctorSpecialities = [
   { label: 'General Practitioner', value: 'General Practitioner' },
@@ -7,9 +7,7 @@ export const doctorSpecialities = [
   { label: 'Neurologist', value: 'Neurologist' },
   { label: 'Dermatologist', value: 'Dermatologist' },
   { label: 'Ophthalmologist', value: 'Ophthalmologist' },
-]
-
-
+];
 
 export interface PatientListProps {
   id: string;
@@ -21,7 +19,6 @@ export interface PatientListProps {
   avatar?: string;
   initials?: string;
 }
-
 
 export const patientsList: PatientListProps[] = [
   {
@@ -78,14 +75,16 @@ export const creatRequestPatientsList = [
   {
     id: 'patient_1',
     name: 'Eleanor Pena',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+    avatar:
+      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
     pid: '#P-8492',
     age: '68yo',
   },
   {
     id: 'patient_2',
     name: 'Albert Flores',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
+    avatar:
+      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
     pid: '#P-3310',
     age: '42yo',
   },
@@ -100,7 +99,8 @@ export const creatRequestPatientsList = [
   {
     id: 'patient_4',
     name: 'Wade Warren',
-    avatar: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
+    avatar:
+      'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
     pid: '#P-1120',
     age: '38yo',
   },
@@ -114,74 +114,139 @@ export type Service = {
 };
 
 export const services: Service[] = [
-  { id: 'wound', title: 'Wound Care', description: 'Dressing changes, cleaning, and monitoring.', icon: IMAGES.bandegeIcon },
-  { id: 'iv', title: 'IV Therapy', description: 'Intravenous fluids and medication admin.', icon: IMAGES.ivfIcon },
-  { id: 'oxygen', title: 'Oxygen Support', description: 'Respiratory therapy and monitoring.', icon: IMAGES.maskIcon },
-  { id: 'nursing', title: 'General Nursing', description: 'Vital signs, medication, daily care.', icon: IMAGES.nurseIcon },
-  { id: 'physio', title: 'Physiotherapy', description: 'Rehabilitation and mobility exercises.', icon: IMAGES.injectionIcon },
-  { id: 'lab', title: 'Lab Collection', description: 'Blood draws and sample collection.', icon: IMAGES.testTubeIcon },
+  {
+    id: 'prescription',
+    title: 'Free Prescription',
+    description: 'General medical prescription and refills.',
+    icon: IMAGES.bandegeIcon,
+  },
+  {
+    id: 'wound',
+    title: 'Wound Care',
+    description: 'Dressing changes, cleaning, and monitoring.',
+    icon: IMAGES.bandegeIcon,
+  },
+  {
+    id: 'iv',
+    title: 'IV Therapy',
+    description: 'Intravenous fluids and medication admin.',
+    icon: IMAGES.ivfIcon,
+  },
+  {
+    id: 'pca',
+    title: 'PCA Infusion',
+    description: 'Patient-controlled analgesia and monitoring.',
+    icon: IMAGES.ivfIcon,
+  },
+  {
+    id: 'pregnancy',
+    title: 'Pregnancy Care',
+    description: 'Specialized infusion and care for pregnancy.',
+    icon: IMAGES.nurseIcon,
+  },
+  {
+    id: 'oxygen',
+    title: 'Oxygen Support',
+    description: 'Respiratory therapy and monitoring.',
+    icon: IMAGES.maskIcon,
+  },
+  {
+    id: 'nursing',
+    title: 'Nursing Care',
+    description: 'Vital signs, medication, daily care.',
+    icon: IMAGES.nurseIcon,
+  },
+  {
+    id: 'physio',
+    title: 'Physiotherapy',
+    description: 'Rehabilitation and mobility exercises.',
+    icon: IMAGES.injectionIcon,
+  },
+  {
+    id: 'oral_nutrition',
+    title: 'Oral Nutrition',
+    description: 'Home oral nutrition supplements and monitoring.',
+    icon: IMAGES.bandegeIcon,
+  },
+  {
+    id: 'enteral',
+    title: 'Enteral Nutrition',
+    description: 'Artificial nutrition support and monitoring.',
+    icon: IMAGES.bandegeIcon,
+  },
+  {
+    id: 'parenteral',
+    title: 'Parenteral Nutrition',
+    description: 'Intravenous nutrition support and management.',
+    icon: IMAGES.ivfIcon,
+  },
+  {
+    id: 'lab',
+    title: 'Lab Collection',
+    description: 'Blood draws and sample collection.',
+    icon: IMAGES.testTubeIcon,
+  },
 ];
-
 
 export const serviceRequests = [
   {
     id: 1,
-    name: "John Doe",
-    initials: "JD",
-    service: "Physical Therapy",
-    requestId: "#6534",
-    formStatus: "Draft",
-    status: "Draft",
-    action: "Continue Form",
+    name: 'John Doe',
+    initials: 'JD',
+    service: 'Physical Therapy',
+    requestId: '#6534',
+    formStatus: 'Draft',
+    status: 'Draft',
+    action: 'Continue Form',
   },
   {
     id: 2,
-    name: "John Doe",
-    initials: "JD",
-    service: "Physical Therapy",
-    requestId: "#6534",
-    formStatus: "Submitted",
-    status: "Submitted",
-    action: "Update & Sign",
+    name: 'John Doe',
+    initials: 'JD',
+    service: 'Physical Therapy',
+    requestId: '#6534',
+    formStatus: 'Submitted',
+    status: 'Submitted',
+    action: 'Update & Sign',
   },
   {
     id: 3,
-    name: "John Doe",
-    initials: "JD",
-    service: "Physical Therapy",
-    requestId: "#6534",
-    formStatus: "Signed",
-    status: "Submitted",
+    name: 'John Doe',
+    initials: 'JD',
+    service: 'Physical Therapy',
+    requestId: '#6534',
+    formStatus: 'Signed',
+    status: 'Submitted',
     action: null,
   },
   {
     id: 4,
-    name: "John Doe",
-    initials: "JD",
-    service: "Physiotherapy",
-    requestId: "#6534",
-    formStatus: "Signed",
-    status: "In Progress",
+    name: 'John Doe',
+    initials: 'JD',
+    service: 'Physiotherapy',
+    requestId: '#6534',
+    formStatus: 'Signed',
+    status: 'In Progress',
     action: null,
   },
   {
     id: 5,
-    name: "Alice Smith",
-    initials: "AS",
-    service: "Physiotherapy",
-    requestId: "#6534",
-    formStatus: "Signed",
-    status: "Returned",
-    action: "Update & Re-sign",
+    name: 'Alice Smith',
+    initials: 'AS',
+    service: 'Physiotherapy',
+    requestId: '#6534',
+    formStatus: 'Signed',
+    status: 'Returned',
+    action: 'Update & Re-sign',
   },
   {
     id: 6,
-    name: "John Doe",
-    initials: "JD",
-    service: "Physiotherapy",
-    requestId: "#6534",
-    formStatus: "Signed",
-    status: "Completed",
+    name: 'John Doe',
+    initials: 'JD',
+    service: 'Physiotherapy',
+    requestId: '#6534',
+    formStatus: 'Signed',
+    status: 'Completed',
     action: null,
   },
 ];

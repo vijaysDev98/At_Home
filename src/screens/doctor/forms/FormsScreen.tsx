@@ -10,13 +10,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { AppDropdown, AppSafeAreaView, AppText, Header, Input, WarningSheet } from '../../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  Header,
+  Input,
+  WarningSheet,
+  RequestSummaryCard,
+} from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import AppDropdown from '../../../components/AppDropDown';
 
 const procedureList = [
   { label: 'Wound Dressing', value: 'wound_dressing' },
@@ -34,13 +42,10 @@ const routeList = [
 ];
 
 const FormsScreen: React.FC = () => {
-
- 
-   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const warningSheetRef = useRef<ActionSheetRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const diagnosisRef = useRef<View>(null);
   const treatmentRef = useRef<View>(null);
-
 
   const [state, setState] = useState({
     primaryDiagnosis: '',
@@ -63,15 +68,15 @@ const FormsScreen: React.FC = () => {
     secondaryDiagnosis: '',
     currentCondition: '',
     procedure: '',
-  })
+  });
 
-    useEffect(() => {
-      // Only show warning for preview/testing
-      // const timer = setTimeout(() => {
-        warningSheetRef.current?.show();
-      // }, 500);
-      // return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    // Only show warning for preview/testing
+    // const timer = setTimeout(() => {
+    warningSheetRef.current?.show();
+    // }, 500);
+    // return () => clearTimeout(timer);
+  }, []);
 
   // Validation function
   const validateForm = () => {
@@ -120,7 +125,11 @@ const FormsScreen: React.FC = () => {
 
   // Scroll to first error field
   const scrollToFirstError = () => {
-    if (errors.primaryDiagnosis || errors.secondaryDiagnosis || errors.currentCondition) {
+    if (
+      errors.primaryDiagnosis ||
+      errors.secondaryDiagnosis ||
+      errors.currentCondition
+    ) {
       diagnosisRef.current?.measure((x, y, width, height, pageX, pageY) => {
         scrollViewRef.current?.scrollTo({ y: pageY - 100, animated: true });
       });
@@ -144,38 +153,34 @@ const FormsScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView
-      style={{ backgroundColor: COLORS.white }}
-    >
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
           isBack
           backIcon={IMAGES.arrowLeft}
           title="Medical Form"
-
         />
         {/* Error summary toast */}
         {getErrorCount() > 0 && (
           <View style={styles.errorToast}>
-            <Image
-              source={IMAGES.error_icon}
-              style={styles.errorImageIcon}
-            />
+            <Image source={IMAGES.error_icon} style={styles.errorImageIcon} />
             <View style={styles.errorToastContent}>
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Bold}
                 color={COLORS.returned}
               >
-                Please fix {getErrorCount()} error{getErrorCount() > 1 ? 's' : ''} before submitting
+                Please fix {getErrorCount()} error
+                {getErrorCount() > 1 ? 's' : ''} before submitting
               </AppText>
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Regular}
                 color={COLORS.returned}
               >
-                Required fields are missing in Diagnosis and Treatment Plan sections.
+                Required fields are missing in Diagnosis and Treatment Plan
+                sections.
               </AppText>
             </View>
           </View>
@@ -195,32 +200,34 @@ const FormsScreen: React.FC = () => {
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-            >Robert Fox</AppText>
+            >
+              Robert Fox
+            </AppText>
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6F767E}
-            >Wound Care • Req #8829</AppText>
+            >
+              Wound Care • Req #8829
+            </AppText>
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6F767E}
-            >Request Status:
-              <AppText
-                font={FONTS.Inter.SemiBold}
-                color={COLORS.submitted}
-
-              > Submitted</AppText>
-              {" Form Status:"} <AppText
-                font={FONTS.Inter.SemiBold}
-                color={COLORS.submitted}
-
-              > Submitted</AppText>
+            >
+              Request Status:
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS.submitted}>
+                {' '}
+                Submitted
+              </AppText>
+              {' Form Status:'}{' '}
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS.submitted}>
+                {' '}
+                Submitted
+              </AppText>
             </AppText>
           </View>
         </View>
-
-
 
         <ScrollView
           ref={scrollViewRef}
@@ -233,10 +240,19 @@ const FormsScreen: React.FC = () => {
             font={FONTS.Inter.Bold}
             color={COLORS._6F767E}
           >
-            {"Wound Care Form"}
+            {'Wound Care Form'}
           </AppText>
 
-          <View ref={diagnosisRef} style={[styles.diagnosisCard, (errors.primaryDiagnosis || errors.secondaryDiagnosis || errors.currentCondition) && styles.diagnosisCardError]}>
+          <View
+            ref={diagnosisRef}
+            style={[
+              styles.diagnosisCard,
+              (errors.primaryDiagnosis ||
+                errors.secondaryDiagnosis ||
+                errors.currentCondition) &&
+                styles.diagnosisCardError,
+            ]}
+          >
             <View style={styles.diagnosisHeader}>
               <Image
                 source={IMAGES.stethoscopeIcon}
@@ -246,31 +262,35 @@ const FormsScreen: React.FC = () => {
                 size={getScaleSize(15)}
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
-              >{"Diagnosis"}</AppText>
+              >
+                {'Diagnosis'}
+              </AppText>
             </View>
             <Input
               isMandatory
-              label='Primary Diagnosis'
+              label="Primary Diagnosis"
               labelColor={COLORS._1A1D1F}
               labelFont={FONTS.Inter.SemiBold}
               placeholder="Enter ICD-10 or description"
               value={state?.primaryDiagnosis}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setState({ ...state, primaryDiagnosis: text });
                 clearError('primaryDiagnosis');
               }}
               style={[styles.inputField]}
               placeholderTextColor={COLORS._1A1D1F}
               error={errors.primaryDiagnosis}
-              inputWrapperStyle={errors.primaryDiagnosis && styles.inputFieldError}
+              inputWrapperStyle={
+                errors.primaryDiagnosis && styles.inputFieldError
+              }
             />
             <Input
-              label='Secondary Diagnosis'
+              label="Secondary Diagnosis"
               labelColor={COLORS._1A1D1F}
               labelFont={FONTS.Inter.SemiBold}
               placeholder="Optional secondary diagnosis"
               value={state?.secondaryDiagnosis}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setState({ ...state, secondaryDiagnosis: text });
                 clearError('secondaryDiagnosis');
               }}
@@ -281,24 +301,35 @@ const FormsScreen: React.FC = () => {
             <Input
               multiline
               isMandatory
-              label='Current Condition '
+              label="Current Condition "
               labelColor={COLORS._1A1D1F}
               labelFont={FONTS.Inter.SemiBold}
               placeholder="Describe patient's current state..."
               value={state?.currentCondition}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setState({ ...state, currentCondition: text });
                 clearError('currentCondition');
               }}
               style={styles.inputField}
-              inputWrapperStyle={[styles.textArea, errors.currentCondition && { borderColor: COLORS.error, backgroundColor: COLORS.errorBg }]}
+              inputWrapperStyle={[
+                styles.textArea,
+                errors.currentCondition && {
+                  borderColor: COLORS.error,
+                  backgroundColor: COLORS.errorBg,
+                },
+              ]}
               placeholderTextColor={COLORS._1A1D1F}
               error={errors.currentCondition}
             />
           </View>
 
-          <View ref={treatmentRef} style={[styles.diagnosisCard, errors.procedure && styles.diagnosisCardError]}>
-
+          <View
+            ref={treatmentRef}
+            style={[
+              styles.diagnosisCard,
+              errors.procedure && styles.diagnosisCardError,
+            ]}
+          >
             <View style={styles.diagnosisHeader}>
               <Image
                 source={IMAGES.treatmentIcon}
@@ -308,7 +339,9 @@ const FormsScreen: React.FC = () => {
                 size={getScaleSize(15)}
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
-              >{"Treatment Plan"}</AppText>
+              >
+                {'Treatment Plan'}
+              </AppText>
             </View>
             <AppDropdown
               label="Procedure / Intervention"
@@ -331,7 +364,7 @@ const FormsScreen: React.FC = () => {
               label="Treatment Goals"
               placeholder="Expected outcomes..."
               value={state.treatmentGoals}
-              onChangeText={(text) =>
+              onChangeText={text =>
                 setState({ ...state, treatmentGoals: text })
               }
               style={styles.inputField}
@@ -339,7 +372,6 @@ const FormsScreen: React.FC = () => {
           </View>
 
           <View style={styles.diagnosisCard}>
-
             <View style={styles.diagnosisHeader}>
               <Image
                 source={IMAGES.stethoscopeIcon}
@@ -349,7 +381,9 @@ const FormsScreen: React.FC = () => {
                 size={getScaleSize(15)}
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
-              >{"Medication / Dosage"}</AppText>
+              >
+                {'Medication / Dosage'}
+              </AppText>
             </View>
             <View style={styles.rowGap}>
               <View style={styles.col2}>
@@ -357,7 +391,7 @@ const FormsScreen: React.FC = () => {
                   label="Medication"
                   placeholder="Name"
                   value={state.medicationName}
-                  onChangeText={(text) =>
+                  onChangeText={text =>
                     setState({ ...state, medicationName: text })
                   }
                   style={styles.inputField}
@@ -369,9 +403,7 @@ const FormsScreen: React.FC = () => {
                   label="Dosage"
                   placeholder="e.g. 50mg"
                   value={state.dosage}
-                  onChangeText={(text) =>
-                    setState({ ...state, dosage: text })
-                  }
+                  onChangeText={text => setState({ ...state, dosage: text })}
                   style={styles.inputField}
                 />
               </View>
@@ -412,7 +444,9 @@ const FormsScreen: React.FC = () => {
                 size={getScaleSize(14)}
                 font={FONTS.Inter.SemiBold}
                 color={COLORS.primary}
-              >+ Add Medication</AppText>
+              >
+                + Add Medication
+              </AppText>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -422,9 +456,7 @@ const FormsScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionSecondary]}
             activeOpacity={0.85}
-            onPress={()=>
-       warningSheetRef?.current?.show()
-            }
+            onPress={() => warningSheetRef?.current?.show()}
           >
             <Text style={[styles.actionText, styles.actionSecondaryText]}>
               Save Progress
@@ -441,11 +473,10 @@ const FormsScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-        <WarningSheet ref={warningSheetRef} />
+      <WarningSheet ref={warningSheetRef} />
     </AppSafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -459,7 +490,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
     gap: 12,
-    backgroundColor: COLORS._E5E7EB
+    backgroundColor: COLORS._E5E7EB,
   },
   patientAvatarWrap: {
     width: getScaleSize(40),
@@ -569,7 +600,7 @@ const styles = StyleSheet.create({
   rowGap: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: getScaleSize(12)
+    marginTop: getScaleSize(12),
   },
   col2: {
     flex: 1,
@@ -711,8 +742,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   inputFieldError: {
-    backgroundColor: COLORS.errorBg
-  }
+    backgroundColor: COLORS.errorBg,
+  },
 });
 
 export default FormsScreen;

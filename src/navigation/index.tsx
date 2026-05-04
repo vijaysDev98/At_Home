@@ -85,11 +85,12 @@ export default function RootNavigation() {
         NavigationService.setTopLevelNavigator(navigationRef);
       }}
     >
-      <Stack.Navigator 
-      screenOptions={{
-        headerShown:false
-      }}
-      initialRouteName={SCREENS.SPLASH}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}
+        initialRouteName={SCREENS.SPLASH}
+      >
         <Stack.Screen
           name={SCREENS.SPLASH}
           component={SplashScreen}
@@ -140,7 +141,7 @@ export default function RootNavigation() {
           component={CreateRequest}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name={SCREENS.FORMS_SCREEN}
           component={FormsScreen}
           options={{ headerShown: false }}

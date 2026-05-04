@@ -1,4 +1,6 @@
 import React, { useRef, useState } from 'react';
+import moment from 'moment';
+
 import {
   Image,
   Modal,
@@ -310,14 +312,8 @@ const ServiceScreen: React.FC = () => {
               serviceType: route.params?.service,
               duration: '45 mins', // Static for demo as in screenshot
               doctorName: 'Sarah Jenkins', // Static for demo
-              completedDate: new Date().toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true,
-              }),
+              completedDate: moment().format('MMM D, YYYY, h:mm A'),
+
             });
           }}
         />

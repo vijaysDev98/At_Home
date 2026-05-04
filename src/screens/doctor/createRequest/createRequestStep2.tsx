@@ -1,8 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation';
+import { RootStackParamList } from '../../../navigation';
 import { AppButton, AppSafeAreaView, AppText } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -11,35 +18,43 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { services } from '../../../utils/dummyData';
 
-export type CreateRequestStep2Props = NativeStackScreenProps<RootStackParamList, 'CreateRequestStep2'>;
+export type CreateRequestStep2Props = NativeStackScreenProps<
+  RootStackParamList,
+  'CreateRequestStep2'
+>;
 
-const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) => {
+const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
+  navigation,
+}) => {
   const [selected, setSelected] = useState<string>('wound');
   const canContinue = useMemo(() => !!selected, [selected]);
 
   return (
     <AppSafeAreaView>
       <View style={styles.container}>
-
-
         <View style={styles.header}>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={() => NavigationService.goBack()}>
-            <Image
-              source={IMAGES.arrowLeft}
-              style={styles.crossIcon}
-            />
+          <TouchableOpacity
+            style={styles.circleBtn}
+            activeOpacity={0.8}
+            onPress={() => NavigationService.goBack()}
+          >
+            <Image source={IMAGES.arrowLeft} style={styles.crossIcon} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <AppText
               size={getScaleSize(12)}
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
-            >Create Request</AppText>
+            >
+              Create Request
+            </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
-            >Step 2/3: Service</AppText>
+            >
+              Step 2/3: Service
+            </AppText>
           </View>
         </View>
 
@@ -54,16 +69,20 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
                 size={getScaleSize(18)}
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
-              >Select Service(12)</AppText>
+              >
+                Select Service(12)
+              </AppText>
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Regular}
                 color={COLORS._6F767E}
-              >Choose the primary service required for the patient.</AppText>
+              >
+                Choose the primary service required for the patient.
+              </AppText>
             </View>
 
             <View style={styles.grid}>
-              {services.map((service) => {
+              {services.map(service => {
                 const isSelected = selected === service.id;
                 return (
                   <TouchableOpacity
@@ -75,9 +94,17 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
                     <View style={styles.cardTopRow}>
                       <Image
                         source={service.icon}
-                        style={{ height: getScaleSize(40), width: getScaleSize(40) }}
+                        style={{
+                          height: getScaleSize(40),
+                          width: getScaleSize(40),
+                        }}
                       />
-                      <View style={[styles.checkOuter, isSelected && styles.checkOuterActive]}>
+                      <View
+                        style={[
+                          styles.checkOuter,
+                          isSelected && styles.checkOuterActive,
+                        ]}
+                      >
                         {isSelected ? <View style={styles.checkInner} /> : null}
                       </View>
                     </View>
@@ -85,12 +112,16 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
                       size={getScaleSize(15)}
                       font={FONTS.Inter.Bold}
                       color={COLORS._1A1D1F}
-                    >{service.title}</AppText>
+                    >
+                      {service.title}
+                    </AppText>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
-                    >{service.description}</AppText>
+                    >
+                      {service.description}
+                    </AppText>
                   </TouchableOpacity>
                 );
               })}
@@ -98,8 +129,12 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
           </ScrollView>
           <View style={styles.bottomButtonContainer}>
             <AppButton
-              title={"Continue"}
-              onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3)}
+              title={'Continue'}
+              onPress={() =>
+                NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {
+                  serviceId: selected,
+                })
+              }
             />
           </View>
         </View>
@@ -145,7 +180,7 @@ const styles = StyleSheet.create({
   headerCenter: {
     alignItems: 'center',
     gap: 2,
-    flex: 1,
+    flex: 2,
   },
   content: {
     flex: 1,
@@ -180,6 +215,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
+    height: 164,
     backgroundColor: '#ffffff',
     borderRadius: 16,
     borderWidth: 2,
@@ -196,8 +232,7 @@ const styles = StyleSheet.create({
   cardActive: {
     borderColor: COLORS.primary,
     backgroundColor: COLORS._E8EDF1,
-    borderWidth: 2
-
+    borderWidth: 2,
   },
   cardTopRow: {
     flexDirection: 'row',
