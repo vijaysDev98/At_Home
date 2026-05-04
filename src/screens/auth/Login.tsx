@@ -345,11 +345,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   );
 
   const onSubmit = () => {
-    navigation.replace('DoctorBottomTabs');
+    NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
     return;
     // 🔥 Reset errors
     setError({ email: '', password: '' });
-NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
+    NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS);
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
@@ -381,7 +381,6 @@ NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
     //   NavigationService.navigate('DoctorBottomTabs');
     //   return;
     // }
-    
 
     // ✅ Mock failure for demonstration (matching the reference image error)
     setError(prev => ({

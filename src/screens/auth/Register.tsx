@@ -161,7 +161,7 @@ const Register: React.FC = () => {
               value={rpps}
               onChangeText={setRpps}
               keyboardType="numeric"
-              helper="Répertoire Partagé des Professionnels de Santé"
+              helper="RPPS number"
               style={{ marginBottom: getScaleSize(20) }}
               helperStyle={{ marginTop: getScaleSize(8) }}
             />
@@ -236,7 +236,7 @@ const Register: React.FC = () => {
             />
 
             <Input
-              label={STRING.address}
+              label={STRING.businessAddress}
               isMandatory
               placeholder="Street address, city, postal code"
               leftIcon={IMAGES.location_pin}
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: getScaleSize(14),
-    fontFamily: FONTS.Inter.SemiBold,
+    fontFamily: FONTS.Inter.Medium,
     color: COLORS.slate900,
     marginBottom: getScaleSize(8),
   },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     color: COLORS.slate700,
   },
   link: {
-    color: '#3b82f6',
+    color: COLORS._526674,
     fontFamily: FONTS.Inter.SemiBold,
   },
   footer: {

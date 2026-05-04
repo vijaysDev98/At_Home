@@ -137,13 +137,13 @@ const ProviderProfile: React.FC = () => {
                 <AppText
                   size={getScaleSize(12)}
                   font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
+                  color={COLORS._6B7280}
                 >
                   3 Active
                 </AppText>
               </View>
             </View>
-            <View style={styles.divider} />
+            {/* <View style={styles.divider} /> */}
             {[
               {
                 title: 'Wound Care Management',
@@ -176,7 +176,6 @@ const ProviderProfile: React.FC = () => {
                     {item.desc}
                   </AppText>
                 </View>
-                {idx < arr.length - 1 && <View style={styles.itemDivider} />}
               </View>
             ))}
           </View>
@@ -206,21 +205,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: COLORS._EFEFEF,
+    borderWidth: 1,
+    borderColor: COLORS._F3F4F6,
   },
   scroll: {
-    paddingHorizontal: getScaleSize(16),
+    // paddingHorizontal: getScaleSize(16),
     paddingBottom: getScaleSize(40),
-    paddingTop: getScaleSize(16),
+    // paddingTop: getScaleSize(16),
     gap: getScaleSize(12),
   },
   profileCard: {
     backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(16),
     alignItems: 'center',
     paddingVertical: getScaleSize(24),
-    paddingHorizontal: getScaleSize(16),
-    borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
     gap: getScaleSize(6),
   },
   avatar: {
@@ -243,11 +240,8 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(16),
-    paddingHorizontal: getScaleSize(16),
+    paddingHorizontal: getScaleSize(20),
     paddingVertical: getScaleSize(16),
-    borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
     gap: getScaleSize(12),
   },
   sectionHeaderRow: {
@@ -289,7 +283,12 @@ const styles = StyleSheet.create({
     gap: getScaleSize(4),
   },
   serviceItem: {
-    paddingVertical: getScaleSize(4),
+    paddingVertical: getScaleSize(14),
+    backgroundColor: COLORS._F8F9FA,
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(13),
+    borderWidth: 1,
+    borderColor: COLORS._F3F4F6,
   },
   itemDivider: {
     height: 1,
@@ -297,7 +296,7 @@ const styles = StyleSheet.create({
     marginVertical: getScaleSize(10),
   },
   activeBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS._F3F4F6,
     paddingHorizontal: getScaleSize(8),
     paddingVertical: getScaleSize(4),
     borderRadius: getScaleSize(6),

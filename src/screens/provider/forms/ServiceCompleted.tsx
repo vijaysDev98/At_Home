@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import AppText from '../../../components/AppText';
+import NavigationService from '../../../navigation/NavigationService';
 
 const ServiceCompletedScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
   // Extracting data from route params or using dummy data for demo
@@ -30,7 +30,10 @@ const ServiceCompletedScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => NavigationService.goBack()}
+          style={styles.backBtn}
+        >
           <Image source={IMAGES.arrow_back} style={styles.backIcon} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
@@ -76,7 +79,10 @@ const ServiceCompletedScreen: React.FC = () => {
           <View style={styles.successTopBar} />
           <View style={styles.successContent}>
             <View style={styles.checkContainer}>
-              <Image source={IMAGES.serviceCompletedCheck} style={styles.checkIcon} />
+              <Image
+                source={IMAGES.serviceCompletedCheck}
+                style={styles.checkIcon}
+              />
             </View>
 
             <AppText
@@ -98,14 +104,20 @@ const ServiceCompletedScreen: React.FC = () => {
             </AppText>
 
             <View style={styles.timePill}>
-              <Image source={IMAGES.serviceCompletedClock} style={styles.pillIcon} />
+              <Image
+                source={IMAGES.serviceCompletedClock}
+                style={styles.pillIcon}
+              />
               <AppText size={getScaleSize(12)} color={COLORS._64748B}>
                 Completed on {completedDate}
               </AppText>
             </View>
 
             <View style={styles.doctorPill}>
-              <Image source={IMAGES.serviceCompletedDoctor} style={styles.doctorIcon} />
+              <Image
+                source={IMAGES.serviceCompletedDoctor}
+                style={styles.doctorIcon}
+              />
               <AppText
                 size={getScaleSize(12)}
                 color={COLORS.submitted}
@@ -120,7 +132,10 @@ const ServiceCompletedScreen: React.FC = () => {
         {/* Summary Card */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
-            <Image source={IMAGES.serviceSummaryIcon} style={styles.summaryIcon} />
+            <Image
+              source={IMAGES.serviceSummaryIcon}
+              style={styles.summaryIcon}
+            />
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(14)}
@@ -241,7 +256,10 @@ const ServiceCompletedScreen: React.FC = () => {
         {/* Clinical Notes Card */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
-            <Image source={IMAGES.serviceNotesIcon} style={styles.summaryIcon} />
+            <Image
+              source={IMAGES.serviceNotesIcon}
+              style={styles.summaryIcon}
+            />
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(14)}
@@ -295,7 +313,10 @@ const ServiceCompletedScreen: React.FC = () => {
         {/* Bottom Actions */}
         <View style={styles.bottomActions}>
           <TouchableOpacity style={styles.actionBtnSecondary}>
-            <Image source={IMAGES.serviceViewActionIcon} style={styles.actionIcon} />
+            <Image
+              source={IMAGES.serviceViewActionIcon}
+              style={styles.actionIcon}
+            />
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(12)}

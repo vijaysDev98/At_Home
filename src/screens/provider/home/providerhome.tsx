@@ -7,16 +7,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { AppText } from '../../../components';
 import LinearGradient from 'react-native-linear-gradient';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 const ProviderHome: React.FC = () => {
-  const navigation = useNavigation<any>();
-
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
@@ -124,7 +123,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-            onPress={() => navigation.navigate('Forms' as never)}
+            // onPress={() => NavigationService.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -194,30 +193,24 @@ const ProviderHome: React.FC = () => {
             },
           ].map((item, index) => {
             const handlePress = () => {
-              navigation.navigate(
-                'ProviderForm' as never,
-                {
-                  mode:
-                    item.status === 'InProgress' || item.status === 'Submitted'
-                      ? 'update'
-                      : 'view',
-                  requestStatus: item.status,
-                  formStatus: item.formStatus,
-                } as never,
-              );
+              NavigationService.navigate(SCREENS.PROVIDER_FORM, {
+                mode:
+                  item.status === 'InProgress' || item.status === 'Submitted'
+                    ? 'update'
+                    : 'view',
+                requestStatus: item.status,
+                formStatus: item.formStatus,
+              } as never);
             };
 
             const handleServicePress = () => {
-              navigation.navigate(
-                'ServiceScreen' as never,
-                {
-                  requestStatus: item.status,
-                  formStatus: item.formStatus,
-                  patientName: item.name,
-                  service: item.specialty,
-                  requestId: item.requestId,
-                } as never,
-              );
+              NavigationService.navigate(SCREENS.SERVICE_SCREEN, {
+                requestStatus: item.status,
+                formStatus: item.formStatus,
+                patientName: item.name,
+                service: item.specialty,
+                requestId: item.requestId,
+              } as never);
             };
 
             const buttonText =
