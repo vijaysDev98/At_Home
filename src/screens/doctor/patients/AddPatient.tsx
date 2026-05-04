@@ -11,7 +11,6 @@ import { AppSafeAreaView, AppText, Header, Input, PrimaryButton } from '../../..
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
-import DiscardBottomSheet from '../../../components/BottomSheets/DiscardBottomSheet';
 
 const AddPatient: React.FC = () => {
 
@@ -217,12 +216,6 @@ const AddPatient: React.FC = () => {
       </View>
      
     </AppSafeAreaView>
-     <DiscardBottomSheet
-        ref={sheetRef}
-        onConfirm={() => {
-          console.log('Discard confirmed');
-        }}
-      />
     </>
   );
 };

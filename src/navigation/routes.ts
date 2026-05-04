@@ -17,6 +17,8 @@ export const SCREENS = {
   ADD_PATIENT: 'AddPatient',
   PATIENT_DETAIL: 'PatientDetail',
   SIGNATURE_FORM: 'SignatureForm',
+  DoctorRequest:'DoctorRequest',
+  FORMS_SCREEN : 'Forms_Screen'
 } as const;
 
 // Doctor Bottom Tab Screen Names
@@ -24,7 +26,7 @@ export const DOCTOR_TAB_SCREENS = {
   HOME: 'Home',
   PATIENTS: 'Patients',
   CREATE_REQUEST: 'CreateRequest',
-  FORMS: 'Forms',
+  DOCTOR_REQUEST: 'DoctorRequest',
   PROFILE: 'Profile',
 } as const;
 

@@ -30,6 +30,7 @@ import ServiceScreen from '../screens/provider/forms/Service';
 import ServiceCompletedScreen from '../screens/provider/forms/ServiceCompleted';
 import NavigationService from './NavigationService';
 import { SCREENS } from './routes';
+import FormsScreen from '../screens/doctor/forms/FormsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -44,6 +45,7 @@ export type RootStackParamList = {
   CreateRequest: undefined;
   CreateRequestStep2: undefined;
   CreateRequestStep3: undefined;
+  FORMS_SCREEN: undefined;
   DoctorBottomTabs: NavigatorScreenParams<BottomTabParamList> | undefined;
   ProviderBottomTabs:
     | NavigatorScreenParams<ProviderBottomTabParamList>
@@ -136,6 +138,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.CREATE_REQUEST}
           component={CreateRequest}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name={SCREENS.FORMS_SCREEN}
+          component={FormsScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

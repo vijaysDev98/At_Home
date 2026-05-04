@@ -1,190 +1,419 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { AppDropdown, AppSafeAreaView, AppText, Header, Input, WarningSheet } from '../../../components';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+
+const procedureList = [
+  { label: 'Wound Dressing', value: 'wound_dressing' },
+  { label: 'Debridement', value: 'debridement' },
+];
+
+const frequencyList = [
+  { label: 'Once', value: 'once' },
+  { label: 'Twice', value: 'twice' },
+];
+
+const routeList = [
+  { label: 'Oral', value: 'oral' },
+  { label: 'Injection', value: 'injection' },
+];
 
 const FormsScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+
+ 
+   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const diagnosisRef = useRef<View>(null);
+  const treatmentRef = useRef<View>(null);
+
+
+  const [state, setState] = useState({
+    primaryDiagnosis: '',
+    secondaryDiagnosis: '',
+    currentCondition: '',
+
+    procedure: '',
+    treatmentGoals: '',
+
+    medicationName: '',
+    dosage: '',
+    frequency: '',
+    route: '',
+
+    clinicalNotes: '',
+  });
+
+  const [errors, setErrors] = useState({
+    primaryDiagnosis: '',
+    secondaryDiagnosis: '',
+    currentCondition: '',
+    procedure: '',
+  })
+
+    useEffect(() => {
+      // Only show warning for preview/testing
+      // const timer = setTimeout(() => {
+        warningSheetRef.current?.show();
+      // }, 500);
+      // return () => clearTimeout(timer);
+    }, []);
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors = {
+      primaryDiagnosis: '',
+      secondaryDiagnosis: '',
+      currentCondition: '',
+      procedure: '',
+    };
+
+    let hasErrors = false;
+
+    // Validate Primary Diagnosis
+    if (!state.primaryDiagnosis.trim()) {
+      newErrors.primaryDiagnosis = 'Primary diagnosis is required';
+      hasErrors = true;
+    }
+
+    // Validate Current Condition
+    if (!state.currentCondition.trim()) {
+      newErrors.currentCondition = 'Current condition description is required';
+      hasErrors = true;
+    }
+
+    // Validate Procedure
+    if (!state.procedure) {
+      newErrors.procedure = 'Procedure selection is required';
+      hasErrors = true;
+    }
+
+    setErrors(newErrors);
+    return hasErrors;
+  };
+
+  // Get error count for display
+  const getErrorCount = () => {
+    return Object.values(errors).filter(error => error !== '').length;
+  };
+
+  // Clear specific error when user starts typing
+  const clearError = (field: keyof typeof errors) => {
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Scroll to first error field
+  const scrollToFirstError = () => {
+    if (errors.primaryDiagnosis || errors.secondaryDiagnosis || errors.currentCondition) {
+      diagnosisRef.current?.measure((x, y, width, height, pageX, pageY) => {
+        scrollViewRef.current?.scrollTo({ y: pageY - 100, animated: true });
+      });
+    } else if (errors.procedure) {
+      treatmentRef.current?.measure((x, y, width, height, pageX, pageY) => {
+        scrollViewRef.current?.scrollTo({ y: pageY - 100, animated: true });
+      });
+    }
+  };
+
+  // Handle submit with validation
+  const handleSubmit = () => {
+    const hasErrors = !validateForm();
+    if (!hasErrors) {
+      // Navigate to next screen
+      NavigationService.navigate(SCREENS.SIGNATURE_FORM);
+    } else {
+      // Scroll to first error
+      setTimeout(() => scrollToFirstError(), 100);
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView
+      style={{ backgroundColor: COLORS.white }}
+    >
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-            <Text style={styles.headerIcon}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Medical Form</Text>
+        <Header
+          style={styles.headerStyle}
+          isBack
+          backIcon={IMAGES.arrowLeft}
+          title="Medical Form"
+
+        />
+        {/* Error summary toast */}
+        {getErrorCount() > 0 && (
+          <View style={styles.errorToast}>
+            <Image
+              source={IMAGES.error_icon}
+              style={styles.errorImageIcon}
+            />
+            <View style={styles.errorToastContent}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.returned}
+              >
+                Please fix {getErrorCount()} error{getErrorCount() > 1 ? 's' : ''} before submitting
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS.returned}
+              >
+                Required fields are missing in Diagnosis and Treatment Plan sections.
+              </AppText>
+            </View>
           </View>
-          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-            <Text style={styles.headerIcon}>⋮</Text>
-          </TouchableOpacity>
+        )}
+
+        <View style={styles.patientInfoCard}>
+          <View style={styles.patientAvatarWrap}>
+            <Image
+              source={{
+                uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
+              }}
+              style={styles.patientAvatar}
+            />
+          </View>
+          <View>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >Robert Fox</AppText>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+            >Wound Care • Req #8829</AppText>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+            >Request Status:
+              <AppText
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.submitted}
+
+              > Submitted</AppText>
+              {" Form Status:"} <AppText
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.submitted}
+
+              > Submitted</AppText>
+            </AppText>
+          </View>
         </View>
 
-        {/* Error summary toast */}
-        <View style={styles.errorToast}>
-          <Text style={styles.errorToastIcon}>⚠️</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.errorToastTitle}>
-              Please fix 3 errors before submitting
-            </Text>
-            <Text style={styles.errorToastBody}>
-              Required fields are missing in Diagnosis and Treatment Plan
-              sections.
-            </Text>
-          </View>
-        </View>
+
 
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Patient context */}
-          <View style={styles.patientCard}>
-            <View style={styles.patientAvatarWrap}>
+          <AppText
+            size={getScaleSize(14)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._6F767E}
+          >
+            {"Wound Care Form"}
+          </AppText>
+
+          <View ref={diagnosisRef} style={[styles.diagnosisCard, (errors.primaryDiagnosis || errors.secondaryDiagnosis || errors.currentCondition) && styles.diagnosisCardError]}>
+            <View style={styles.diagnosisHeader}>
               <Image
-                source={{
-                  uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg',
-                }}
-                style={styles.patientAvatar}
+                source={IMAGES.stethoscopeIcon}
+                style={styles.stethoscopeIcon}
               />
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >{"Diagnosis"}</AppText>
             </View>
-            <View>
-              <Text style={styles.patientName}>Robert Fox</Text>
-              <Text style={styles.patientMeta}>Wound Care • Req #8829</Text>
-            </View>
+            <Input
+              isMandatory
+              label='Primary Diagnosis'
+              labelColor={COLORS._1A1D1F}
+              labelFont={FONTS.Inter.SemiBold}
+              placeholder="Enter ICD-10 or description"
+              value={state?.primaryDiagnosis}
+              onChangeText={(text) => {
+                setState({ ...state, primaryDiagnosis: text });
+                clearError('primaryDiagnosis');
+              }}
+              style={[styles.inputField]}
+              placeholderTextColor={COLORS._1A1D1F}
+              error={errors.primaryDiagnosis}
+              inputWrapperStyle={errors.primaryDiagnosis && styles.inputFieldError}
+            />
+            <Input
+              label='Secondary Diagnosis'
+              labelColor={COLORS._1A1D1F}
+              labelFont={FONTS.Inter.SemiBold}
+              placeholder="Optional secondary diagnosis"
+              value={state?.secondaryDiagnosis}
+              onChangeText={(text) => {
+                setState({ ...state, secondaryDiagnosis: text });
+                clearError('secondaryDiagnosis');
+              }}
+              style={styles.inputField}
+              placeholderTextColor={COLORS._1A1D1F}
+            />
+
+            <Input
+              multiline
+              isMandatory
+              label='Current Condition '
+              labelColor={COLORS._1A1D1F}
+              labelFont={FONTS.Inter.SemiBold}
+              placeholder="Describe patient's current state..."
+              value={state?.currentCondition}
+              onChangeText={(text) => {
+                setState({ ...state, currentCondition: text });
+                clearError('currentCondition');
+              }}
+              style={styles.inputField}
+              inputWrapperStyle={[styles.textArea, errors.currentCondition && { borderColor: COLORS.error, backgroundColor: COLORS.errorBg }]}
+              placeholderTextColor={COLORS._1A1D1F}
+              error={errors.currentCondition}
+            />
           </View>
 
-          {/* Diagnosis - error state */}
-          <View style={[styles.card, styles.cardError]}>
-            <View style={styles.errorStripe} />
-            <View style={styles.cardHeaderBetween}>
-              <View style={styles.rowCenter}>
-                <Text style={[styles.cardIcon, styles.cardIconError]}>🩺</Text>
-                <Text style={styles.cardTitle}>Diagnosis</Text>
-              </View>
-              <Text style={styles.badgeError}>2 missing</Text>
+          <View ref={treatmentRef} style={[styles.diagnosisCard, errors.procedure && styles.diagnosisCardError]}>
+
+            <View style={styles.diagnosisHeader}>
+              <Image
+                source={IMAGES.treatmentIcon}
+                style={styles.stethoscopeIcon}
+              />
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >{"Treatment Plan"}</AppText>
             </View>
-            <View style={styles.fieldGroupLg}>
-              <FormField
-                label="Primary Diagnosis"
-                required
-                placeholder="Enter ICD-10 or description"
-                error="Primary diagnosis is required"
-              />
-              <FormField
-                label="Secondary Diagnosis"
-                placeholder="Optional secondary diagnosis"
-                value="Type 2 Diabetes"
-              />
-              <FormField
-                label="Current Condition"
-                required
-                placeholder="Describe patient's current state..."
-                multiline
-                error="Current condition description is required"
-              />
-            </View>
+            <AppDropdown
+              label="Procedure / Intervention"
+              labelColor={COLORS._1A1D1F}
+              labelFont={FONTS.Inter.SemiBold}
+              style={styles.inputField}
+              isMandatory
+              data={procedureList}
+              value={state.procedure}
+              placeholder="Select procedure..."
+              onChange={(val: string | number) => {
+                setState({ ...state, procedure: val as string });
+                clearError('procedure');
+              }}
+              error={errors.procedure}
+            />
+
+            <Input
+              multiline
+              label="Treatment Goals"
+              placeholder="Expected outcomes..."
+              value={state.treatmentGoals}
+              onChangeText={(text) =>
+                setState({ ...state, treatmentGoals: text })
+              }
+              style={styles.inputField}
+            />
           </View>
 
-          {/* Treatment - error state */}
-          <View style={[styles.card, styles.cardError]}>
-            <View style={styles.errorStripe} />
-            <View style={styles.cardHeaderBetween}>
-              <View style={styles.rowCenter}>
-                <Text style={[styles.cardIcon, styles.cardIconError]}>🧰</Text>
-                <Text style={styles.cardTitle}>Treatment Plan</Text>
-              </View>
-              <Text style={styles.badgeError}>1 missing</Text>
-            </View>
-            <View style={styles.fieldGroupLg}>
-              <FormField
-                label="Procedure / Intervention"
-                required
-                placeholder="Select procedure..."
-                isSelect
-                error="Please select a procedure"
-              />
-              <FormField
-                label="Treatment Goals"
-                placeholder="Expected outcomes..."
-                multiline
-                value="Wound healing and infection prevention."
-              />
-            </View>
-          </View>
+          <View style={styles.diagnosisCard}>
 
-          {/* Medication - valid */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardIcon, styles.cardIconSuccess]}>💊</Text>
-              <Text style={styles.cardTitle}>Medication / Dosage</Text>
+            <View style={styles.diagnosisHeader}>
+              <Image
+                source={IMAGES.stethoscopeIcon}
+                style={styles.stethoscopeIcon}
+              />
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >{"Medication / Dosage"}</AppText>
             </View>
             <View style={styles.rowGap}>
               <View style={styles.col2}>
-                <FormField
+                <Input
                   label="Medication"
                   placeholder="Name"
-                  value="Amoxicillin"
-                  readOnly
+                  value={state.medicationName}
+                  onChangeText={(text) =>
+                    setState({ ...state, medicationName: text })
+                  }
+                  style={styles.inputField}
                 />
               </View>
+
               <View style={styles.col2}>
-                <FormField
+                <Input
                   label="Dosage"
                   placeholder="e.g. 50mg"
-                  value="500mg"
-                  readOnly
+                  value={state.dosage}
+                  onChangeText={(text) =>
+                    setState({ ...state, dosage: text })
+                  }
+                  style={styles.inputField}
                 />
               </View>
             </View>
+
             <View style={styles.rowGap}>
               <View style={styles.col2}>
-                <FormField
+                <AppDropdown
                   label="Frequency"
-                  isSelect
-                  placeholder="Once"
-                  value="TID"
-                  readOnly
+                  labelColor={COLORS._1A1D1F}
+                  labelFont={FONTS.Inter.SemiBold}
+                  data={frequencyList}
+                  value={state.frequency}
+                  placeholder="Select"
+                  onChange={(val: string | number) =>
+                    setState({ ...state, frequency: val as string })
+                  }
                 />
               </View>
-              <View style={styles.col2}>
-                <FormField
-                  label="Route"
-                  isSelect
-                  placeholder="Oral"
-                  value="Oral"
-                  readOnly
-                />
-              </View>
-            </View>
-            <TouchableOpacity style={styles.addBtn} activeOpacity={0.85}>
-              <Text style={styles.addBtnIcon}>＋</Text>
-              <Text style={styles.addBtnText}>Add Medication</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Notes */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardIcon}>📋</Text>
-              <Text style={styles.cardTitle}>Clinical Notes</Text>
+              <View style={styles.col2}>
+                <AppDropdown
+                  label="Route"
+                  labelColor={COLORS._1A1D1F}
+                  labelFont={FONTS.Inter.SemiBold}
+                  data={routeList}
+                  value={state.route}
+                  placeholder="Select"
+                  onChange={(val: string | number) =>
+                    setState({ ...state, route: val as string })
+                  }
+                />
+              </View>
             </View>
-            <FormField
-              label=""
-              placeholder="Additional observations, patient feedback, or follow-up instructions..."
-              multiline
-              value="Patient reported slight discomfort during the initial assessment."
-            />
+
+            <TouchableOpacity style={styles.addBtn}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.primary}
+              >+ Add Medication</AppText>
+            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -193,226 +422,55 @@ const FormsScreen: React.FC = () => {
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionSecondary]}
             activeOpacity={0.85}
+            onPress={()=>
+       warningSheetRef?.current?.show()
+            }
           >
             <Text style={[styles.actionText, styles.actionSecondaryText]}>
-              Save Draft
+              Save Progress
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionPrimary]}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('SignatureForm')}
+            onPress={handleSubmit}
           >
             <Text style={[styles.actionText, styles.actionPrimaryText]}>
-              Submit
+              Update & Sign
             </Text>
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+        <WarningSheet ref={warningSheetRef} />
+    </AppSafeAreaView>
   );
 };
 
-interface FormFieldProps {
-  label: string;
-  placeholder: string;
-  required?: boolean;
-  multiline?: boolean;
-  isSelect?: boolean;
-  error?: string;
-  value?: string;
-  readOnly?: boolean;
-}
-
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  placeholder,
-  required,
-  multiline,
-  isSelect,
-  error,
-  value,
-  readOnly,
-}) => {
-  const hasError = !!error;
-  return (
-    <View style={styles.field}>
-      {label ? (
-        <Text style={styles.label}>
-          {label}
-          {required ? <Text style={styles.required}> *</Text> : null}
-        </Text>
-      ) : null}
-      <View
-        style={[
-          styles.input,
-          multiline ? styles.inputMultiline : null,
-          isSelect ? styles.select : null,
-          hasError ? styles.inputError : null,
-          readOnly ? styles.inputReadonly : null,
-        ]}
-      >
-        <Text
-          style={[
-            styles.placeholder,
-            readOnly ? styles.placeholderReadonly : null,
-          ]}
-        >
-          {value || placeholder}
-        </Text>
-        {isSelect ? (
-          <Text
-            style={[
-              styles.selectIcon,
-              hasError ? styles.selectIconError : null,
-            ]}
-          >
-            ⌄
-          </Text>
-        ) : null}
-      </View>
-      {hasError ? (
-        <View style={styles.errorRow}>
-          <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    borderBottomColor: '#EFEFEF',
-    borderBottomWidth: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerIcon: {
-    fontSize: 20,
-    color: '#1A1D1F',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1D1F',
+    backgroundColor: COLORS._E5E7EB,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 140,
+    paddingBottom: 100,
     gap: 12,
-  },
-  patientCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: COLORS._E5E7EB
   },
   patientAvatarWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
     overflow: 'hidden',
     backgroundColor: '#E8EDF1',
   },
   patientAvatar: {
     width: '100%',
     height: '100%',
-  },
-  patientName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A1D1F',
-  },
-  patientMeta: {
-    fontSize: 12,
-    color: '#6F767E',
-    marginTop: 2,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    gap: 12,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  cardError: {
-    borderColor: '#FFA39E',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardHeaderBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardIcon: {
-    fontSize: 16,
-  },
-  cardIconError: {
-    color: '#FF4D4F',
-  },
-  cardIconSuccess: {
-    color: '#2ECA7F',
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1A1D1F',
-  },
-  badgeError: {
-    backgroundColor: '#FFF1F0',
-    color: '#FF4D4F',
-    fontSize: 11,
-    fontWeight: '700',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
   },
   errorStripe: {
     position: 'absolute',
@@ -429,9 +487,6 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     gap: 12,
-  },
-  fieldGroupLg: {
-    gap: 16,
   },
   field: {
     gap: 8,
@@ -497,6 +552,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FF4D4F',
   },
+  errorToast: {
+    backgroundColor: COLORS.errorBg,
+    borderBottomColor: COLORS.returned,
+    borderBottomWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
   errorText: {
     fontSize: 11,
     color: '#FF4D4F',
@@ -504,17 +569,18 @@ const styles = StyleSheet.create({
   rowGap: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: getScaleSize(12)
   },
   col2: {
     flex: 1,
   },
   addBtn: {
-    marginTop: 8,
-    borderRadius: 12,
+    marginTop: getScaleSize(12),
+    borderRadius: getScaleSize(12),
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: '#526674',
-    height: 44,
+    height: getScaleSize(44),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -529,27 +595,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#526674',
-  },
-  errorToast: {
-    backgroundColor: '#FFF1F0',
-    borderBottomColor: '#FFA39E',
-    borderBottomWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  errorToastIcon: {
-    fontSize: 16,
-    color: '#FF4D4F',
-    marginTop: 2,
-  },
-  errorToastTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FF4D4F',
-    marginBottom: 2,
   },
   errorToastBody: {
     fontSize: 12,
@@ -567,11 +612,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 6,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: -4 },
+    // shadowOpacity: 0.05,
+    // shadowRadius: 8,
+    // elevation: 6,
   },
   actionBtn: {
     flex: 1,
@@ -599,6 +644,75 @@ const styles = StyleSheet.create({
   actionPrimaryText: {
     color: '#FFFFFF',
   },
+  // New styles for inline styles
+  headerStyle: {
+    paddingHorizontal: getScaleSize(27),
+    backgroundColor: COLORS.white,
+  },
+  errorImageIcon: {
+    height: getScaleSize(18),
+    width: getScaleSize(18),
+  },
+  errorToastIcon: {
+    fontSize: 16,
+    color: '#FF4D4F',
+    marginTop: 2,
+  },
+  errorToastTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FF4D4F',
+    marginBottom: 2,
+  },
+  errorToastContent: {
+    flex: 1,
+  },
+  patientInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(16),
+    gap: getScaleSize(12),
+    backgroundColor: COLORS.white,
+  },
+  diagnosisCard: {
+    backgroundColor: COLORS.white,
+    padding: getScaleSize(17),
+    borderRadius: getScaleSize(16),
+  },
+  diagnosisHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
+  },
+  stethoscopeIcon: {
+    height: getScaleSize(20),
+    width: getScaleSize(20),
+  },
+  inputField: {
+    marginTop: getScaleSize(12),
+    paddingHorizontal: 0,
+  },
+  textArea: {
+    minHeight: 110,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#efefef',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    textAlignVertical: 'top',
+  },
+  diagnosisCardError: {
+    borderColor: COLORS.error,
+    // backgroundColor: COLORS.errorBg,
+    borderWidth: 1,
+  },
+  inputFieldError: {
+    backgroundColor: COLORS.errorBg
+  }
 });
 
 export default FormsScreen;

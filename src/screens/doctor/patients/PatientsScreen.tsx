@@ -26,8 +26,6 @@ type PatientStatus = 'All' | 'Recently Added' | 'Recently Updated';
 
 const chips: PatientStatus[] = ['All', 'Recently Added', 'Recently Updated',];
 
-
-
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const PatientsScreen: React.FC = () => {
@@ -84,11 +82,12 @@ const PatientsScreen: React.FC = () => {
   );
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    style={{backgroundColor:COLORS.white}}
+    >
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          {/* <Text style={styles.headerTitle}>Patients</Text> */}
           <AppText
           size={getScaleSize(20)}
     font={ FONTS.Inter.Bold}

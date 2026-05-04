@@ -24,6 +24,7 @@
     "react-native-actions-sheet": "^10.1.2",
     "react-native-date-picker": "^5.0.13",
     "react-native-dropdown-picker": "^5.4.6",
+    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "^2.31.1",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "^4.3.0",
