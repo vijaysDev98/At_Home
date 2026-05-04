@@ -1,6 +1,15 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  SectionList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Image,
+} from 'react-native';
+import { AppSafeAreaView, AppText, Header } from '../../../components';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
 
 const today = [
   {
@@ -8,8 +17,8 @@ const today = [
     title: 'Form Returned',
     desc: 'Provider Sarah M. requested clarification on medication list for John Doe (#REQ-8294).',
     time: '10:42 AM',
-    icon: '↺',
-    iconColor: '#f59e0b',
+    icon: IMAGES.ic_reload,
+    iconColor: COLORS._FFF4E5,
     unread: true,
   },
   {
@@ -17,8 +26,8 @@ const today = [
     title: 'Service Completed',
     desc: 'Wound care service for Maria Garcia (#REQ-8288) has been marked as completed.',
     time: '08:15 AM',
-    icon: '✓',
-    iconColor: '#10b981',
+    icon: IMAGES.ic_ServiceCompleted,
+    iconColor: COLORS._E6F9F0,
     unread: false,
   },
 ];
@@ -29,90 +38,90 @@ const week = [
     title: 'Status Update',
     desc: 'Request #REQ-8290 for Robert Smith is now In Progress.',
     time: 'Yesterday',
-    icon: '⟳',
-    iconColor: '#3b82f6',
+    icon: IMAGES.ic_inprogress,
+    iconColor: COLORS.primary,
   },
   {
     id: 'week-2',
     title: 'Form Returned',
     desc: 'Missing signature on authorization form for Emma Davis (#REQ-8285).',
     time: 'Mon',
-    icon: '↺',
-    iconColor: '#f59e0b',
+    icon: IMAGES.ic_reload,
+    iconColor: COLORS._FFF4E5,
   },
   {
     id: 'week-3',
     title: 'Service Completed',
     desc: 'IV Therapy for James Wilson (#REQ-8280) successfully completed.',
     time: 'Oct 22',
-    icon: '✓',
-    iconColor: '#10b981',
+    icon: IMAGES.ic_ServiceCompleted,
+    iconColor: COLORS._E6F9F0,
+  },
+];
+
+// SectionList data structure
+const notificationSections = [
+  {
+    title: 'Today',
+    data: today,
+  },
+  {
+    title: 'This Week',
+    data: week,
   },
 ];
 
 const DoctorNotification: React.FC = () => {
-  const renderItem = (
-    item: typeof today[number] | typeof week[number],
-    isUnread = false,
-  ) => {
+  const renderItem = ({ item, index }: { item: typeof today[number]; index: number; }) => {
+    const isUnread = item.unread || false;
     return (
-      <View key={item.id} style={[styles.card, isUnread ? styles.unreadCard : null]}>
+      <View style={[styles.notificationItem, isUnread ? styles.unreadCard : null]}>
         {isUnread ? <View style={styles.unreadDot} /> : null}
-        <View style={[styles.iconWrap, { borderColor: `${item.iconColor}22` }] }>
-          <Text style={[styles.icon, { color: item.iconColor }]}>{item.icon}</Text>
+        <View style={[styles.iconWrap, { borderColor: `${item.iconColor}22` }]}>
+          <Image source={item.icon} style={[styles.iconImage, { tintColor: item.iconColor }]} />
         </View>
         <View style={styles.textCol}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.time}>{item.time}</Text>
+            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>{item.title}</AppText>
+            <AppText size={getScaleSize(10)} color={COLORS._6B7280}>{item.time}</AppText>
           </View>
-          <Text style={styles.desc}>{item.desc}</Text>
+          <AppText size={getScaleSize(12)} color={COLORS._6F767E}>{item.desc}</AppText>
         </View>
       </View>
     );
   };
 
+  const renderSectionHeader = ({ section }: { section: typeof notificationSections[number] }) => (
+    <View style={styles.sectionHeader}>
+      <AppText size={getScaleSize(12)} font={FONTS.Inter.Bold} color={COLORS._6B7280}>{section.title}</AppText>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.markRead}>Mark all read</Text>
-          </TouchableOpacity>
-        </View>
+        <Header
+          style={styles.headerStyle}
+          title="Notifications"
+          leftContent={() => (
+            <TouchableOpacity activeOpacity={0.7}>
+              <AppText size={getScaleSize(13)} font={FONTS.Inter.Bold} color={COLORS._526674}>Mark all read</AppText>
+            </TouchableOpacity>
+          )}
+        />
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+        <SectionList
+          style={styles.sectionList}
+          sections={notificationSections}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          SectionSeparatorComponent={() => <View style={styles.sectionSeparator} />}
           showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Today</Text>
-            <View style={styles.sectionCard}>
-              {today.map((item, idx) => (
-                <View key={item.id}>
-                  {renderItem(item, item.unread)}
-                  {idx < today.length - 1 ? <View style={styles.divider} /> : null}
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>This Week</Text>
-            <View style={styles.sectionCard}>
-              {week.map((item, idx) => (
-                <View key={item.id}>
-                  {renderItem(item)}
-                  {idx < week.length - 1 ? <View style={styles.divider} /> : null}
-                </View>
-              ))}
-            </View>
-          </View>
-        </ScrollView>
+          contentContainerStyle={styles.sectionListContent}
+        />
       </View>
-    </SafeAreaView>
+   </AppSafeAreaView>
   );
 };
 
@@ -123,7 +132,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: COLORS._F8F9FA,
+  },
+  headerStyle: {
+    paddingHorizontal: getScaleSize(20),
+    backgroundColor: COLORS.white,
   },
   header: {
     flexDirection: 'row',
@@ -145,13 +158,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#526674',
   },
-  scroll: {
+  sectionList: {
     flex: 1,
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 16,
+  sectionListContent: {
+    // paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(12),
+  },
+  sectionHeader: {
+    marginBottom: getScaleSize(8),
+  },
+  sectionSeparator: {
+    height: getScaleSize(16),
   },
   section: {
     gap: 10,
@@ -173,49 +191,54 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
-  card: {
+  notificationItem: {
     flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 12,
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(14),
+    gap: getScaleSize(12),
     alignItems: 'flex-start',
+    backgroundColor: COLORS.white,
+    // marginHorizontal: getScaleSize(20),
+    borderRadius: getScaleSize(14),
+    // borderWidth: 1,
   },
   unreadCard: {
     backgroundColor: '#f4f7ff',
   },
   unreadDot: {
     position: 'absolute',
-    left: 8,
+    left: getScaleSize(8),
     top: '50%',
     marginTop: -4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#526674',
+    width: getScaleSize(8),
+    height: getScaleSize(8),
+    borderRadius: getScaleSize(4),
+    backgroundColor: COLORS._526674,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
-  icon: {
-    fontSize: 16,
-    fontWeight: '700',
+  iconImage: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
   },
   textCol: {
     flex: 1,
-    gap: 4,
-    paddingRight: 6,
+    gap: getScaleSize(4),
+    paddingRight: getScaleSize(6),
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: getScaleSize(8),
   },
   title: {
     fontSize: 14,
@@ -232,11 +255,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4b5563',
     lineHeight: 18,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginLeft: 52,
   },
 });
 

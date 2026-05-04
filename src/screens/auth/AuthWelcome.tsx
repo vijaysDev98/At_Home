@@ -7,7 +7,6 @@ import { AppButton, AppSafeAreaView, AppText } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant/strings';
-import DiscardBottomSheet from '../../components/BottomSheets/DiscardBottomSheet';
 import { SCREENS } from '../../navigation/routes';
 import NavigationService from '../../navigation/NavigationService';
 
@@ -59,12 +58,6 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
         </View>
       </View>
     </AppSafeAreaView>
-     <DiscardBottomSheet
-            ref={sheetRef}
-            onConfirm={() => {
-              console.log('Discard confirmed');
-            }}
-          />
           </>
   );
 };

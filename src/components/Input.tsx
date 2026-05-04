@@ -82,7 +82,8 @@ const Input: React.FC<InputProps> = ({
     : null);
   return (
     <View style={[styles.root, style]}>
-      <View style={styles.labelRow}>
+      {labelRight || label && (
+        <View style={styles.labelRow}>
         {label ? (
           <AppText
             size={labelSize ? labelSize : getScaleSize(13)}
@@ -95,6 +96,7 @@ const Input: React.FC<InputProps> = ({
         ) : null}
         {labelRight && labelRight}
       </View>
+    )}
       {subText ? (
         <AppText
           size={getScaleSize(12)}
@@ -204,8 +206,8 @@ const styles = StyleSheet.create({
   },
   inputWrapperMultiline: {
     minHeight: getScaleSize(56),
-    alignItems: 'flex-start',
-    paddingVertical: getScaleSize(14),
+    // alignItems: 'flex-start',
+    // paddingVertical: getScaleSize(14),
   },
   inputWrapperError: {
     borderColor: '#ef4444',
@@ -232,6 +234,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(20),
     height: getScaleSize(20),
     resizeMode: 'contain',
+    
   },
   helperRow: {
     flexDirection: 'row',

@@ -2,14 +2,16 @@ import React from 'react';
 import {
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
   Image,
+  TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import NavigationService from '../../../navigation/NavigationService';
+import { AppSafeAreaView, AppText, Header, Input } from '../../../components';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS, FONTS } from '../../../utils';
 
 const DoctorProfile: React.FC = () => {
   const handleLogout = () => {
@@ -17,15 +19,20 @@ const DoctorProfile: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.headerAvatar}>
-            <Text style={styles.headerAvatarIcon}>🧑‍⚕️</Text>
-          </View>
-        </View>
+        <Header
+          style={styles.headerStyle}
+          title="Profile"
+          leftContent={() => (
+            <View style={styles.headerAvatar}>
+              <Image
+                source={IMAGES.person}
+                style={styles.headerAvatarImage}
+              />
+            </View>
+          )}
+        />
 
         <ScrollView
           style={styles.scroll}
@@ -40,42 +47,72 @@ const DoctorProfile: React.FC = () => {
                 style={styles.avatar}
               />
               <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.85}>
-                <Text style={styles.cameraIcon}>📷</Text>
+                <Image source={IMAGES.editIcon} style={styles.cameraIcon} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.name}>Dr. John Smith</Text>
-            <Text style={styles.subhead}>General Practitioner</Text>
+            <AppText
+              size={getScaleSize(18)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}>
+              Dr. John Smith
+            </AppText>
+            <AppText
+              size={getScaleSize(14)}
+              color={COLORS._6B7280}>
+              General Practitioner
+            </AppText>
           </View>
 
           {/* Form card */}
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Personal Information</Text>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}>
+              Personal Information
+            </AppText>
             <View style={styles.fieldBlock}>
-              <Label text="Full Name" />
-              <Input value="Dr. John Smith" icon="👤" />
+
+              <Input
+                label='Full Name'
+                style={styles.inputContainer}
+                value="Dr. John Smith" leftIcon={IMAGES.ic_profile} />
             </View>
             <View style={styles.fieldBlock}>
-              <Label text="Email Address" />
-              <Input value="john.smith@athome.md" icon="✉️" valid />
+              <Input
+                label='Email Address'
+                style={styles.inputContainer}
+                value="john.smith@athome.md" leftIcon={IMAGES.email_icon} />
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Professional Credentials</Text>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}>
+              Professional Credentials
+            </AppText>
             <View style={styles.fieldBlock}>
-              <Label text="RPPS Number" />
-              <Input value="10002849501" icon="🪪" />
-            </View>
-            <View style={styles.fieldBlock}>
-              <Label text="FINESS Number" />
-              <Input value="750012345" icon="🏢" />
-            </View>
-            <View style={styles.fieldBlock}>
-              <Label text="Business Address" />
+              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
               <Input
+                label='RPPS Number'
+                style={styles.inputContainer} value="10002849501" leftIcon={IMAGES.card} />
+            </View>
+            <View style={styles.fieldBlock}>
+              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
+              <Input
+                label='FINESS Number'
+                style={styles.inputContainer} value="750012345" leftIcon={IMAGES.hospital} />
+            </View>
+            <View style={styles.fieldBlock}>
+              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>Business Address</AppText> */}
+              <Input
+                label='Business Address'
                 value={'123 Medical Center Blvd\n75001 Paris, France'}
-                icon="📍"
+                leftIcon={IMAGES.location_pin}
                 multiline
+                style={styles.inputContainer}
               />
             </View>
           </View>
@@ -93,57 +130,26 @@ const DoctorProfile: React.FC = () => {
             activeOpacity={0.85}
             onPress={handleLogout}
           >
-            <Text style={styles.logoutIcon}>↩️</Text>
-            <Text style={styles.logoutText}>Log Out</Text>
+            <Image source={IMAGES.arrow_back} style={styles.logoutIcon} />
+            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS.error}>Log Out</AppText>
           </TouchableOpacity>
         </ScrollView>
-
-        {/* Fixed Save */}
-        <View style={styles.saveBar}>
-          <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9}>
-            <Text style={styles.saveIcon}>💾</Text>
-            <Text style={styles.saveText}>Save Changes</Text>
-          </TouchableOpacity>
-        </View>
       </View>
-    </SafeAreaView>
-  );
-};
-
-const Label = ({ text }: { text: string }) => (
-  <Text style={styles.label}>{text}</Text>
-);
-
-const Input = ({
-  value,
-  icon,
-  valid,
-  multiline,
-}: {
-  value: string;
-  icon?: string;
-  valid?: boolean;
-  multiline?: boolean;
-}) => {
-  return (
-    <View style={styles.inputWrapper}>
-      {icon ? <Text style={styles.inputIcon}>{icon}</Text> : null}
-      <TextInput
-        style={[styles.input, multiline ? styles.textArea : null]}
-        value={value}
-        multiline={multiline}
-        editable={false}
-      />
-      {valid ? <Text style={styles.validIcon}>✔</Text> : null}
-    </View>
+      {/* Fixed Save */}
+      <View style={styles.saveBar}>
+        <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9}>
+          <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold} color={COLORS.white}>Save Changes</AppText>
+        </TouchableOpacity>
+      </View>
+    </AppSafeAreaView>
   );
 };
 
 const RowItem = ({ label, value, chevron }: { label: string; value?: string; chevron?: boolean }) => (
   <View style={styles.rowItem}>
-    <Text style={styles.rowLabel}>{label}</Text>
-    {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-    {chevron ? <Text style={styles.chevron}>›</Text> : null}
+    <AppText size={getScaleSize(14)} font={FONTS.Inter.SemiBold} color={COLORS._1A1D1F}>{label}</AppText>
+    {value ? <AppText size={getScaleSize(14)} color={COLORS._6B7280}>{value}</AppText> : null}
+    {chevron ? <AppText size={getScaleSize(16)} color={COLORS._6F767E}>›</AppText> : null}
   </View>
 );
 
@@ -156,7 +162,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: COLORS._F8F9FA,
+  },
+  headerStyle: {
+    paddingHorizontal: getScaleSize(20),
+    backgroundColor: COLORS.white,
   },
   statusBar: {
     height: 44,
@@ -178,35 +188,20 @@ const styles = StyleSheet.create({
   statusIcon: {
     fontSize: 12,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
   headerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#e4e9ee',
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    overflow: 'hidden',
+    backgroundColor: COLORS._E4E9EE,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
-  headerAvatarIcon: {
-    fontSize: 16,
+  headerAvatarImage: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary
   },
   scroll: {
     flex: 1,
@@ -215,22 +210,22 @@ const styles = StyleSheet.create({
     paddingBottom: 140,
   },
   avatarSection: {
-    backgroundColor: '#ffffff',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.white,
+    paddingVertical: getScaleSize(24),
+    paddingHorizontal: getScaleSize(20),
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: COLORS._E5E7EB,
   },
   avatarWrap: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: getScaleSize(96),
+    height: getScaleSize(96),
+    borderRadius: getScaleSize(48),
     overflow: 'hidden',
     position: 'relative',
-    marginBottom: 12,
+    marginBottom: getScaleSize(12),
     borderWidth: 4,
-    borderColor: '#ffffff',
+    borderColor: COLORS.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
@@ -244,184 +239,156 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -4,
     bottom: -4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#526674',
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: COLORS._526674,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: COLORS.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   cameraIcon: {
-    color: '#ffffff',
-    fontSize: 14,
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.white,
   },
   name: {
-    fontSize: 18,
+    fontSize: getScaleSize(18),
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS._1A1D1F,
   },
   subhead: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: getScaleSize(14),
+    color: COLORS._6B7280,
   },
   card: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(16),
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(16),
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS._E5E7EB,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
-    gap: 12,
+    gap: getScaleSize(12),
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: getScaleSize(12),
     fontWeight: '700',
-    color: '#6b7280',
+    color: COLORS._6B7280,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   fieldBlock: {
-    gap: 6,
+    gap: getScaleSize(6),
   },
   label: {
-    fontSize: 12,
-    color: '#4b5563',
+    fontSize: getScaleSize(12),
+    color: COLORS._6F767E,
     fontWeight: '600',
-    marginLeft: 4,
-  },
-  inputWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 10,
-    top: 14,
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  input: {
-    width: '100%',
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#f8fafc',
-    fontSize: 14,
-    color: '#111827',
-  },
-  textArea: {
-    height: 88,
-    textAlignVertical: 'top',
-    paddingTop: 12,
-  },
-  validIcon: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
-    color: '#10b981',
-    fontSize: 14,
+    marginLeft: getScaleSize(4),
   },
   rowItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: getScaleSize(10),
   },
   rowLabel: {
-    fontSize: 14,
-    color: '#374151',
+    fontSize: getScaleSize(14),
+    color: COLORS._1A1D1F,
     fontWeight: '600',
     flex: 1,
   },
   rowValue: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: getScaleSize(14),
+    color: COLORS._6B7280,
   },
   chevron: {
-    fontSize: 16,
-    color: '#9ca3af',
-    marginLeft: 6,
+    fontSize: getScaleSize(16),
+    color: COLORS._6F767E,
+    marginLeft: getScaleSize(6),
   },
   divider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
-    marginVertical: 4,
+    backgroundColor: COLORS._E5E7EB,
+    marginVertical: getScaleSize(4),
   },
   logoutBtn: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
     borderWidth: 1,
-    borderColor: '#ef4444',
-    backgroundColor: '#ffffff',
+    borderColor: COLORS.error,
+    backgroundColor: COLORS.white,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: getScaleSize(8),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
   },
   logoutIcon: {
-    fontSize: 14,
-    color: '#ef4444',
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.error,
   },
   logoutText: {
-    fontSize: 14,
+    fontSize: getScaleSize(14),
     fontWeight: '700',
-    color: '#ef4444',
+    color: COLORS.error,
   },
   saveBar: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(16),
     backgroundColor: 'rgba(255,255,255,0.92)',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: COLORS._E5E7EB,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
   },
   saveBtn: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#526674',
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS._526674,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: getScaleSize(8),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
   },
   saveIcon: {
-    fontSize: 16,
-    color: '#ffffff',
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    tintColor: COLORS.white,
   },
   saveText: {
-    fontSize: 15,
+    fontSize: getScaleSize(15),
     fontWeight: '700',
-    color: '#ffffff',
+    color: COLORS.white,
   },
+  inputContainer: {
+    paddingHorizontal: 0
+  }
 });
 
 export default DoctorProfile;

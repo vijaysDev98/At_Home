@@ -76,4 +76,5 @@ export const IMAGES = {
   serviceViewActionIcon: require('./figma_service_action_view.png'),
   serviceDownloadActionIcon: require('./figma_service_action_download.png'),
   ic_announcement: require('./ic_announcement.png'),
+  treatmentIcon: require('./treatmentIcon.png'),
 };

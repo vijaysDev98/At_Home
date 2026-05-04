@@ -18,12 +18,13 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { AppText } from '../components';
 import { DOCTOR_TAB_SCREENS } from './routes';
+import DoctorRequestScreen from '../screens/doctor/Request';
 
 export type BottomTabParamList = {
   Home: undefined;
   Patients: undefined;
   CreateRequest: undefined;
-  Forms: undefined;
+  DoctorRequest: undefined;
   Profile: undefined;
 };
 
@@ -35,7 +36,7 @@ const iconForRoute = (name: keyof BottomTabParamList) => {
       return IMAGES.tab_home;
     case DOCTOR_TAB_SCREENS.PATIENTS:
       return IMAGES.tab_patients;
-    case DOCTOR_TAB_SCREENS.FORMS:
+    case DOCTOR_TAB_SCREENS.DOCTOR_REQUEST:
       return IMAGES.tab_request;
     case DOCTOR_TAB_SCREENS.PROFILE:
       return IMAGES.tab_profile;
@@ -61,7 +62,7 @@ const DoctorBottomTabs: React.FC = () => {
       <Tab.Screen name={DOCTOR_TAB_SCREENS.HOME} component={HomeScreen} />
       <Tab.Screen name={DOCTOR_TAB_SCREENS.PATIENTS} component={PatientsScreen} />
       <Tab.Screen name={DOCTOR_TAB_SCREENS.CREATE_REQUEST} component={CreateRequest} />
-      <Tab.Screen name={DOCTOR_TAB_SCREENS.FORMS} component={FormsScreen} />
+      <Tab.Screen name={DOCTOR_TAB_SCREENS.DOCTOR_REQUEST} component={DoctorRequestScreen} />
       <Tab.Screen name={DOCTOR_TAB_SCREENS.PROFILE} component={DoctorProfile} />
     </Tab.Navigator>
   );
@@ -91,7 +92,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
           };
 
           const label =
-            route.name === DOCTOR_TAB_SCREENS.FORMS
+            route.name === DOCTOR_TAB_SCREENS.DOCTOR_REQUEST
               ? 'Request'
               : descriptors[route.key]?.options?.tabBarLabel ?? route.name;
           const icon = iconForRoute(route.name as keyof BottomTabParamList);

@@ -9,29 +9,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { AppSafeAreaView, Header } from '../../../components';
+import { IMAGES } from '../../../assets/images';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { COLORS } from '../../../utils';
 
 const SignatureForm: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.headerBtn}
-            activeOpacity={0.8}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.headerIcon}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Review & Sign</Text>
-          </View>
-          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-            <Text style={styles.headerIcon}>⋮</Text>
-          </TouchableOpacity>
-        </View>
+            <Header
+          style={styles.headerStyle}
+          isBack
+          backIcon={IMAGES.arrowLeft}
+          title="Review & Sign"
+
+        />
 
         <ScrollView
           style={styles.scroll}
@@ -105,7 +100,7 @@ const SignatureForm: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+   </AppSafeAreaView>
   );
 };
 
@@ -131,6 +126,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+   headerStyle: {
+    paddingHorizontal: getScaleSize(27),
+    backgroundColor: COLORS.white,
   },
   header: {
     height: 60,

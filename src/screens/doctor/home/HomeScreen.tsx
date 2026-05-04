@@ -14,6 +14,8 @@ import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 const avatarUri =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
@@ -61,7 +63,9 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    style={{backgroundColor:COLORS.white}}
+    >
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -84,7 +88,9 @@ const HomeScreen: React.FC = () => {
               </AppText>
             </View>
           </View>
-          <TouchableOpacity activeOpacity={0.7} style={styles.notificationBtn}>
+          <TouchableOpacity
+            onPress={() => NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)}
+            activeOpacity={0.7} style={styles.notificationBtn}>
             <Image
               source={IMAGES.notification_icon}
               style={styles.notificationIcon}
@@ -286,7 +292,7 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
 
-{/* Recent Queue */}
+          {/* Recent Queue */}
           <View >
             <AppText
               size={getScaleSize(16)}
@@ -297,106 +303,107 @@ const HomeScreen: React.FC = () => {
               {STRING.recentQueue}
             </AppText>
             <View
-            style={{
-              borderWidth:1,
-              borderColor:COLORS._EFEFEF,
-              borderRadius:getScaleSize(16),
-              padding:getScaleSize(16),
-              backgroundColor:COLORS.white,
-              marginHorizontal:getScaleSize(24)
-            }}
+              style={{
+                borderWidth: 1,
+                borderColor: COLORS._EFEFEF,
+                borderRadius: getScaleSize(16),
+                padding: getScaleSize(16),
+                backgroundColor: COLORS.white,
+                marginHorizontal: getScaleSize(24)
+              }}
             >
-              <View style={{flexDirection:'row', alignItems:'center',
+              <View style={{
+                flexDirection: 'row', alignItems: 'center',
               }}>
-               {/* <Image
+                {/* <Image
                source={IMAGES.patient}
                style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
                /> */}
-            <View style={{
-              alignItems:'center',
-              justifyContent:'center',
-              height:getScaleSize(40), 
-              width:getScaleSize(40), 
-              borderWidth:1,
-              borderColor:COLORS._DBEAFE,
-              backgroundColor:COLORS._EFF6FF, borderRadius:getScaleSize(20)
-              }}>
-                <AppText
-                size={getScaleSize(16)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._2563EB}
-                >{"JD"}</AppText>
-            </View>
+                <View style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: getScaleSize(40),
+                  width: getScaleSize(40),
+                  borderWidth: 1,
+                  borderColor: COLORS._DBEAFE,
+                  backgroundColor: COLORS._EFF6FF, borderRadius: getScaleSize(20)
+                }}>
+                  <AppText
+                    size={getScaleSize(16)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._2563EB}
+                  >{"JD"}</AppText>
+                </View>
 
-            <View
-            style={{marginLeft:getScaleSize(12),flex:0.8}}
-            >
-              <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1A1A}
-              >
-                {"John Doe"}
-              </AppText>
-              <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._6B7280}
-              >
-                {"Physical Therapy"}
-                </AppText>
-            </View>
-            <View style={{
-              alignItems:'center',
-              backgroundColor:COLORS._EFF6FF, borderRadius:getScaleSize(20),
-              paddingHorizontal:getScaleSize(8),
-              paddingVertical:getScaleSize(3)
-              }}>
-              <AppText
-              size={getScaleSize(11)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._2563EB}
-              >
-                {"Submitted"}
-                </AppText>
-            </View>
+                <View
+                  style={{ marginLeft: getScaleSize(12), flex: 0.8 }}
+                >
+                  <AppText
+                    size={getScaleSize(16)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1A1A}
+                  >
+                    {"John Doe"}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6B7280}
+                  >
+                    {"Physical Therapy"}
+                  </AppText>
+                </View>
+                <View style={{
+                  alignItems: 'center',
+                  backgroundColor: COLORS._EFF6FF, borderRadius: getScaleSize(20),
+                  paddingHorizontal: getScaleSize(8),
+                  paddingVertical: getScaleSize(3)
+                }}>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._2563EB}
+                  >
+                    {"Submitted"}
+                  </AppText>
+                </View>
               </View>
 
               <View
-              style={{height:1,backgroundColor:COLORS._E5E7EB, marginVertical:getScaleSize(12)}}
+                style={{ height: 1, backgroundColor: COLORS._E5E7EB, marginVertical: getScaleSize(12) }}
               />
 
-              <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View>
                   <AppText
-                  size={getScaleSize(11)}
-                  font={FONTS.Inter.SemiBold}
-                  color={COLORS._6F767E}
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.SemiBold}
+                    color={COLORS._6F767E}
                   >{"Request ID"}</AppText>
                   <AppText
-                  size={getScaleSize(13)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._1A1D1F}
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._1A1D1F}
                   >{"#6534"}</AppText>
-                  </View>
-                  <View>
+                </View>
+                <View>
                   <AppText
-                  size={getScaleSize(11)}
-                  font={FONTS.Inter.SemiBold}
-                  color={COLORS._6F767E}
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.SemiBold}
+                    color={COLORS._6F767E}
                   >{"Form Status"}</AppText>
                   <AppText
-                  size={getScaleSize(13)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._1A1D1F}
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._1A1D1F}
                   >{"Submitted"}</AppText>
-                  </View>
+                </View>
               </View>
 
               <AppButton
-              title={"Update & Sign"}
-              onPress={() => {}}
-              style={{marginTop:getScaleSize(12)}}
+                title={"Update & Sign"}
+                onPress={() => { }}
+                style={{ marginTop: getScaleSize(12) }}
               />
 
             </View>
@@ -408,12 +415,9 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS._F9FAFB,
-  },
   container: {
     flex: 1,
+    backgroundColor: COLORS._F9FAFB,
   },
   notificationIcon: {
     width: getScaleSize(16),
