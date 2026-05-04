@@ -36,7 +36,9 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = () => {
   }
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity

@@ -41,13 +41,16 @@ const DoctorProfile: React.FC = () => {
         >
           {/* Avatar section */}
           <View style={styles.avatarSection}>
-            <View style={styles.avatarWrap}>
-              <Image
-                source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg' }}
-                style={styles.avatar}
-              />
+            <View>
+              <View style={styles.avatarWrap}>
+                <Image
+                  source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg' }}
+                  style={styles.avatar}
+                />
+
+              </View>
               <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.85}>
-                <Image source={IMAGES.editIcon} style={styles.cameraIcon} />
+                <Image source={IMAGES.cameraIcon} style={styles.cameraIcon} />
               </TouchableOpacity>
             </View>
             <AppText
@@ -76,12 +79,16 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label='Full Name'
                 style={styles.inputContainer}
-                value="Dr. John Smith" leftIcon={IMAGES.ic_profile} />
+                value="Dr. John Smith" 
+                isLocked={true}
+                leftIcon={IMAGES.ic_profile}
+                 />
             </View>
             <View style={styles.fieldBlock}>
               <Input
                 label='Email Address'
                 style={styles.inputContainer}
+                isLocked={true}
                 value="john.smith@athome.md" leftIcon={IMAGES.email_icon} />
             </View>
           </View>
@@ -103,7 +110,10 @@ const DoctorProfile: React.FC = () => {
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
               <Input
                 label='FINESS Number'
-                style={styles.inputContainer} value="750012345" leftIcon={IMAGES.hospital} />
+                style={styles.inputContainer} 
+                value="750012345" 
+                leftIcon={IMAGES.hospital} 
+                />
             </View>
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>Business Address</AppText> */}
@@ -149,7 +159,7 @@ const RowItem = ({ label, value, chevron }: { label: string; value?: string; che
   <View style={styles.rowItem}>
     <AppText size={getScaleSize(14)} font={FONTS.Inter.SemiBold} color={COLORS._1A1D1F}>{label}</AppText>
     {value ? <AppText size={getScaleSize(14)} color={COLORS._6B7280}>{value}</AppText> : null}
-    {chevron ? <AppText size={getScaleSize(16)} color={COLORS._6F767E}>›</AppText> : null}
+    {chevron ? <Image source={IMAGES.forwardIcon} style={styles.chevronIcon} /> : null}
   </View>
 );
 
@@ -230,15 +240,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
+    elevation: 2
   },
   avatar: {
     width: '100%',
     height: '100%',
+    // borderRadius:"50%"
   },
   cameraBtn: {
     position: 'absolute',
-    right: -4,
-    bottom: -4,
+    right: 4,
+    bottom: 4,
     width: getScaleSize(32),
     height: getScaleSize(32),
     borderRadius: getScaleSize(16),
@@ -251,6 +263,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    zIndex:1
   },
   cameraIcon: {
     width: getScaleSize(16),
@@ -300,6 +313,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: getScaleSize(10),
+    justifyContent: 'space-between'
   },
   rowLabel: {
     fontSize: getScaleSize(14),
@@ -388,6 +402,11 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 0
+  },
+  chevronIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain'
   }
 });
 

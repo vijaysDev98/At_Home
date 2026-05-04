@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootStackParamList } from '../../navigation';
 import {
   AppSafeAreaView,
@@ -21,6 +22,9 @@ import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant/strings';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
+import { AppDispatch, RootState } from '../../redux/store';
+import { userLogin } from '../../actions/auth/authAction';
+import { setLoading } from '../../actions/auth/authSlice';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -28,6 +32,9 @@ export type LoginScreenProps = NativeStackScreenProps<
 >;
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.login);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState({
@@ -41,12 +48,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     [email, password],
   );
 
-  const onSubmit = () => {
-    navigation.replace('DoctorBottomTabs');
-    return;
+  const onSubmit = async () => {
     // 🔥 Reset errors
     setError({ email: '', password: '' });
-NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
+    
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
@@ -69,22 +74,13 @@ NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
 
     if (!isValid) return;
 
-    // ✅ Static credentials check for demonstration
-    // if (
-    //   trimmedEmail.toLocaleLowerCase() === 'test@gmail.com' &&
-    //   trimmedPassword === 'Test@123'
-    // ) {
-    //   // navigation.replace('DoctorBottomTabs');
-    //   NavigationService.navigate('DoctorBottomTabs');
-    //   return;
-    // }
-    
-
-    // ✅ Mock failure for demonstration (matching the reference image error)
-    setError(prev => ({
-      ...prev,
-      password: STRING.incorrectPassword,
-    }));
+    else{
+       const loginData = {
+        email: trimmedEmail,
+        password: trimmedPassword,
+      };
+      await dispatch(userLogin(loginData));
+    }
   };
 
   return (
@@ -175,7 +171,7 @@ NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS)
           <PrimaryButton
             title={STRING.login}
             onPress={onSubmit}
-            // disabled={isDisabled}
+            disabled={isDisabled || isLoading}
             style={{ marginTop: getScaleSize(12) }}
           />
 

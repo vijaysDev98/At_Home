@@ -18,7 +18,9 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({ navigation }) =
   const canContinue = useMemo(() => !!selected, [selected]);
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <View style={styles.container}>
 
 

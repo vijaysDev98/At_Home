@@ -29,7 +29,9 @@ const AddPatient: React.FC = () => {
 
   return (
     <>
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <Header
         isBack
         title="Add Patient"
