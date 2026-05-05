@@ -114,7 +114,9 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={{ flex: 0.5 }}>

@@ -30,7 +30,9 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   const canContinue = useMemo(() => !!selected, [selected]);
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity

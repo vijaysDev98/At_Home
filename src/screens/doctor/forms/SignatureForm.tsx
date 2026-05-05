@@ -18,7 +18,9 @@ const SignatureForm: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView
+    edges={true}
+    >
       <View style={styles.container}>
             <Header
           style={styles.headerStyle}
@@ -362,11 +364,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 6,
   },
   actionBtn: {
     height: 56,

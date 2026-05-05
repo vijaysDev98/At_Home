@@ -153,7 +153,7 @@ const FormsScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView edges={true}>
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}

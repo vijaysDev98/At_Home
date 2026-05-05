@@ -19,6 +19,7 @@ interface AppSafeAreaViewProps {
   isBottomMargin?: boolean;
   isLight?: boolean;
   isFullScreen?: boolean;
+  edges?:any
 }
 
 const AppSafeAreaView = ({
@@ -28,6 +29,7 @@ const AppSafeAreaView = ({
   isBottomMargin = true,
   isFullScreen = false,
   isLight,
+  edges
 }: AppSafeAreaViewProps) => {
   const insets = useSafeAreaInsets()
 
@@ -62,9 +64,11 @@ const AppSafeAreaView = ({
         style={[
           {
             flex: 1,
+            backgroundColor: COLORS.white,
           },
           style,
         ]}
+        edges={edges? ["top", "right", "left","bottom"] :["top", "right", "left"]}
       >
         <StatusBar
           translucent
