@@ -39,8 +39,8 @@ export type RootStackParamList = {
   Register: undefined;
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
-  OtpVerification: { email?: string } | undefined;
-  ResetPassword: undefined;
+  OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
+  ResetPassword: { email?: string; otp?: string; resetToken?: string } | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
   CreateRequestStep2: undefined;

@@ -1,28 +1,311 @@
-import { Platform } from "react-native";
-import { SHOW_TOAST, Storage } from "../../constant";
-import { AppDispatch } from "../../redux/store";
-import { setLoading } from "./authSlice";
-import { API } from "../../api";
+import { SHOW_TOAST, Storage } from '../../constant';
+import { AppDispatch } from '../../redux/store';
+import { setLoading, setUserData, resetAuth } from './authSlice';
+import { API } from '../../api';
+import NavigationService from '../../navigation/NavigationService';
+import { SCREENS } from '../../navigation/routes';
+import { fetchProfile } from '../profile/profileAction';
 
-export const userLogin =
-  (data: any) => async (dispatch: AppDispatch) => {
-    try {
-      data['fcm_token'] =
-        (await Storage.get(Storage.FCM_TOKEN_KEY)) ?? 'no token found';
-      dispatch(setLoading(true));
-      const response: any = await API.Instance.post(API.API_ROUTES.login, data);
+const getUserDataForRedux = (user: any) => {
+  if (!user) {
+    return null;
+  }
 
-      if (response?.success) {
-        await Storage.save(
-          Storage.USER_TOKEN,
-          response?.data?.access_token,
+  // Extract user data from login response, excluding tokens
+  const { 
+    accessToken, 
+    refreshToken, 
+    access_token, 
+    refresh_token,
+    ...sanitizedUser 
+  } = user;
+
+  return sanitizedUser;
+};
+
+const persistAuthInStorage = async (user: any) => {  
+  const accessToken = user?.accessToken;
+  const refreshToken = user?.refreshToken;
+  const roles = user?.roles || [];
+
+  if (accessToken) {
+    await Storage.save(Storage.USER_TOKEN, accessToken);
+  }
+
+  if (refreshToken) {
+    await Storage.save(Storage.REFRESH_TOKEN, refreshToken);
+  }
+
+  if (roles.length > 0) {
+    await Storage.save(Storage.USER_ROLE, roles[0]);
+  }
+};
+
+export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
+  try {
+    data['fcm_token'] =
+      (await Storage.get(Storage.FCM_TOKEN_KEY)) ?? 'no token found';
+    dispatch(setLoading(true));
+    const response: any = await API.Instance.post(API.API_ROUTES.login, data);
+
+    if (response?.status) {
+      const responseData = response?.data;
+      const innerData = responseData?.data;
+
+      // Handle OTP requirement
+      if (innerData?.requiresOtp || innerData?.requiresOTP) {
+        SHOW_TOAST(
+          responseData?.message || 'OTP sent to your email. Please verify.',
+          'success',
         );
-        // dispatch(getUserProfile());
+        dispatch(setLoading(false));
+        NavigationService.navigate(SCREENS.OTP_VERIFICATION, {
+          email: innerData?.email,
+        });
+        return;
+      }
+
+      // If no OTP required (direct login)
+      await persistAuthInStorage(innerData);
+      const roles = innerData?.roles || [];
+      dispatch(setUserData(getUserDataForRedux(innerData)));
+      dispatch(fetchProfile());
+      SHOW_TOAST('Welcome back!', 'success');
+      dispatch(setLoading(false));
+
+      // Role-based navigation
+      if (roles.includes('provider') || roles.includes('nurse')) {
+        NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
       } else {
-        SHOW_TOAST(response?.message || 'Something went wrong', 'error');
+        NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
+      }
+    } else {
+      if (response?.code === 401) {
+        SHOW_TOAST(
+          response?.message || 'Invalid credentials or account not approved',
+          'error',
+        );
+      } else if (response?.code === 403) {
+        SHOW_TOAST(
+          response?.message || 'Account pending approval or inactive',
+          'error',
+        );
+      } else {
+        SHOW_TOAST(
+          response?.message || 'Invalid credentials. Please try again.',
+          'error',
+        );
+      }
+    }
+  } catch (e) {
+    console.log('login Error', e);
+    SHOW_TOAST('Something went wrong', 'error');
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const response: any = await API.Instance.post(
+      API.API_ROUTES.register,
+      data,
+    );
+    dispatch(setLoading(false));
+
+    if (response?.status && response?.code === 201) {
+      SHOW_TOAST(
+        response?.data?.message ||
+          'Registration successful. Please wait for admin approval.',
+        'success',
+      );
+      NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
+    } else if (response?.code === 400 || response?.code === 409) {
+      SHOW_TOAST(
+        response?.message || 'Validation error or user already exists',
+        'error',
+      );
+    } else {
+      SHOW_TOAST(response?.message || 'Something went wrong', 'error');
+    }
+  } catch (e) {
+    dispatch(setLoading(false));
+    console.log('Register Error', e);
+    SHOW_TOAST('Something went wrong', 'error');
+  }
+};
+
+export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const response: any = await API.Instance.post(
+      API.API_ROUTES.verifyLoginOtp,
+      data,
+    );
+    console.log('after login', JSON.stringify(response));
+
+    if (response?.status && response?.code === 200) {
+      const responseData = response?.data;
+      const innerData = responseData?.data;
+
+      const user = innerData;
+
+      await persistAuthInStorage(innerData);
+      dispatch(setUserData(getUserDataForRedux(user)));
+      dispatch(fetchProfile());
+      SHOW_TOAST('Login successful!', 'success');
+      dispatch(setLoading(false));
+
+      // Role-based navigation
+      const roles = user?.roles || [];
+      if (roles.includes('provider') || roles.includes('nurse')) {
+        NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
+      } else {
+        NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
+      }
+    } else {
+      dispatch(setLoading(false));
+      if (response?.code === 400) {
+        SHOW_TOAST(response?.message || 'Invalid OTP', 'error');
+      } else if (response?.code === 401) {
+        SHOW_TOAST(response?.message || 'OTP expired', 'error');
+      } else {
+        SHOW_TOAST(
+          response?.message || 'Verification failed. Please try again.',
+          'error',
+        );
+      }
+    }
+  } catch (e) {
+    console.log('Verify OTP Error', e);
+    SHOW_TOAST('Something went wrong', 'error');
+    dispatch(setLoading(false));
+  }
+};
+
+export const userLogout = () => async (dispatch: AppDispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const token = await Storage.get(Storage.USER_TOKEN);
+    let data = {
+      token: token,
+    };
+    const response: any = await API.Instance.get(API.API_ROUTES.logout, {
+      params: data,
+    });
+    console.log('logout response', JSON.stringify(response));
+
+    if (response?.status) {
+      SHOW_TOAST(response?.message || 'Logged out successfully', 'success');
+      await Storage.clear();
+      dispatch(resetAuth());
+      NavigationService.reset(SCREENS.WELCOME);
+    } else {
+      // Show error toast if API logout fails, but proceed with local logout
+      SHOW_TOAST(response?.message || 'Failed to logout from server', 'error');
+    }
+  } catch (e: any) {
+    SHOW_TOAST('Something went wrong during logout', 'error');
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const forgotPassword =
+  (email: string) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.forgotPassword,
+        { email },
+      );
+
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.message || 'OTP sent to your email', 'success');
+        dispatch(setLoading(false));
+        NavigationService.navigate(SCREENS.OTP_VERIFICATION, {
+          email,
+          isForgotPassword: true,
+        });
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message || 'Failed to send OTP', 'error');
       }
     } catch (e) {
-     console.log("login Error",e)
+      console.log('Forgot Password Error', e);
+      SHOW_TOAST('Something went wrong', 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const verifyForgotPasswordOtp =
+  (data: { email: string; otp: string }) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.verifyForgotPasswordOTP,
+        data,
+      );
+
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST('OTP verified successfully', 'success');
+        dispatch(setLoading(false));
+        const resetToken = response?.data?.data?.resetToken || '';
+        NavigationService.navigate(SCREENS.RESET_PASSWORD, {
+          email: data.email,
+          otp: data.otp,
+          resetToken,
+        });
+      } else {
+        dispatch(setLoading(false));
+        if (response?.code === 400) {
+          SHOW_TOAST(response?.message || 'Invalid OTP', 'error');
+        } else if (response?.code === 401) {
+          SHOW_TOAST(response?.message || 'OTP expired', 'error');
+        } else {
+          SHOW_TOAST(
+            response?.message || 'Verification failed. Please try again.',
+            'error',
+          );
+        }
+      }
+    } catch (e) {
+      console.log('Verify Forgot Password OTP Error', e);
+      SHOW_TOAST('Something went wrong', 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const resetPassword =
+  (data: {
+    resetToken: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) =>
+  async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.resetPassword,
+        data,
+      );
+      console.log('reset password response', JSON.stringify(response));
+
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(
+          response?.message || 'Password changed successfully',
+          'success',
+        );
+        dispatch(setLoading(false));
+        NavigationService.reset(SCREENS.LOGIN);
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message || 'Failed to change password', 'error');
+      }
+    } catch (e) {
+      console.log('Reset Password Error', e);
       SHOW_TOAST('Something went wrong', 'error');
       dispatch(setLoading(false));
     }

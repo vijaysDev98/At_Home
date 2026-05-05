@@ -43,21 +43,16 @@ export async function refreshAccessToken(
     if (result.status) {
 
       const refreshResponse = result?.data?.data; // 👈 new access token data
+      if (!refreshResponse?.access_token) return "";
 
-      // 1️⃣ Get old stored user data
-      const userDetails = await Storage.get(Storage.USER_DETAILS);
-      const userData = JSON.parse(userDetails ?? '{}');
-      if (!userData) return "";
-
-      // 2️⃣ Replace access token only
-      const updatedUserDetails = {
-        ...userData,
-        access_token: refreshResponse.access_token,
-        access_token_expire: refreshResponse.access_token_expire,
-      };
-      // 3️⃣ Save back to AsyncStorage
-      await Storage.save(Storage.USER_DETAILS, JSON.stringify(updatedUserDetails));
-      return updatedUserDetails?.access_token;
+      await Storage.save(Storage.USER_TOKEN, refreshResponse.access_token);
+      
+      // If the backend also returns a new refresh token, save it too
+      if (refreshResponse.refresh_token) {
+        await Storage.save(Storage.REFRESH_TOKEN, refreshResponse.refresh_token);
+      }
+      
+      return refreshResponse.access_token;
     } else {
       return "";
     }

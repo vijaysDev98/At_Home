@@ -103,56 +103,8 @@ const OxygenTherapyForm: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              SHORT-TERM HOME OXYGEN THERAPY
+              Short-term Home Oxygen Therapy
             </AppText>
-          </View>
-
-          {/* Prescription Date */}
-          <View style={styles.card}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setPickerType('prescriptionDate');
-                setOpen(true);
-              }}
-            >
-              <Input
-                editable={false}
-                label="Prescription date"
-                placeholder="DD/MM/YYYY"
-                value={state.prescriptionDate}
-                style={styles.inputField}
-                pointerEvents="none"
-              />
-            </TouchableOpacity>
-            <DatePicker
-              modal
-              mode="date"
-              open={open}
-              date={date}
-              onConfirm={d => {
-                setOpen(false);
-                setDate(d);
-
-                if (pickerType === 'prescriptionDate') {
-                  const formattedDate = moment(d).format('DD/MM/YYYY');
-                  setState({ ...state, prescriptionDate: formattedDate });
-                }
-
-                setPickerType(null);
-              }}
-              onCancel={() => {
-                setOpen(false);
-                setPickerType(null);
-              }}
-            />
-
-            <AppDurationPicker
-              ref={durationPickerRef}
-              onConfirm={h => {
-                setState({ ...state, durationHours: h });
-              }}
-            />
           </View>
 
           {/* PATIENT SECTION */}
@@ -166,7 +118,7 @@ const OxygenTherapyForm: React.FC = () => {
 
           {/* PRESCRIPTION */}
           <View style={styles.card}>
-            {renderSectionHeader('PRESCRIPTION')}
+            {renderSectionHeader('Prescription')}
 
             <View style={{ gap: getScaleSize(16) }}>
               <View>
@@ -194,9 +146,16 @@ const OxygenTherapyForm: React.FC = () => {
                   <View style={styles.checkboxItem}>
                     <CheckBox
                       boxType="circle"
-                      value={state.primarySource === 'cylinder'}
+                      value={
+                        state.primarySource ===
+                        'ompressed oxygen cylinder with pressure regulator and appropriate flowmeter*'
+                      }
                       onValueChange={() =>
-                        setState({ ...state, primarySource: 'cylinder' })
+                        setState({
+                          ...state,
+                          primarySource:
+                            'ompressed oxygen cylinder with pressure regulator and appropriate flowmeter*',
+                        })
                       }
                       tintColors={{
                         true: COLORS.primary,
@@ -204,7 +163,10 @@ const OxygenTherapyForm: React.FC = () => {
                       }}
                     />
 
-                    <AppText size={getScaleSize(13)}>Cylinder</AppText>
+                    <AppText size={getScaleSize(13)}>
+                      ompressed oxygen cylinder with pressure regulator and
+                      appropriate flowmeter*
+                    </AppText>
                   </View>
                 </View>
               </View>
@@ -248,29 +210,42 @@ const OxygenTherapyForm: React.FC = () => {
               </View>
 
               <View style={styles.row}>
-                <View style={styles.checkboxItem}>
-                  <CheckBox
-                    boxType="circle"
-                    value={state.interface === 'cannula'}
-                    onValueChange={() =>
-                      setState({ ...state, interface: 'cannula' })
-                    }
-                    tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-                  />
+                <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
+                  Oxygen delivery method:
+                </AppText>
+                <View style={styles.row}>
+                  <View style={styles.checkboxItem}>
+                    <CheckBox
+                      boxType="circle"
+                      value={state.interface === 'cannula'}
+                      onValueChange={() =>
+                        setState({ ...state, interface: 'cannula' })
+                      }
+                      tintColors={{
+                        true: COLORS.primary,
+                        false: COLORS._6F767E,
+                      }}
+                    />
 
-                  <AppText size={getScaleSize(13)}>Nasal cannula</AppText>
-                </View>
-                <View style={styles.checkboxItem}>
-                  <CheckBox
-                    boxType="circle"
-                    value={state.interface === 'mask'}
-                    onValueChange={() =>
-                      setState({ ...state, interface: 'mask' })
-                    }
-                    tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-                  />
+                    <AppText size={getScaleSize(13)}>
+                      Oxygen nasal cannula
+                    </AppText>
+                  </View>
+                  <View style={styles.checkboxItem}>
+                    <CheckBox
+                      boxType="circle"
+                      value={state.interface === 'mask'}
+                      onValueChange={() =>
+                        setState({ ...state, interface: 'mask' })
+                      }
+                      tintColors={{
+                        true: COLORS.primary,
+                        false: COLORS._6F767E,
+                      }}
+                    />
 
-                  <AppText size={getScaleSize(13)}>Oxygen mask</AppText>
+                    <AppText size={getScaleSize(13)}>Oxygen mask</AppText>
+                  </View>
                 </View>
               </View>
 
@@ -298,8 +273,8 @@ const OxygenTherapyForm: React.FC = () => {
                     pointerEvents="none"
                   />
                 </TouchableOpacity>
-                <AppText size={getScaleSize(13)}>hours /</AppText>
-                <View style={styles.row}>
+                <AppText size={getScaleSize(13)}>hours / day / month</AppText>
+                {/* <View style={styles.row}>
                   <TouchableOpacity
                     onPress={() => setState({ ...state, durationPer: 'day' })}
                   >
@@ -341,7 +316,7 @@ const OxygenTherapyForm: React.FC = () => {
                       month
                     </AppText>
                   </TouchableOpacity>
-                </View>
+                </View> */}
               </View>
 
               <View style={{ gap: 12 }}>
@@ -376,7 +351,7 @@ const OxygenTherapyForm: React.FC = () => {
 
               <View style={styles.row}>
                 <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
-                  Humidifier (ISO 8185):
+                  Humidifier compliant with NF EN ISO 8185 standard{' '}
                 </AppText>
                 <View style={styles.row}>
                   <View style={styles.checkboxItem}>
@@ -421,7 +396,8 @@ const OxygenTherapyForm: React.FC = () => {
                 />
 
                 <AppText size={getScaleSize(13)}>
-                  Provision of backup source (cylinder)
+                  Backup source: compressed oxygen cylinder with pressure
+                  regulator and appropriate flowmeter
                 </AppText>
               </View>
 
@@ -434,7 +410,8 @@ const OxygenTherapyForm: React.FC = () => {
                 />
 
                 <AppText size={getScaleSize(13)}>
-                  Provision of mobility source (small cylinder)
+                  Mobility source: 1 small compressed oxygen cylinder with
+                  pressure regulator and appropriate flowmeter
                 </AppText>
               </View>
 
@@ -447,7 +424,7 @@ const OxygenTherapyForm: React.FC = () => {
                 />
 
                 <AppText size={getScaleSize(13)}>
-                  Provision of a pulse oximeter
+                  Provision of a pulse oximeter{' '}
                 </AppText>
               </View>
 
@@ -462,7 +439,7 @@ const OxygenTherapyForm: React.FC = () => {
                 />
 
                 <AppText size={getScaleSize(13)}>
-                  Non-kinking star-lumen tubing
+                  Non-kinking star-lumen oxygen tubing if possible{' '}
                 </AppText>
               </View>
 
@@ -495,7 +472,7 @@ const OxygenTherapyForm: React.FC = () => {
 
           {/* PATIENT INSTRUCTIONS */}
           <View style={styles.card}>
-            {renderSectionHeader('PATIENT INSTRUCTIONS')}
+            {renderSectionHeader('Patient Instructions')}
             <View style={{ gap: 6 }}>
               <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
                 {'\u2022'} NEVER smoke or vape while using oxygen.
@@ -576,6 +553,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: getScaleSize(5),
     flexWrap: 'wrap',
+    width: '80%',
   },
   checkboxItem: {
     flexDirection: 'row',

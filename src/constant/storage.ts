@@ -1,11 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Storage = {
-    USER_DETAILS: 'USER_DETAILS',
     FCM_TOKEN_KEY:'FCM_TOKEN_KEY',
     USER_TOKEN:'USER_TOKEN',
-
-
+    REFRESH_TOKEN: 'REFRESH_TOKEN',
+    USER_ROLE: 'USER_ROLE',
     async save(key: string, value: string): Promise<boolean> {
         try {
             const res = await AsyncStorage.setItem(key, value ?? '');

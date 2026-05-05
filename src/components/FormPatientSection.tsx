@@ -15,6 +15,7 @@ export interface PatientSectionProps {
   setState: (state: any) => void;
   showWeight?: boolean;
   showNIR?: boolean;
+  showALD?: boolean;
 }
 
 const FormPatientSection: React.FC<PatientSectionProps> = ({
@@ -22,6 +23,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
   setState,
   showWeight = true,
   showNIR = true,
+  showALD = true,
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
@@ -41,7 +43,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader('Patient', IMAGES.person)}
+      {renderSectionHeader('Patient Information', IMAGES.person)}
       <View style={styles.row}>
         <Input
           label="First name"
@@ -95,7 +97,6 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           setDobDate(d);
           const formattedDate = moment(d).format('DD/MM/YYYY');
           setState({ ...state, patientDOB: formattedDate });
-
         }}
         onCancel={() => setOpenDob(false)}
       />
@@ -110,28 +111,31 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         />
       )}
 
-      <View style={[styles.checkboxItem, { marginTop: getScaleSize(12) }]}>
-        <CheckBox
-          boxType="square"
-          value={
-            state.careRelatedToALD === true || state.careRelatedToALD === 'ALD'
-          }
-          onValueChange={val => {
-            const newVal =
-              typeof state.careRelatedToALD === 'string'
-                ? val
-                  ? 'ALD'
-                  : 'NOT_ALD'
-                : val;
-            setState({ ...state, careRelatedToALD: newVal });
-          }}
-          tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-        />
+      {showALD && (
+        <View style={[styles.checkboxItem, { marginTop: getScaleSize(12) }]}>
+          <CheckBox
+            boxType="square"
+            value={
+              state.careRelatedToALD === true ||
+              state.careRelatedToALD === 'ALD'
+            }
+            onValueChange={val => {
+              const newVal =
+                typeof state.careRelatedToALD === 'string'
+                  ? val
+                    ? 'ALD'
+                    : 'NOT_ALD'
+                  : val;
+              setState({ ...state, careRelatedToALD: newVal });
+            }}
+            tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
+          />
 
-        <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
-          Care related to a long-term condition (ALD)
-        </AppText>
-      </View>
+          <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+            Care related to a long-term condition (ALD)
+          </AppText>
+        </View>
+      )}
     </View>
   );
 };

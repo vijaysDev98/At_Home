@@ -110,7 +110,7 @@ const NursingCareForm: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              PRESCRIPTION FORM EXCLUSIVELY FOR NURSING CARE
+              Prescription Form Exclusively For Nursing Care
             </AppText>
             <AppText
               size={getScaleSize(13)}
@@ -118,7 +118,16 @@ const NursingCareForm: React.FC = () => {
               color={COLORS._6F767E}
               style={{ marginTop: getScaleSize(4) }}
             >
-              TICK THE APPROPRIATE BOXES ON THE FORM
+              This prescription form is intended exclusively for the
+              prescription of nursing care.
+            </AppText>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+              style={{ marginTop: getScaleSize(8) }}
+            >
+              Cross out any items that do not apply.
             </AppText>
           </View>
 
@@ -150,11 +159,13 @@ const NursingCareForm: React.FC = () => {
                 setDate(d);
                 const formattedDate = moment(d).format('DD/MM/YYYY');
 
-                
                 if (pickerType === 'prescriptionDate') {
                   setState({ ...state, prescriptionDate: formattedDate });
                 } else if (pickerType === 'catheterRemovalDate') {
-                  setState({ ...state, urinaryCatheterRemovalDate: formattedDate });
+                  setState({
+                    ...state,
+                    urinaryCatheterRemovalDate: formattedDate,
+                  });
                 }
                 setPickerType(null);
               }}
@@ -166,17 +177,28 @@ const NursingCareForm: React.FC = () => {
           </View>
 
           {/* PATIENT SECTION */}
-          <FormPatientSection state={state} setState={setState} />
+          <FormPatientSection
+            state={state}
+            setState={setState}
+            showWeight={false}
+            showNIR={false}
+            showALD={false}
+          />
 
           {/* PRESCRIBER IDENTIFICATION */}
           <FormPrescriberSection state={state} setState={setState} />
 
-          {/* FACILITY SECTION */}
-          <FormFacilitySection state={state} setState={setState} />
-
           {/* HYGIENE & CARE DETAILS */}
           <View style={styles.card}>
-            {renderSectionHeader('HYGIENE & CARE')}
+            <AppText
+              size={getScaleSize(13)}
+              color={COLORS._6F767E}
+              style={{ marginBottom: getScaleSize(12) }}
+            >
+              To be carried out by a private/home care nurse at the patient's
+              home, every day, including Sundays and public holidays:
+            </AppText>
+            {renderSectionHeader('Hygiene & Care')}
             <View style={styles.checkboxGroup}>
               <View style={styles.checkboxItem}>
                 <CheckBox
@@ -210,7 +232,7 @@ const NursingCareForm: React.FC = () => {
           </View>
 
           <View style={styles.card}>
-            {renderSectionHeader('MONITORING VITAL SIGNS')}
+            {renderSectionHeader('Monitoring Vital Signs')}
             <View style={styles.checkboxGroup}>
               <View style={styles.checkboxItem}>
                 <CheckBox
@@ -255,15 +277,18 @@ const NursingCareForm: React.FC = () => {
                 />
 
                 <AppText size={getScaleSize(13)}>
-                  Weekly monitoring of body weight with chart
+                  Weekly monitoring of body weight with maintenance of a weight
+                  chart
                 </AppText>
               </View>
             </View>
           </View>
 
           <View style={styles.card}>
-            {renderSectionHeader('TREATMENTS & DRESSINGS')}
-            <View style={styles.checkboxItem}>
+            {renderSectionHeader('Treatments & Dressings')}
+            <View
+              style={[styles.checkboxItem, { marginBottom: getScaleSize(12) }]}
+            >
               <CheckBox
                 boxType="square"
                 value={state.glucoseInsulinChecked}
@@ -278,30 +303,38 @@ const NursingCareForm: React.FC = () => {
                   flex: 1,
                   flexDirection: 'row',
                   alignItems: 'center',
+                  flexWrap: 'wrap',
                   gap: getScaleSize(4),
                 }}
               >
-                <AppText size={getScaleSize(13)}>Glucose & insulin</AppText>
+                <AppText size={getScaleSize(13)}>
+                  Capillary blood glucose monitoring and insulin injection
+                  according to medical prescription
+                </AppText>
                 <Input
-                  placeholder="Times"
                   value={state.glucoseInsulinTimesPerDay}
                   onChangeText={t =>
                     setState({ ...state, glucoseInsulinTimesPerDay: t })
                   }
-                  style={{ flex: 0.3, paddingHorizontal: 0 }}
+                  style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
                   keyboardType="numeric"
                 />
-                <AppText size={getScaleSize(13)}>/ day</AppText>
+                <AppText size={getScaleSize(13)}>times per day</AppText>
               </View>
             </View>
 
-            <Input
-              label="Dressing Location"
-              placeholder="e.g. Right leg"
-              value={state.dressingLocation}
-              onChangeText={t => setState({ ...state, dressingLocation: t })}
-              style={styles.inputField}
-            />
+            <View style={[styles.row, { marginBottom: getScaleSize(8) }]}>
+              <AppText size={getScaleSize(13)}>Location:</AppText>
+              <Input
+                value={state.dressingLocation}
+                onChangeText={t => setState({ ...state, dressingLocation: t })}
+                style={{ flex: 1, paddingHorizontal: 0 }}
+                inputWrapperStyle={styles.inlineInputWrapper}
+                inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
+              />
+            </View>
             <View style={styles.row}>
               <View style={styles.checkboxItem}>
                 <CheckBox
@@ -328,28 +361,30 @@ const NursingCareForm: React.FC = () => {
             </View>
             <View style={styles.row}>
               <Input
-                label="Times / day"
-                placeholder="e.g. 1"
                 value={state.dressingTimesPerDay}
                 onChangeText={t =>
                   setState({ ...state, dressingTimesPerDay: t })
                 }
-                style={{ flex: 1, paddingHorizontal: 0 }}
+                style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                inputWrapperStyle={styles.inlineInputWrapper}
+                inputStyle={styles.inlineInputText}
                 keyboardType="numeric"
               />
+              <AppText size={getScaleSize(13)}>times per day / every</AppText>
               <Input
-                label="Every (days)"
-                placeholder="e.g. 2"
                 value={state.dressingEveryDays}
                 onChangeText={t => setState({ ...state, dressingEveryDays: t })}
-                style={{ flex: 1, paddingHorizontal: 0 }}
+                style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                inputWrapperStyle={styles.inlineInputWrapper}
+                inputStyle={styles.inlineInputText}
                 keyboardType="numeric"
               />
+              <AppText size={getScaleSize(13)}>days</AppText>
             </View>
           </View>
 
           <View style={styles.card}>
-            {renderSectionHeader('SUTURES & CATHETER')}
+            {renderSectionHeader('Sutures & Catheter')}
             <View style={styles.checkboxItem}>
               <CheckBox
                 boxType="square"
@@ -368,14 +403,17 @@ const NursingCareForm: React.FC = () => {
                   gap: getScaleSize(4),
                 }}
               >
-                <AppText size={getScaleSize(13)}>Removal of sutures in</AppText>
+                <AppText size={getScaleSize(13)}>
+                  Removal of sutures or staples in
+                </AppText>
                 <Input
-                  placeholder="days"
                   value={state.removalSuturesInDays}
                   onChangeText={t =>
                     setState({ ...state, removalSuturesInDays: t })
                   }
-                  style={{ flex: 0.3, paddingHorizontal: 0 }}
+                  style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
                   keyboardType="numeric"
                 />
                 <AppText size={getScaleSize(13)}>days</AppText>
@@ -400,37 +438,46 @@ const NursingCareForm: React.FC = () => {
                   gap: getScaleSize(4),
                 }}
               >
-                <AppText size={getScaleSize(13)}>Urinary catheter care</AppText>
+                <AppText size={getScaleSize(13)}>
+                  Urinary catheter care [
+                </AppText>
                 <Input
-                  placeholder="Times"
                   value={state.urinaryCatheterCareTimesPerDay}
                   onChangeText={t =>
                     setState({ ...state, urinaryCatheterCareTimesPerDay: t })
                   }
-                  style={{ flex: 0.3, paddingHorizontal: 0 }}
+                  style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
                   keyboardType="numeric"
                 />
-                <AppText size={getScaleSize(13)}>/ day</AppText>
+                <AppText size={getScaleSize(13)}> ] times per day</AppText>
               </View>
             </View>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setPickerType('catheterRemovalDate');
-                setOpen(true);
-              }}
-            >
-              <Input
-                editable={false}
-                label="Removal of the urinary catheter on"
-                placeholder="DD/MM/YYYY"
-                value={state.urinaryCatheterRemovalDate}
-                style={styles.inputField}
-                pointerEvents="none"
-              />
-            </TouchableOpacity>
-
+            <View style={[styles.row, { marginBottom: getScaleSize(12) }]}>
+              <AppText size={getScaleSize(13)}>
+                Removal of the urinary catheter on:
+              </AppText>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setPickerType('catheterRemovalDate');
+                  setOpen(true);
+                }}
+                style={{ flex: 1 }}
+              >
+                <Input
+                  editable={false}
+                  placeholder="DD/MM/YYYY"
+                  value={state.urinaryCatheterRemovalDate}
+                  style={{ width: '100%', paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
+                  pointerEvents="none"
+                />
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.checkboxItem}>
               <CheckBox
@@ -449,7 +496,7 @@ const NursingCareForm: React.FC = () => {
           </View>
 
           <View style={styles.card}>
-            {renderSectionHeader('CONDITION RELEVANCE')}
+            {renderSectionHeader('Condition Relevance')}
             <View style={styles.checkboxGroup}>
               <View style={styles.checkboxItem}>
                 <CheckBox
@@ -459,9 +506,15 @@ const NursingCareForm: React.FC = () => {
                   tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
                 />
 
-                <AppText size={getScaleSize(13)}>
-                  Prescriptions unrelated to long-term condition (ALD)
-                </AppText>
+                <View style={{ flex: 1 }}>
+                  <AppText size={getScaleSize(13)}>
+                    Prescriptions not related to the recognized long-term
+                    condition (listed or unlisted)
+                  </AppText>
+                  <AppText size={getScaleSize(12)} font={FONTS.Inter.Bold}>
+                    (INTERCURRENT ILLNESSES)
+                  </AppText>
+                </View>
               </View>
               <View style={styles.checkboxItem}>
                 <CheckBox
@@ -471,47 +524,74 @@ const NursingCareForm: React.FC = () => {
                   tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
                 />
 
-                <AppText size={getScaleSize(13)}>
-                  Prescriptions related to treatment of ALD
-                </AppText>
+                <View style={{ flex: 1 }}>
+                  <AppText size={getScaleSize(13)}>
+                    Prescriptions related to the treatment of the recognized
+                    long-term condition (listed or unlisted)
+                  </AppText>
+                  <AppText size={getScaleSize(12)} font={FONTS.Inter.Bold}>
+                    (EXEMPTING LONG-TERM CONDITION)
+                  </AppText>
+                </View>
               </View>
             </View>
           </View>
 
           <View style={styles.card}>
-            {renderSectionHeader('MEDICAL CERTIFICATION')}
+            {renderSectionHeader('Medical Certification')}
             <AppText
               size={getScaleSize(13)}
               color={COLORS._6F767E}
               style={{ marginBottom: getScaleSize(12) }}
             >
-              I, the undersigned Dr. {state.prescriberLastName}, certify that
-              patient's state of health requires nursing care at home.
+              I, the undersigned Dr. {state.prescriberLastName}, after examining
+              Mr / Mrs / Ms {state.patientLastName}, certify that his/her state
+              of health requires nursing care at home.
             </AppText>
             <View style={styles.row}>
+              <AppText size={getScaleSize(13)}>Prescription for</AppText>
               <Input
-                label="Prescription for (days)"
-                placeholder="days"
                 value={state.prescriptionForDays}
                 onChangeText={t =>
                   setState({ ...state, prescriptionForDays: t })
                 }
-                style={{ flex: 1, paddingHorizontal: 0 }}
+                style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                inputWrapperStyle={styles.inlineInputWrapper}
+                inputStyle={styles.inlineInputText}
                 keyboardType="numeric"
               />
-              <View
-                style={[styles.checkboxItem, { marginTop: getScaleSize(25) }]}
-              >
+              <AppText size={getScaleSize(13)}>days, renewable.</AppText>
+              <View style={styles.checkboxItem}>
                 <CheckBox
                   boxType="square"
                   value={state.renewable}
                   onValueChange={v => setState({ ...state, renewable: v })}
                   tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
                 />
-
-                <AppText size={getScaleSize(13)}>Renewable</AppText>
               </View>
             </View>
+
+            {/* <View
+              style={[
+                styles.row,
+                {
+                  justifyContent: 'space-between',
+                  marginTop: getScaleSize(20),
+                },
+              ]}
+            >
+              <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
+                Physician signature
+              </AppText>
+              <View
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: COLORS._EFEFEF,
+                  width: getScaleSize(150),
+                  height: getScaleSize(40),
+                }}
+              />
+            </View> */}
           </View>
         </ScrollView>
       </View>
@@ -570,6 +650,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(4),
+  },
+  inlineInputWrapper: {
+    height: 'auto',
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    borderBottomColor: COLORS.primary,
+  },
+  inlineInputText: {
+    textAlign: 'center',
+    padding: 0,
+    fontFamily: FONTS.Inter.Bold,
+    color: COLORS.primary,
+    fontSize: getScaleSize(14),
   },
 });
 

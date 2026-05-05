@@ -16,7 +16,10 @@ import { creatRequestPatientsList } from '../../../utils/dummyData';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 
-export type CreateRequestProps = NativeStackScreenProps<RootStackParamList, 'CreateRequest'>;
+export type CreateRequestProps = NativeStackScreenProps<
+  RootStackParamList,
+  'CreateRequest'
+>;
 
 // Filter Types
 type FilterType = 'all' | 'recent' | 'active';
@@ -29,22 +32,24 @@ interface FilterChipProps {
 }
 
 // FilterChip Component
-const FilterChip: React.FC<FilterChipProps> = React.memo(({ key, label, isActive, onPress }) => (
-  <TouchableOpacity
-    key={key}
-    activeOpacity={0.85}
-    onPress={onPress}
-    style={[styles.chip, isActive && styles.chipActive]}
-  >
-    <AppText
-      color={isActive ? COLORS.white : COLORS._6F767E}
-      size={getScaleSize(12)}
-      font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+const FilterChip: React.FC<FilterChipProps> = React.memo(
+  ({ key, label, isActive, onPress }) => (
+    <TouchableOpacity
+      key={key}
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[styles.chip, isActive && styles.chipActive]}
     >
-      {label}
-    </AppText>
-  </TouchableOpacity>
-));
+      <AppText
+        color={isActive ? COLORS.white : COLORS._6F767E}
+        size={getScaleSize(12)}
+        font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+      >
+        {label}
+      </AppText>
+    </TouchableOpacity>
+  ),
+);
 
 // PatientItem Component
 interface PatientItemProps {
@@ -53,49 +58,51 @@ interface PatientItemProps {
   onSelect: (id: string) => void;
 }
 
-const PatientItem: React.FC<PatientItemProps> = React.memo(({ patient, isSelected, onSelect }) => (
-  <TouchableOpacity
-    key={patient.id}
-    activeOpacity={0.9}
-    style={[styles.patientCard, isSelected && styles.patientCardActive]}
-    onPress={() => onSelect(patient.id)}
-  >
-    <View style={styles.avatarWrap}>
-      {patient.avatar ? (
-        <Image source={{ uri: patient.avatar }} style={styles.avatar} />
-      ) : (
-        <View style={styles.initialsWrap}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {patient.initials}
-          </AppText>
-        </View>
-      )}
-    </View>
-    <View style={styles.patientInfo}>
-      <AppText
-        size={getScaleSize(16)}
-        font={FONTS.Inter.Bold}
-        color={COLORS._1A1D1F}
-      >
-        {patient.name}
-      </AppText>
-      <AppText
-        size={getScaleSize(12)}
-        font={FONTS.Inter.Regular}
-        color={COLORS._6F767E}
-      >
-        {patient.pid} • {patient.age}
-      </AppText>
-    </View>
-    <View style={[styles.radioOuter, isSelected && styles.radioOuterActive]}>
-      {isSelected ? <View style={styles.radioInner} /> : null}
-    </View>
-  </TouchableOpacity>
-));
+const PatientItem: React.FC<PatientItemProps> = React.memo(
+  ({ patient, isSelected, onSelect }) => (
+    <TouchableOpacity
+      key={patient.id}
+      activeOpacity={0.9}
+      style={[styles.patientCard, isSelected && styles.patientCardActive]}
+      onPress={() => onSelect(patient.id)}
+    >
+      <View style={styles.avatarWrap}>
+        {patient.avatar ? (
+          <Image source={{ uri: patient.avatar }} style={styles.avatar} />
+        ) : (
+          <View style={styles.initialsWrap}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {patient.initials}
+            </AppText>
+          </View>
+        )}
+      </View>
+      <View style={styles.patientInfo}>
+        <AppText
+          size={getScaleSize(16)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+        >
+          {patient.name}
+        </AppText>
+        <AppText
+          size={getScaleSize(12)}
+          font={FONTS.Inter.Regular}
+          color={COLORS._6F767E}
+        >
+          {patient.pid} • {patient.age}
+        </AppText>
+      </View>
+      <View style={[styles.radioOuter, isSelected && styles.radioOuterActive]}>
+        {isSelected ? <View style={styles.radioInner} /> : null}
+      </View>
+    </TouchableOpacity>
+  ),
+);
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState<string>('patient_1');
@@ -105,11 +112,14 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const canContinue = useMemo(() => !!selectedId, [selectedId]);
 
   // Filter options
-  const filterOptions = useMemo(() => [
-    { key: 'all' as FilterType, label: 'All Patients' },
-    { key: 'recent' as FilterType, label: 'Recent' },
-    { key: 'active' as FilterType, label: 'Active Only' },
-  ], []);
+  const filterOptions = useMemo(
+    () => [
+      { key: 'all' as FilterType, label: 'All Patients' },
+      { key: 'recent' as FilterType, label: 'Recent' },
+      { key: 'active' as FilterType, label: 'Active Only' },
+    ],
+    [],
+  );
 
   // Event handlers
   const handleGoBack = useCallback(() => {
@@ -134,30 +144,35 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   }, []);
 
   return (
-    <AppSafeAreaView
-    edges={true}
-    style={styles.safe}>
+    <AppSafeAreaView edges={true} style={styles.safe}>
       <View style={styles.container}>
-
         <View style={styles.header}>
-          <TouchableOpacity style={styles.circleBtn} activeOpacity={0.8} onPress={handleGoBack}>
-            <Image
-              source={IMAGES.crossIcon}
-              style={styles.crossIcon}
-            />
-          </TouchableOpacity>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.circleBtn}
+              activeOpacity={0.8}
+              onPress={handleGoBack}
+            >
+              <Image source={IMAGES.crossIcon} style={styles.crossIcon} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.headerCenter}>
             <AppText
               size={getScaleSize(12)}
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
-            >Create Request</AppText>
+            >
+              Create Request
+            </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
-            >Step 1/3: Patient</AppText>
+            >
+              Step 1/3: Patient
+            </AppText>
           </View>
+          <View style={styles.headerLeft} />
         </View>
 
         <View style={styles.content}>
@@ -170,7 +185,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               size={getScaleSize(18)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-            >Select Patient</AppText>
+            >
+              Select Patient
+            </AppText>
 
             <Input
               leftIcon={IMAGES.search}
@@ -179,7 +196,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
             />
 
             <View style={styles.filters}>
-              {filterOptions.map((option) => (
+              {filterOptions.map(option => (
                 <FilterChip
                   key={option.key}
                   label={option.label}
@@ -190,7 +207,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
             </View>
 
             <View style={styles.list}>
-              {creatRequestPatientsList.map((patient) => (
+              {creatRequestPatientsList.map(patient => (
                 <PatientItem
                   key={patient.id}
                   patient={patient}
@@ -204,24 +221,30 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
           </ScrollView>
 
           <View style={styles.bottomSheet}>
-            <TouchableOpacity 
-              activeOpacity={0.85} 
+            <TouchableOpacity
+              activeOpacity={0.85}
               style={styles.createPatientBtn}
               onPress={handleCreateNewPatient}
             >
-              <Image 
-                source={IMAGES.new_request} 
-                style={styles.newRequestIcon} 
+              <Image
+                source={IMAGES.new_request}
+                style={styles.newRequestIcon}
               />
               <AppText
                 size={getScaleSize(15)}
                 color={COLORS._526674}
                 font={FONTS.Inter.Bold}
-              > Create New Patient</AppText>
+              >
+                {' '}
+                Create New Patient
+              </AppText>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.9}
-              style={[styles.continueBtn, !canContinue && styles.continueDisabled]}
+              style={[
+                styles.continueBtn,
+                !canContinue && styles.continueDisabled,
+              ]}
               disabled={!canContinue}
               onPress={handleContinue}
             >
@@ -229,7 +252,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 size={getScaleSize(15)}
                 color={COLORS.white}
                 font={FONTS.Inter.Bold}
-              >Continue</AppText>
+              >
+                Continue
+              </AppText>
             </TouchableOpacity>
           </View>
         </View>
@@ -281,6 +306,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+  headerLeft: {
+    flex: 0.5,
+    alignItems: 'flex-start',
+  },
   circleBtn: {
     width: 40,
     height: 40,
@@ -309,8 +338,8 @@ const styles = StyleSheet.create({
     paddingBottom: getScaleSize(160),
     paddingTop: getScaleSize(20),
   },
-    searchInput: {
-    paddingHorizontal: 0
+  searchInput: {
+    paddingHorizontal: 0,
   },
   filters: {
     flexDirection: 'row',
@@ -458,7 +487,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 8
+    gap: 8,
   },
   createPatientText: {
     fontSize: 15,

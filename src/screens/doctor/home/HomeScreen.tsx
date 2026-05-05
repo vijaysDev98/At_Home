@@ -16,6 +16,8 @@ import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const avatarUri =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
@@ -60,7 +62,7 @@ const patientMetrics = [
 ];
 
 const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const { profileData } = useSelector((state: RootState) => state.profile);
 
   return (
     <AppSafeAreaView
@@ -84,7 +86,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.primary}
               >
-                Dr. Patel
+                Dr. {profileData?.fullName}
               </AppText>
             </View>
           </View>

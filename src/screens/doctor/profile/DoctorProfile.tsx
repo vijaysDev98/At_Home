@@ -7,16 +7,32 @@ import {
   Image,
   TextInput,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import NavigationService from '../../../navigation/NavigationService';
 import { AppSafeAreaView, AppText, Header, Input } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
+import { useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { userLogout } from '../../../actions/auth/authAction';
 
 const DoctorProfile: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { profileData } = useSelector((state: RootState) => state.profile);
+
   const handleLogout = () => {
-    NavigationService.reset('Login');
+    dispatch(userLogout());
   };
+
+  // Get user data from Redux or use defaults
+  const userName = profileData?.fullName ;
+  const userEmail = profileData?.email;
+  const userSpecialty = profileData?.specialty ;
+  const userRpps = profileData?.rppsNumber ;
+  const userFiness = profileData?.finessNumber ;
+  const userAddress = profileData?.businessAddress ;
+  const userAvatar = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg'; // Use default avatar for now
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
@@ -44,7 +60,7 @@ const DoctorProfile: React.FC = () => {
             <View>
               <View style={styles.avatarWrap}>
                 <Image
-                  source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg' }}
+                  source={{ uri: userAvatar }}
                   style={styles.avatar}
                 />
 
@@ -57,12 +73,12 @@ const DoctorProfile: React.FC = () => {
               size={getScaleSize(18)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}>
-              Dr. John Smith
+              {userName}
             </AppText>
             <AppText
               size={getScaleSize(14)}
               color={COLORS._6B7280}>
-              General Practitioner
+              {userSpecialty}
             </AppText>
           </View>
 
@@ -79,7 +95,7 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label='Full Name'
                 style={styles.inputContainer}
-                value="Dr. John Smith" 
+                value={userName} 
                 isLocked={true}
                 leftIcon={IMAGES.ic_profile}
                  />
@@ -89,7 +105,8 @@ const DoctorProfile: React.FC = () => {
                 label='Email Address'
                 style={styles.inputContainer}
                 isLocked={true}
-                value="john.smith@athome.md" leftIcon={IMAGES.email_icon} />
+                value={userEmail} 
+                leftIcon={IMAGES.email_icon} />
             </View>
           </View>
 
@@ -104,14 +121,16 @@ const DoctorProfile: React.FC = () => {
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
               <Input
                 label='RPPS Number'
-                style={styles.inputContainer} value="10002849501" leftIcon={IMAGES.card} />
+                style={styles.inputContainer} 
+                value={userRpps} 
+                leftIcon={IMAGES.card} />
             </View>
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
               <Input
                 label='FINESS Number'
                 style={styles.inputContainer} 
-                value="750012345" 
+                value={userFiness} 
                 leftIcon={IMAGES.hospital} 
                 />
             </View>
@@ -119,7 +138,7 @@ const DoctorProfile: React.FC = () => {
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>Business Address</AppText> */}
               <Input
                 label='Business Address'
-                value={'123 Medical Center Blvd\n75001 Paris, France'}
+                value={userAddress}
                 leftIcon={IMAGES.location_pin}
                 multiline
                 style={styles.inputContainer}

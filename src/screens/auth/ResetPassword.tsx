@@ -20,13 +20,22 @@ import { getScaleSize } from '../../utils/scaleSize';
 import { STRING } from '../../constant/strings';
 import { useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { resetPassword } from '../../actions/auth/authAction';
+import { AppLoader } from '../../components';
 
 export type ResetPasswordProps = NativeStackScreenProps<
   RootStackParamList,
   'ResetPassword'
 >;
 
-const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
+const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
+  const resetToken = route.params?.resetToken ?? '';
+
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.login);
+
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -50,8 +59,9 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
   const canSubmit = strengthLevel === 4 && isMatch;
 
   const onSubmit = () => {
-    if (!canSubmit) return;
-    navigation.replace('Login');
+    if (!canSubmit || isLoading) return;
+
+    dispatch(resetPassword({ resetToken, newPassword: password, confirmPassword: confirm }));
   };
 
   const meterColors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
@@ -61,6 +71,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
       style={styles.safe}
       edges={['top', 'left', 'right', 'bottom']}
     >
+      <AppLoader visible={isLoading} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -158,7 +169,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
               secureTextEntry={!showConfirm}
               value={confirm}
               onChangeText={setConfirm}
-              leftIcon={IMAGES.securityIcon} // Fallback for help_icon
+              leftIcon={IMAGES.lock} // Fallback for help_icon
               isPasswordVisible={showConfirm}
               handlePasswordVisibility={() => setShowConfirm(p => !p)}
               containerBackgroundColor={COLORS._F8F9FA}
@@ -175,7 +186,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation }) => {
             <PrimaryButton
               title={STRING.resetPassword}
               onPress={onSubmit}
-              disabled={!canSubmit}
+              disabled={!canSubmit || isLoading}
               style={{ marginTop: getScaleSize(40) }}
             />
           </View>

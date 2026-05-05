@@ -8,16 +8,26 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useDispatch } from 'react-redux';
 import { RootStackParamList } from '../navigation';
+import { Storage } from '../constant';
+import { SCREENS } from '../navigation/routes';
+import NavigationService from '../navigation/NavigationService';
+import { AppDispatch } from '../redux/store';
+import { fetchProfile } from '../actions/profile/profileAction';
 
 const LOGO_URI =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png';
 const LOGO_BG_URI =
-  "https://storage.googleapis.com/uxpilot-auth.appspot.com/FwWoWvhFRtVXodtR5CK3BVPRcSP2%2F2f63fe4a-2524-441c-b0fb-47972806c27b.png";
+  'https://storage.googleapis.com/uxpilot-auth.appspot.com/FwWoWvhFRtVXodtR5CK3BVPRcSP2%2F2f63fe4a-2524-441c-b0fb-47972806c27b.png';
 
-export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Splash'>;
+export type SplashScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Splash'
+>;
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
+  const dispatch = useDispatch<AppDispatch>();
   const pulse = useRef(new Animated.Value(0.6)).current;
   const fade = useRef(new Animated.Value(0.8)).current;
 
@@ -52,24 +62,33 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
       ]),
     ).start();
 
-    const timer = setTimeout(() => {
-      const isLoggedIn = false; // replace with real auth state
-      if (isLoggedIn) {
-        navigation.replace('Home');
+    const timer = setTimeout(async () => {
+      const token = await Storage.get(Storage.USER_TOKEN);
+      const role = await Storage.get(Storage.USER_ROLE);
+
+      if (token) {
+        await dispatch(fetchProfile());
+        if (role === 'provider') {
+          NavigationService.replace(SCREENS.PROVIDER_BOTTOM_TABS as any);
+        } else {
+          NavigationService.replace(SCREENS.DOCTOR_BOTTOM_TABS as any);
+        }
       } else {
-        navigation.replace('Welcome');
+        NavigationService.replace(SCREENS.WELCOME as any);
       }
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [fade, navigation, pulse]);
+  }, [dispatch, fade, NavigationService, pulse]);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       <View style={styles.content}>
-        <Animated.View style={[styles.logoWrapper, { transform: [{ scale: pulse }] }]}>
+        <Animated.View
+          style={[styles.logoWrapper, { transform: [{ scale: pulse }] }]}
+        >
           <Animated.Image
             source={{ uri: LOGO_URI }}
             resizeMode="contain"
@@ -82,7 +101,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
           />
         </Animated.View>
 
-        <Animated.Text style={[styles.title, { opacity: fade }]}>At-Home</Animated.Text>
+        <Animated.Text style={[styles.title, { opacity: fade }]}>
+          At-Home
+        </Animated.Text>
         <Animated.Text style={[styles.tagline, { opacity: fade }]}>
           Healthcare Evolved
         </Animated.Text>

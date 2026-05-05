@@ -18,11 +18,15 @@ import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
 import { useNavigation } from '@react-navigation/native';
 import CheckBox from '@react-native-community/checkbox';
-import { Input, PrimaryButton } from '../../components';
+import { Input, PrimaryButton, AppLoader } from '../../components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { STRING } from '../../constant/strings';
 import NavigationService from '../../navigation/NavigationService';
 import { doctorSpecialities } from '../../utils/dummyData';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { userRegister } from '../../actions/auth/authAction';
+import { AppDispatch } from '../../redux/store';
 
 // --- Sub-components ---
 
@@ -64,8 +68,8 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
 // --- Main Screen ---
 
 const Register: React.FC = () => {
-  const navigation = useNavigation();
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.login);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -83,21 +87,76 @@ const Register: React.FC = () => {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const isFormValid = () => {
-    return (
-      fullName &&
-      email &&
-      password &&
-      password &&
-      rpps &&
-      finess &&
-      specialty &&
-      agreed
-    );
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,16}$/;
+
+  const validate = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required.';
+    }
+    if (!email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      newErrors.email = 'Enter a valid email address.';
+    }
+    if (!password) {
+      newErrors.password = 'Password is required.';
+    } else if (!PASSWORD_REGEX.test(password)) {
+      newErrors.password =
+        'Password must be 8–16 characters with at least 1 uppercase, 1 lowercase, and 1 number.';
+    }
+    if (!rpps.trim()) {
+      newErrors.rpps = 'RPPS number is required.';
+    } else if (!/^\d{11}$/.test(rpps.trim())) {
+      newErrors.rpps = 'RPPS number must be exactly 11 digits.';
+    }
+    if (!finess.trim()) {
+      newErrors.finess = 'FINESS number is required.';
+    } else if (!/^\d{9}$/.test(finess.trim())) {
+      newErrors.finess = 'FINESS number must be exactly 9 digits.';
+    }
+    if (!specialty) {
+      newErrors.specialty = 'Please select your specialty.';
+    }
+    if (!placeOfPractice.trim()) {
+      newErrors.placeOfPractice = 'Place of practice is required.';
+    }
+    if (!address.trim()) {
+      newErrors.address = 'Business address is required.';
+    }
+    if (!agreed) {
+      newErrors.agreed = 'You must accept the terms to continue.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const isFormValid = () =>
+    !!(fullName && email && password && rpps && finess && specialty && address && placeOfPractice && agreed);
+
+  const onRegister = async () => {
+    if (!validate()) return;
+    const registerData = {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      password: password.trim(),
+      role: 'doctor',
+      country: 'France',
+      rppsNumber: rpps.trim(),
+      finessNumber: finess.trim(),
+      specialty: specialty,
+      businessAddress: address.trim(),
+      practiceType: placeOfPractice.trim(),
+    };
+    await dispatch(userRegister(registerData));
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppLoader visible={isLoading} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -123,8 +182,9 @@ const Register: React.FC = () => {
               placeholder={STRING.enterFullName}
               leftIcon={IMAGES.person}
               value={fullName}
-              onChangeText={setFullName}
-              style={{ marginBottom: getScaleSize(20) }}
+              onChangeText={t => { setFullName(t); setErrors(e => ({ ...e, fullName: '' })); }}
+              error={errors.fullName}
+              style={{ marginBottom: getScaleSize(errors.fullName ? 4 : 20) }}
             />
 
             <Input
@@ -133,10 +193,11 @@ const Register: React.FC = () => {
               placeholder={STRING.enterEmailAddress}
               leftIcon={IMAGES.mail}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={t => { setEmail(t); setErrors(e => ({ ...e, email: '' })); }}
               keyboardType="email-address"
-              helper="We'll send verification to this email"
-              style={{ marginBottom: getScaleSize(20) }}
+              error={errors.email}
+              helper={errors.email ? undefined : "We'll send verification to this email"}
+              style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
               helperStyle={{ marginTop: getScaleSize(8) }}
             />
 
@@ -146,11 +207,12 @@ const Register: React.FC = () => {
               placeholder={STRING.createPassword}
               leftIcon={IMAGES.lock}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={t => { setPassword(t); setErrors(e => ({ ...e, password: '' })); }}
               secureTextEntry={true}
               isPasswordVisible={showPassword}
               handlePasswordVisibility={() => setShowPassword(!showPassword)}
-              style={{ marginBottom: getScaleSize(20) }}
+              error={errors.password}
+              style={{ marginBottom: getScaleSize(errors.password ? 4 : 20) }}
             />
 
             <Input
@@ -159,10 +221,11 @@ const Register: React.FC = () => {
               placeholder={`${STRING.enterRppsNumber} (${STRING.elevenDigit})`}
               leftIcon={IMAGES.card}
               value={rpps}
-              onChangeText={setRpps}
+              onChangeText={t => { setRpps(t); setErrors(e => ({ ...e, rpps: '' })); }}
               keyboardType="numeric"
-              helper="RPPS number"
-              style={{ marginBottom: getScaleSize(20) }}
+              error={errors.rpps}
+              helper={errors.rpps ? undefined : 'RPPS number'}
+              style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
               helperStyle={{ marginTop: getScaleSize(8) }}
             />
 
@@ -172,10 +235,11 @@ const Register: React.FC = () => {
               placeholder={`${STRING.enterFinessNumber} (${STRING.nineDigit})`}
               leftIcon={IMAGES.hospital}
               value={finess}
-              onChangeText={setFiness}
+              onChangeText={t => { setFiness(t); setErrors(e => ({ ...e, finess: '' })); }}
               keyboardType="numeric"
-              helper="Facility identification number"
-              style={{ marginBottom: getScaleSize(20) }}
+              error={errors.finess}
+              helper={errors.finess ? undefined : 'Facility identification number'}
+              style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
               helperStyle={{ marginTop: getScaleSize(8) }}
             />
 
@@ -224,15 +288,21 @@ const Register: React.FC = () => {
                 />
               </View>
             </View>
+            {!!errors.specialty && (
+              <Text style={[styles.errorText, { paddingHorizontal: getScaleSize(24), marginBottom: getScaleSize(8) }]}>
+                {errors.specialty}
+              </Text>
+            )}
 
             <Input
               label={STRING.placeOfPractice}
               isMandatory
-              placeholder="9 digits"
+              placeholder={STRING.placeOfPractice}
               value={placeOfPractice}
-              onChangeText={setPlaceOfPractice}
-              keyboardType="numeric"
-              style={{ marginBottom: getScaleSize(20) }}
+              onChangeText={t => { setPlaceOfPractice(t); setErrors(e => ({ ...e, placeOfPractice: '' })); }}
+              leftIcon={IMAGES.hospital}
+              error={errors.placeOfPractice}
+              style={{ marginBottom: getScaleSize(errors.placeOfPractice ? 4 : 20) }}
             />
 
             <Input
@@ -241,8 +311,9 @@ const Register: React.FC = () => {
               placeholder="Street address, city, postal code"
               leftIcon={IMAGES.location_pin}
               value={address}
-              onChangeText={setAddress}
-              style={{ marginBottom: getScaleSize(20) }}
+              onChangeText={t => { setAddress(t); setErrors(e => ({ ...e, address: '' })); }}
+              error={errors.address}
+              style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
             />
 
             {/* Terms Agreement */}
@@ -268,19 +339,24 @@ const Register: React.FC = () => {
                 </Text>
               }
             />
+            {!!errors.agreed && (
+              <Text style={[styles.errorText, { paddingHorizontal: getScaleSize(24), marginBottom: getScaleSize(8) }]}>
+                {errors.agreed}
+              </Text>
+            )}
 
             {/* Submit Section */}
             <View style={styles.footer}>
               <PrimaryButton
                 title={STRING.submitRegistration}
                 icon={IMAGES.arrowRight}
-                onPress={() => console.log('LOGIN')}
+                onPress={() => onRegister()}
                 disabled={!isFormValid()}
               />
 
               <TouchableOpacity
                 style={styles.signInContainer}
-                onPress={() => navigation.navigate('Login' as never)}
+                onPress={() => NavigationService.navigate('Login')}
               >
                 <Text style={styles.signInText}>
                   Already have an account?{' '}
@@ -383,6 +459,13 @@ const styles = StyleSheet.create({
   signInLink: {
     color: COLORS.primary,
     fontFamily: FONTS.Inter.Bold,
+  },
+  errorText: {
+    fontSize: getScaleSize(12),
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS.error,
+    marginTop: getScaleSize(4),
+    marginBottom: getScaleSize(12),
   },
   fieldWrapper: {
     paddingHorizontal: getScaleSize(24),

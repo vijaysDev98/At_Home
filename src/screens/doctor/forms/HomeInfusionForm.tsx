@@ -113,7 +113,6 @@ const HomeInfusionForm: React.FC = () => {
             M = end.diff(start, 'days') + 1;
           }
         } else if (product.treatmentDuration) {
-
           M = parseInt(product.treatmentDuration) || 0;
         }
 
@@ -334,25 +333,29 @@ const HomeInfusionForm: React.FC = () => {
             <AppText color={COLORS._1A1D1F}>Central venous (CVP)</AppText>
           </View>
 
-          {product.route === 'central_cvp' && (
-            <View style={styles.subOptions}>
-              {['Implanted port', 'Central catheter', 'PICC'].map(type => (
-                <View key={type} style={styles.checkboxItem}>
-                  <CheckBox
-                    boxType="circle"
-                    value={product.centralType === type}
-                    onValueChange={() =>
-                      updateProduct(index, 'centralType', type)
-                    }
-                    tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-                  />
-                  <AppText size={getScaleSize(13)} color={COLORS._6F767E}>
-                    {type}
-                  </AppText>
-                </View>
-              ))}
-            </View>
-          )}
+          <View
+            style={[
+              styles.subOptions,
+              product.route !== 'central_cvp' && { opacity: 0.5 },
+            ]}
+            pointerEvents={product.route === 'central_cvp' ? 'auto' : 'none'}
+          >
+            {['Implanted port', 'Central catheter', 'PICC'].map(type => (
+              <View key={type} style={styles.checkboxItem}>
+                <CheckBox
+                  boxType="circle"
+                  value={product.centralType === type}
+                  onValueChange={() =>
+                    updateProduct(index, 'centralType', type)
+                  }
+                  tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
+                />
+                <AppText size={getScaleSize(13)} color={COLORS._6F767E}>
+                  {type}
+                </AppText>
+              </View>
+            ))}
+          </View>
 
           {['Peritoneal', 'Peripheral venous', 'Subcutaneous'].map(r => (
             <View key={r} style={styles.checkboxItem}>
@@ -412,7 +415,6 @@ const HomeInfusionForm: React.FC = () => {
               />
               <AppText size={getScaleSize(13)}>yes</AppText>
             </View>
-            <AppText size={getScaleSize(13)}>or</AppText>
             <View style={styles.checkboxItem}>
               <CheckBox
                 boxType="circle"
@@ -663,7 +665,7 @@ const HomeInfusionForm: React.FC = () => {
               font={FONTS.Inter.Bold}
               size={getScaleSize(14)}
             >
-              + ADD a infusion Product
+              + Add a infusion Product
             </AppText>
           </TouchableOpacity>
         </ScrollView>

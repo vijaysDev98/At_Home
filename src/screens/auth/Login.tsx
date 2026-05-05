@@ -14,6 +14,7 @@ import {
   AppText,
   Input,
   PrimaryButton,
+  AppLoader,
 } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { COLORS, FONTS, REGEX } from '../../utils';
@@ -23,7 +24,6 @@ import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { AppDispatch, RootState } from '../../redux/store';
 import { userLogin } from '../../actions/auth/authAction';
-import { setLoading } from '../../actions/auth/authSlice';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -83,6 +83,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <AppSafeAreaView style={styles.container}>
+      <AppLoader visible={isLoading} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

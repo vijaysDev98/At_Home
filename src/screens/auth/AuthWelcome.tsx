@@ -19,46 +19,44 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
   const sheetRef = useRef<any>(null);
   return (
     <>
-    <AppSafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Image source={IMAGES.logo} style={styles.logo} resizeMode="cover" />
-        <AppText
-          size={getScaleSize(32)}
-          font={FONTS.Inter.SemiBold}
-          color={COLORS.primary}
-          align="center"
-        >
-          {STRING.welcomeTitle}
-        </AppText>
-        <AppText
-          size={getScaleSize(15)}
-          font={FONTS.Inter.Regular}
-          align="center"
-          style={styles.subtitle}
-          color={COLORS.primaryMuted}
-        >
-          {STRING.welcomeSubtitle}
-        </AppText>
-        <View style={styles.actions}>
-          <AppButton
-            title={STRING.signIn}
-            style={styles.signInButton}
-            onPress={() => 
-              NavigationService.navigate(SCREENS.LOGIN)
-            }
-            rightIcon={IMAGES.arrowRight}
-          />
-          <AppButton
-            title={STRING.createAccount}
-            onPress={() => NavigationService.navigate(SCREENS.REGISTER)}
-            backgroundColor={COLORS._F8F9FA}
-            textColor={COLORS.primary}
-            style={styles.createAccountButton}
-          />
+      <AppSafeAreaView style={styles.safe}>
+        <View style={styles.container}>
+          <Image source={IMAGES.logo} style={styles.logo} resizeMode="cover" />
+          <AppText
+            size={getScaleSize(32)}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS.primary}
+            align="center"
+          >
+            {STRING.welcomeTitle}
+          </AppText>
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Regular}
+            align="center"
+            style={styles.subtitle}
+            color={COLORS.primaryMuted}
+          >
+            {STRING.welcomeSubtitle}
+          </AppText>
+          <View style={styles.actions}>
+            <AppButton
+              title={STRING.signIn}
+              style={styles.signInButton}
+              onPress={() => NavigationService.navigate(SCREENS.LOGIN)}
+              rightIcon={IMAGES.arrowRight}
+            />
+            <AppButton
+              title={STRING.createAccount}
+              onPress={() => NavigationService.navigate(SCREENS.REGISTER)}
+              backgroundColor={COLORS._F8F9FA}
+              textColor={COLORS.primary}
+              style={styles.createAccountButton}
+            />
+          </View>
         </View>
-      </View>
-    </AppSafeAreaView>
-          </>
+      </AppSafeAreaView>
+    </>
   );
 };
 

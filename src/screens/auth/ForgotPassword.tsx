@@ -16,6 +16,10 @@ import { IMAGES } from '../../assets/images';
 import { getScaleSize } from '../../utils/scaleSize';
 import NavigationService from '../../navigation/NavigationService';
 import { STRING } from '../../constant/strings';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { forgotPassword } from '../../actions/auth/authAction';
+import { AppLoader } from '../../components';
 
 export type ForgotPasswordProps = NativeStackScreenProps<
   RootStackParamList,
@@ -28,24 +32,21 @@ const LOGO_URI =
 const ForgotPassword: React.FC<ForgotPasswordProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.login);
 
   const isValidEmail = useMemo(
     () => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email.trim()),
     [email],
   );
   const isDisabled = useMemo(
-    () => !isValidEmail || submitting,
-    [isValidEmail, submitting],
+    () => !isValidEmail || isLoading,
+    [isValidEmail, isLoading],
   );
 
   const onSubmit = () => {
     if (isDisabled) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      navigation.navigate('OtpVerification', { email });
-    }, 1000);
+    dispatch(forgotPassword(email));
   };
 
   const showError = touched && email.length > 0 && !isValidEmail;
@@ -55,6 +56,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ navigation }) => {
       style={styles.safe}
       edges={['top', 'left', 'right', 'bottom']}
     >
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <Header isBack={true} />
 

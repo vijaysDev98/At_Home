@@ -12,10 +12,13 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { COLORS, FONTS } from '../../utils';
-import { AppText, Header, PrimaryButton } from '../../components';
+import { AppText, Header, PrimaryButton, AppLoader } from '../../components';
 import { IMAGES } from '../../assets/images';
 import { getScaleSize } from '../../utils/scaleSize';
 import { STRING } from '../../constant/strings';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { verifyOtp, verifyForgotPasswordOtp } from '../../actions/auth/authAction';
 
 export type OtpVerificationProps = NativeStackScreenProps<
   RootStackParamList,
@@ -30,6 +33,10 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   route,
 }) => {
   const email = route.params?.email ?? 'dr.smith@example.com';
+  const isForgotPassword = route.params?.isForgotPassword ?? false;
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.login);
+  
   const [code, setCode] = useState(Array(6).fill(''));
   const [touched, setTouched] = useState(false);
   const [timer, setTimer] = useState(179); // 2:59
@@ -80,6 +87,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
       style={styles.safe}
       edges={['top', 'left', 'right', 'bottom']}
     >
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         {/* Header */}
         <Header isBack />
@@ -189,8 +197,14 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <View style={styles.ctaBar}>
           <PrimaryButton
             title={STRING.verify}
-            onPress={() => navigation.navigate('ResetPassword')}
-            disabled={!isComplete}
+            onPress={() => {
+              if (isForgotPassword) {
+                dispatch(verifyForgotPasswordOtp({ email, otp: code.join('') }));
+              } else {
+                dispatch(verifyOtp({ email, otp: code.join('') }));
+              }
+            }}
+            disabled={!isComplete || isLoading}
             style={{ marginTop: getScaleSize(80) }}
           />
         </View>

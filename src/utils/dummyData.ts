@@ -2,7 +2,7 @@ import { IMAGES } from '../assets/images';
 
 export const doctorSpecialities = [
   { label: 'General Practitioner', value: 'General Practitioner' },
-  { label: 'Cardiologist', value: 'Cardiologist' },
+  { label: 'cardiology', value: 'cardiology' },
   { label: 'Pediatrician', value: 'Pediatrician' },
   { label: 'Neurologist', value: 'Neurologist' },
   { label: 'Dermatologist', value: 'Dermatologist' },
@@ -115,12 +115,6 @@ export type Service = {
 
 export const services: Service[] = [
   {
-    id: 'prescription',
-    title: 'Free Prescription',
-    description: 'General medical prescription and refills.',
-    icon: IMAGES.bandegeIcon,
-  },
-  {
     id: 'wound',
     title: 'Wound Care',
     description: 'Dressing changes, cleaning, and monitoring.',
@@ -130,7 +124,37 @@ export const services: Service[] = [
     id: 'iv',
     title: 'IV Therapy',
     description: 'Intravenous fluids and medication admin.',
+    icon: IMAGES.injectionIcon,
+  },
+  {
+    id: 'oxygen',
+    title: 'Oxygen Support',
+    description: 'Respiratory therapy and monitoring.',
+    icon: IMAGES.maskIcon,
+  },
+  {
+    id: 'nursing',
+    title: 'General Nursing',
+    description: 'Vital signs, medication, daily care.',
+    icon: IMAGES.nurseIcon,
+  },
+  {
+    id: 'physio',
+    title: 'Physiotherapy',
+    description: 'Rehabilitation and mobility exercises.',
     icon: IMAGES.ivfIcon,
+  },
+  {
+    id: 'lab',
+    title: 'Lab Collection',
+    description: 'Blood draws and sample collection.',
+    icon: IMAGES.testTubeIcon,
+  },
+  {
+    id: 'prescription',
+    title: 'Free Prescription',
+    description: 'General medical prescription and refills.',
+    icon: IMAGES.bandegeIcon,
   },
   {
     id: 'pca',
@@ -143,24 +167,6 @@ export const services: Service[] = [
     title: 'Pregnancy Care',
     description: 'Specialized infusion and care for pregnancy.',
     icon: IMAGES.nurseIcon,
-  },
-  {
-    id: 'oxygen',
-    title: 'Oxygen Support',
-    description: 'Respiratory therapy and monitoring.',
-    icon: IMAGES.maskIcon,
-  },
-  {
-    id: 'nursing',
-    title: 'Nursing Care',
-    description: 'Vital signs, medication, daily care.',
-    icon: IMAGES.nurseIcon,
-  },
-  {
-    id: 'physio',
-    title: 'Physiotherapy',
-    description: 'Rehabilitation and mobility exercises.',
-    icon: IMAGES.injectionIcon,
   },
   {
     id: 'oral_nutrition',
@@ -179,12 +185,6 @@ export const services: Service[] = [
     title: 'Parenteral Nutrition',
     description: 'Intravenous nutrition support and management.',
     icon: IMAGES.ivfIcon,
-  },
-  {
-    id: 'lab',
-    title: 'Lab Collection',
-    description: 'Blood draws and sample collection.',
-    icon: IMAGES.testTubeIcon,
   },
 ];
 

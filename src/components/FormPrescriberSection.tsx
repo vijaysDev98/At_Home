@@ -9,12 +9,16 @@ import { IMAGES } from '../assets/images';
 export interface PrescriberSectionProps {
   state: any;
   setState: (state: any) => void;
+  title?: string;
+  showFiness?: boolean;
   children?: React.ReactNode;
 }
 
 const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
   state,
   setState,
+  title = 'Prescriber identification',
+  showFiness = false,
   children,
 }) => {
   const renderSectionHeader = (title: string, icon?: any) => (
@@ -32,7 +36,7 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader('Prescriber identification', IMAGES.stethoscopeIcon)}
+      {renderSectionHeader(title, IMAGES.stethoscopeIcon)}
       <View style={styles.row}>
         <Input
           isLocked
@@ -59,9 +63,21 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
           label="RPPS ID"
           value={state.prescriberRPPS}
           style={[styles.inputField, { flex: 1 }]}
-          infoText="*Shared directory of healthcare professionals"
         />
       </View>
+      <AppText size={getScaleSize(12)} color={COLORS._6F767E} style={{ marginTop: getScaleSize(-4), marginBottom: getScaleSize(8) }}>
+        *Shared directory of healthcare professionals
+      </AppText>
+      {showFiness && (
+        <View style={styles.row}>
+          <Input
+            isLocked
+            label="FINESS"
+            value={state.prescriberFINESS}
+            style={[styles.inputField, { flex: 1 }]}
+          />
+        </View>
+      )}
       {children}
     </View>
   );

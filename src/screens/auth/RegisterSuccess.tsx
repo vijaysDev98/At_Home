@@ -1,47 +1,97 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
+import { AppText, PrimaryButton } from '../../components';
+import { COLORS, FONTS } from '../../utils';
+import { getScaleSize } from '../../utils/scaleSize';
+import { IMAGES } from '../../assets/images';
+import NavigationService from '../../navigation/NavigationService';
+import { SCREENS } from '../../navigation/routes';
 
-export type RegisterSuccessProps = NativeStackScreenProps<RootStackParamList, 'RegisterSuccess'>;
+export type RegisterSuccessProps = NativeStackScreenProps<
+  RootStackParamList,
+  'RegisterSuccess'
+>;
 
 const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView
+      style={styles.safe}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
       <View style={styles.container}>
+        {/* Hero */}
         <View style={styles.heroSection}>
-          <View style={styles.checkWrap}>
-            <View style={styles.pulse} />
-            <Text style={styles.checkIcon}>✔︎</Text>
-          </View>
+          {/* Check icon circle */}
+          <Image
+            source={IMAGES.ic_register_done}
+            style={{ height: getScaleSize(96), width: getScaleSize(96) }}
+            resizeMode="contain"
+          />
 
-          <Text style={styles.title}>Registration Successful</Text>
-          <Text style={styles.subtitle}>
-            Your account has been created and is currently <Text style={styles.highlight}>pending admin approval</Text>. We
-            will notify you via email once your account is activated.
-          </Text>
+          <AppText
+            size={getScaleSize(24)}
+            font={FONTS.Inter.Bold}
+            color={COLORS.slate900}
+            align="center"
+          >
+            Registration Successful
+          </AppText>
 
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Regular}
+            color={COLORS.slate700}
+            align="center"
+            style={{ maxWidth: getScaleSize(320) }}
+          >
+            Your account has been created and is currently{' '}
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.primary}
+            >
+              pending admin approval
+            </AppText>
+            . We will notify you via email once your account is activated.
+          </AppText>
+
+          {/* Info Card */}
           <View style={styles.infoCard}>
-            <Text style={styles.clock}>⏰</Text>
+            <Image
+              source={IMAGES.ic_clock}
+              style={{ height: getScaleSize(25), width: getScaleSize(25) }}
+            />
             <View style={styles.infoTextWrap}>
-              <Text style={styles.infoTitle}>What happens next?</Text>
-              <Text style={styles.infoBody}>
-                Our team reviews all healthcare provider applications within 24-48 business hours to ensure platform
-                security.
-              </Text>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.slate900}
+              >
+                What happens next?
+              </AppText>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Regular}
+                color={COLORS.slate700}
+                style={{ marginTop: getScaleSize(4) }}
+              >
+                Your registration will be reviewed by the admin. You will be
+                notified once your account is approved. You cannot log in until
+                your account is approved.
+              </AppText>
             </View>
           </View>
         </View>
 
+        {/* CTA */}
         <View style={styles.ctaContainer}>
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            activeOpacity={0.9}
-            onPress={() => navigation.replace('Login')}
-          >
-            <Text style={styles.primaryText}>Back to Login</Text>
-          </TouchableOpacity>
+          <PrimaryButton
+            title="Back to Login"
+            onPress={() => NavigationService.reset(SCREENS.LOGIN)}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -51,128 +101,44 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   heroSection: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: getScaleSize(32),
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
-  },
-  checkWrap: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-    position: 'relative',
-  },
-  pulse: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 48,
-    backgroundColor: 'rgba(82, 102, 116, 0.1)',
-  },
-  checkIcon: {
-    fontSize: 32,
-    color: '#526674',
-    fontWeight: '700',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1e293b',
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 320,
-  },
-  highlight: {
-    color: '#526674',
-    fontWeight: '700',
+    gap: getScaleSize(20),
   },
   infoCard: {
     width: '100%',
-    backgroundColor: '#f8fafc',
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: COLORS._F8F9FA,
+    borderRadius: getScaleSize(14),
+    padding: getScaleSize(16),
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS._E5E7EB,
     flexDirection: 'row',
-    gap: 12,
+    gap: getScaleSize(12),
     alignItems: 'flex-start',
-  },
-  clock: {
-    fontSize: 18,
-    color: '#526674',
-    marginTop: 2,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   infoTextWrap: {
     flex: 1,
-    gap: 4,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  infoBody: {
-    fontSize: 13,
-    color: '#64748b',
-    lineHeight: 18,
   },
   ctaContainer: {
     width: '100%',
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  primaryBtn: {
-    height: 50,
-    backgroundColor: '#526674',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  primaryText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  homeIndicatorContainer: {
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  homeIndicator: {
-    width: 134,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: getScaleSize(24),
+    paddingBottom: getScaleSize(24),
   },
 });
 

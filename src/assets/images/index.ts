@@ -79,4 +79,5 @@ export const IMAGES = {
   treatmentIcon: require('./treatmentIcon.png'),
   info: require('./info.png'),
   cameraIcon: require('./cameraIcon.png'),
+  ic_register_done: require('./ic_register_done.png'),
 };

@@ -1,20 +1,19 @@
-import Toast from 'react-native-toast-message'
+import Toast from 'react-native-toast-message';
 
-
-export async function SHOW_TOAST(message: string | null | undefined, type: any) {
-
-    Toast.show({
-        type: type ? type : 'error',
-        text1: message ? message : 'Something went wrong',
-        position: 'top'
-    })
-
+export function SHOW_TOAST(
+  message: string | null | undefined,
+  type: 'success' | 'error' | 'info' = 'error',
+) {
+  Toast.show({
+    type,
+    text1: message ?? 'Something went wrong',
+    position: 'top',
+    visibilityTime: 4000,
+    autoHide: true,
+    topOffset: 50,
+  });
 }
 
 export function SHOW_SUCCESS_TOAST(message: string) {
-    Toast.show({
-        type: 'success',
-        text1: message,
-        position: 'top'
-    })
+  SHOW_TOAST(message, 'success');
 }

@@ -11,10 +11,6 @@ import {
   StyleProp,
   TextStyle,
   ViewStyle,
-  Alert,
-  Modal,
-  Animated,
-  Dimensions,
 } from 'react-native';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
@@ -46,7 +42,6 @@ export interface InputProps extends TextInputProps {
   isLocked?: boolean;
   renderPicker?: () => React.ReactNode;
   inputWrapperStyle?: StyleProp<ViewStyle>;
-  infoText?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -75,40 +70,9 @@ const Input: React.FC<InputProps> = ({
   isLocked = false,
   renderPicker,
   inputWrapperStyle,
-  infoText,
   ...rest
 }) => {
   const { multiline } = rest;
-  const [showTooltip, setShowTooltip] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const iconRef = useRef<any>(null);
-  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
-
-  const toggleTooltip = () => {
-    if (!showTooltip) {
-      iconRef.current?.measure((fx, fy, width, height, px, py) => {
-        const { width: windowWidth } = Dimensions.get('window');
-        let left = px - 10;
-        if (left + 220 > windowWidth) {
-          left = windowWidth - 236;
-        }
-        setTooltipPos({ top: py, left: Math.max(16, left) });
-        setShowTooltip(true);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      });
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }).start(() => setShowTooltip(false));
-    }
-  };
-
   // When locked: gray bg, no border colour, force non-editable
   const lockedBg = '#F3F4F6';
   const resolvedBg = isLocked
@@ -138,71 +102,11 @@ const Input: React.FC<InputProps> = ({
                 {label}{' '}
                 {isMandatory && <AppText color={COLORS.error}>*</AppText>}
               </AppText>
-              {infoText && (
-                <TouchableOpacity
-                  ref={iconRef}
-                  onPress={toggleTooltip}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  style={{ marginLeft: 6 }}
-                >
-                  <Image
-                    source={IMAGES.info}
-                    style={{ width: 14, height: 14, tintColor: COLORS._64748B }}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              )}
             </View>
           ) : null}
           {labelRight && labelRight}
         </View>
       )}
-      <Modal
-        visible={showTooltip}
-        transparent
-        animationType="none"
-        onRequestClose={toggleTooltip}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: 'transparent' }}
-          onPress={toggleTooltip}
-        >
-          <Animated.View
-            style={{
-              position: 'absolute',
-              top: tooltipPos.top,
-              left: tooltipPos.left,
-              opacity: fadeAnim,
-              transform: [
-                {
-                  scale: fadeAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.95, 1],
-                  }),
-                },
-              ],
-              backgroundColor: COLORS._1E293B,
-              padding: 12,
-              borderRadius: 8,
-              width: 220,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 5,
-            }}
-          >
-            <AppText
-              size={getScaleSize(12)}
-              color={COLORS.white}
-              font={FONTS.Inter.Regular}
-              style={{ lineHeight: 18 }}
-            >
-              {infoText}
-            </AppText>
-          </Animated.View>
-        </Pressable>
-      </Modal>
       {subText ? (
         <AppText
           size={getScaleSize(12)}

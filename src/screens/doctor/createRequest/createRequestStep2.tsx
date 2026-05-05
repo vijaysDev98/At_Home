@@ -30,18 +30,18 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   const canContinue = useMemo(() => !!selected, [selected]);
 
   return (
-    <AppSafeAreaView
-    edges={true}
-    >
+    <AppSafeAreaView edges={true}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.circleBtn}
-            activeOpacity={0.8}
-            onPress={() => NavigationService.goBack()}
-          >
-            <Image source={IMAGES.arrowLeft} style={styles.crossIcon} />
-          </TouchableOpacity>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.circleBtn}
+              activeOpacity={0.8}
+              onPress={() => NavigationService.goBack()}
+            >
+              <Image source={IMAGES.arrowLeft} style={styles.crossIcon} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.headerCenter}>
             <AppText
               size={getScaleSize(12)}
@@ -58,6 +58,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               Step 2/3: Service
             </AppText>
           </View>
+          <View style={styles.headerLeft} />
         </View>
 
         <View style={styles.content}>
@@ -167,6 +168,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+  },
+  headerLeft: {
+    flex: 0.5,
   },
   circleBtn: {
     width: 40,

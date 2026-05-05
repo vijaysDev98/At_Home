@@ -19,9 +19,7 @@ export const authSlice = createSlice({
     setUserData: (state, {payload}) => {
       state.userData = payload;
     },
-    resetAuth: state => {
-      state = undefined;
-    },
+    resetAuth: () => initialState,
   },
 });
 

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  TextInput,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import { ActionSheetRef } from 'react-native-actions-sheet';
@@ -113,50 +112,14 @@ const WoundCareForm: React.FC = () => {
               Wound Dressing Prescription Support Form
             </AppText>
           </View>
-          
-          {/* Prescription Date */}
-          <View style={styles.card}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setPickerType('prescriptionDate');
-                setOpen(true);
-              }}
-            >
-              <Input
-                editable={false}
-                label="Prescription date"
-                placeholder="DD/MM/YYYY"
-                value={state.prescriptionDate}
-                style={styles.inputField}
-                pointerEvents="none"
-              />
-            </TouchableOpacity>
-            <DatePicker
-              modal
-              mode="date"
-              open={open}
-              date={date}
-              onConfirm={d => {
-                setOpen(false);
-                setDate(d);
-                const formattedDate = moment(d).format('DD/MM/YYYY');
-
-                
-                if (pickerType === 'prescriptionDate') {
-                  setState({ ...state, prescriptionDate: formattedDate });
-                }
-                setPickerType(null);
-              }}
-              onCancel={() => {
-                setOpen(false);
-                setPickerType(null);
-              }}
-            />
-          </View>
 
           {/* PRESCRIBER IDENTIFICATION */}
-          <FormPrescriberSection state={state} setState={setState} />
+          <FormPrescriberSection
+            state={state}
+            setState={setState}
+            title="Physician Information"
+            showFiness={true}
+          />
 
           {/* PATIENT SECTION */}
           <FormPatientSection
@@ -164,24 +127,106 @@ const WoundCareForm: React.FC = () => {
             setState={setState}
             showWeight={false}
             showNIR={false}
+            showALD={false}
+          />
+
+          {/* ALD & Date SECTION */}
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <View style={{ flex: 1, gap: getScaleSize(8) }}>
+                <View style={styles.checkboxItem}>
+                  <CheckBox
+                    boxType="square"
+                    value={state.careRelatedToALD === 'ALD'}
+                    onValueChange={() =>
+                      setState({ ...state, careRelatedToALD: 'ALD' })
+                    }
+                    tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
+                  />
+                  <AppText size={getScaleSize(13)}>
+                    Care related to long-term condition (ALD)
+                  </AppText>
+                </View>
+                <View style={styles.checkboxItem}>
+                  <CheckBox
+                    boxType="square"
+                    value={state.careRelatedToALD === 'NOT_ALD'}
+                    onValueChange={() =>
+                      setState({ ...state, careRelatedToALD: 'NOT_ALD' })
+                    }
+                    tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
+                  />
+                  <AppText size={getScaleSize(13)}>
+                    Care not related to long-term condition (ALD)
+                  </AppText>
+                </View>
+              </View>
+            </View>
+
+            <View style={{ marginTop: getScaleSize(12) }}>
+              <Input
+                onPress={() => {
+                  setPickerType('prescriptionDate');
+                  setOpen(true);
+                }}
+                editable={false}
+                label="Prescription date"
+                placeholder="DD/MM/YYYY"
+                value={state.prescriptionDate}
+                style={[styles.inputField, { marginBottom: 0 }]}
+                pointerEvents="none"
+              />
+            </View>
+          </View>
+
+          <DatePicker
+            modal
+            mode="date"
+            open={open}
+            date={date}
+            onConfirm={d => {
+              setOpen(false);
+              setDate(d);
+              const formattedDate = moment(d).format('DD/MM/YYYY');
+
+              if (pickerType === 'prescriptionDate') {
+                setState({ ...state, prescriptionDate: formattedDate });
+              }
+              setPickerType(null);
+            }}
+            onCancel={() => {
+              setOpen(false);
+              setPickerType(null);
+            }}
           />
 
           {/* WOUND CHARACTERISTICS */}
           <View style={styles.card}>
-            {renderSectionHeader('Wound Characteristics')}
-            <Input
-              label="Wound Size"
-              placeholder="e.g. 5x5 cm"
-              value={state.woundSize}
-              onChangeText={t => setState({ ...state, woundSize: t })}
-              style={styles.inputField}
-            />
+            {renderSectionHeader('Type of wound:')}
 
             <View style={{ gap: getScaleSize(12), marginTop: getScaleSize(8) }}>
               <View>
-                <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
-                  Type of wound:
-                </AppText>
+                <View
+                  style={[
+                    styles.row,
+                    { justifyContent: 'space-between', marginBottom: 0 },
+                  ]}
+                >
+                  <View style={[styles.row, { flex: 1, marginLeft: 12 }]}>
+                    <AppText size={getScaleSize(13)}>Size:</AppText>
+                    <Input
+                      value={state.woundSize}
+                      onChangeText={t => setState({ ...state, woundSize: t })}
+                      style={{ flex: 1, paddingHorizontal: 0 }}
+                      inputWrapperStyle={styles.inlineInputWrapper}
+                      inputStyle={[
+                        styles.inlineInputText,
+                        { textAlign: 'left' },
+                      ]}
+                      placeholder="e.g. 5x5 cm"
+                    />
+                  </View>
+                </View>
                 <View style={[styles.row, { marginTop: 8 }]}>
                   <View style={styles.checkboxItem}>
                     <CheckBox
@@ -275,12 +320,25 @@ const WoundCareForm: React.FC = () => {
               }}
             >
               {[
-                { key: 'Hyperabsorbent', label: 'Hyperabsorbent' },
-                { key: 'Postop', label: 'Post-op (Mediane)' },
-                { key: 'Debridement', label: 'Debridement' },
-                { key: 'Hydrocolloid', label: 'Hydrocolloid' },
+                {
+                  key: 'Hyperabsorbent',
+                  label: 'Hyperabsorbent (ulcer-type wound)',
+                },
+                { key: 'Postop', label: 'Post-op (e.g., Mediane Post-op)' },
+                {
+                  key: 'Debridement',
+                  label: 'Debridement and healing dressing (e.g., Algostéril)',
+                },
+                {
+                  key: 'Hydrocolloid',
+                  label:
+                    'Hydrocolloid: absorbs exudate and forms a moist gel on contact with the wound',
+                },
               ].map(dt => (
-                <View key={dt.key} style={styles.checkboxItem}>
+                <View
+                  key={dt.key}
+                  style={[styles.checkboxItem, { width: '100%' }]}
+                >
                   <CheckBox
                     boxType="circle"
                     value={state.dressingType === dt.key}
@@ -293,10 +351,12 @@ const WoundCareForm: React.FC = () => {
                     }}
                   />
 
-                  <AppText size={getScaleSize(12)}>{dt.label}</AppText>
+                  <AppText size={getScaleSize(12)} style={{ flex: 1 }}>
+                    {dt.label}
+                  </AppText>
                 </View>
               ))}
-              <View style={styles.checkboxItem}>
+              <View style={[styles.checkboxItem, { width: '100%' }]}>
                 <CheckBox
                   boxType="square"
                   value={state.packing}
@@ -306,6 +366,77 @@ const WoundCareForm: React.FC = () => {
 
                 <AppText size={getScaleSize(12)}>Packing</AppText>
               </View>
+
+              <View
+                style={[
+                  { marginLeft: getScaleSize(24), gap: getScaleSize(8) },
+                  !state.packing && { opacity: 0.5 },
+                ]}
+                pointerEvents={state.packing ? 'auto' : 'none'}
+              >
+                  <View style={styles.checkboxItem}>
+                    <CheckBox
+                      boxType="square"
+                      value={state.packingGoals.fillCavity}
+                      onValueChange={v =>
+                        setState({
+                          ...state,
+                          packingGoals: {
+                            ...state.packingGoals,
+                            fillCavity: v,
+                          },
+                        })
+                      }
+                      tintColors={{
+                        true: COLORS.primary,
+                        false: COLORS._6F767E,
+                      }}
+                    />
+                    <AppText size={getScaleSize(12)}>Fill a cavity</AppText>
+                  </View>
+                  <View style={styles.checkboxItem}>
+                    <CheckBox
+                      boxType="square"
+                      value={state.packingGoals.occupyDeadSpace}
+                      onValueChange={v =>
+                        setState({
+                          ...state,
+                          packingGoals: {
+                            ...state.packingGoals,
+                            occupyDeadSpace: v,
+                          },
+                        })
+                      }
+                      tintColors={{
+                        true: COLORS.primary,
+                        false: COLORS._6F767E,
+                      }}
+                    />
+                    <AppText size={getScaleSize(12)}>Occupy dead space</AppText>
+                  </View>
+                  <View style={styles.checkboxItem}>
+                    <CheckBox
+                      boxType="square"
+                      value={state.packingGoals.preventClosure}
+                      onValueChange={v =>
+                        setState({
+                          ...state,
+                          packingGoals: {
+                            ...state.packingGoals,
+                            preventClosure: v,
+                          },
+                        })
+                      }
+                      tintColors={{
+                        true: COLORS.primary,
+                        false: COLORS._6F767E,
+                      }}
+                    />
+                    <AppText size={getScaleSize(12)}>
+                      Prevent premature superficial closure
+                    </AppText>
+                  </View>
+                </View>
             </View>
 
             <View
@@ -398,7 +529,7 @@ const WoundCareForm: React.FC = () => {
                   }
                   style={[styles.inlineInput, { flex: 1 }]}
                 /> */}
-                <TextInput
+                <Input
                   placeholder="0"
                   value={state.materials.kitsPerDay}
                   onChangeText={t =>
@@ -407,7 +538,9 @@ const WoundCareForm: React.FC = () => {
                       materials: { ...prev.materials, kitsPerDay: t },
                     }))
                   }
-                  style={[styles.inlineInput, { width: getScaleSize(40) }]}
+                  style={{ width: getScaleSize(40), paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
                   keyboardType="numeric"
                 />
                 <AppText size={getScaleSize(13)}>per day</AppText>
@@ -432,17 +565,20 @@ const WoundCareForm: React.FC = () => {
                 <AppText size={getScaleSize(13)}>
                   Nylex or Velpeau retention bandage
                 </AppText>
-                {/* <TextInput
-                  placeholder="________________"
-                  value={state.materials.retentionBandage}
+                <Input
+                  value={state.materials.bandagePerDay}
                   onChangeText={t =>
-                    setState({
-                      ...state,
-                      materials: { ...state.materials, retentionBandage: t },
-                    })
+                    setState(prev => ({
+                      ...prev,
+                      materials: { ...prev.materials, bandagePerDay: t },
+                    }))
                   }
-                  style={[styles.inlineInput, { flex: 1 }]}
-                /> */}
+                  style={{ width: getScaleSize(40), paddingHorizontal: 0, marginLeft: getScaleSize(8) }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(13)}>per day</AppText>
               </View>
 
               <View style={styles.checkboxItem}>
@@ -457,7 +593,7 @@ const WoundCareForm: React.FC = () => {
                   tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
                 />
                 <AppText size={getScaleSize(13)}>Cleaning with</AppText>
-                <TextInput
+                <Input
                   // placeholder="________________________________"
                   value={state.materials.cleaningWith}
                   onChangeText={t =>
@@ -466,7 +602,9 @@ const WoundCareForm: React.FC = () => {
                       materials: { ...prev.materials, cleaningWith: t },
                     }))
                   }
-                  style={[styles.inlineInput, { flex: 1 }]}
+                  style={{ flex: 1, paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
                 />
               </View>
 
@@ -482,7 +620,7 @@ const WoundCareForm: React.FC = () => {
                   tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
                 />
                 <AppText size={getScaleSize(13)}>Disinfection with</AppText>
-                <TextInput
+                <Input
                   // placeholder="________________________________"
                   value={state.materials.disinfectionWith}
                   onChangeText={t =>
@@ -491,7 +629,9 @@ const WoundCareForm: React.FC = () => {
                       materials: { ...prev.materials, disinfectionWith: t },
                     }))
                   }
-                  style={[styles.inlineInput, { flex: 1 }]}
+                  style={{ flex: 1, paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
                 />
               </View>
 
@@ -500,7 +640,7 @@ const WoundCareForm: React.FC = () => {
                   <AppText size={getScaleSize(13)}>
                     1st layer in contact with the wound
                   </AppText>
-                  <TextInput
+                  <Input
                     value={state.materials.firstLayer}
                     onChangeText={t =>
                       setState(prev => ({
@@ -508,14 +648,16 @@ const WoundCareForm: React.FC = () => {
                         materials: { ...prev.materials, firstLayer: t },
                       }))
                     }
-                    style={[styles.inlineInput, { flex: 1 }]}
+                    style={{ flex: 1, paddingHorizontal: 0 }}
+                    inputWrapperStyle={styles.inlineInputWrapper}
+                    inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
                   />
                 </View>
                 <View style={styles.row}>
                   <AppText size={getScaleSize(13)}>
                     2nd overlapping layer
                   </AppText>
-                  <TextInput
+                  <Input
                     value={state.materials.secondLayer}
                     onChangeText={t =>
                       setState(prev => ({
@@ -523,7 +665,9 @@ const WoundCareForm: React.FC = () => {
                         materials: { ...prev.materials, secondLayer: t },
                       }))
                     }
-                    style={[styles.inlineInput, { flex: 1 }]}
+                    style={{ flex: 1, paddingHorizontal: 0 }}
+                    inputWrapperStyle={styles.inlineInputWrapper}
+                    inputStyle={[styles.inlineInputText, { textAlign: 'left' }]}
                   />
                 </View>
               </View>
@@ -539,7 +683,7 @@ const WoundCareForm: React.FC = () => {
                   />
                   <AppText size={getScaleSize(13)}>Treatment duration</AppText>
                 </View>
-                <TextInput
+                <Input
                   value={state.treatmentDuration}
                   onChangeText={t =>
                     setState({
@@ -548,7 +692,9 @@ const WoundCareForm: React.FC = () => {
                       untilHealed: false,
                     })
                   }
-                  style={[styles.inlineInput, { width: getScaleSize(60) }]}
+                  style={{ width: getScaleSize(60), paddingHorizontal: 0 }}
+                  inputWrapperStyle={styles.inlineInputWrapper}
+                  inputStyle={styles.inlineInputText}
                 />
                 <AppText size={getScaleSize(13)}>or</AppText>
                 <View style={styles.checkboxItem}>
@@ -560,6 +706,23 @@ const WoundCareForm: React.FC = () => {
                   <AppText size={getScaleSize(13)}>Until healed</AppText>
                 </View>
               </View>
+            </View>
+          </View>
+
+          {/* SIGNATURE SECTION */}
+          <View style={styles.card}>
+            <View style={[styles.row, { justifyContent: 'space-between' }]}>
+              <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
+                Physician signature
+              </AppText>
+              <View
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: COLORS._EFEFEF,
+                  width: getScaleSize(150),
+                  height: getScaleSize(40),
+                }}
+              />
             </View>
           </View>
         </ScrollView>
@@ -618,10 +781,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: getScaleSize(4),
   },
-  inlineInput: {
+  inlineInputWrapper: {
+    height: 'auto',
+    borderWidth: 0,
     borderBottomWidth: 1,
+    borderRadius: 0,
+    paddingHorizontal: 0,
     borderBottomColor: COLORS.primary,
-    width: getScaleSize(50),
+  },
+  inlineInputText: {
     textAlign: 'center',
     padding: 0,
     fontFamily: FONTS.Inter.Bold,
