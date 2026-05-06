@@ -40,9 +40,12 @@ export type RootStackParamList = {
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
-  ResetPassword: { email?: string; otp?: string; resetToken?: string } | undefined;
+  ResetPassword:
+    | { email?: string; otp?: string; resetToken?: string }
+    | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
+  DoctorRequest: undefined;
   CreateRequestStep2: undefined;
   CreateRequestStep3: undefined;
   FORMS_SCREEN: undefined;

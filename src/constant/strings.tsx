@@ -1,10 +1,15 @@
 export const STRING = {
+  // ─── Auth: Welcome ───────────────────────────────────────────
   welcomeTitle: 'Welcome to\nAt-Home',
   welcomeSubtitle: 'Patients to Doctors',
   signIn: 'Sign In',
   createAccount: 'Create Account',
+
+  // ─── Auth: Register ──────────────────────────────────────────
   createYourAccount: 'Create Your Account',
   createAccountSubtitle: 'Please fill in your professional information',
+  updateYourProfile: 'Update Your Profile',
+  updateProfileSubtitle: 'Update your professional details',
   fullName: 'Full Name',
   emailAddress: 'Email Address',
   password: 'Password',
@@ -26,7 +31,12 @@ export const STRING = {
   elevenDigit: '11 digits',
   nineDigit: '9 digits',
   selectYourSpecialty: 'Select your specialty',
+  selectPlaceOfPractice: 'Select place of practice',
   submitRegistration: 'Submit Registration',
+  saveChanges: 'Save Changes',
+  cancel: 'Cancel',
+
+  // ─── Auth: Login ─────────────────────────────────────────────
   welcomeBack: 'Welcome Back',
   welcomeBackMessage: 'Sign in to your At-Home account',
   login: 'Login',
@@ -41,15 +51,21 @@ export const STRING = {
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
   forgotQuestion: 'Forgot?',
+
+  // ─── Auth: Forgot Password ───────────────────────────────────
   sendOTP: 'Send OTP / Reset Link',
   forgetPasswordMessage:
     "Enter your registered email address and we'll send you an OTP to reset your password.",
   backToLogin: 'Back to Login',
+
+  // ─── Auth: OTP Verification ──────────────────────────────────
   verifyEmail: 'Verify your email',
   varifyEmailMessage: 'We sent a 6-digit code to',
   codeExpiresIn: 'Code expires in',
   resendCode: 'Resend Code',
   verify: 'Verify',
+
+  // ─── Auth: Reset Password ────────────────────────────────────
   resetPassword: 'Reset Password',
   resetPasswordMessage: 'Create a new, strong password for your account.',
   newPassword: 'New Password',
@@ -59,6 +75,10 @@ export const STRING = {
   containsUpper: 'Contains uppercase letter',
   containsNumber: 'Contains number',
   containsSpecial: 'Contains special character',
+  enterNewPassword: 'Enter new password',
+  enterConfirmPassword: 'Enter confirm password',
+
+  // ─── Home Screen ─────────────────────────────────────────────
   goodMorning: 'Good morning,',
   requestsOverview: 'Requests Overview',
   active: 'Active',
@@ -70,13 +90,62 @@ export const STRING = {
   totalPatients: 'Total Patients',
   patients: 'Patients',
   viewAll: 'View All',
-  searchPatients: 'Search patients...',
   quickActions: 'Quick Actions',
   newRequest: 'New Request',
   addPatient: 'Add Patient',
   signPendingForm: 'Sign Pending Form',
-  enterNewPassword: 'Enter new password',
-  enterConfirmPassword: 'Enter confirm password',
   recentActivity: 'Recent Activity',
   recentQueue: 'Recent Queue',
+  requestId: 'Request ID',
+  formStatus: 'Form Status',
+  updateAndSign: 'Update & Sign',
+
+  // ─── Doctor Profile ──────────────────────────────────────────
+  profile: 'Profile',
+  editProfile: 'Edit Profile',
+  personalInformation: 'Personal Information',
+  professionalCredentials: 'Professional Credentials',
+  professionalDetails: 'Professional Details',
+  appVersion: 'App Version',
+  appVersionValue: 'v2.4.1 (Build 842)',
+  termsOfService: 'Terms of Service',
+  privacyPolicy: 'Privacy Policy',
+  logOut: 'Log Out',
+
+  // ─── Add Patient ─────────────────────────────────────────────
+  addPatientTitle: 'Add Patient',
+  dateOfBirth: 'Date of Birth',
+  phoneNumber: 'Phone Number',
+  streetAddress: 'Street Address',
+  city: 'City',
+  zip: 'Zip',
+  contactDetails: 'Contact Details',
+  address: 'Address',
+  medicalInformation: 'Medical Information',
+  initialNotes: 'Initial Notes / Allergies',
+  savePatient: 'Save Patient',
+  notesPlaceholder:
+    'Enter any known allergies, chronic conditions, or important medical history...',
+  notesHelper: 'Optional. Can be updated later.',
+  selectDateOfBirth: 'Select date of birth',
+  enterPhoneNumber: 'Enter phone number',
+  enterStreetAddress: 'Enter street address',
+  enterCity: 'Enter city',
+  enterZip: 'Zip',
+  searchPatients: 'Search patients...',
+
+  // ─── Validation / Errors ─────────────────────────────────────
+  fullNameRequired: 'Full name is required.',
+  fullNameMinLength: 'Name must be at least 3 characters.',
+  phoneRequired: 'Phone number is required.',
+  invalidEmailAddress: 'Please enter a valid email address.',
+  invalidDateFormat: 'Use YYYY-MM-DD format.',
+  specialtyRequired: 'Please select your specialty.',
+  practiceTypeRequired: 'Place of practice is required.',
+  addressRequired: 'Business address is required.',
+  rppsRequired: 'RPPS number is required.',
+  finessRequired: 'FINESS number is required.',
+  nameRequired: 'Name is required.',
+  passwordMismatch: 'Passwords do not match.',
+  agreementRequired: 'You must agree to the terms.',
 };

@@ -33,7 +33,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading } = useSelector((state: RootState) => state.login);
+  const { isLoading } = useSelector((state: RootState) => state.common);
 
   const isValidEmail = useMemo(
     () => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email.trim()),

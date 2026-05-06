@@ -65,6 +65,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
     const timer = setTimeout(async () => {
       const token = await Storage.get(Storage.USER_TOKEN);
       const role = await Storage.get(Storage.USER_ROLE);
+      console.log("Access token", token);
+      
 
       if (token) {
         await dispatch(fetchProfile());

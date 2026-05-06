@@ -35,7 +35,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   const email = route.params?.email ?? 'dr.smith@example.com';
   const isForgotPassword = route.params?.isForgotPassword ?? false;
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading } = useSelector((state: RootState) => state.login);
+  const { isLoading } = useSelector((state: RootState) => state.common);
   
   const [code, setCode] = useState(Array(6).fill(''));
   const [touched, setTouched] = useState(false);

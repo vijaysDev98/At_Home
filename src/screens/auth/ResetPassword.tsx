@@ -34,7 +34,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   const resetToken = route.params?.resetToken ?? '';
 
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading } = useSelector((state: RootState) => state.login);
+  const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');

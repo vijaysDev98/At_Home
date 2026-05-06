@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -9,91 +9,152 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useDispatch, useSelector } from 'react-redux';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { AppSafeAreaView, AppText, PrimaryButton } from '../../../components';
+import { RootStackParamList } from '../../../navigation';
+import { fetchPatients } from '../../../actions/patient/patientAction';
+import {
+  AppLoader,
+  AppSafeAreaView,
+  AppText,
+  PrimaryButton,
+} from '../../../components';
 import { STRING } from '../../../constant/strings';
 import { SCREENS } from '../../../navigation/routes';
 import NavigationService from '../../../navigation/NavigationService';
-import { PatientListProps, patientsList } from '../../../utils/dummyData';
-import { RootStackParamList } from '../../../navigation';
+import { RootState } from '../../../redux/store';
 
 // Define types for better type safety
 type PatientStatus = 'All' | 'Recently Added' | 'Recently Updated';
 
-const chips: PatientStatus[] = ['All', 'Recently Added', 'Recently Updated',];
+const chips: PatientStatus[] = ['All', 'Recently Added', 'Recently Updated'];
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const PatientsScreen: React.FC = () => {
+  const isFocused = useIsFocused();
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
+  const { patients, pagination } = useSelector((state: RootState) => state.patient);
+  const { isLoading: globalLoading } = useSelector((state: RootState) => state.common);
+
   const [selectedChip, setSelectedChip] = useState('All');
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Memoize filtered patients to avoid unnecessary recalculations
-  const filteredPatients = useMemo(() => {
-    if (selectedChip === 'All') return patientsList;
-    return patientsList.filter(
-      p => p.status.toLowerCase() === selectedChip.toLowerCase(),
-    );
-  }, [selectedChip]);
+  const fetchPatientsData = async (
+    p: number = 1,
+    s: string = '',
+    refresh: boolean = false,
+  ) => {
+    if (p > 1) setIsFetchingNextPage(true);
+    await dispatch(fetchPatients(p, s));
+    setIsFetchingNextPage(false);
+    setIsRefreshing(false);
+  };
 
-  // Extract patient item rendering to separate component for better performance
-  const PatientItem = React.memo(({ item, onPress }: { item: PatientListProps; onPress: () => void }) => (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      style={styles.card}
-      onPress={onPress}
-    >
-      <View style={styles.cardLeft}>
-        <View style={styles.avatarWrapper}>
-          {item.avatar ? (
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          ) : (
+  useEffect(() => {
+    if (isFocused) {
+      setPage(1);
+      fetchPatientsData(1, search);
+    }
+  }, [isFocused]);
+
+  // Debounced search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search !== '') {
+        setPage(1);
+        fetchPatientsData(1, search);
+      } else {
+        // If search is cleared, fetch all
+        setPage(1);
+        fetchPatientsData(1, '');
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    setPage(1);
+    fetchPatientsData(1, search, true);
+  };
+
+  const onLoadMore = () => {
+    if (pagination?.hasNextPage && !isFetchingNextPage) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchPatientsData(nextPage, search);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const PatientItem = memo(
+    ({ item, onPress }: { item: any; onPress: () => void }) => (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        style={styles.card}
+        onPress={onPress}
+      >
+        <View style={styles.cardLeft}>
+          <View style={styles.avatarWrapper}>
             <View style={styles.initialsWrap}>
-              <Text style={styles.initials}>{item.initials}</Text>
+              <Text style={styles.initials}>{getInitials(item.fullName)}</Text>
             </View>
-          )}
-        </View>
-        <View>
-          <Text style={styles.name}>{item.name}</Text>
-          <View style={styles.phoneRow}>
-            <Image source={IMAGES.phone} style={styles.phoneIcon} />
-            <Text style={styles.phone}>{item.phone}</Text>
+          </View>
+          <View>
+            <Text style={styles.name}>{item.fullName}</Text>
+            <View style={styles.phoneRow}>
+              <Image source={IMAGES.phone} style={styles.phoneIcon} />
+              <Text style={styles.phone}>{item.phoneNumber}</Text>
+            </View>
           </View>
         </View>
-      </View>
-      {/* <View style={styles.cardRight}> */}
-      <Image source={IMAGES.forwardIcon} style={styles.rightIcon} />
-      {/* </View> */}
-    </TouchableOpacity>
-  ));
+        <Image source={IMAGES.forwardIcon} style={styles.rightIcon} />
+      </TouchableOpacity>
+    ),
+  );
 
-  // Optimized render item function
-  const renderItem = ({ item }: { item: PatientListProps }) => (
+  const renderItem = ({ item }: { item: any }) => (
     <PatientItem
       item={item}
       onPress={() =>
-        NavigationService.navigate(SCREENS.PATIENT_DETAIL, { id: item.id } as any)
+        NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
+          id: item.id,
+        } as any)
       }
     />
   );
 
   return (
-    <AppSafeAreaView
-    style={{backgroundColor:COLORS.white}}
-    >
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <AppText
-          size={getScaleSize(20)}
-    font={ FONTS.Inter.Bold}
-    color={ COLORS._1A1D1F}
-    style={styles.headerTitle}
-          >{"Patients"}</AppText>
+            size={getScaleSize(20)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+            style={styles.headerTitle}
+          >
+            {'Patients'}
+          </AppText>
 
           {/* Search */}
           <View style={styles.searchWrapper}>
@@ -102,6 +163,8 @@ const PatientsScreen: React.FC = () => {
               placeholder={STRING.searchPatients}
               placeholderTextColor="#6F767E"
               style={styles.searchInput}
+              value={search}
+              onChangeText={setSearch}
             />
           </View>
 
@@ -138,13 +201,25 @@ const PatientsScreen: React.FC = () => {
         </View>
 
         {/* Patient list */}
+
         <FlatList
-          data={filteredPatients}
+          data={patients}
           style={styles.flatListContainer}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
+          onRefresh={onRefresh}
+          refreshing={isRefreshing}
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={() =>
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: 20 }}>
+                <AppLoader visible={true} />
+              </View>
+            ) : null
+          }
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           updateCellsBatchingPeriod={50}
@@ -163,6 +238,7 @@ const PatientsScreen: React.FC = () => {
           />
         </View>
       </View>
+      <AppLoader visible={globalLoading && page === 1 && !isRefreshing} />
     </AppSafeAreaView>
   );
 };
@@ -231,7 +307,7 @@ const styles = StyleSheet.create({
     gap: getScaleSize(8),
     alignItems: 'center',
     marginTop: getScaleSize(12),
-    paddingHorizontal: getScaleSize(20)
+    paddingHorizontal: getScaleSize(20),
   },
   chip: {
     paddingHorizontal: getScaleSize(22),

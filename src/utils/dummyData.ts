@@ -1,12 +1,13 @@
 import { IMAGES } from '../assets/images';
-
 export const doctorSpecialities = [
-  { label: 'General Practitioner', value: 'General Practitioner' },
+  { label: 'General Practitioner', value: 'generalPractice' },
   { label: 'cardiology', value: 'cardiology' },
-  { label: 'Pediatrician', value: 'Pediatrician' },
+  { label: 'Pediatrician', value: 'pediatrics' },
   { label: 'Neurologist', value: 'Neurologist' },
-  { label: 'Dermatologist', value: 'Dermatologist' },
-  { label: 'Ophthalmologist', value: 'Ophthalmologist' },
+  { label: 'Dermatologist', value: 'dermatology' },
+  { label: 'Ophthalmologist', value: 'orthopedics' },
+  { label: 'Neurology', value: 'neurology' },
+  { label: 'Other', value: 'other' },
 ];
 
 export interface PatientListProps {

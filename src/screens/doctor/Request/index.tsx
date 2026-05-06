@@ -1,13 +1,20 @@
-import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native"
-import { AppSafeAreaView, AppText, Header, Input, RequestCard } from "../../../components"
-import { COLORS, FONTS } from "../../../utils"
-import { getScaleSize } from "../../../utils/scaleSize"
-import { IMAGES } from "../../../assets/images"
-import React, { useCallback, useMemo, useState } from "react"
-import { serviceRequests } from "../../../utils/dummyData"
-import NavigationService from "../../../navigation/NavigationService"
-import { SCREENS } from "../../../navigation/routes"
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { AppSafeAreaView, AppText, Header, Input } from '../../../components';
+import { COLORS, FONTS } from '../../../utils';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { IMAGES } from '../../../assets/images';
+import React, { useCallback, useMemo, useState } from 'react';
+import { serviceRequests } from '../../../utils/dummyData';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation';
+import RequestCard from '../../../components/RequestCard';
 
+export type DoctorRequestProps = NativeStackScreenProps<
+  RootStackParamList,
+  'DoctorRequest'
+>;
 // Filter Types
 type FilterType = 'all' | 'recent' | 'active';
 
@@ -18,35 +25,38 @@ interface FilterChipProps {
   onPress: () => void;
 }
 
-const FilterChip: React.FC<FilterChipProps> = React.memo(({ key, label, isActive, onPress }) => (
-  <TouchableOpacity
-    key={key}
-    activeOpacity={0.85}
-    onPress={onPress}
-    style={[styles.chip, isActive && styles.chipActive]}
-  >
-    <AppText
-      color={isActive ? COLORS.white : COLORS._6F767E}
-      size={getScaleSize(12)}
-      font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+const FilterChip: React.FC<FilterChipProps> = React.memo(
+  ({ key, label, isActive, onPress }) => (
+    <TouchableOpacity
+      key={key}
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[styles.chip, isActive && styles.chipActive]}
     >
-      {label}
-    </AppText>
-  </TouchableOpacity>
-));
+      <AppText
+        color={isActive ? COLORS.white : COLORS._6F767E}
+        size={getScaleSize(12)}
+        font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
+      >
+        {label}
+      </AppText>
+    </TouchableOpacity>
+  ),
+);
 
-
-const DoctorRequest = () => {
-
+const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const [filter, setFilter] = useState<FilterType>('all');
 
   // Filter options
-  const filterOptions = useMemo(() => [
-    { key: 'all' as FilterType, label: 'All ' },
-    { key: 'draft' as FilterType, label: 'Draft' },
-    { key: 'inprogress' as FilterType, label: 'In Progress' },
-    { key: 'active' as FilterType, label: 'Returned' },
-  ], []);
+  const filterOptions = useMemo(
+    () => [
+      { key: 'all' as FilterType, label: 'All ' },
+      { key: 'draft' as FilterType, label: 'Draft' },
+      { key: 'inprogress' as FilterType, label: 'In Progress' },
+      { key: 'active' as FilterType, label: 'Returned' },
+    ],
+    [],
+  );
 
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
@@ -61,16 +71,14 @@ const DoctorRequest = () => {
         requestId={item.requestId}
         formStatus={item.formStatus}
         status={item.status}
-      buttonText={item.action}
-      onButtonPress={()=> NavigationService.navigate(SCREENS.FORMS_SCREEN)}
+        buttonText={item.action}
+        onButtonPress={() => NavigationService.navigate(SCREENS.FORMS_SCREEN)}
       />
-    )
-  }
+    );
+  };
 
   return (
-    <AppSafeAreaView
-      style={{ backgroundColor: COLORS.white }}
-    >
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <Header
         title="Service Request"
         subTitle="Manage your service requests"
@@ -86,7 +94,7 @@ const DoctorRequest = () => {
         />
 
         <View style={styles.filters}>
-          {filterOptions.map((option) => (
+          {filterOptions.map(option => (
             <FilterChip
               key={option.key}
               label={option.label}
@@ -101,8 +109,9 @@ const DoctorRequest = () => {
           font={FONTS.Inter.SemiBold}
           color={COLORS._6B7280}
           style={{ marginTop: getScaleSize(16) }}
-        >{"24 Forms Found "}</AppText>
-
+        >
+          {'24 Forms Found '}
+        </AppText>
       </View>
 
       <FlatList
@@ -114,14 +123,14 @@ const DoctorRequest = () => {
           marginTop: getScaleSize(12),
           gap: getScaleSize(12),
           backgroundColor: COLORS._F8F9FA,
-          paddingBottom:getScaleSize(50)
+          paddingBottom: getScaleSize(50),
         }}
       />
     </AppSafeAreaView>
-  )
-}
+  );
+};
 
-export default DoctorRequest
+export default DoctorRequest;
 
 const styles = StyleSheet.create({
   container: {
@@ -152,5 +161,4 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._526674,
     borderColor: COLORS._526674,
   },
-
-})
+});

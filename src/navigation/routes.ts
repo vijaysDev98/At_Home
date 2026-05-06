@@ -20,7 +20,7 @@ export const SCREENS = {
   PROVIDER_FORM: 'ProviderForm',
   SERVICE_COMPLETED: 'ServiceCompleted',
   SERVICE_SCREEN: 'ServiceScreen',
-  DoctorRequest: 'DoctorRequest',
+  DOCTOR_REQUEST: 'DoctorRequest',
   FORMS_SCREEN: 'Forms_Screen',
 } as const;
 

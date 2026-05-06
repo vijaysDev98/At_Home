@@ -1,51 +1,93 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
   Image,
   TextInput,
+  Platform,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import NavigationService from '../../../navigation/NavigationService';
-import { AppSafeAreaView, AppText, Header, Input } from '../../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  Header,
+  Input,
+  AppLoader,
+} from '../../../components';
+import AppBottomSheet from '../../../components/AppBottomSheet';
+import { ImagePickerContent } from '../../../components/ImagePickerContent';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
-import { useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { userLogout } from '../../../actions/auth/authAction';
+import { updateProfile } from '../../../actions/profile/profileAction';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { SHOW_TOAST } from '../../../constant';
+import { STRING } from '../../../constant/strings';
+import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
+import { uploadImageToS3 } from '../../../services/uploadService';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 
 const DoctorProfile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<any>();
   const { profileData } = useSelector((state: RootState) => state.profile);
+  const { isLoading } = useSelector((state: RootState) => state.common);
+  console.log('profileData', profileData);
+
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  // Update userAvatar when profileData changes
+  useEffect(() => {
+    if (profileData?.profileImg) {
+      setUserAvatar(profileData.profileImg);
+    }
+  }, [profileData?.profileImg]);
 
   const handleLogout = () => {
     dispatch(userLogout());
   };
 
-  // Get user data from Redux or use defaults
-  const userName = profileData?.fullName ;
+  const handleEditProfile = () => {
+    navigation.navigate('Register', {
+      isEdit: true,
+      userData: {
+        fullName: profileData?.fullName,
+        email: profileData?.email,
+        rppsNumber: profileData?.rppsNumber,
+        finessNumber: profileData?.finessNumber,
+        specialty: profileData?.specialty,
+        practiceType: profileData?.practiceType,
+        businessAddress: profileData?.businessAddress,
+        profileImg: profileData?.profileImg,
+      },
+    });
+  };
+
+  const fullName = profileData?.fullName || '';
   const userEmail = profileData?.email;
-  const userSpecialty = profileData?.specialty ;
-  const userRpps = profileData?.rppsNumber ;
-  const userFiness = profileData?.finessNumber ;
-  const userAddress = profileData?.businessAddress ;
-  const userAvatar = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg'; // Use default avatar for now
+  const userSpecialty = profileData?.specialty;
+  const userRpps = profileData?.rppsNumber;
+  const userFiness = profileData?.finessNumber;
+  const userAddress = profileData?.businessAddress;
+  const userPracticeType = profileData?.practiceType;
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
-          title="Profile"
+          title={STRING.profile}
           leftContent={() => (
             <View style={styles.headerAvatar}>
-              <Image
-                source={IMAGES.person}
-                style={styles.headerAvatarImage}
-              />
+              <Image source={IMAGES.person} style={styles.headerAvatarImage} />
             </View>
           )}
         />
@@ -60,26 +102,59 @@ const DoctorProfile: React.FC = () => {
             <View>
               <View style={styles.avatarWrap}>
                 <Image
-                  source={{ uri: userAvatar }}
+                  source={
+                    userAvatar
+                      ? userAvatar.startsWith('file://') ||
+                        userAvatar.startsWith('content://') ||
+                        userAvatar.startsWith('data:')
+                        ? { uri: userAvatar }
+                        : { uri: IMAGE_BASE_URL + userAvatar }
+                      : IMAGES.person
+                  }
                   style={styles.avatar}
                 />
-
               </View>
-              <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.85}>
-                <Image source={IMAGES.cameraIcon} style={styles.cameraIcon} />
+              {/* <TouchableOpacity
+                  style={styles.cameraBtn}
+                  activeOpacity={0.85}
+                  onPress={handleEditProfile}
+                >
+                  <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
+                </TouchableOpacity> */}
+            </View>
+            <View style={styles.avatarInfo}>
+              <View>
+                <AppText
+                  size={getScaleSize(18)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`}
+                </AppText>
+                <AppText
+                  size={getScaleSize(14)}
+                  align="center"
+                  style={{ marginVertical: getScaleSize(5) }}
+                  color={COLORS._6B7280}
+                >
+                  {userSpecialty}
+                </AppText>
+              </View>
+              <TouchableOpacity
+                style={styles.editBtn}
+                activeOpacity={0.85}
+                onPress={handleEditProfile}
+              >
+                <Image source={IMAGES.ic_edit} style={styles.editBtnIcon} />
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._526674}
+                >
+                  {STRING.editProfile}
+                </AppText>
               </TouchableOpacity>
             </View>
-            <AppText
-              size={getScaleSize(18)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}>
-              {userName}
-            </AppText>
-            <AppText
-              size={getScaleSize(14)}
-              color={COLORS._6B7280}>
-              {userSpecialty}
-            </AppText>
           </View>
 
           {/* Form card */}
@@ -87,26 +162,29 @@ const DoctorProfile: React.FC = () => {
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Bold}
-              color={COLORS._6B7280}>
-              Personal Information
+              color={COLORS._6B7280}
+            >
+              {STRING.personalInformation}
             </AppText>
             <View style={styles.fieldBlock}>
-
               <Input
-                label='Full Name'
+                label={STRING.fullName}
                 style={styles.inputContainer}
-                value={userName} 
-                isLocked={true}
+                value={fullName}
+                isLocked={false}
+                editable={false}
                 leftIcon={IMAGES.ic_profile}
-                 />
+              />
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label='Email Address'
+                label={STRING.emailAddress}
                 style={styles.inputContainer}
-                isLocked={true}
-                value={userEmail} 
-                leftIcon={IMAGES.email_icon} />
+                isLocked={false}
+                editable={false}
+                value={userEmail}
+                leftIcon={IMAGES.email_icon}
+              />
             </View>
           </View>
 
@@ -114,44 +192,71 @@ const DoctorProfile: React.FC = () => {
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Bold}
-              color={COLORS._6B7280}>
-              Professional Credentials
+              color={COLORS._6B7280}
+            >
+              {STRING.professionalCredentials}
             </AppText>
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
               <Input
-                label='RPPS Number'
-                style={styles.inputContainer} 
-                value={userRpps} 
-                leftIcon={IMAGES.card} />
+                label={STRING.rppsNumber}
+                style={styles.inputContainer}
+                value={userRpps}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.card}
+              />
             </View>
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
               <Input
-                label='FINESS Number'
-                style={styles.inputContainer} 
-                value={userFiness} 
-                leftIcon={IMAGES.hospital} 
-                />
+                label={STRING.finessNumber}
+                style={styles.inputContainer}
+                value={userFiness}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.hospital}
+              />
             </View>
             <View style={styles.fieldBlock}>
-              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>Business Address</AppText> */}
               <Input
-                label='Business Address'
+                label={STRING.businessAddress}
                 value={userAddress}
+                isLocked={false}
+                editable={false}
                 leftIcon={IMAGES.location_pin}
                 multiline
+                style={styles.inputContainer}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={STRING.specialty}
+                value={userSpecialty}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.stethoscope}
+                style={styles.inputContainer}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={STRING.placeOfPractice}
+                value={userPracticeType}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.hospital}
                 style={styles.inputContainer}
               />
             </View>
           </View>
 
           <View style={styles.card}>
-            <RowItem label="App Version" value="v2.4.1 (Build 842)" />
+            <RowItem label={STRING.appVersion} value={STRING.appVersionValue} />
             <Divider />
-            <RowItem label="Terms of Service" chevron />
+            <RowItem label={STRING.termsOfService} chevron />
             <Divider />
-            <RowItem label="Privacy Policy" chevron />
+            <RowItem label={STRING.privacyPolicy} chevron />
           </View>
 
           <TouchableOpacity
@@ -160,25 +265,45 @@ const DoctorProfile: React.FC = () => {
             onPress={handleLogout}
           >
             <Image source={IMAGES.arrow_back} style={styles.logoutIcon} />
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS.error}>Log Out</AppText>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.error}
+            >
+              {STRING.logOut}
+            </AppText>
           </TouchableOpacity>
         </ScrollView>
-      </View>
-      {/* Fixed Save */}
-      <View style={styles.saveBar}>
-        <TouchableOpacity style={styles.saveBtn} activeOpacity={0.9}>
-          <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold} color={COLORS.white}>Save Changes</AppText>
-        </TouchableOpacity>
       </View>
     </AppSafeAreaView>
   );
 };
 
-const RowItem = ({ label, value, chevron }: { label: string; value?: string; chevron?: boolean }) => (
+const RowItem = ({
+  label,
+  value,
+  chevron,
+}: {
+  label: string;
+  value?: string;
+  chevron?: boolean;
+}) => (
   <View style={styles.rowItem}>
-    <AppText size={getScaleSize(14)} font={FONTS.Inter.SemiBold} color={COLORS._1A1D1F}>{label}</AppText>
-    {value ? <AppText size={getScaleSize(14)} color={COLORS._6B7280}>{value}</AppText> : null}
-    {chevron ? <Image source={IMAGES.forwardIcon} style={styles.chevronIcon} /> : null}
+    <AppText
+      size={getScaleSize(14)}
+      font={FONTS.Inter.SemiBold}
+      color={COLORS._1A1D1F}
+    >
+      {label}
+    </AppText>
+    {value ? (
+      <AppText size={getScaleSize(14)} color={COLORS._6B7280}>
+        {value}
+      </AppText>
+    ) : null}
+    {chevron ? (
+      <Image source={IMAGES.forwardIcon} style={styles.chevronIcon} />
+    ) : null}
   </View>
 );
 
@@ -224,13 +349,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: COLORS._E4E9EE,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   headerAvatarImage: {
     width: getScaleSize(16),
     height: getScaleSize(16),
     resizeMode: 'contain',
-    tintColor: COLORS.primary
+    tintColor: COLORS.primary,
   },
   scroll: {
     flex: 1,
@@ -259,7 +384,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
-    elevation: 2
+    elevation: 2,
   },
   avatar: {
     width: '100%',
@@ -282,7 +407,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    zIndex:1
+    zIndex: 1,
   },
   cameraIcon: {
     width: getScaleSize(16),
@@ -332,7 +457,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: getScaleSize(10),
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   rowLabel: {
     fontSize: getScaleSize(14),
@@ -420,13 +545,91 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   inputContainer: {
-    paddingHorizontal: 0
+    paddingHorizontal: 0,
   },
   chevronIcon: {
     width: getScaleSize(18),
     height: getScaleSize(18),
-    resizeMode: 'contain'
-  }
+    resizeMode: 'contain',
+  },
+  editProfileBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  editIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+  },
+  editBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(16),
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderTopWidth: 1,
+    borderTopColor: COLORS._E5E7EB,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    flexDirection: 'row',
+    gap: getScaleSize(12),
+  },
+  actionBtn: {
+    flex: 1,
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  cancelBtn: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  avatarInfo: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(8),
+    backgroundColor: COLORS._F8F9FA,
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    marginTop: getScaleSize(8),
+  },
+  editBtnIcon: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    tintColor: COLORS._526674,
+  },
 });
 
 export default DoctorProfile;

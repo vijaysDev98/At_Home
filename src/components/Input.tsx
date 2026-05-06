@@ -42,6 +42,7 @@ export interface InputProps extends TextInputProps {
   isLocked?: boolean;
   renderPicker?: () => React.ReactNode;
   inputWrapperStyle?: StyleProp<ViewStyle>;
+  placeholderTextColor?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -70,6 +71,7 @@ const Input: React.FC<InputProps> = ({
   isLocked = false,
   renderPicker,
   inputWrapperStyle,
+  placeholderTextColor,
   ...rest
 }) => {
   const { multiline } = rest;
@@ -136,7 +138,7 @@ const Input: React.FC<InputProps> = ({
           {...rest}
           editable={isLocked ? false : onPress ? false : rest.editable}
           style={[styles.input, isLocked && styles.inputLocked, inputStyle]}
-          placeholderTextColor={COLORS._1E293B}
+          placeholderTextColor={placeholderTextColor || COLORS._1E293B}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
         />
 
@@ -165,7 +167,7 @@ const Input: React.FC<InputProps> = ({
         <View style={styles.helperRow}>
           <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
           <AppText
-            size={12}
+            size={getScaleSize(12)}
             color="#ef4444"
             style={[styles.helperText, helperStyle]}
           >

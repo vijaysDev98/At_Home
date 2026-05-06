@@ -4,6 +4,8 @@ interface ProfileData {
   id: string;
   fullName: string;
   email: string;
+  username?: string;
+  profileImg?: string;
   rppsNumber: string;
   finessNumber: string;
   specialty: string;
@@ -27,12 +29,10 @@ interface ProfileData {
 }
 
 interface ProfileSliceProps {
-  isLoading: boolean;
   profileData: ProfileData | null;
 }
 
 export const initialState: ProfileSliceProps = {
-  isLoading: false,
   profileData: null,
 };
 
@@ -40,9 +40,6 @@ export const profileSlice = createSlice({
   name: 'profile',
   initialState,
   reducers: {
-    setProfileLoading: (state, { payload }) => {
-      state.isLoading = payload;
-    },
     setProfileData: (state, { payload }) => {
       state.profileData = payload;
     },
@@ -50,7 +47,7 @@ export const profileSlice = createSlice({
   },
 });
 
-export const { setProfileLoading, setProfileData, resetProfile } =
+export const { setProfileData, resetProfile } =
   profileSlice.actions;
 
 export default profileSlice.reducer;

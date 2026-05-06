@@ -32,7 +32,7 @@ export type LoginScreenProps = NativeStackScreenProps<
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading } = useSelector((state: RootState) => state.login);
+  const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

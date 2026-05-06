@@ -18,9 +18,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
-
-const avatarUri =
-  'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 
 const metrics = [
   {
@@ -65,34 +63,39 @@ const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
 
   return (
-    <AppSafeAreaView
-    style={{backgroundColor:COLORS.white}}
-    >
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+            <Image
+              source={{ uri: IMAGE_BASE_URL + profileData?.profileImg }}
+              style={styles.avatar}
+            />
             <View>
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Regular}
-                color={COLORS.primaryMuted}
+                color={COLORS._1A1D1F}
               >
                 {STRING.goodMorning}
               </AppText>
               <AppText
                 size={getScaleSize(18)}
                 font={FONTS.Inter.Bold}
-                color={COLORS.primary}
+                color={COLORS.black}
               >
                 Dr. {profileData?.fullName}
               </AppText>
             </View>
           </View>
           <TouchableOpacity
-            onPress={() => NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)}
-            activeOpacity={0.7} style={styles.notificationBtn}>
+            onPress={() =>
+              NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
+            }
+            activeOpacity={0.7}
+            style={styles.notificationBtn}
+          >
             <Image
               source={IMAGES.notification_icon}
               style={styles.notificationIcon}
@@ -151,7 +154,7 @@ const HomeScreen: React.FC = () => {
                 ))}
               </View>
               {/* Action Required */}
-              <View style={styles.section}>
+              <View>
                 <AppText
                   size={getScaleSize(14)}
                   font={FONTS.Inter.Bold}
@@ -277,6 +280,7 @@ const HomeScreen: React.FC = () => {
 
               <TouchableOpacity
                 activeOpacity={0.9}
+                onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
                 style={[styles.quickBtn, styles.quickBtnSecondary]}
               >
                 <Image
@@ -295,7 +299,7 @@ const HomeScreen: React.FC = () => {
           </View>
 
           {/* Recent Queue */}
-          <View >
+          <View>
             <AppText
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
@@ -311,103 +315,129 @@ const HomeScreen: React.FC = () => {
                 borderRadius: getScaleSize(16),
                 padding: getScaleSize(16),
                 backgroundColor: COLORS.white,
-                marginHorizontal: getScaleSize(24)
+                marginHorizontal: getScaleSize(24),
               }}
             >
-              <View style={{
-                flexDirection: 'row', alignItems: 'center',
-              }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
                 {/* <Image
                source={IMAGES.patient}
                style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
                /> */}
-                <View style={{
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: getScaleSize(40),
-                  width: getScaleSize(40),
-                  borderWidth: 1,
-                  borderColor: COLORS._DBEAFE,
-                  backgroundColor: COLORS._EFF6FF, borderRadius: getScaleSize(20)
-                }}>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: getScaleSize(40),
+                    width: getScaleSize(40),
+                    borderWidth: 1,
+                    borderColor: COLORS._DBEAFE,
+                    backgroundColor: COLORS._EFF6FF,
+                    borderRadius: getScaleSize(20),
+                  }}
+                >
                   <AppText
                     size={getScaleSize(16)}
                     font={FONTS.Inter.Bold}
                     color={COLORS._2563EB}
-                  >{"JD"}</AppText>
+                  >
+                    {'JD'}
+                  </AppText>
                 </View>
 
-                <View
-                  style={{ marginLeft: getScaleSize(12), flex: 0.8 }}
-                >
+                <View style={{ marginLeft: getScaleSize(12), flex: 0.8 }}>
                   <AppText
                     size={getScaleSize(16)}
                     font={FONTS.Inter.Bold}
                     color={COLORS._1A1A1A}
                   >
-                    {"John Doe"}
+                    {'John Doe'}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
                     font={FONTS.Inter.Regular}
                     color={COLORS._6B7280}
                   >
-                    {"Physical Therapy"}
+                    {'Physical Therapy'}
                   </AppText>
                 </View>
-                <View style={{
-                  alignItems: 'center',
-                  backgroundColor: COLORS._EFF6FF, borderRadius: getScaleSize(20),
-                  paddingHorizontal: getScaleSize(8),
-                  paddingVertical: getScaleSize(3)
-                }}>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    backgroundColor: COLORS._EFF6FF,
+                    borderRadius: getScaleSize(20),
+                    paddingHorizontal: getScaleSize(8),
+                    paddingVertical: getScaleSize(3),
+                  }}
+                >
                   <AppText
                     size={getScaleSize(11)}
                     font={FONTS.Inter.Regular}
                     color={COLORS._2563EB}
                   >
-                    {"Submitted"}
+                    {'Submitted'}
                   </AppText>
                 </View>
               </View>
 
               <View
-                style={{ height: 1, backgroundColor: COLORS._E5E7EB, marginVertical: getScaleSize(12) }}
+                style={{
+                  height: 1,
+                  backgroundColor: COLORS._E5E7EB,
+                  marginVertical: getScaleSize(12),
+                }}
               />
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <View>
                   <AppText
                     size={getScaleSize(11)}
                     font={FONTS.Inter.SemiBold}
                     color={COLORS._6F767E}
-                  >{"Request ID"}</AppText>
+                  >
+                    {STRING.requestId}
+                  </AppText>
                   <AppText
                     size={getScaleSize(13)}
                     font={FONTS.Inter.Medium}
                     color={COLORS._1A1D1F}
-                  >{"#6534"}</AppText>
+                  >
+                    {'#6534'}
+                  </AppText>
                 </View>
                 <View>
                   <AppText
                     size={getScaleSize(11)}
                     font={FONTS.Inter.SemiBold}
                     color={COLORS._6F767E}
-                  >{"Form Status"}</AppText>
+                  >
+                    {STRING.formStatus}
+                  </AppText>
                   <AppText
                     size={getScaleSize(13)}
                     font={FONTS.Inter.Medium}
                     color={COLORS._1A1D1F}
-                  >{"Submitted"}</AppText>
+                  >
+                    {'Submitted'}
+                  </AppText>
                 </View>
               </View>
 
               <AppButton
-                title={"Update & Sign"}
-                onPress={() => { }}
+                title={STRING.updateAndSign}
+                onPress={() => {}}
                 style={{ marginTop: getScaleSize(12) }}
               />
-
             </View>
           </View>
         </ScrollView>

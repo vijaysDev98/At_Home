@@ -22,7 +22,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   title,
   onPress,
   icon,
-  disabled,
+  disabled = false,
   style,
 }) => {
   return (

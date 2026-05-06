@@ -18,7 +18,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { AppText } from '../components';
 import { DOCTOR_TAB_SCREENS } from './routes';
-import DoctorRequestScreen from '../screens/doctor/Request';
+import DoctorRequest from '../screens/doctor/Request';
 
 export type BottomTabParamList = {
   Home: undefined;
@@ -48,21 +48,30 @@ const iconForRoute = (name: keyof BottomTabParamList) => {
 const DoctorBottomTabs: React.FC = () => {
   return (
     <Tab.Navigator
-      screenOptions={{ 
-        headerShown: false ,
-        tabBarStyle:{
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-        }
+        },
       }}
       tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen name={DOCTOR_TAB_SCREENS.HOME} component={HomeScreen} />
-      <Tab.Screen name={DOCTOR_TAB_SCREENS.PATIENTS} component={PatientsScreen} />
-      <Tab.Screen name={DOCTOR_TAB_SCREENS.CREATE_REQUEST} component={CreateRequest} />
-      <Tab.Screen name={DOCTOR_TAB_SCREENS.DOCTOR_REQUEST} component={DoctorRequestScreen} />
+      <Tab.Screen
+        name={DOCTOR_TAB_SCREENS.PATIENTS}
+        component={PatientsScreen}
+      />
+      <Tab.Screen
+        name={DOCTOR_TAB_SCREENS.CREATE_REQUEST}
+        component={CreateRequest}
+      />
+      <Tab.Screen
+        name={DOCTOR_TAB_SCREENS.DOCTOR_REQUEST}
+        component={DoctorRequest}
+      />
       <Tab.Screen name={DOCTOR_TAB_SCREENS.PROFILE} component={DoctorProfile} />
     </Tab.Navigator>
   );
@@ -105,7 +114,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
                   styles.fab,
                   pressed ? styles.plusBtnPressed : null,
                 ]}
-                onPress={() => navigation.navigate(DOCTOR_TAB_SCREENS.CREATE_REQUEST as never)}
+                onPress={() =>
+                  navigation.navigate(
+                    DOCTOR_TAB_SCREENS.CREATE_REQUEST as never,
+                  )
+                }
               >
                 <Image
                   source={IMAGES.new_request}

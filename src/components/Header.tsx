@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextStyle } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  TextStyle,
+} from 'react-native';
 import { IMAGES } from '../assets/images';
 import NavigationService from '../navigation/NavigationService';
 import { COLORS, FONTS } from '../utils';
@@ -7,9 +14,25 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { ViewStyle } from 'react-native';
 
-const Header = ({ 
-  isBack = false, title, backIcon, style, leftContent, subTitle,titleStyle,titleContainerStyle }:
-  { isBack?: boolean, title?: String, backIcon?: String, style?: ViewStyle, leftContent?: () => React.ReactNode, subTitle?: String,titleStyle?: TextStyle,titleContainerStyle?: ViewStyle }) => {
+const Header = ({
+  isBack = false,
+  title,
+  backIcon,
+  style,
+  leftContent,
+  subTitle,
+  titleStyle,
+  titleContainerStyle,
+}: {
+  isBack?: boolean;
+  title?: String;
+  backIcon?: String;
+  style?: ViewStyle;
+  leftContent?: () => React.ReactNode;
+  subTitle?: String;
+  titleStyle?: TextStyle;
+  titleContainerStyle?: ViewStyle;
+}) => {
   return (
     <View style={[styles.header, style]}>
       <View style={styles.content}>
@@ -19,25 +42,32 @@ const Header = ({
             style={backIcon ? {} : styles.backBtn}
             onPress={() => NavigationService.goBack()}
           >
-            <Image source={backIcon ? backIcon : IMAGES.backIcon} style={styles.backIcon} />
+            <Image
+              source={backIcon ? backIcon : IMAGES.arrowLeft}
+              style={styles.backIcon}
+            />
           </TouchableOpacity>
         )}
         <View style={titleContainerStyle}>
-          {title ?
+          {title ? (
             <AppText
               size={getScaleSize(20)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
               style={titleStyle}
-            >{title}</AppText>
-            : null}
-          {subTitle ?
+            >
+              {title}
+            </AppText>
+          ) : null}
+          {subTitle ? (
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6B7280}
-            >{subTitle}</AppText>
-            : null}
+            >
+              {subTitle}
+            </AppText>
+          ) : null}
         </View>
       </View>
       {leftContent && leftContent()}

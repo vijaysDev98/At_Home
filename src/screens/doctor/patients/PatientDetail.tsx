@@ -1,12 +1,57 @@
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View, Image } from 'react-native';
-import { AppButton, AppSafeAreaView, AppText, Header, RequestCard } from '../../../components';
+import React, { useEffect, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Image,
+} from 'react-native';
+import {
+  AppButton,
+  AppSafeAreaView,
+  AppText,
+  Header,
+} from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-
+import { useRoute, useIsFocused } from '@react-navigation/native';
+import { AppLoader } from '../../../components';
+import moment from 'moment';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { fetchPatientDetails } from '../../../actions/patient/patientAction';
 
 const PatientDetail: React.FC = () => {
+  const isFocused = useIsFocused();
+  const dispatch = useDispatch<any>();
+  const route = useRoute<any>();
+  const { id } = route.params || {};
+  const patient = useSelector((state: RootState) => state.patient.selectedPatient);
+  const { isLoading: globalLoading } = useSelector((state: RootState) => state.common);
+
+  const fetchPatientData = async () => {
+    if (id) {
+      dispatch(fetchPatientDetails(id));
+    }
+  };
+
+  useEffect(() => {
+    if (id && isFocused) {
+      fetchPatientData();
+    }
+  }, [id, isFocused]);
+
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
   return (
     <AppSafeAreaView>
       <Header
@@ -22,35 +67,64 @@ const PatientDetail: React.FC = () => {
         >
           {/* Personal Info Card */}
           <View style={styles.card}>
-            <TouchableOpacity style={styles.editBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              activeOpacity={0.8}
+              hitSlop={20}
+              // delayPressIn={0}
+              onPress={() =>
+                NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
+              }
+            >
               <Image source={IMAGES.editIcon} style={styles.editIcon} />
             </TouchableOpacity>
 
             <View style={styles.profileRow}>
               <View style={styles.avatarWrap}>
-                <Image
-                  source={{ uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg' }}
-                  style={styles.avatar}
-                />
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <AppText
+                    size={getScaleSize(20)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._526674}
+                  >
+                    {getInitials(patient?.fullName)}
+                  </AppText>
+                </View>
               </View>
               <View style={styles.profileMeta}>
                 <AppText
                   size={getScaleSize(18)}
                   color={COLORS._1A1D1F}
                   font={FONTS.Inter.Bold}
-                >Eleanor Pena</AppText>
+                >
+                  {patient?.fullName || '---'}
+                </AppText>
                 <AppText
                   size={getScaleSize(13)}
                   color={COLORS._6F767E}
                   font={FONTS.Inter.Regular}
-                >DOB: Oct 24, 1955 (68yo)</AppText>
+                >
+                  DOB:{' '}
+                  {patient?.dateOfBirth
+                    ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
+                    : '---'}{' '}
+                  ({patient?.age || 0}yo)
+                </AppText>
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot} />
                   <AppText
                     size={getScaleSize(12)}
                     color={COLORS._2ECA7F}
                     font={FONTS.Inter.Medium}
-                  >Active Patient</AppText>
+                  >
+                    Active Patient
+                  </AppText>
                 </View>
               </View>
             </View>
@@ -65,11 +139,35 @@ const PatientDetail: React.FC = () => {
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
-                  >Primary Contact</AppText>
+                  >
+                    Primary Contact
+                  </AppText>
                   <AppText
                     size={getScaleSize(14)}
                     font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}>(555) 019-2834</AppText>
+                    color={COLORS._1A1D1F}
+                  >
+                    {patient?.phoneNumber || '---'}
+                  </AppText>
+                </View>
+              </View>
+              <View style={styles.infoRow}>
+                <Image source={IMAGES.mail} style={styles.infoIcon} />
+                <View>
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                  >
+                    Email Address
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._1A1D1F}
+                  >
+                    {patient?.email || '---'}
+                  </AppText>
                 </View>
               </View>
               <View style={styles.infoRow}>
@@ -79,12 +177,17 @@ const PatientDetail: React.FC = () => {
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
-                  >Home Address</AppText>
+                  >
+                    Home Address
+                  </AppText>
                   <AppText
                     size={getScaleSize(14)}
                     font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}>
-                    4140 Parker Rd. Allentown,{"\n"}New Mexico 31134
+                    color={COLORS._1A1D1F}
+                  >
+                    {patient?.streetAddress ? `${patient.streetAddress}, ` : ''}
+                    {patient?.city ? `${patient.city}, ` : ''}
+                    {patient?.zip || ''}
                   </AppText>
                 </View>
               </View>
@@ -97,13 +200,17 @@ const PatientDetail: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS.black}
-            >Medical Notes</AppText>
+            >
+              Medical Notes
+            </AppText>
             <TouchableOpacity activeOpacity={0.8}>
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
-              >Edit</AppText>
+              >
+                Edit
+              </AppText>
             </TouchableOpacity>
           </View>
 
@@ -117,12 +224,10 @@ const PatientDetail: React.FC = () => {
                 size={getScaleSize(14)}
                 font={FONTS.Inter.SemiBold}
                 color={COLORS._1A1A1A}
-              >Allergies:</AppText> Penicillin, Peanuts{"\n"}
-
-              <AppText size={getScaleSize(14)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._1A1A1A}
-              >Recent Notes:</AppText> Patient requires regular blood pressure monitoring. Experiences mild dizziness in the mornings. Ensure hydration is maintained. Last checkup showed improved blood sugar levels.
+              >
+                Medical Description:
+              </AppText>{' '}
+              {patient?.medicalDescription || 'No description provided.'}
             </AppText>
           </View>
 
@@ -132,16 +237,19 @@ const PatientDetail: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS.black}
-            >Linked Requests</AppText>
+            >
+              Linked Requests
+            </AppText>
             <TouchableOpacity style={styles.plusBtn} activeOpacity={0.8}>
-              <Image source={IMAGES.new_request} style={styles.newRequestIcon} />
+              <Image
+                source={IMAGES.new_request}
+                style={styles.newRequestIcon}
+              />
             </TouchableOpacity>
           </View>
-
-          <RequestCard />
-
         </ScrollView>
       </View>
+      <AppLoader visible={globalLoading} />
     </AppSafeAreaView>
   );
 };
@@ -153,7 +261,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS._F8F9FA
+    backgroundColor: COLORS._F8F9FA,
   },
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
@@ -185,13 +293,14 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    zIndex: 10000,
     backgroundColor: '#E8EDF1',
     alignItems: 'center',
     justifyContent: 'center',
   },
   editIcon: {
     height: getScaleSize(32),
-    width: getScaleSize(32)
+    width: getScaleSize(32),
   },
   profileRow: {
     flexDirection: 'row',
@@ -242,7 +351,7 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(5),
     height: getScaleSize(18),
     width: getScaleSize(18),
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
   sectionHeader: {
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 import { SHOW_TOAST, Storage } from '../../constant';
 import { AppDispatch } from '../../redux/store';
-import { setLoading, setUserData, resetAuth } from './authSlice';
+import { setUserData, resetAuth } from './authSlice';
+import { setLoading } from '../common/commonSlice';
 import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';

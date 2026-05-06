@@ -80,4 +80,7 @@ export const IMAGES = {
   info: require('./info.png'),
   cameraIcon: require('./cameraIcon.png'),
   ic_register_done: require('./ic_register_done.png'),
+  ic_edit: require('./ic_edit.png'),
+  ic_camera: require('./ic_camera.png'),
+  ic_gallery: require('./ic_gallery.png'),
 };
