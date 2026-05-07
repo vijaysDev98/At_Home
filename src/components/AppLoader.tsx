@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native';
 import { COLORS } from '../utils';
+import { AppSafeAreaView } from './AppSafeAreaView';
 
 interface AppLoaderProps {
   visible: boolean;
@@ -9,11 +10,11 @@ interface AppLoaderProps {
 const AppLoader: React.FC<AppLoaderProps> = ({ visible }) => {
   return (
     <Modal transparent animationType="fade" visible={visible}>
-      <View style={styles.container}>
+      <AppSafeAreaView edges={false} style={styles.container}>
         <View style={styles.loaderWrapper}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
-      </View>
+      </AppSafeAreaView>
     </Modal>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -10,13 +10,38 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
-import { AppButton, AppSafeAreaView, AppText } from '../../../components';
+import {
+  AppButton,
+  AppLoader,
+  AppSafeAreaView,
+  AppText,
+} from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
-import { services } from '../../../utils/dummyData';
+import { getServicesService } from '../../../services/patientService';
+import { STRING } from '../../../constant';
+
+const getServiceIcon = (name: string) => {
+  const query = name.toLowerCase();
+  if (query.includes('wound')) return IMAGES.bandegeIcon;
+  if (query.includes('iv therapy') || query.includes('antibiotherapy'))
+    return IMAGES.injectionIcon;
+  if (query.includes('oxygen')) return IMAGES.maskIcon;
+  if (query.includes('artificial nutrition')) return IMAGES.testTubeIcon;
+  if (query.includes('hygiene') || query.includes('pregnancy'))
+    return IMAGES.nurseIcon;
+  if (
+    query.includes('pca') ||
+    query.includes('parenteral') ||
+    query.includes('hydration')
+  )
+    return IMAGES.ivfIcon;
+  if (query.includes('cno')) return IMAGES.stethoscopeIcon;
+  return IMAGES.nurseIcon; // Default
+};
 
 export type CreateRequestStep2Props = NativeStackScreenProps<
   RootStackParamList,
@@ -26,8 +51,32 @@ export type CreateRequestStep2Props = NativeStackScreenProps<
 const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   navigation,
 }) => {
-  const [selected, setSelected] = useState<string>('wound');
+  const [apiServices, setApiServices] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selected, setSelected] = useState<string>('');
   const canContinue = useMemo(() => !!selected, [selected]);
+
+  const fetchServices = async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await getServicesService(1, 20);
+      if (response?.status && response?.code === 200) {
+        const list = response.data.data.services || [];
+        setApiServices(list);
+        if (list.length > 0) {
+          setSelected(list[0].id); // Select first by default
+        }
+      }
+    } catch (error) {
+      console.log('Error fetching services:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   return (
     <AppSafeAreaView edges={true}>
@@ -48,14 +97,14 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              Create Request
+              {STRING.createRequest}
             </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              Step 2/3: Service
+              {STRING.step2Of3}
             </AppText>
           </View>
           <View style={styles.headerLeft} />
@@ -73,61 +122,71 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                Select Service(12)
+                {STRING.selectService} ({apiServices.length})
               </AppText>
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Regular}
                 color={COLORS._6F767E}
               >
-                Choose the primary service required for the patient.
+                {STRING.selectServiceDescription}
               </AppText>
             </View>
 
             <View style={styles.grid}>
-              {services.map(service => {
-                const isSelected = selected === service.id;
-                return (
-                  <TouchableOpacity
-                    key={service.id}
-                    activeOpacity={0.9}
-                    style={[styles.card, isSelected && styles.cardActive]}
-                    onPress={() => setSelected(service.id)}
-                  >
-                    <View style={styles.cardTopRow}>
-                      <Image
-                        source={service.icon}
-                        style={{
-                          height: getScaleSize(40),
-                          width: getScaleSize(40),
-                        }}
-                      />
-                      <View
-                        style={[
-                          styles.checkOuter,
-                          isSelected && styles.checkOuterActive,
-                        ]}
-                      >
-                        {isSelected ? <View style={styles.checkInner} /> : null}
+              {isLoading ? (
+                <View style={styles.loaderContainer}>
+                  <AppLoader visible={true} />
+                </View>
+              ) : (
+                apiServices.map(service => {
+                  const isSelected = selected === service.id;
+                  return (
+                    <TouchableOpacity
+                      key={service.id}
+                      activeOpacity={0.9}
+                      style={[styles.card, isSelected && styles.cardActive]}
+                      onPress={() => setSelected(service.id)}
+                    >
+                      <View style={styles.cardTopRow}>
+                        <Image
+                          source={getServiceIcon(service.serviceName)}
+                          style={{
+                            height: getScaleSize(40),
+                            width: getScaleSize(40),
+                          }}
+                        />
+                        <View
+                          style={[
+                            styles.checkOuter,
+                            isSelected && styles.checkOuterActive,
+                          ]}
+                        >
+                          {isSelected ? (
+                            <View style={styles.checkInner} />
+                          ) : null}
+                        </View>
                       </View>
-                    </View>
-                    <AppText
-                      size={getScaleSize(15)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                    >
-                      {service.title}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                    >
-                      {service.description}
-                    </AppText>
-                  </TouchableOpacity>
-                );
-              })}
+                      <AppText
+                        size={getScaleSize(15)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                        numberOfLines={2}
+                      >
+                        {service.serviceName}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                        numberOfLines={3}
+                      >
+                        {service.description}
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
             </View>
           </ScrollView>
           <View style={styles.bottomButtonContainer}>
@@ -340,6 +399,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingVertical: getScaleSize(17),
     paddingHorizontal: getScaleSize(20),
+  },
+  loaderContainer: {
+    width: '100%',
+    height: 300,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

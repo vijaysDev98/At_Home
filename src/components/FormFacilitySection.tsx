@@ -19,7 +19,7 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
 }) => {
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
-      {icon && <Image source={icon} style={styles.sectionIcon} />}
+      {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
       <AppText
         size={getScaleSize(15)}
         font={FONTS.Inter.Bold}
@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    elevation: 4
   },
   sectionHeader: {
     flexDirection: 'row',

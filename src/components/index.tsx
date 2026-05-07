@@ -13,3 +13,4 @@ export { default as FormFacilitySection } from './FormFacilitySection';
 export { default as AppDurationPicker } from './AppDurationPicker';
 export type { AppDurationPickerRef } from './AppDurationPicker';
 export { default as AppLoader } from './AppLoader';
+export { default as AppCheckBox } from './AppCheckBox';

@@ -134,7 +134,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           onFocus={() => setIsFocus(true)}
           onBlur={() => setIsFocus(false)}
           onChange={item => {
-            onChange(item.value);
+            onChange(item?.value);
             setIsFocus(false);
           }}
           renderRightIcon={() => (

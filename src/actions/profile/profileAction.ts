@@ -22,16 +22,11 @@ export const fetchProfile = () => async (dispatch: AppDispatch) => {
     if (response?.status && response?.code === 200) {
       dispatch(setProfileData(response?.data?.data ?? null));
     } else {
-      SHOW_TOAST(
-        response?.data?.message ||
-          response?.message ||
-          'Failed to fetch profile',
-        'error',
-      );
+      SHOW_TOAST(response?.message, 'error');
     }
   } catch (e: any) {
     console.log('Fetch Profile Error', e);
-    SHOW_TOAST('Something went wrong while fetching profile', 'error');
+    SHOW_TOAST(undefined, 'error');
   } finally {
     dispatch(setLoading(false));
   }
@@ -62,10 +57,8 @@ export const updateProfile =
         // Refetch profile to get updated data
         dispatch(fetchProfile());
         return true;
-      } else if (response?.code === 400) {
-        SHOW_TOAST(response.message, 'error');
       } else {
-        SHOW_TOAST(response?.message || 'Failed to update profile', 'error');
+        SHOW_TOAST(response?.message, 'error');
       }
       return false;
     } catch (e: any) {
@@ -76,7 +69,7 @@ export const updateProfile =
           'error',
         );
       } else {
-        SHOW_TOAST('Something went wrong while updating profile', 'error');
+        SHOW_TOAST(undefined, 'error');
       }
       return false;
     } finally {

@@ -23,14 +23,20 @@ import { SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
+import { STRING } from '../../../constant';
+import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
   const dispatch = useDispatch<any>();
   const route = useRoute<any>();
   const { id } = route.params || {};
-  const patient = useSelector((state: RootState) => state.patient.selectedPatient);
-  const { isLoading: globalLoading } = useSelector((state: RootState) => state.common);
+  const patient = useSelector(
+    (state: RootState) => state.patient.selectedPatient,
+  );
+  const { isLoading: globalLoading } = useSelector(
+    (state: RootState) => state.common,
+  );
 
   const fetchPatientData = async () => {
     if (id) {
@@ -43,6 +49,12 @@ const PatientDetail: React.FC = () => {
       fetchPatientData();
     }
   }, [id, isFocused]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearSelectedPatient());
+    };
+  }, []);
 
   const getInitials = (name: string) => {
     if (!name) return '??';
@@ -57,7 +69,7 @@ const PatientDetail: React.FC = () => {
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
-        title="Patient Detail"
+        title={STRING.patientDetail}
         style={styles.headerStyle}
       />
       <View style={styles.container}>
@@ -123,7 +135,7 @@ const PatientDetail: React.FC = () => {
                     color={COLORS._2ECA7F}
                     font={FONTS.Inter.Medium}
                   >
-                    Active Patient
+                    {STRING.activePatient}
                   </AppText>
                 </View>
               </View>
@@ -140,7 +152,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
                   >
-                    Primary Contact
+                    {STRING.primaryContact}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
@@ -159,7 +171,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
                   >
-                    Email Address
+                    {STRING.emailAddress}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
@@ -178,7 +190,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
                   >
-                    Home Address
+                    {STRING.homeAddress}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
@@ -201,15 +213,20 @@ const PatientDetail: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.black}
             >
-              Medical Notes
+              {STRING.medicalNotes}
             </AppText>
-            <TouchableOpacity activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() =>
+                NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
+              }
+              activeOpacity={0.8}
+            >
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
               >
-                Edit
+                {STRING.edit}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -225,7 +242,7 @@ const PatientDetail: React.FC = () => {
                 font={FONTS.Inter.SemiBold}
                 color={COLORS._1A1A1A}
               >
-                Medical Description:
+                {STRING.medicalDescription}:
               </AppText>{' '}
               {patient?.medicalDescription || 'No description provided.'}
             </AppText>
@@ -238,7 +255,7 @@ const PatientDetail: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.black}
             >
-              Linked Requests
+              {STRING.linkedRequests}
             </AppText>
             <TouchableOpacity style={styles.plusBtn} activeOpacity={0.8}>
               <Image

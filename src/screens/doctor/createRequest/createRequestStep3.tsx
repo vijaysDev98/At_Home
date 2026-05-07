@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -9,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation';
 import {
   AppSafeAreaView,
   AppText,
@@ -21,16 +21,13 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
-import FreePrescriptionForm from '../forms/FreePrescriptionForm';
-import HomeInfusionForm from '../forms/HomeInfusionForm';
-import EnteralNutritionForm from '../forms/EnteralNutritionForm';
-import NursingCareForm from '../forms/NursingCareForm';
-import PCAInfusionForm from '../forms/PCAInfusionForm';
-import PregnancyCareForm from '../forms/PregnancyCareForm';
-import ParenteralNutritionForm from '../forms/ParenteralNutritionForm';
-import OralNutritionForm from '../forms/OralNutritionForm';
-import OxygenTherapyForm from '../forms/OxygenTherapyForm';
-import WoundCareForm from '../forms/WoundCareForm';
+import AntibiotherapyInfusionForm from '../forms/AntibiotherapyInfusionForm';
+import CNOForm from '../forms/CNOForm';
+import EnteralArtificialNutritionForm from '../forms/ArtificialNutritionForm';
+import { STRING } from '../../../constant';
+import moment from 'moment';
+import { RootStackParamList } from '../../../navigation';
+import ArtificialNutritionForm from '../forms/ArtificialNutritionForm';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -39,6 +36,9 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 
 const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const serviceId = (route.params as any)?.serviceId || 'wound';
+  const selectedPatient = useSelector(
+    (state: any) => state.patient.selectedPatient,
+  );
 
   const serviceTitle = useMemo(() => {
     switch (serviceId) {
@@ -64,6 +64,12 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
         return 'Enteral Nutrition';
       case 'lab':
         return 'Lab Collection';
+      case '69ef359fd1c1c4252d4b8d4f':
+        return 'Antibiotherapy Infusion';
+      case '69ef359fd1c1c4252d4b8d4d':
+        return 'CNO';
+      case '69ef359fd1c1c4252d4b8d4e':
+        return 'Artificial Nutrition';
       default:
         return 'Wound Care';
     }
@@ -114,9 +120,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   return (
-    <AppSafeAreaView
-    edges={true}
-    >
+    <AppSafeAreaView edges={true}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={{ flex: 0.5 }}>
@@ -134,14 +138,14 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              Create Request
+              {STRING.createRequest}
             </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              Step 3/3: Fill Medical Form
+              {STRING.step3Of3}
             </AppText>
           </View>
           <View style={{ flex: 0.5 }} />
@@ -156,48 +160,36 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             <View
               style={{
                 gap: getScaleSize(14),
-                paddingTop: getScaleSize(18),
-                paddingBottom: getScaleSize(12),
+                paddingVertical: getScaleSize(18),
                 backgroundColor: COLORS.white,
                 paddingHorizontal: getScaleSize(16),
               }}
             >
               <RequestSummaryCard
-                patientName="Robert Fox"
-                patientMeta="ID: PT-8829 • 65 yrs"
-                patientAvatar="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg"
+                patient={selectedPatient}
                 serviceTitle={serviceTitle}
                 serviceIcon={serviceIcon}
+                showEdit={true}
               />
             </View>
             <View>
               <View
                 style={{
-                  paddingHorizontal: getScaleSize(16),
+                  // paddingHorizontal: getScaleSize(16),
                   backgroundColor: COLORS._F9FAFB,
                 }}
               >
                 {/* Dynamic Form Content */}
-                {serviceId === 'prescription' ? (
-                  <FreePrescriptionForm />
-                ) : serviceId === 'wound' ? (
-                  <WoundCareForm />
-                ) : serviceId === 'oxygen' ? (
-                  <OxygenTherapyForm />
-                ) : serviceId === 'iv' ? (
-                  <HomeInfusionForm />
-                ) : serviceId === 'enteral' ? (
-                  <EnteralNutritionForm />
-                ) : serviceId === 'nursing' ? (
-                  <NursingCareForm />
-                ) : serviceId === 'pca' ? (
-                  <PCAInfusionForm />
-                ) : serviceId === 'pregnancy' ? (
-                  <PregnancyCareForm />
-                ) : serviceId === 'parenteral' ? (
-                  <ParenteralNutritionForm />
-                ) : serviceId === 'oral_nutrition' ? (
-                  <OralNutritionForm />
+                {
+                 
+                serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
+                  <AntibiotherapyInfusionForm />
+                ) : serviceId === '69ef359fd1c1c4252d4b8d4d' ? (
+                  <CNOForm />
+                ) : serviceId === '69ef359fd1c1c4252d4b8d4e' ? (
+                  <ArtificialNutritionForm />
+                ) : serviceId === '69ef3557d1c1c4252d4b8d2c' ? (
+                  <EnteralArtificialNutritionForm />
                 ) : (
                   <View
                     style={{

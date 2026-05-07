@@ -1,20 +1,31 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation';
-import { AppSafeAreaView, AppText, Input } from '../../../components';
+import {
+  AppLoader,
+  AppSafeAreaView,
+  AppText,
+  Input,
+} from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { creatRequestPatientsList } from '../../../utils/dummyData';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { RootStackParamList } from '../../../navigation';
+import { STRING } from '../../../constant';
+import { fetchPatients } from '../../../actions/patient/patientAction';
+import { setSelectedPatient } from '../../../actions/patient/patientSlice';
+import { useIsFocused } from '@react-navigation/native';
 
 export type CreateRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -59,64 +70,151 @@ interface PatientItemProps {
 }
 
 const PatientItem: React.FC<PatientItemProps> = React.memo(
-  ({ patient, isSelected, onSelect }) => (
-    <TouchableOpacity
-      key={patient.id}
-      activeOpacity={0.9}
-      style={[styles.patientCard, isSelected && styles.patientCardActive]}
-      onPress={() => onSelect(patient.id)}
-    >
-      <View style={styles.avatarWrap}>
-        {patient.avatar ? (
-          <Image source={{ uri: patient.avatar }} style={styles.avatar} />
-        ) : (
-          <View style={styles.initialsWrap}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              {patient.initials}
-            </AppText>
-          </View>
-        )}
-      </View>
-      <View style={styles.patientInfo}>
-        <AppText
-          size={getScaleSize(16)}
-          font={FONTS.Inter.Bold}
-          color={COLORS._1A1D1F}
+  ({ patient, isSelected, onSelect }) => {
+    const getInitials = (name: string) => {
+      if (!name) return '??';
+      const parts = name.split(' ');
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return name.slice(0, 2).toUpperCase();
+    };
+
+    return (
+      <TouchableOpacity
+        key={patient.id}
+        activeOpacity={0.9}
+        style={[styles.patientCard, isSelected && styles.patientCardActive]}
+        onPress={() => onSelect(patient.id)}
+      >
+        <View style={styles.avatarWrap}>
+          {patient.avatar ? (
+            <Image source={{ uri: patient.avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.initialsWrap}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {getInitials(patient.fullName)}
+              </AppText>
+            </View>
+          )}
+        </View>
+        <View style={styles.patientInfo}>
+          <AppText
+            size={getScaleSize(16)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+          >
+            {patient.fullName}
+          </AppText>
+          <AppText
+            size={getScaleSize(12)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._6F767E}
+          >
+            ID: #P-{patient.id.slice(-4).toUpperCase()} • {patient.age || 0}yo
+          </AppText>
+        </View>
+        <View
+          style={[styles.radioOuter, isSelected && styles.radioOuterActive]}
         >
-          {patient.name}
-        </AppText>
-        <AppText
-          size={getScaleSize(12)}
-          font={FONTS.Inter.Regular}
-          color={COLORS._6F767E}
-        >
-          {patient.pid} • {patient.age}
-        </AppText>
-      </View>
-      <View style={[styles.radioOuter, isSelected && styles.radioOuterActive]}>
-        {isSelected ? <View style={styles.radioInner} /> : null}
-      </View>
-    </TouchableOpacity>
-  ),
+          {isSelected ? <View style={styles.radioInner} /> : null}
+        </View>
+      </TouchableOpacity>
+    );
+  },
 );
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
-  const [selectedId, setSelectedId] = useState<string>('patient_1');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const isFocused = useIsFocused();
+  const dispatch = useDispatch<any>();
+  const { patients, pagination } = useSelector(
+    (state: RootState) => state.patient,
+  );
+  const { isLoading: globalLoading } = useSelector(
+    (state: RootState) => state.common,
+  );
 
-  // Memoized values
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [search, setSearch] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchPatientsData = async (
+    p: number = 1,
+    s: string = '',
+    refresh: boolean = false,
+  ) => {
+    await dispatch(fetchPatients(p, s));
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    // Only fetch if the list is empty (first time)
+    if (patients.length === 0) {
+      fetchPatientsData(1, search);
+    }
+  }, []);
+
+  // Debounced search logic from PatientsScreen
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search !== '') {
+        fetchPatientsData(1, search);
+      } else if (patients.length > 0) {
+        // If search is cleared, fetch all only if we don't have data
+        fetchPatientsData(1, '');
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    fetchPatientsData(1, search, true);
+  };
+
+  // Memoized sorting logic from PatientsScreen
+  const filteredAndSortedPatients = useMemo(() => {
+    let result = [...patients];
+
+    // Search filter (local filter for snappier feel while searching)
+    if (search.trim()) {
+      const query = search.toLowerCase();
+      result = result.filter(
+        p =>
+          p.fullName?.toLowerCase().includes(query) ||
+          p.id?.toLowerCase().includes(query),
+      );
+    }
+
+    // Chip filter logic
+    if (filter === 'recent') {
+      result.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } else if (filter === 'active') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      result = result.filter(p => new Date(p.updatedAt) > sevenDaysAgo);
+    }
+
+    return result;
+  }, [patients, search, filter]);
+
   const canContinue = useMemo(() => !!selectedId, [selectedId]);
 
   // Filter options
   const filterOptions = useMemo(
     () => [
-      { key: 'all' as FilterType, label: 'All Patients' },
-      { key: 'recent' as FilterType, label: 'Recent' },
-      { key: 'active' as FilterType, label: 'Active Only' },
+      { key: 'all' as FilterType, label: STRING.allPatients },
+      { key: 'recent' as FilterType, label: STRING.recent },
+      { key: 'active' as FilterType, label: STRING.activeOnly },
     ],
     [],
   );
@@ -135,16 +233,21 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   }, []);
 
   const handleContinue = useCallback(() => {
-    NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2);
-  }, []);
+    const patient = patients.find(
+      p => p.id === selectedId || p._id === selectedId,
+    );
+    if (patient) {
+      dispatch(setSelectedPatient(patient));
+      NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2);
+    }
+  }, [selectedId, patients, dispatch]);
 
   const handleCreateNewPatient = useCallback(() => {
-    // TODO: Navigate to create patient screen
-    console.log('Create new patient');
+    NavigationService.navigate(SCREENS.ADD_PATIENT);
   }, []);
 
   return (
-    <AppSafeAreaView edges={true} style={styles.safe}>
+    <AppSafeAreaView edges={false} style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -162,63 +265,83 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              Create Request
+              {STRING.createRequest}
             </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              Step 1/3: Patient
+              {STRING.step1Of3}
             </AppText>
           </View>
           <View style={styles.headerLeft} />
         </View>
 
         <View style={styles.content}>
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <AppText
-              size={getScaleSize(18)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+          {globalLoading && patients.length === 0 ? (
+            <View style={styles.loaderContainer}>
+              <AppLoader visible={true} />
+            </View>
+          ) : (
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={onRefresh}
+                  colors={[COLORS.primary]}
+                />
+              }
             >
-              Select Patient
-            </AppText>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                Select Patient
+              </AppText>
 
-            <Input
-              leftIcon={IMAGES.search}
-              style={styles.searchInput}
-              placeholder="Search by name or ID..."
-            />
+              <Input
+                leftIcon={IMAGES.search}
+                style={styles.searchInput}
+                placeholder="Search by name or ID..."
+                value={search}
+                onChangeText={setSearch}
+              />
 
-            <View style={styles.filters}>
-              {filterOptions.map(option => (
-                <FilterChip
-                  key={option.key}
-                  label={option.label}
-                  isActive={filter === option.key}
-                  onPress={() => handleFilterChange(option.key)}
-                />
-              ))}
-            </View>
+              <View style={styles.filters}>
+                {filterOptions.map(option => (
+                  <FilterChip
+                    key={option.key}
+                    label={option.label}
+                    isActive={filter === option.key}
+                    onPress={() => handleFilterChange(option.key)}
+                  />
+                ))}
+              </View>
 
-            <View style={styles.list}>
-              {creatRequestPatientsList.map(patient => (
-                <PatientItem
-                  key={patient.id}
-                  patient={patient}
-                  isSelected={selectedId === patient.id}
-                  onSelect={handlePatientSelect}
-                />
-              ))}
-            </View>
+              <View style={styles.list}>
+                {filteredAndSortedPatients.map(patient => (
+                  <PatientItem
+                    key={patient.id}
+                    patient={patient}
+                    isSelected={selectedId === patient.id}
+                    onSelect={handlePatientSelect}
+                  />
+                ))}
+                {filteredAndSortedPatients.length === 0 && (
+                  <View style={styles.emptyContainer}>
+                    <AppText color={COLORS._6F767E}>No patients found</AppText>
+                  </View>
+                )}
+              </View>
 
-            <View style={styles.spacer} />
-          </ScrollView>
+              <View style={styles.spacer} />
+            </ScrollView>
+          )}
 
           <View style={styles.bottomSheet}>
             <TouchableOpacity
@@ -467,15 +590,16 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: 14,
+    paddingBottom: getScaleSize(24), // Added padding for tab bar spacing
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS._EFEFEF,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    // elevation: 6,
     gap: 10,
+    zIndex: 10,
   },
   createPatientBtn: {
     height: 52,
@@ -518,6 +642,16 @@ const styles = StyleSheet.create({
     height: getScaleSize(15),
     width: getScaleSize(12),
     tintColor: COLORS.primary,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -39,8 +39,12 @@ const PatientsScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
-  const { patients, pagination } = useSelector((state: RootState) => state.patient);
-  const { isLoading: globalLoading } = useSelector((state: RootState) => state.common);
+  const { patients, pagination } = useSelector(
+    (state: RootState) => state.patient,
+  );
+  const { isLoading: globalLoading } = useSelector(
+    (state: RootState) => state.common,
+  );
 
   const [selectedChip, setSelectedChip] = useState('All');
   const [page, setPage] = useState(1);
@@ -48,51 +52,80 @@ const PatientsScreen: React.FC = () => {
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Map chip selection to filter parameter
+  const getFilterValue = (chip: string): string | undefined => {
+    switch (chip) {
+      case 'All':
+        return undefined;
+      case 'Recently Added':
+        return 'recently_added';
+      case 'Recently Updated':
+        return 'recently_updated';
+      default:
+        return undefined;
+    }
+  };
+
   const fetchPatientsData = async (
     p: number = 1,
     s: string = '',
     refresh: boolean = false,
+    f?: string,
   ) => {
     if (p > 1) setIsFetchingNextPage(true);
-    await dispatch(fetchPatients(p, s));
+    await dispatch(fetchPatients(p, s, f));
     setIsFetchingNextPage(false);
     setIsRefreshing(false);
   };
 
   useEffect(() => {
-    if (isFocused) {
+    // Fetch only on initial mount if the list is empty.
+    // Navigating back from Edit/Add screens will not trigger a re-fetch,
+    // as those actions already update the Redux state directly.
+    if (patients.length === 0) {
       setPage(1);
-      fetchPatientsData(1, search);
+      const filter = getFilterValue(selectedChip);
+      fetchPatientsData(1, search, false, filter);
     }
-  }, [isFocused]);
+  }, []);
+
+  // Handle filter changes
+  useEffect(() => {
+    setPage(1);
+    const filter = getFilterValue(selectedChip);
+    fetchPatientsData(1, search, false, filter);
+  }, [selectedChip]);
 
   // Debounced search
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      const filter = getFilterValue(selectedChip);
       if (search !== '') {
         setPage(1);
-        fetchPatientsData(1, search);
+        fetchPatientsData(1, search, false, filter);
       } else {
-        // If search is cleared, fetch all
+        // If search is cleared, fetch all with current filter
         setPage(1);
-        fetchPatientsData(1, '');
+        fetchPatientsData(1, '', false, filter);
       }
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, selectedChip]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
     setPage(1);
-    fetchPatientsData(1, search, true);
+    const filter = getFilterValue(selectedChip);
+    fetchPatientsData(1, search, true, filter);
   };
 
   const onLoadMore = () => {
     if (pagination?.hasNextPage && !isFetchingNextPage) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchPatientsData(nextPage, search);
+      const filter = getFilterValue(selectedChip);
+      fetchPatientsData(nextPage, search, false, filter);
     }
   };
 

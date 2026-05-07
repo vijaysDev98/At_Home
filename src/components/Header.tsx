@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backIcon: {
-    width: 24,
-    height: 24,
+    width: getScaleSize(17),
+    height: getScaleSize(15),
     resizeMode: 'contain',
   },
 });

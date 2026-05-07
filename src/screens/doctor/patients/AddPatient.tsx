@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -24,7 +24,10 @@ import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { STRING } from '../../../constant/strings';
-import { addPatient, updatePatient } from '../../../actions/patient/patientAction';
+import {
+  addPatient,
+  updatePatient,
+} from '../../../actions/patient/patientAction';
 import { RootState } from '../../../redux/store';
 import { useRoute } from '@react-navigation/native';
 import AppBottomSheet from '../../../components/AppBottomSheet';
@@ -78,7 +81,7 @@ const AddPatient: React.FC = () => {
 
   const discardSheetRef = useRef<ActionSheetRef>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (patientToEdit) {
       setFullName(patientToEdit.fullName || '');
       setPhone(patientToEdit.phoneNumber || '');
@@ -161,20 +164,22 @@ const AddPatient: React.FC = () => {
           title={isEdit ? STRING.editPatient : STRING.addPatientTitle}
           backIcon={IMAGES.arrowLeft}
           style={styles.headerStyle}
-          leftContent={() => (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => NavigationService.goBack()}
-            >
-              <AppText
-                size={getScaleSize(15)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
+          {...(!isEdit && {
+            leftContent: () => (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => NavigationService.goBack()}
               >
-                {STRING.cancel}
-              </AppText>
-            </TouchableOpacity>
-          )}
+                <AppText
+                  size={getScaleSize(15)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                >
+                  {STRING.cancel}
+                </AppText>
+              </TouchableOpacity>
+            ),
+          })}
         />
         <View style={styles.container}>
           <ScrollView
@@ -565,7 +570,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(100),
+    paddingBottom: getScaleSize(280),
     // paddingTop: getScaleSize(16),
   },
   section: {

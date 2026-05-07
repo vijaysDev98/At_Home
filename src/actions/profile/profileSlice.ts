@@ -8,6 +8,7 @@ interface ProfileData {
   profileImg?: string;
   rppsNumber: string;
   finessNumber: string;
+  phoneNumber: string;
   specialty: string;
   businessAddress: string;
   practiceType: string;
@@ -47,7 +48,6 @@ export const profileSlice = createSlice({
   },
 });
 
-export const { setProfileData, resetProfile } =
-  profileSlice.actions;
+export const { setProfileData, resetProfile } = profileSlice.actions;
 
 export default profileSlice.reducer;

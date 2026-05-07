@@ -374,69 +374,69 @@ const WoundCareForm: React.FC = () => {
                 ]}
                 pointerEvents={state.packing ? 'auto' : 'none'}
               >
-                  <View style={styles.checkboxItem}>
-                    <CheckBox
-                      boxType="square"
-                      value={state.packingGoals.fillCavity}
-                      onValueChange={v =>
-                        setState({
-                          ...state,
-                          packingGoals: {
-                            ...state.packingGoals,
-                            fillCavity: v,
-                          },
-                        })
-                      }
-                      tintColors={{
-                        true: COLORS.primary,
-                        false: COLORS._6F767E,
-                      }}
-                    />
-                    <AppText size={getScaleSize(12)}>Fill a cavity</AppText>
-                  </View>
-                  <View style={styles.checkboxItem}>
-                    <CheckBox
-                      boxType="square"
-                      value={state.packingGoals.occupyDeadSpace}
-                      onValueChange={v =>
-                        setState({
-                          ...state,
-                          packingGoals: {
-                            ...state.packingGoals,
-                            occupyDeadSpace: v,
-                          },
-                        })
-                      }
-                      tintColors={{
-                        true: COLORS.primary,
-                        false: COLORS._6F767E,
-                      }}
-                    />
-                    <AppText size={getScaleSize(12)}>Occupy dead space</AppText>
-                  </View>
-                  <View style={styles.checkboxItem}>
-                    <CheckBox
-                      boxType="square"
-                      value={state.packingGoals.preventClosure}
-                      onValueChange={v =>
-                        setState({
-                          ...state,
-                          packingGoals: {
-                            ...state.packingGoals,
-                            preventClosure: v,
-                          },
-                        })
-                      }
-                      tintColors={{
-                        true: COLORS.primary,
-                        false: COLORS._6F767E,
-                      }}
-                    />
-                    <AppText size={getScaleSize(12)}>
-                      Prevent premature superficial closure
-                    </AppText>
-                  </View>
+                <View style={styles.checkboxItem}>
+                  <CheckBox
+                    boxType="square"
+                    value={state.packingGoals.fillCavity}
+                    onValueChange={v =>
+                      setState({
+                        ...state,
+                        packingGoals: {
+                          ...state.packingGoals,
+                          fillCavity: v,
+                        },
+                      })
+                    }
+                    tintColors={{
+                      true: COLORS.primary,
+                      false: COLORS._6F767E,
+                    }}
+                  />
+                  <AppText size={getScaleSize(12)}>Fill a cavity</AppText>
                 </View>
+                <View style={styles.checkboxItem}>
+                  <CheckBox
+                    boxType="square"
+                    value={state.packingGoals.occupyDeadSpace}
+                    onValueChange={v =>
+                      setState({
+                        ...state,
+                        packingGoals: {
+                          ...state.packingGoals,
+                          occupyDeadSpace: v,
+                        },
+                      })
+                    }
+                    tintColors={{
+                      true: COLORS.primary,
+                      false: COLORS._6F767E,
+                    }}
+                  />
+                  <AppText size={getScaleSize(12)}>Occupy dead space</AppText>
+                </View>
+                <View style={styles.checkboxItem}>
+                  <CheckBox
+                    boxType="square"
+                    value={state.packingGoals.preventClosure}
+                    onValueChange={v =>
+                      setState({
+                        ...state,
+                        packingGoals: {
+                          ...state.packingGoals,
+                          preventClosure: v,
+                        },
+                      })
+                    }
+                    tintColors={{
+                      true: COLORS.primary,
+                      false: COLORS._6F767E,
+                    }}
+                  />
+                  <AppText size={getScaleSize(12)}>
+                    Prevent premature superficial closure
+                  </AppText>
+                </View>
+              </View>
             </View>
 
             <View
@@ -573,7 +573,11 @@ const WoundCareForm: React.FC = () => {
                       materials: { ...prev.materials, bandagePerDay: t },
                     }))
                   }
-                  style={{ width: getScaleSize(40), paddingHorizontal: 0, marginLeft: getScaleSize(8) }}
+                  style={{
+                    width: getScaleSize(40),
+                    paddingHorizontal: 0,
+                    marginLeft: getScaleSize(8),
+                  }}
                   inputWrapperStyle={styles.inlineInputWrapper}
                   inputStyle={styles.inlineInputText}
                   keyboardType="numeric"

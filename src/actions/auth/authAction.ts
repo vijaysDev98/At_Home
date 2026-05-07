@@ -13,18 +13,18 @@ const getUserDataForRedux = (user: any) => {
   }
 
   // Extract user data from login response, excluding tokens
-  const { 
-    accessToken, 
-    refreshToken, 
-    access_token, 
+  const {
+    accessToken,
+    refreshToken,
+    access_token,
     refresh_token,
-    ...sanitizedUser 
+    ...sanitizedUser
   } = user;
 
   return sanitizedUser;
 };
 
-const persistAuthInStorage = async (user: any) => {  
+const persistAuthInStorage = async (user: any) => {
   const accessToken = user?.accessToken;
   const refreshToken = user?.refreshToken;
   const roles = user?.roles || [];
@@ -46,8 +46,10 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
   try {
     data['fcm_token'] =
       (await Storage.get(Storage.FCM_TOKEN_KEY)) ?? 'no token found';
+
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(API.API_ROUTES.login, data);
+    console.log("log in data", data, response);
 
     if (response?.status) {
       const responseData = response?.data;
@@ -82,25 +84,16 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
       }
     } else {
       if (response?.code === 401) {
-        SHOW_TOAST(
-          response?.message || 'Invalid credentials or account not approved',
-          'error',
-        );
+        SHOW_TOAST(response?.message, 'error');
       } else if (response?.code === 403) {
-        SHOW_TOAST(
-          response?.message || 'Account pending approval or inactive',
-          'error',
-        );
+        SHOW_TOAST(response?.message, 'error');
       } else {
-        SHOW_TOAST(
-          response?.message || 'Invalid credentials. Please try again.',
-          'error',
-        );
+        SHOW_TOAST(response?.message, 'error');
       }
     }
   } catch (e) {
     console.log('login Error', e);
-    SHOW_TOAST('Something went wrong', 'error');
+    SHOW_TOAST(undefined, 'error');
   } finally {
     dispatch(setLoading(false));
   }
@@ -118,22 +111,19 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
     if (response?.status && response?.code === 201) {
       SHOW_TOAST(
         response?.data?.message ||
-          'Registration successful. Please wait for admin approval.',
+        'Registration successful. Please wait for admin approval.',
         'success',
       );
       NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
     } else if (response?.code === 400 || response?.code === 409) {
-      SHOW_TOAST(
-        response?.message || 'Validation error or user already exists',
-        'error',
-      );
+      SHOW_TOAST(response?.message, 'error');
     } else {
-      SHOW_TOAST(response?.message || 'Something went wrong', 'error');
+      SHOW_TOAST(response?.message, 'error');
     }
   } catch (e) {
     dispatch(setLoading(false));
     console.log('Register Error', e);
-    SHOW_TOAST('Something went wrong', 'error');
+    SHOW_TOAST(undefined, 'error');
   }
 };
 
@@ -168,19 +158,16 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
     } else {
       dispatch(setLoading(false));
       if (response?.code === 400) {
-        SHOW_TOAST(response?.message || 'Invalid OTP', 'error');
+        SHOW_TOAST(response?.message, 'error');
       } else if (response?.code === 401) {
-        SHOW_TOAST(response?.message || 'OTP expired', 'error');
+        SHOW_TOAST(response?.message, 'error');
       } else {
-        SHOW_TOAST(
-          response?.message || 'Verification failed. Please try again.',
-          'error',
-        );
+        SHOW_TOAST(response?.message, 'error');
       }
     }
   } catch (e) {
     console.log('Verify OTP Error', e);
-    SHOW_TOAST('Something went wrong', 'error');
+    SHOW_TOAST(undefined, 'error');
     dispatch(setLoading(false));
   }
 };
@@ -204,10 +191,10 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
       NavigationService.reset(SCREENS.WELCOME);
     } else {
       // Show error toast if API logout fails, but proceed with local logout
-      SHOW_TOAST(response?.message || 'Failed to logout from server', 'error');
+      SHOW_TOAST(response?.message, 'error');
     }
   } catch (e: any) {
-    SHOW_TOAST('Something went wrong during logout', 'error');
+    SHOW_TOAST(undefined, 'error');
   } finally {
     dispatch(setLoading(false));
   }
@@ -231,11 +218,11 @@ export const forgotPassword =
         });
       } else {
         dispatch(setLoading(false));
-        SHOW_TOAST(response?.message || 'Failed to send OTP', 'error');
+        SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
       console.log('Forgot Password Error', e);
-      SHOW_TOAST('Something went wrong', 'error');
+      SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
   };
@@ -261,19 +248,16 @@ export const verifyForgotPasswordOtp =
       } else {
         dispatch(setLoading(false));
         if (response?.code === 400) {
-          SHOW_TOAST(response?.message || 'Invalid OTP', 'error');
+          SHOW_TOAST(response?.message, 'error');
         } else if (response?.code === 401) {
-          SHOW_TOAST(response?.message || 'OTP expired', 'error');
+          SHOW_TOAST(response?.message, 'error');
         } else {
-          SHOW_TOAST(
-            response?.message || 'Verification failed. Please try again.',
-            'error',
-          );
+          SHOW_TOAST(response?.message, 'error');
         }
       }
     } catch (e) {
       console.log('Verify Forgot Password OTP Error', e);
-      SHOW_TOAST('Something went wrong', 'error');
+      SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
   };
@@ -284,30 +268,30 @@ export const resetPassword =
     newPassword: string;
     confirmPassword: string;
   }) =>
-  async (dispatch: AppDispatch) => {
-    try {
-      dispatch(setLoading(true));
+    async (dispatch: AppDispatch) => {
+      try {
+        dispatch(setLoading(true));
 
-      const response: any = await API.Instance.post(
-        API.API_ROUTES.resetPassword,
-        data,
-      );
-      console.log('reset password response', JSON.stringify(response));
-
-      if (response?.status && response?.code === 200) {
-        SHOW_TOAST(
-          response?.message || 'Password changed successfully',
-          'success',
+        const response: any = await API.Instance.post(
+          API.API_ROUTES.resetPassword,
+          data,
         );
+        console.log('reset password response', JSON.stringify(response));
+
+        if (response?.status && response?.code === 200) {
+          SHOW_TOAST(
+            response?.message || 'Password changed successfully',
+            'success',
+          );
+          dispatch(setLoading(false));
+          NavigationService.reset(SCREENS.LOGIN);
+        } else {
+          dispatch(setLoading(false));
+          SHOW_TOAST(response?.message, 'error');
+        }
+      } catch (e) {
+        console.log('Reset Password Error', e);
+        SHOW_TOAST(undefined, 'error');
         dispatch(setLoading(false));
-        NavigationService.reset(SCREENS.LOGIN);
-      } else {
-        dispatch(setLoading(false));
-        SHOW_TOAST(response?.message || 'Failed to change password', 'error');
       }
-    } catch (e) {
-      console.log('Reset Password Error', e);
-      SHOW_TOAST('Something went wrong', 'error');
-      dispatch(setLoading(false));
-    }
-  };
+    };

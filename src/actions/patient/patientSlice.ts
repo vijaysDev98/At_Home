@@ -53,12 +53,17 @@ const patientSlice = createSlice({
      * Ensures UI consistency after an 'Edit Patient' operation.
      */
     updatePatientInList: (state, action: PayloadAction<any>) => {
-      const index = state.patients.findIndex(p => p.id === action.payload.id);
+      const updatedPatient = action.payload;
+      const index = state.patients.findIndex(
+        p => p.id === updatedPatient.id || p._id === updatedPatient.id || p.id === updatedPatient._id
+      );
+      
       if (index !== -1) {
-        state.patients[index] = action.payload;
+        state.patients[index] = { ...state.patients[index], ...updatedPatient };
       }
-      if (state.selectedPatient?.id === action.payload.id) {
-        state.selectedPatient = action.payload;
+      
+      if (state.selectedPatient && (state.selectedPatient.id === updatedPatient.id || state.selectedPatient._id === updatedPatient.id)) {
+        state.selectedPatient = { ...state.selectedPatient, ...updatedPatient };
       }
     },
 
@@ -69,6 +74,14 @@ const patientSlice = createSlice({
     addPatientToList: (state, action: PayloadAction<any>) => {
       state.patients = [action.payload, ...state.patients];
     },
+
+    /**
+     * Resets the selected patient state.
+     * Used when leaving the detail screen or before fetching a new patient.
+     */
+    clearSelectedPatient: (state) => {
+      state.selectedPatient = null;
+    },
   },
 });
 
@@ -78,6 +91,7 @@ export const {
   setSelectedPatient,
   updatePatientInList,
   addPatientToList,
+  clearSelectedPatient,
 } = patientSlice.actions;
 
 export default patientSlice.reducer;

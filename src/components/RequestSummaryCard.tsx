@@ -10,11 +10,10 @@ import {
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
+import moment from 'moment';
 
 interface RequestSummaryCardProps {
-  patientName: string;
-  patientMeta: string;
-  patientAvatar?: string;
+  patient?: any;
   serviceTitle: string;
   serviceCategory?: string;
   serviceIcon: any;
@@ -26,9 +25,7 @@ interface RequestSummaryCardProps {
 }
 
 const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
-  patientName,
-  patientMeta,
-  patientAvatar,
+  patient,
   serviceTitle,
   serviceCategory = 'Primary Service',
   serviceIcon,
@@ -38,6 +35,11 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   style,
   rightContent,
 }) => {
+  const name = patient?.fullName || 'N/A';
+  const avatar = patient?.avatar;
+  const age = "ID: PT-" + patient?.id?.slice(-4).toUpperCase() + " • " + patient?.age + " yrs"
+
+
   return (
     <View style={[styles.summaryCard, style]}>
       <View style={styles.summaryRow}>
@@ -45,11 +47,11 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
           <View style={styles.avatarWrap}>
             <Image
               source={
-                patientAvatar
-                  ? { uri: patientAvatar }
+                avatar
+                  ? { uri: avatar }
                   : {
-                      uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-                    }
+                    uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+                  }
               }
               style={styles.avatar}
             />
@@ -60,30 +62,30 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {patientName}
+              {name}
             </AppText>
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6F767E}
             >
-              {patientMeta}
+              {age}
             </AppText>
           </View>
         </View>
         {rightContent
           ? rightContent
           : showEdit && (
-              <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._526674}
-                >
-                  Edit
-                </AppText>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._526674}
+              >
+                Edit
+              </AppText>
+            </TouchableOpacity>
+          )}
       </View>
 
       <View style={styles.summaryRowDivider} />
