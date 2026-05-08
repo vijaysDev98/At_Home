@@ -28,6 +28,8 @@ import { COLORS, FONTS } from '../../../utils';
 import { STRING } from '../../../constant';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
+import FormSignature from '../../../components/FormSignature';
 
 const AntibiotherapyInfusionForm: React.FC = () => {
   const selectedPatient = useSelector(
@@ -46,62 +48,53 @@ const AntibiotherapyInfusionForm: React.FC = () => {
   } | null>(null);
 
   const [state, setState] = useState({
-    prescriptionDate: moment().format('DD/MM/YYYY'),
-    startTherapy: false,
-    renewalTherapy: false,
+    // Prescription Details
+    prescription_date: moment().format('DD/MM/YYYY'),
+    therapy_type: '',
 
-    // Patient
-    patientLastName: '',
-    patientFirstName: selectedPatient?.fullName || '',
-    patientDOB: selectedPatient?.dateOfBirth
+    // Patient Information
+    patient_last_name: '',
+    patient_first_name: selectedPatient?.fullName || '',
+    dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    patientWeight: '',
-    patientNIR: '',
-    careRelatedToALD: false,
+    weight: '',
+    nir: '',
+    ald_condition: false,
 
-    // Prescriber (Auto-filled from doctor profile)
-    prescriberLastName: '',
-    prescriberFirstName: profileData?.fullName || '',
-    prescriberPhone: profileData?.phoneNumber || '',
-    prescriberRPPS: profileData?.rppsNumber || '',
+    // Prescriber Identification (Auto-filled from doctor profile)
+    prescriber_last_name: profileData?.fullName || '',
+    prescriber_first_name: '',
+    prescriber_phone: profileData?.phoneNumber || '',
+    rpps_id: profileData?.rppsNumber || '',
 
-    // Facility
-    hospitalName: profileData?.businessAddress || '',
-    hospitalAddress: '',
-    finessNo: profileData?.finessNumber || '',
+    // Facility Information
+    hospital_name: profileData?.businessAddress || '',
+    hospital_address: '',
+    finess_number: profileData?.finessNumber || '',
 
     // Signature
-    physicianSignature: '',
+    physician_signature: '',
 
     // Infusion Products (Repeatable)
-    infusionProducts: [
+    infusion_products: [
       {
-        productName: '',
+        product_name: '',
         strength: '',
-        withDiluent: false,
-        withoutDiluent: false,
-        diluentVolume: '',
-        durationHours: '',
-        durationMinutes: '',
-        frequencyPerDay: '',
-        implantedPort: false,
-        centralCatheter: false,
-        picc: false,
-        perineural: false,
-        peripheralVenous: false,
-        subcutaneous: false,
-        gravityMode: false,
-        elastomericDiffuser: false,
-        electricInfusionPump: false,
-        ambulatoryRequired: false,
-        preparedInFacility: false,
-        healthcareFacilitySupervision: false,
-        startDate: '',
-        endDate: '',
-        treatmentDurationDays: '',
+        diluent_type: '',
+        diluent_volume_ml: '',
+        duration_hours: '',
+        duration_minutes: '',
+        frequency_per_day: '',
+        route_of_access: '',
+        mode_of_administration: '',
+        ambulatory_required: false,
+        prepared_in_facility: false,
+        start_date: '',
+        end_date: '',
+        treatment_duration_days: '',
         tni: '',
-        infuseAlone: false,
+        infuse_alone: false,
       },
     ],
   });
@@ -109,35 +102,25 @@ const AntibiotherapyInfusionForm: React.FC = () => {
   const addProduct = () => {
     setState(prev => ({
       ...prev,
-      infusionProducts: [
-        ...prev.infusionProducts,
+      infusion_products: [
+        ...prev.infusion_products,
         {
-          productName: '',
+          product_name: '',
           strength: '',
-          withDiluent: false,
-          withoutDiluent: false,
-          diluentVolume: '',
-          durationHours: '',
-          durationMinutes: '',
-          frequencyPerDay: '',
-          implantedPort: false,
-          centralCatheter: false,
-          picc: false,
-          perineural: false,
-          peripheralVenous: false,
-          subcutaneous: false,
-          gravityMode: false,
-          elastomericDiffuser: false,
-          electricInfusionPump: false,
-          ambulatoryRequired: false,
-          preparedInFacility: false,
-          healthcareFacilitySupervision: false,
-          startDate: '',
-          endDate: '',
-          treatmentDurationDays: '',
+          diluent_type: '',
+          diluent_volume_ml: '',
+          duration_hours: '',
+          duration_minutes: '',
+          frequency_per_day: '',
+          route_of_access: '',
+          mode_of_administration: '',
+          ambulatory_required: false,
+          prepared_in_facility: false,
+          start_date: '',
+          end_date: '',
+          treatment_duration_days: '',
           tni: '',
-          infuseAlone: false,
-          newProperty: '', // New state property
+          infuse_alone: false,
         },
       ],
     }));
@@ -146,15 +129,15 @@ const AntibiotherapyInfusionForm: React.FC = () => {
   const removeProduct = (index: number) => {
     setState(prev => ({
       ...prev,
-      infusionProducts: prev.infusionProducts.filter((_, i) => i !== index),
+      infusion_products: prev.infusion_products.filter((_: any, i: number) => i !== index),
     }));
   };
 
   const updateProduct = (index: number, field: string, value: any) => {
     setState(prev => ({
       ...prev,
-      infusionProducts: prev.infusionProducts.map((product, i) =>
-        i === index ? { ...product, [field]: value } : product
+      infusion_products: prev.infusion_products.map((product: any, i: number) =>
+        i === index ? { ...product, [field]: value } : product,
       ),
     }));
   };
@@ -190,66 +173,40 @@ const AntibiotherapyInfusionForm: React.FC = () => {
         </View>
 
         {/* PRESCRIPTION DETAILS */}
-        <View style={styles.card}>
-          {renderSectionHeader(STRING.prescriptionDetails)}
-          <Input
-            onPress={() => {
-              setPickerType({ type: 'prescriptionDate' });
-              setOpen(true);
-            }}
-            editable={false}
-            label={STRING.prescriptionDate}
-            placeholder="DD/MM/YYYY"
-            value={state.prescriptionDate}
-            style={styles.inputField}
-            pointerEvents="none"
-          />
-          <View style={styles.checkboxGroup}>
-            <AppCheckBox
-              value={state.startTherapy}
-              onValueChange={(value) => setState(prev => ({ ...prev, startTherapy: value }))}
-              label={STRING.startOfHomeInfusionTherapy}
-            />
-            <AppCheckBox
-              value={state.renewalTherapy}
-              onValueChange={(value) => setState(prev => ({ ...prev, renewalTherapy: value }))}
-              label={STRING.renewalOrModification}
-            />
-          </View>
-        </View>
+        <FormPrescriptionDetails state={state} setState={setState} />
 
         {/* PATIENT INFORMATION */}
         <FormPatientSection
           state={{
-            patientLastName: state.patientLastName,
-            patientFirstName: state.patientFirstName,
-            patientDOB: state.patientDOB,
-            patientWeight: state.patientWeight,
-            patientNIR: state.patientNIR,
-            careRelatedToALD: state.careRelatedToALD,
+            patient_first_name: state.patient_first_name,
+            patient_last_name: state.patient_last_name,
+            dob: state.dob,
+            weight: state.weight,
+            nir: state.nir,
+            ald_condition: state.ald_condition,
           }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          setState={updates => setState(prev => ({ ...prev, ...updates }))}
         />
 
         {/* PRESCRIBER IDENTIFICATION */}
         <FormPrescriberSection
           state={{
-            prescriberLastName: state.prescriberLastName,
-            prescriberFirstName: state.prescriberFirstName,
-            prescriberPhone: state.prescriberPhone,
-            prescriberRPPS: state.prescriberRPPS,
+            prescriberLastName: state.prescriber_last_name,
+            prescriberFirstName: state.prescriber_first_name,
+            prescriberPhone: state.prescriber_phone,
+            prescriberRPPS: state.rpps_id,
           }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          setState={updates => setState(prev => ({ ...prev, ...updates }))}
         />
 
         {/* FACILITY INFORMATION */}
         <FormFacilitySection
           state={{
-            hospitalName: state.hospitalName,
-            hospitalAddress: state.hospitalAddress,
-            finessNo: state.finessNo,
+            hospitalName: state.hospital_name,
+            hospitalAddress: state.hospital_address,
+            finessNo: state.finess_number,
           }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          setState={updates => setState(prev => ({ ...prev, ...updates }))}
         />
 
         {/* INFUSION PRODUCTS */}
@@ -262,7 +219,7 @@ const AntibiotherapyInfusionForm: React.FC = () => {
           {STRING.infusionProducts}
         </AppText>
         <View style={styles.card}>
-          {state.infusionProducts.map((product, index) => (
+          {state.infusion_products.map((product: any, index: number) => (
             <View>
               <View style={[styles.productHeader]}>
                 <AppText
@@ -270,12 +227,11 @@ const AntibiotherapyInfusionForm: React.FC = () => {
                   font={FONTS.Inter.SemiBold}
                   color={COLORS._1A1D1F}
                 >
-                  {STRING.product}{index + 1}
+                  {STRING.product}
+                  {index + 1}
                 </AppText>
-                {state.infusionProducts.length > 1 && (
-                  <TouchableOpacity
-                    onPress={() => removeProduct(index)}
-                  >
+                {state.infusion_products.length > 1 && (
+                  <TouchableOpacity onPress={() => removeProduct(index)}>
                     <Text style={{ color: COLORS.error }}>remove</Text>
                   </TouchableOpacity>
                 )}
@@ -283,38 +239,33 @@ const AntibiotherapyInfusionForm: React.FC = () => {
 
               <Input
                 label={STRING.productName}
-                value={product.productName}
-                onChangeText={(value) => updateProduct(index, 'productName', value)}
+                value={product.product_name}
+                onChangeText={value =>
+                  updateProduct(index, 'product_name', value)
+                }
                 placeholder={STRING.enterProductName}
                 style={styles.inputField}
               />
               <Input
                 label={STRING.strength}
                 value={product.strength}
-                onChangeText={(value) => updateProduct(index, 'strength', value)}
+                onChangeText={value => updateProduct(index, 'strength', value)}
                 placeholder={STRING.concentration}
                 style={styles.inputField}
               />
 
-
               <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
                 <AppCheckBox
-                  value={product.withDiluent}
-                  onValueChange={(value) => {
-                    updateProduct(index, 'withDiluent', value);
-                    if (value) {
-                      updateProduct(index, 'withoutDiluent', false);
-                    }
+                  value={product.diluent_type === 'with'}
+                  onValueChange={value => {
+                    updateProduct(index, 'diluent_type', value ? 'with' : '');
                   }}
                   label={STRING.withDiluent}
                 />
                 <AppCheckBox
-                  value={product.withoutDiluent}
-                  onValueChange={(value) => {
-                    updateProduct(index, 'withoutDiluent', value);
-                    if (value) {
-                      updateProduct(index, 'withDiluent', false);
-                    }
+                  value={product.diluent_type === 'without'}
+                  onValueChange={value => {
+                    updateProduct(index, 'diluent_type', value ? 'without' : '');
                   }}
                   label={STRING.withoutDiluent}
                 />
@@ -322,32 +273,40 @@ const AntibiotherapyInfusionForm: React.FC = () => {
 
               <Input
                 label={STRING.diluentVolume}
-                value={product.diluentVolume}
-                onChangeText={(value) => updateProduct(index, 'diluentVolume', value)}
+                value={product.diluent_volume_ml}
+                onChangeText={value =>
+                  updateProduct(index, 'diluent_volume_ml', value)
+                }
                 placeholder={STRING.volumePerDay}
                 style={styles.inputField}
                 keyboardType="numeric"
               />
               <Input
                 label={STRING.duration}
-                value={product.durationHours}
-                onChangeText={(value) => updateProduct(index, 'durationHours', value)}
+                value={product.duration_hours}
+                onChangeText={value =>
+                  updateProduct(index, 'duration_hours', value)
+                }
                 placeholder={STRING.hours}
                 style={styles.inputField}
                 keyboardType="numeric"
               />
               <Input
                 label={STRING.durationMin}
-                value={product.durationMinutes}
-                onChangeText={(value) => updateProduct(index, 'durationMinutes', value)}
+                value={product.duration_minutes}
+                onChangeText={value =>
+                  updateProduct(index, 'duration_minutes', value)
+                }
                 placeholder={STRING.minutes}
                 style={styles.inputField}
                 keyboardType="numeric"
               />
               <Input
                 label={STRING.frequency}
-                value={product.frequencyPerDay}
-                onChangeText={(value) => updateProduct(index, 'frequencyPerDay', value)}
+                value={product.frequency_per_day}
+                onChangeText={value =>
+                  updateProduct(index, 'frequency_per_day', value)
+                }
                 placeholder={STRING.freqPerDay}
                 style={styles.inputField}
                 keyboardType="numeric"
@@ -361,38 +320,15 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               >
                 {STRING.routeOfAccess}
               </AppText>
-              <View style={styles.checkboxGroup}>
-                <AppCheckBox
-                  value={product.implantedPort}
-                  onValueChange={(value) => updateProduct(index, 'implantedPort', value)}
-                  label="Implanted Port"
-                />
-                <AppCheckBox
-                  value={product.centralCatheter}
-                  onValueChange={(value) => updateProduct(index, 'centralCatheter', value)}
-                  label="Central Catheter"
-                />
-                <AppCheckBox
-                  value={product.picc}
-                  onValueChange={(value) => updateProduct(index, 'picc', value)}
-                  label="Peripherally inserted central catheter (PICC)"
-                />
-                <AppCheckBox
-                  value={product.perineural}
-                  onValueChange={(value) => updateProduct(index, 'perineural', value)}
-                  label="Perineural"
-                />
-                <AppCheckBox
-                  value={product.peripheralVenous}
-                  onValueChange={(value) => updateProduct(index, 'peripheralVenous', value)}
-                  label="Peripheral Venous"
-                />
-                <AppCheckBox
-                  value={product.subcutaneous}
-                  onValueChange={(value) => updateProduct(index, 'subcutaneous', value)}
-                  label="Subcutaneous"
-                />
-              </View>
+              <Input
+                label="Route of Access"
+                value={product.route_of_access}
+                onChangeText={value =>
+                  updateProduct(index, 'route_of_access', value)
+                }
+                placeholder="Select route of access"
+                style={styles.inputField}
+              />
 
               <AppText
                 size={getScaleSize(13)}
@@ -402,23 +338,15 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               >
                 Mode of Administration
               </AppText>
-              <View style={styles.checkboxGroup}>
-                <AppCheckBox
-                  value={product.gravityMode}
-                  onValueChange={(value) => updateProduct(index, 'gravityMode', value)}
-                  label="Gravity"
-                />
-                <AppCheckBox
-                  value={product.elastomericDiffuser}
-                  onValueChange={(value) => updateProduct(index, 'elastomericDiffuser', value)}
-                  label="Elastomeric Diffuser"
-                />
-                <AppCheckBox
-                  value={product.electricInfusionPump}
-                  onValueChange={(value) => updateProduct(index, 'electricInfusionPump', value)}
-                  label="Electric Infusion Pump"
-                />
-              </View>
+              <Input
+                label="Mode of Administration"
+                value={product.mode_of_administration}
+                onChangeText={value =>
+                  updateProduct(index, 'mode_of_administration', value)
+                }
+                placeholder="Select mode of administration"
+                style={styles.inputField}
+              />
 
               <AppText
                 size={getScaleSize(13)}
@@ -429,24 +357,29 @@ const AntibiotherapyInfusionForm: React.FC = () => {
                 The patient must remain ambulatory during treatment?:
               </AppText>
               <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
-
                 <AppCheckBox
-                  value={product.ambulatoryRequired}
-                  onValueChange={(value) => updateProduct(index, 'ambulatoryRequired', value)}
+                  value={product.ambulatory_required}
+                  onValueChange={value =>
+                    updateProduct(index, 'ambulatory_required', value)
+                  }
                   label="Yes"
                 />
 
                 <AppCheckBox
-                  value={product.preparedInFacility}
-                  onValueChange={(value) => updateProduct(index, 'preparedInFacility', value)}
+                  value={!product.ambulatory_required}
+                  onValueChange={value =>
+                    updateProduct(index, 'ambulatory_required', !value)
+                  }
                   label="No"
                 />
               </View>
 
               <View style={{ marginBottom: getScaleSize(10) }}>
                 <AppCheckBox
-                  value={product.healthcareFacilitySupervision}
-                  onValueChange={(value) => updateProduct(index, 'healthcareFacilitySupervision', value)}
+                  value={product.prepared_in_facility}
+                  onValueChange={value =>
+                    updateProduct(index, 'prepared_in_facility', value)
+                  }
                   label="If filled/prepared under the supervision of a healthcare facility, tick this box"
                 />
               </View>
@@ -454,9 +387,9 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               <View style={styles.dateInputsRow}>
                 <Input
                   label="Start Date"
-                  value={product.startDate}
+                  value={product.start_date}
                   onPress={() => {
-                    setPickerType({ type: 'startDate', index });
+                    setPickerType({ type: 'start_date', index });
                     setOpen(true);
                   }}
                   placeholder="DD/MM/YYYY"
@@ -464,9 +397,9 @@ const AntibiotherapyInfusionForm: React.FC = () => {
                 />
                 <Input
                   label="End Date"
-                  value={product.endDate}
+                  value={product.end_date}
                   onPress={() => {
-                    setPickerType({ type: 'endDate', index });
+                    setPickerType({ type: 'end_date', index });
                     setOpen(true);
                   }}
                   placeholder="DD/MM/YYYY"
@@ -475,8 +408,10 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               </View>
               <Input
                 label="Treatment Duration (days)"
-                value={product.treatmentDurationDays}
-                onChangeText={(value) => updateProduct(index, 'treatmentDurationDays', value)}
+                value={product.treatment_duration_days}
+                onChangeText={value =>
+                  updateProduct(index, 'treatment_duration_days', value)
+                }
                 placeholder="Enter treatment duration"
                 style={styles.inputField}
                 keyboardType="numeric"
@@ -484,7 +419,7 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               <Input
                 label="Total Number of Infusions"
                 value={product.tni}
-                onChangeText={(value) => updateProduct(index, 'tni', value)}
+                onChangeText={value => updateProduct(index, 'tni', value)}
                 placeholder="Auto-calculated"
                 style={styles.inputField}
                 keyboardType="numeric"
@@ -492,8 +427,10 @@ const AntibiotherapyInfusionForm: React.FC = () => {
               />
 
               <AppCheckBox
-                value={product.infuseAlone}
-                onValueChange={(value) => updateProduct(index, 'infuseAlone', value)}
+                value={product.infuse_alone}
+                onValueChange={value =>
+                  updateProduct(index, 'infuse_alone', value)
+                }
                 label="If this treatment must be infused ALONE, tick this box"
               />
             </View>
@@ -512,17 +449,7 @@ const AntibiotherapyInfusionForm: React.FC = () => {
         </TouchableOpacity>
 
         {/* SIGNATURE */}
-        <View style={styles.card}>
-          {renderSectionHeader('Signature')}
-          <Input
-            label="Physician Signature"
-            value={state.physicianSignature}
-            onChangeText={(value) => setState(prev => ({ ...prev, physicianSignature: value }))}
-            placeholder="Enter physician signature"
-            style={styles.inputField}
-          />
-          <View style={styles.signatureLine} />
-        </View>
+        <FormSignature />
       </ScrollView>
 
       <DatePicker
@@ -530,7 +457,7 @@ const AntibiotherapyInfusionForm: React.FC = () => {
         open={open}
         date={date}
         mode="date"
-        onConfirm={(selectedDate) => {
+        onConfirm={selectedDate => {
           setOpen(false);
           if (pickerType) {
             const formattedDate = moment(selectedDate).format('DD/MM/YYYY');
@@ -618,7 +545,7 @@ const styles = StyleSheet.create({
   },
   checkboxGroup: {
     gap: getScaleSize(12),
-    marginBottom: getScaleSize(12)
+    marginBottom: getScaleSize(12),
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -671,7 +598,7 @@ const styles = StyleSheet.create({
     paddingBottom: getScaleSize(12),
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    marginBottom: getScaleSize(10)
+    marginBottom: getScaleSize(10),
   },
   dateInputsRow: {
     flexDirection: 'row',

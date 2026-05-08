@@ -28,6 +28,14 @@ import { STRING } from '../../../constant';
 import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
 import ArtificialNutritionForm from '../forms/ArtificialNutritionForm';
+import GenericForm from '../forms/FreePrescriptionForm';
+import FreePrescriptionForm from '../forms/FreePrescriptionForm';
+import HydrationInfusionForm from '../forms/HydrationInfusion';
+import MedicalOxygen from '../forms/MedicalOxygen';
+import PcaForm from '../forms/PcaForm';
+import PersonalHygieneCare from '../forms/PersonalHygieneCare';
+import PregnancyCareForm from '../forms/PregnancyCareForm';
+import WoundCareForm from '../forms/WoundCareForm';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -35,45 +43,12 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 >;
 
 const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
-  const serviceId = (route.params as any)?.serviceId || 'wound';
+  const service = route?.params?.selected || {};
+  const serviceId = service?.id;
+  const serviceName = service?.serviceName;
   const selectedPatient = useSelector(
     (state: any) => state.patient.selectedPatient,
   );
-
-  const serviceTitle = useMemo(() => {
-    switch (serviceId) {
-      case 'prescription':
-        return 'Free Prescription';
-      case 'iv':
-        return 'Home Infusion';
-      case 'oxygen':
-        return 'Short-term Oxygen Therapy';
-      case 'pca':
-        return 'PCA Infusion';
-      case 'pregnancy':
-        return 'Pregnancy Care';
-      case 'parenteral':
-        return 'Parenteral Nutrition';
-      case 'oral_nutrition':
-        return 'Oral Nutrition';
-      case 'nursing':
-        return 'Nursing Care';
-      case 'physio':
-        return 'Physiotherapy';
-      case 'enteral':
-        return 'Enteral Nutrition';
-      case 'lab':
-        return 'Lab Collection';
-      case '69ef359fd1c1c4252d4b8d4f':
-        return 'Antibiotherapy Infusion';
-      case '69ef359fd1c1c4252d4b8d4d':
-        return 'CNO';
-      case '69ef359fd1c1c4252d4b8d4e':
-        return 'Artificial Nutrition';
-      default:
-        return 'Wound Care';
-    }
-  }, [serviceId]);
 
   const serviceIcon = useMemo(() => {
     switch (serviceId) {
@@ -167,7 +142,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             >
               <RequestSummaryCard
                 patient={selectedPatient}
-                serviceTitle={serviceTitle}
+                serviceTitle={serviceName}
                 serviceIcon={serviceIcon}
                 showEdit={true}
               />
@@ -180,9 +155,9 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 }}
               >
                 {/* Dynamic Form Content */}
-                {
-                 
-                serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
+                {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
+                  <CNOForm />
+                ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
                   <AntibiotherapyInfusionForm />
                 ) : serviceId === '69ef359fd1c1c4252d4b8d4d' ? (
                   <CNOForm />
@@ -190,85 +165,103 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                   <ArtificialNutritionForm />
                 ) : serviceId === '69ef3557d1c1c4252d4b8d2c' ? (
                   <EnteralArtificialNutritionForm />
-                ) : (
-                  <View
-                    style={{
-                      backgroundColor: COLORS._F8F9FA,
-                      borderRadius: getScaleSize(16),
-                      borderWidth: 1,
-                      borderColor: COLORS._EFEFEF,
-                      padding: getScaleSize(16),
-                      gap: getScaleSize(16),
-                    }}
-                  >
-                    {/* Diagnosis Header */}
+                ) : serviceId === '69eb112a056b86c571c1a44f' ? (
+                  <FreePrescriptionForm />
+                ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (
+                  <HydrationInfusionForm />
+                ) : serviceId == '69ef353fd1c1c4252d4b8d22' ? (
+                  <HydrationInfusionForm title={'IV Therapy Prescription Form'} />
+                ) : serviceId == '69ef354cd1c1c4252d4b8d27' ? (
+                  <MedicalOxygen />
+                ) : serviceId == "69ef356cd1c1c4252d4b8d36" ? (
+                  <PcaForm />
+                ) : serviceId == "69ef357cd1c1c4252d4b8d40" ? (
+                  <HydrationInfusionForm title='Parenteral Nutrition (Central Line) Prescription Form' />
+                ) : serviceId == "69ef3563d1c1c4252d4b8d31" ? (
+                  <PersonalHygieneCare />
+                ) : serviceId == "69ef3534d1c1c4252d4b8d1d" ? (
+                  <WoundCareForm />
+                ) : serviceId == "69ef3575d1c1c4252d4b8d3b" ?
+                  <HydrationInfusionForm title={'Pregnancy-Related Care Prescription Form'} />
+                  : (
                     <View
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
+                        backgroundColor: COLORS._F8F9FA,
+                        borderRadius: getScaleSize(16),
+                        borderWidth: 1,
+                        borderColor: COLORS._EFEFEF,
+                        padding: getScaleSize(16),
+                        gap: getScaleSize(16),
                       }}
                     >
-                      <Image
-                        source={IMAGES.stethoscopeIcon}
-                        style={{ width: 20, height: 20 }}
+                      {/* Diagnosis Header */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
+                      >
+                        <Image
+                          source={IMAGES.stethoscopeIcon}
+                          style={{ width: 20, height: 20 }}
+                        />
+                        <AppText
+                          size={getScaleSize(16)}
+                          font={FONTS.Inter.Bold}
+                          color={COLORS._1A1D1F}
+                        >
+                          Diagnosis
+                        </AppText>
+                      </View>
+
+                      {/* Primary Diagnosis */}
+                      <Input
+                        label="Primary Diagnosis"
+                        labelColor={COLORS._1A1D1F}
+                        labelFont={FONTS.Inter.SemiBold}
+                        placeholder="Enter ICD-10 or description"
+                        value={state?.primaryDiagnosis}
+                        onChangeText={text =>
+                          setState({ ...state, primaryDiagnosis: text })
+                        }
+                        style={styles.inputField}
+                        placeholderTextColor={COLORS._1A1D1F}
                       />
+
+                      {/* Secondary Diagnosis */}
+                      <Input
+                        label="Secondary Diagnosis"
+                        labelColor={COLORS._1A1D1F}
+                        labelFont={FONTS.Inter.SemiBold}
+                        placeholder="Optional secondary diagnosis"
+                        value={state?.secondaryDiagnosis}
+                        onChangeText={text =>
+                          setState({ ...state, secondaryDiagnosis: text })
+                        }
+                        style={styles.inputField}
+                        placeholderTextColor={COLORS._1A1D1F}
+                      />
+
                       <AppText
-                        size={getScaleSize(16)}
-                        font={FONTS.Inter.Bold}
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
                         color={COLORS._1A1D1F}
                       >
-                        Diagnosis
+                        Current Condition
                       </AppText>
+                      <TextInput
+                        placeholder="Describe patient's current state..."
+                        value={state?.currentCondition}
+                        onChangeText={text =>
+                          setState({ ...state, currentCondition: text })
+                        }
+                        style={styles.textArea}
+                        multiline
+                        placeholderTextColor={COLORS._1A1D1F}
+                      />
                     </View>
-
-                    {/* Primary Diagnosis */}
-                    <Input
-                      label="Primary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Enter ICD-10 or description"
-                      value={state?.primaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, primaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    {/* Secondary Diagnosis */}
-                    <Input
-                      label="Secondary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Optional secondary diagnosis"
-                      value={state?.secondaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, secondaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS._1A1D1F}
-                    >
-                      Current Condition
-                    </AppText>
-                    <TextInput
-                      placeholder="Describe patient's current state..."
-                      value={state?.currentCondition}
-                      onChangeText={text =>
-                        setState({ ...state, currentCondition: text })
-                      }
-                      style={styles.textArea}
-                      multiline
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-                  </View>
-                )}
+                  )}
               </View>
             </View>
           </ScrollView>

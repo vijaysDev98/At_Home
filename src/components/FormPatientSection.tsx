@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import moment from 'moment';
 
 import DatePicker from 'react-native-date-picker';
-import CheckBox from '@react-native-community/checkbox';
+import AppCheckBox from './AppCheckBox';
 import AppText from './AppText';
 import Input from './Input';
 import { getScaleSize } from '../utils/scaleSize';
@@ -16,6 +16,8 @@ export interface PatientSectionProps {
   showWeight?: boolean;
   showNIR?: boolean;
   showALD?: boolean;
+  showNALD?: boolean;
+  showDate?: boolean;
 }
 
 const FormPatientSection: React.FC<PatientSectionProps> = ({
@@ -24,6 +26,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
   showWeight = true,
   showNIR = true,
   showALD = true,
+  showNALD = false,
+  showDate = false
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
@@ -48,39 +52,44 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         <Input
           label="First name"
           placeholder="Enter first name"
-          value={state.patientFirstName}
-          onChangeText={text => setState({ ...state, patientFirstName: text })}
+          value={state.patient_first_name}
+          onChangeText={text => setState({ ...state, patient_first_name: text })}
           style={[styles.inputField, { flex: 1 }]}
         />
         <Input
           label="Last name"
           placeholder="Enter last name"
-          value={state.patientLastName}
-          onChangeText={text => setState({ ...state, patientLastName: text })}
+          value={state.patient_last_name}
+          onChangeText={text => setState({ ...state, patient_last_name: text })}
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>
       <View style={styles.row}>
-        <TouchableOpacity
-          activeOpacity={0.8}
+
+        <Input
           onPress={() => setOpenDob(true)}
-          style={{ flex: 1 }}
-        >
-          <Input
-            editable={false}
-            label="Date of birth"
-            placeholder="DD/MM/YYYY"
-            value={state.patientDOB}
-            style={styles.inputField}
-            pointerEvents="none"
-          />
-        </TouchableOpacity>
+          editable={false}
+          label="Date of birth"
+          placeholder="DD/MM/YYYY"
+          value={state.dob}
+          style={[styles.inputField, { flex: 1 }]}
+          pointerEvents="none"
+        />
+        {showDate && <Input
+          onPress={() => setOpenDob(true)}
+          editable={false}
+          label="Date"
+          placeholder="DD/MM/YYYY"
+          value={state.dob}
+          style={[styles.inputField, { flex: 1 }]}
+          pointerEvents="none"
+        />}
         {showWeight && (
           <Input
             label="Weight (kg)"
             placeholder="e.g. 70"
-            value={state.patientWeight}
-            onChangeText={text => setState({ ...state, patientWeight: text })}
+            value={state.weight}
+            onChangeText={text => setState({ ...state, weight: text })}
             style={[styles.inputField, { flex: 1 }]}
             keyboardType="numeric"
           />
@@ -96,7 +105,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           setOpenDob(false);
           setDobDate(d);
           const formattedDate = moment(d).format('DD/MM/YYYY');
-          setState({ ...state, patientDOB: formattedDate });
+          setState({ ...state, dob: formattedDate });
         }}
         onCancel={() => setOpenDob(false)}
       />
@@ -105,36 +114,50 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         <Input
           label="Social Insurance number (NIR)"
           placeholder="Enter NIR"
-          value={state.patientNIR}
-          onChangeText={text => setState({ ...state, patientNIR: text })}
-          style={styles.inputField}
+          value={state.nir}
+          onChangeText={text => setState({ ...state, nir: text })}
+          style={[styles.inputField, { marginBottom: 0 }]}
         />
       )}
 
       {showALD && (
-        <View style={[styles.checkboxItem, { marginTop: getScaleSize(12) }]}>
-          <CheckBox
-            boxType="square"
-            value={
-              state.careRelatedToALD === true ||
-              state.careRelatedToALD === 'ALD'
-            }
-            onValueChange={val => {
-              const newVal =
-                typeof state.careRelatedToALD === 'string'
-                  ? val
-                    ? 'ALD'
-                    : 'NOT_ALD'
-                  : val;
-              setState({ ...state, careRelatedToALD: newVal });
-            }}
-            tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-          />
+        <AppCheckBox
+          value={
+            state.ald_condition === true ||
+            state.ald_condition === 'ALD'
+          }
+          onValueChange={val => {
+            const newVal =
+              typeof state.ald_condition === 'string'
+                ? val
+                  ? 'ALD'
+                  : 'NOT_ALD'
+                : val;
+            setState({ ...state, ald_condition: newVal });
+          }}
+          label="Care related to a long-term condition (ALD)"
+          containerStyle={{ marginTop: getScaleSize(12) }}
+        />
+      )}
 
-          <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
-            Care related to a long-term condition (ALD)
-          </AppText>
-        </View>
+      {showNALD && (
+        <AppCheckBox
+          value={
+            state.careNotRelatedToALD === true ||
+            state.careNotRelatedToALD === 'NALD'
+          }
+          onValueChange={val => {
+            const newVal =
+              typeof state.careNotRelatedToALD === 'string'
+                ? val
+                  ? 'NALD'
+                  : 'NOT_NALD'
+                : val;
+            setState({ ...state, careNotRelatedToALD: newVal });
+          }}
+          label="Care not related to long-term condition (ALD)"
+          containerStyle={{ marginTop: getScaleSize(12) }}
+        />
       )}
     </View>
   );
@@ -166,7 +189,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: getScaleSize(12),
     alignItems: 'center',
-    marginBottom: getScaleSize(5),
+    // marginBottom: getScaleSize(5),
   },
   checkboxItem: {
     flexDirection: 'row',

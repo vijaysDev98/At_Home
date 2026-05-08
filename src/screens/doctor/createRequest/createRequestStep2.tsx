@@ -31,7 +31,7 @@ const getServiceIcon = (name: string) => {
     return IMAGES.injectionIcon;
   if (query.includes('oxygen')) return IMAGES.maskIcon;
   if (query.includes('artificial nutrition')) return IMAGES.testTubeIcon;
-  if (query.includes('hygiene') || query.includes('pregnancy'))
+  if (query.includes('hygiene') || query.includes('pregnancy') || query.includes('cno'))
     return IMAGES.nurseIcon;
   if (
     query.includes('pca') ||
@@ -140,13 +140,13 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                 </View>
               ) : (
                 apiServices.map(service => {
-                  const isSelected = selected === service.id;
+                  const isSelected = selected?.id === service.id;
                   return (
                     <TouchableOpacity
                       key={service.id}
                       activeOpacity={0.9}
                       style={[styles.card, isSelected && styles.cardActive]}
-                      onPress={() => setSelected(service.id)}
+                      onPress={() => setSelected(service)}
                     >
                       <View style={styles.cardTopRow}>
                         <Image
@@ -194,7 +194,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               title={'Continue'}
               onPress={() =>
                 NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {
-                  serviceId: selected,
+                  selected,
                 })
               }
             />

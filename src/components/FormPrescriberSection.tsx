@@ -17,7 +17,7 @@ export interface PrescriberSectionProps {
 const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
   state,
   setState,
-  title = 'Prescriber identification',
+  title = 'Prescriber Identification',
   showFiness = false,
   children,
 }) => {
@@ -52,12 +52,17 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         />
       </View>
       <View style={styles.row}>
-        <Input
+        {showFiness ? <Input
+          isLocked
+          label="FINESS"
+          value={state.prescriberFINESS}
+          style={[styles.inputField, { flex: 1 }]}
+        /> : <Input
           isLocked
           label="Phone"
           value={state.prescriberPhone || state.prescriberEmergencyPhone}
           style={[styles.inputField, { flex: 1 }]}
-        />
+        />}
         <Input
           isLocked
           label="RPPS ID"
@@ -68,16 +73,6 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
       <AppText size={getScaleSize(12)} color={COLORS._6F767E} style={{ marginTop: getScaleSize(-4), marginBottom: getScaleSize(8) }}>
         *Shared directory of healthcare professionals
       </AppText>
-      {showFiness && (
-        <View style={styles.row}>
-          <Input
-            isLocked
-            label="FINESS"
-            value={state.prescriberFINESS}
-            style={[styles.inputField, { flex: 1 }]}
-          />
-        </View>
-      )}
       {children}
     </View>
   );

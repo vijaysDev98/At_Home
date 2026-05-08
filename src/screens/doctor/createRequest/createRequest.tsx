@@ -237,8 +237,11 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
       p => p.id === selectedId || p._id === selectedId,
     );
     if (patient) {
+      console.log('CreateRequest - Setting selected patient:', patient);
       dispatch(setSelectedPatient(patient));
       NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2);
+    } else {
+      console.log('CreateRequest - No patient found with ID:', selectedId);
     }
   }, [selectedId, patients, dispatch]);
 

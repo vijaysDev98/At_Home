@@ -37,18 +37,24 @@ const AppCheckBox: React.FC<AppCheckBoxProps> = ({
         value={value}
         onValueChange={onValueChange}
         tintColors={{
-          true: COLORS._526674,
-          false: COLORS._EFEFEF,
+          true: disabled ? COLORS._D0D5DD : COLORS.primary,
+          false: disabled ? COLORS._D0D5DD : COLORS._6F767E,
         }}
       />
+
       <AppText
         size={getScaleSize(13)}
-        color={COLORS._1A1D1F}
+        color={
+          disabled
+            ? COLORS._98A2B3
+            : COLORS._1A1D1F
+        }
         font={FONTS.Inter.Regular}
         style={[styles.label, labelStyle, textStyle]}
       >
         {label}
       </AppText>
+
     </View>
   );
 };

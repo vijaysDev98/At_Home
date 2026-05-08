@@ -3,6 +3,7 @@ import {
   Image,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -16,6 +17,7 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
+  AppCheckBox,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -34,6 +36,29 @@ const CNOForm: React.FC = () => {
     patientWeight: '',
     patientNIR: '',
     careRelatedToALD: false,
+    patientName: '', // For inline input
+    patientAge: '', // For inline input
+    outSideAld: false,
+    relatedToAld: false,
+    highProteinHighCalorieONSdrink1_5_Qty: '',
+    highProteinHighCalorieONSdrink1_5_Qty2: '',
+    highProteinHighCalorieONSdrink1_5_fiber_Qty: '',
+    highProteinHighCalorieONSdrink1_5_fiber_Qty2: '',
+    highProteinHighCalorieONSdrink2_Qty: '',
+    highProteinHighCalorieONSdrink2_Qty2: '',
+    highProteinHighCalorieONS2_concentrated_Qty: '',
+    highProteinHighCalorieONS2_concentrated_Qty2: '',
+    highProteinHighCalorieONScream1_5_Qty: '',
+    highProteinHighCalorieONScream1_5_Qty2: '',
+    highProteinHighCalorieONSsoup1_5_Qty: '',
+    highProteinHighCalorieONSsoup1_5_Qty2: '',
+    blendedHighProteinMeals_Qty: '',
+    blendedHighProteinMeals_Qty2: '',
+    fruitJuiceONS_Qty: '',
+    fruitJuiceONS_Qty2: '',
+    compote_Qty: '',
+    compote_Qty2: '',
+    otherNutritionalSupplement: '',
 
     // Prescriber
     prescriberLastName: 'Jenkins',
@@ -98,6 +123,15 @@ const CNOForm: React.FC = () => {
           </AppText>
         </View>
 
+        {/* PATIENT SECTION */}
+        <FormPatientSection
+          state={state}
+          setState={setState}
+          showWeight={true}
+          showNIR={true}
+          showALD={true}
+        />
+
         {/* PRESCRIBER SECTION */}
         <FormPrescriberSection
           state={state}
@@ -108,179 +142,589 @@ const CNOForm: React.FC = () => {
         {/* FACILITY INFORMATION */}
         <FormFacilitySection state={state} setState={setState} />
 
-        {/* PATIENT SECTION */}
-        <FormPatientSection
-          state={state}
-          setState={setState}
-          showWeight={true}
-          showNIR={true}
-          showALD={true}
-        />
-
         {/* MEDICAL HISTORY */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.medicalHistory, IMAGES.stethoscopeIcon)}
+          {renderSectionHeader(STRING.prescriptionContext)}
           <Input
-            label={STRING.primaryDiagnosis}
-            placeholder="Enter primary diagnosis"
+            label={STRING.prescriptionPlace}
+            placeholder={STRING.enterPrescriptionPlace}
             value={state.primaryDiagnosis}
             onChangeText={t => setState({ ...state, primaryDiagnosis: t })}
             style={styles.inputField}
           />
           <Input
-            label={STRING.comorbidities}
-            placeholder="e.g. Diabetes, Renal Failure"
-            value={state.comorbidities}
-            onChangeText={t => setState({ ...state, comorbidities: t })}
-            style={styles.inputField}
-            multiline
+            onPress={() => setOpen(true)}
+            editable={false}
+            label={STRING.prescriptionDate}
+            placeholder="DD/MM/YYYY"
+            value={state.albuminDate}
+            style={[styles.inputField, { flex: 1 }]}
+            pointerEvents="none"
           />
+          <AppText
+            style={{ marginBottom: getScaleSize(5) }}
+            color={COLORS._1E293B}
+            size={getScaleSize(13)}
+            font={FONTS.Inter.Medium}
+          >
+            {STRING.prescriptionType}
+          </AppText>
+          <View style={[styles.checkBoxContainer]}>
+            <AppCheckBox
+              label={STRING.outSideAld}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.relatedToAld}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+          </View>
         </View>
 
-        {/* NUTRITIONAL ASSESSMENT */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.nutritionalAssessment)}
-          <View style={styles.row}>
-            <Input
-              label={STRING.weightLossPercentage}
-              placeholder="%"
-              value={state.weightLossPercentage}
-              onChangeText={t =>
-                setState({ ...state, weightLossPercentage: t })
+          {renderSectionHeader(STRING.patientCondition)}
+          <View style={styles.patientConditionRow}>
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              The health status of Mr/Ms
+            </AppText>
+            <TextInput
+              value={state.patientName}
+              onChangeText={value =>
+                setState(prev => ({ ...prev, patientName: value }))
               }
-              style={[styles.inputField, { flex: 1 }]}
+              style={styles.inlineInput}
+              placeholder=""
+              placeholderTextColor={COLORS._6F767E}
+            />
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              aged
+            </AppText>
+            <TextInput
+              value={state.patientAge}
+              onChangeText={value =>
+                setState(prev => ({ ...prev, patientAge: value }))
+              }
+              style={styles.inlineInput}
+              placeholder=""
+              placeholderTextColor={COLORS._6F767E}
               keyboardType="numeric"
             />
-            <Input
-              label={STRING.bmi}
-              placeholder="0.0"
-              value={state.bmi}
-              onChangeText={t => setState({ ...state, bmi: t })}
-              style={[styles.inputField, { flex: 1 }]}
+          </View>
+          <View style={styles.patientConditionRow}>
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              Weighing
+            </AppText>
+            <TextInput
+              value={state.patientWeight}
+              onChangeText={value =>
+                setState(prev => ({ ...prev, patientWeight: value }))
+              }
+              style={styles.inlineInput}
+              placeholder=""
+              placeholderTextColor={COLORS._6F767E}
               keyboardType="numeric"
+            />
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              kg.
+            </AppText>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._1A1D1F}
+            >
+              {`\nrequires oral nutritional supplements:`}
+            </AppText>
+            <View style={[styles.checkBoxContainer]}>
+              <AppCheckBox
+                label={STRING.diabeticRange}
+                value={state.outSideAld}
+                onValueChange={v => setState({ ...state, outSideAld: v })}
+              />
+              <AppCheckBox
+                label={STRING.standardCarbohydrateRange}
+                value={state.outSideAld}
+                onValueChange={v => setState({ ...state, outSideAld: v })}
+              />
+            </View>
+
+            {/* Nutritional Supplements List */}
+            <View style={styles.nutritionalSupplementsList}>
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  1. High protein high calorie ONS drink 1.5 kcal/ml
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink1_5_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink1_5_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink1_5_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink1_5_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • High protein high calorie ONS drink 1.5 kcal/ml + fiber
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink1_5_fiber_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink1_5_fiber_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink1_5_fiber_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink1_5_fiber_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • High protein high calorie ONS drink 2 kcal/ml
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink2_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink2_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSdrink2_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSdrink2_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • High protein high calorie ONS 2 concentrated kcal/ml
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONS2_concentrated_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONS2_concentrated_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONS2_concentrated_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONS2_concentrated_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • High protein high calorie ONS cream 1.5 kcal/ml
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONScream1_5_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONScream1_5_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONScream1_5_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONScream1_5_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • High protein high calorie ONS soup 1.5 kcal/ml
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSsoup1_5_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSsoup1_5_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.highProteinHighCalorieONSsoup1_5_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      highProteinHighCalorieONSsoup1_5_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • Blended high protein meals
+                </AppText>
+                <TextInput
+                  value={state.blendedHighProteinMeals_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      blendedHighProteinMeals_Qty: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.blendedHighProteinMeals_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      blendedHighProteinMeals_Qty2: value,
+                    }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • Fruit juice ONS
+                </AppText>
+                <TextInput
+                  value={state.fruitJuiceONS_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({ ...prev, fruitJuiceONS_Qty: value }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.fruitJuiceONS_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({ ...prev, fruitJuiceONS_Qty2: value }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • Compote
+                </AppText>
+                <TextInput
+                  value={state.compote_Qty}
+                  onChangeText={value =>
+                    setState(prev => ({ ...prev, compote_Qty: value }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  Qty
+                </AppText>
+                <TextInput
+                  value={state.compote_Qty2}
+                  onChangeText={value =>
+                    setState(prev => ({ ...prev, compote_Qty2: value }))
+                  }
+                  style={styles.quantityInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                  keyboardType="numeric"
+                />
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  /day
+                </AppText>
+              </View>
+
+              <View style={styles.supplementItem}>
+                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+                  • Other:
+                </AppText>
+                <TextInput
+                  value={state.otherNutritionalSupplement}
+                  onChangeText={value =>
+                    setState(prev => ({
+                      ...prev,
+                      otherNutritionalSupplement: value,
+                    }))
+                  }
+                  style={styles.otherInput}
+                  placeholder=""
+                  placeholderTextColor={COLORS._6F767E}
+                />
+              </View>
+            </View>
+            <View style={styles.row}>
+              <Input
+                label={STRING.patientName}
+                placeholder={STRING.enterPatientName}
+                value={state.primaryDiagnosis}
+                onChangeText={t => setState({ ...state, primaryDiagnosis: t })}
+                style={[styles.inputField, { flex: 1 }]}
+              />
+
+              <Input
+                editable={false}
+                label="Date of birth"
+                placeholder="DD/MM/YYYY"
+                value={state.patientDOB}
+                style={[styles.inputField, { flex: 1 }]}
+                pointerEvents="none"
+              />
+            </View>
+
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._1A1D1F}
+            >
+              {STRING.prescriberIdentification}
+            </AppText>
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._1A1D1F}
+            >
+              To be consumed at least 2 hours before or after each meal for 1
+              month
+            </AppText>
+            <Input
+              label={'Texture'}
+              value={state.primaryDiagnosis}
+              onChangeText={t => setState({ ...state, primaryDiagnosis: t })}
+              style={[styles.inputField, { flex: 1 }]}
             />
           </View>
 
           <AppText
             size={getScaleSize(13)}
-            font={FONTS.Inter.SemiBold}
-            style={{ marginBottom: 8 }}
+            font={FONTS.Inter.Regular}
+            color={COLORS._1A1D1F}
+            style={{ marginBottom: getScaleSize(10) }}
           >
-            {STRING.oralIntake}
+            Reassessment at 1 month
           </AppText>
-          <View style={styles.radioRow}>
-            {[
-              { label: STRING.normal, value: 'normal' },
-              { label: STRING.reduced, value: 'reduced' },
-              { label: STRING.minimal, value: 'minimal' },
-            ].map(opt => (
-              <TouchableOpacity
-                key={opt.value}
-                style={styles.radioItem}
-                onPress={() => setState({ ...state, oralIntake: opt.value })}
-              >
-                <View
-                  style={[
-                    styles.radioOuter,
-                    state.oralIntake === opt.value && styles.radioOuterActive,
-                  ]}
-                >
-                  {state.oralIntake === opt.value && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
-                <AppText size={getScaleSize(12)}>{opt.label}</AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.row}>
-            <Input
-              label={STRING.albuminLevel}
-              placeholder="g/L"
-              value={state.albuminLevel}
-              onChangeText={t => setState({ ...state, albuminLevel: t })}
-              style={[styles.inputField, { flex: 1 }]}
+          <View style={styles.supplementItem}>
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              Renewal to be carried out for
+            </AppText>
+            <TextInput
+              value={state.fruitJuiceONS_Qty2}
+              onChangeText={value =>
+                setState(prev => ({ ...prev, fruitJuiceONS_Qty2: value }))
+              }
+              style={styles.quantityInput}
+              placeholder=""
+              placeholderTextColor={COLORS._6F767E}
               keyboardType="numeric"
             />
-            <Input
-              onPress={() => setOpen(true)}
-              editable={false}
-              label={STRING.albuminDate}
-              placeholder="DD/MM/YYYY"
-              value={state.albuminDate}
-              style={[styles.inputField, { flex: 1 }]}
-              pointerEvents="none"
+            <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
+              months
+            </AppText>
+          </View>
+
+          <View
+            style={{ gap: getScaleSize(3), marginBottom: getScaleSize(10) }}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._1A1D1F}
+            >
+              {`After a reassessment including:`}
+            </AppText>
+            <AppCheckBox
+              label={STRING.weight}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.nutritionalStatus}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.progressionOfThePathology}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.levelOfSpontaneousOralIntake}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.toleranceOfOralNutritionalSupplements}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
+            />
+            <AppCheckBox
+              label={STRING.complianceWithOns}
+              value={state.outSideAld}
+              onValueChange={v => setState({ ...state, outSideAld: v })}
             />
           </View>
-        </View>
-
-        {/* PRESCRIPTION */}
-        <View style={styles.card}>
-          {renderSectionHeader(STRING.nutritionalPrescription)}
           <Input
-            label={STRING.productName}
-            placeholder={STRING.enterProductName}
-            value={state.productName}
-            onChangeText={t => setState({ ...state, productName: t })}
-            style={styles.inputField}
-          />
-          <View style={styles.row}>
-            <Input
-              label={STRING.energyDensity}
-              placeholder="kcal/ml"
-              value={state.energyDensity}
-              onChangeText={t => setState({ ...state, energyDensity: t })}
-              style={[styles.inputField, { flex: 1 }]}
-              keyboardType="numeric"
-            />
-            <Input
-              label={STRING.volumePerDay}
-              placeholder="ml"
-              value={state.volumePerDay}
-              onChangeText={t => setState({ ...state, volumePerDay: t })}
-              style={[styles.inputField, { flex: 1 }]}
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={styles.row}>
-            <Input
-              label={STRING.frequency}
-              placeholder="times/day"
-              value={state.frequency}
-              onChangeText={t => setState({ ...state, frequency: t })}
-              style={[styles.inputField, { flex: 1 }]}
-            />
-            <Input
-              label={STRING.durationWeeks}
-              placeholder="Weeks"
-              value={state.durationWeeks}
-              onChangeText={t => setState({ ...state, durationWeeks: t })}
-              style={[styles.inputField, { flex: 1 }]}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
-
-        {/* FOLLOW-UP */}
-        <View style={styles.card}>
-          {renderSectionHeader(STRING.followUp)}
-          <Input
-            label={STRING.weightMonitoringFrequency}
-            placeholder="e.g. Once a week"
-            value={state.weightMonitoringFrequency}
-            onChangeText={t =>
-              setState({ ...state, weightMonitoringFrequency: t })
-            }
-            style={styles.inputField}
+            onPress={() => setOpen(true)}
+            editable={false}
+            label={STRING.date}
+            placeholder="DD/MM/YYYY"
+            value={state.albuminDate}
+            style={[styles.inputField]}
+            pointerEvents="none"
           />
         </View>
 
         {/* SIGNATURE SECTION */}
         <View style={styles.card}>
-          <View style={[styles.row, { justifyContent: 'space-between' }]}>
+          <View style={[styles.row]}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {STRING.physicianSignature}
+              {STRING.signature}
             </AppText>
             <View style={styles.signatureLine} />
           </View>
@@ -316,14 +760,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: getScaleSize(40),
     gap: getScaleSize(12),
+    marginHorizontal: getScaleSize(16),
+  },
+  checkBoxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerTextContainer: {
     marginBottom: getScaleSize(4),
+    paddingHorizontal: getScaleSize(16),
   },
   card: {
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -338,11 +789,12 @@ const styles = StyleSheet.create({
   },
   inputField: {
     marginBottom: getScaleSize(12),
+    paddingHorizontal: 0,
   },
   row: {
     flexDirection: 'row',
-    gap: getScaleSize(12),
     alignItems: 'center',
+    gap: getScaleSize(12),
   },
   radioRow: {
     flexDirection: 'row',
@@ -377,6 +829,54 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS._EFEFEF,
     width: getScaleSize(150),
     height: getScaleSize(40),
+  },
+  patientConditionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: getScaleSize(12),
+    gap: getScaleSize(6),
+  },
+  inlineInput: {
+    minWidth: getScaleSize(80),
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS._1A1D1F,
+    fontSize: getScaleSize(14),
+    color: COLORS._1A1D1F,
+    textAlign: 'center',
+    paddingVertical: getScaleSize(2),
+    paddingHorizontal: getScaleSize(8),
+  },
+  nutritionalSupplementsList: {
+    marginTop: getScaleSize(12),
+  },
+  supplementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: getScaleSize(8),
+    gap: getScaleSize(6),
+  },
+  quantityInput: {
+    minWidth: getScaleSize(50),
+    maxWidth: getScaleSize(80),
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS._1A1D1F,
+    fontSize: getScaleSize(14),
+    color: COLORS._1A1D1F,
+    textAlign: 'center',
+    paddingVertical: getScaleSize(2),
+    paddingHorizontal: getScaleSize(6),
+  },
+  otherInput: {
+    minWidth: getScaleSize(120),
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS._1A1D1F,
+    fontSize: getScaleSize(14),
+    color: COLORS._1A1D1F,
+    paddingVertical: getScaleSize(2),
+    paddingHorizontal: getScaleSize(8),
+    flex: 1,
   },
 });
 

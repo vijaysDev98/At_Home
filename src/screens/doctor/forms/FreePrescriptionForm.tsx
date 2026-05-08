@@ -29,6 +29,8 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
+import FormSignature from '../../../components/FormSignature';
 
 const FreePrescriptionForm: React.FC = () => {
   const warningSheetRef = useRef<ActionSheetRef>(null);
@@ -118,86 +120,10 @@ const FreePrescriptionForm: React.FC = () => {
             >
               Free Prescription Form
             </AppText>
-            <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.Medium}
-              color={COLORS._6F767E}
-              style={{ marginTop: getScaleSize(4) }}
-            >
-              Tick the appropriate boxes on the form
-            </AppText>
           </View>
 
-          {/* Prescription Date & Main Options */}
-          <View style={styles.card}>
-            {renderSectionHeader('Prescription date', IMAGES.ic_calender)}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setPickerType('prescriptionDate');
-                setOpen(true);
-              }}
-            >
-              <Input
-                editable={false}
-                placeholder="DD/MM/YYYY"
-                value={state.prescriptionDate}
-                style={styles.inputField}
-                labelSize={getScaleSize(20)}
-                pointerEvents="none"
-              />
-            </TouchableOpacity>
-            <DatePicker
-              modal
-              mode="date"
-              open={open}
-              date={date}
-              onConfirm={d => {
-                setOpen(false);
-                setDate(d);
-                const formattedDate = moment(d).format('DD/MM/YYYY');
-
-                if (pickerType === 'prescriptionDate') {
-                  setState({ ...state, prescriptionDate: formattedDate });
-                }
-                setPickerType(null);
-              }}
-              onCancel={() => {
-                setOpen(false);
-                setPickerType(null);
-              }}
-            />
-            <View style={styles.checkboxGroup}>
-              <View style={styles.checkboxItem}>
-                <CheckBox
-                  boxType="square"
-                  value={state.homeInfusionTherapy}
-                  onValueChange={val =>
-                    setState({ ...state, homeInfusionTherapy: val })
-                  }
-                  tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-                />
-
-                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
-                  Start of home infusion therapy
-                </AppText>
-              </View>
-              <View style={styles.checkboxItem}>
-                <CheckBox
-                  boxType="square"
-                  value={state.renewalModification}
-                  onValueChange={val =>
-                    setState({ ...state, renewalModification: val })
-                  }
-                  tintColors={{ true: COLORS.primary, false: COLORS._6F767E }}
-                />
-
-                <AppText size={getScaleSize(14)} color={COLORS._1A1D1F}>
-                  Renewal or modification
-                </AppText>
-              </View>
-            </View>
-          </View>
+          {/* PRESCRIPTION DETAILS */}
+          <FormPrescriptionDetails state={state} setState={setState} />
 
           {/* PATIENT SECTION */}
           <FormPatientSection state={state} setState={setState} />
@@ -205,16 +131,20 @@ const FreePrescriptionForm: React.FC = () => {
           <FormPrescriberSection state={state} setState={setState} />
 
           {/* FACILITY SECTION */}
-          <FormFacilitySection state={state} setState={setState}>
+          <FormFacilitySection state={state} setState={setState} />
+
+          <View style={[styles.card, { elevation: 4 }]}>
+            {renderSectionHeader("Additional Notes")}
             <Input
               multiline
-              label="Forms for"
-              placeholder="Enter details"
+              placeholder=".........."
               value={state.formsFor}
               onChangeText={text => setState({ ...state, formsFor: text })}
-              style={styles.inputField}
+              style={[styles.inputField]}
             />
-          </FormFacilitySection>
+          </View>
+
+          <FormSignature />
         </ScrollView>
       </View>
       <WarningSheet ref={warningSheetRef} />
@@ -234,6 +164,7 @@ const styles = StyleSheet.create({
     // padding: 16,
     paddingBottom: getScaleSize(100),
     gap: getScaleSize(12),
+    paddingHorizontal: getScaleSize(16),
   },
   headerTextContainer: {
     marginBottom: getScaleSize(8),

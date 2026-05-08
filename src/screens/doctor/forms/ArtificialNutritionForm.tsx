@@ -24,6 +24,8 @@ import { COLORS, FONTS } from '../../../utils';
 import { STRING } from '../../../constant';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
+import FormSignature from '../../../components/FormSignature';
 
 const ArtificialNutritionForm: React.FC = () => {
   const selectedPatient = useSelector(
@@ -171,33 +173,7 @@ const ArtificialNutritionForm: React.FC = () => {
         </View>
 
         {/* PRESCRIPTION DETAILS */}
-        <View style={styles.card}>
-          {renderSectionHeader(STRING.prescriptionDetails)}
-          <Input
-            onPress={() => {
-              setPickerType({ type: 'prescriptionDate' });
-              setOpen(true);
-            }}
-            editable={false}
-            label={STRING.prescriptionDate}
-            placeholder="DD/MM/YYYY"
-            value={state.prescriptionDate}
-            style={styles.inputField}
-            pointerEvents="none"
-          />
-          <View style={styles.checkboxGroup}>
-            <AppCheckBox
-              value={state.startTherapy}
-              onValueChange={(value) => setState(prev => ({ ...prev, startTherapy: value }))}
-              label={STRING.startOfHomeInfusionTherapy}
-            />
-            <AppCheckBox
-              value={state.renewalTherapy}
-              onValueChange={(value) => setState(prev => ({ ...prev, renewalTherapy: value }))}
-              label={STRING.renewalOrModification}
-            />
-          </View>
-        </View>
+        <FormPrescriptionDetails state={state} setState={setState} />
 
         {/* PATIENT INFORMATION */}
         <FormPatientSection
@@ -564,21 +540,6 @@ const ArtificialNutritionForm: React.FC = () => {
               color={COLORS._1A1D1F}
               font={FONTS.Inter.SemiBold}
             >
-              Signature:
-            </AppText>
-            <TextInput
-              value={state.signature}
-              onChangeText={(value) => setState(prev => ({ ...prev, signature: value }))}
-              style={[styles.pdfInlineInput, styles.signatureInput]}
-              placeholder=""
-            />
-          </View>
-          <View style={styles.signatureRow}>
-            <AppText
-              size={getScaleSize(13)}
-              color={COLORS._1A1D1F}
-              font={FONTS.Inter.SemiBold}
-            >
               Number of boxes checked:
             </AppText>
             <TextInput
@@ -589,6 +550,9 @@ const ArtificialNutritionForm: React.FC = () => {
             />
           </View>
         </View>
+
+        <FormSignature />
+
       </ScrollView>
 
       <DatePicker
@@ -747,7 +711,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(8),
-    marginBottom: getScaleSize(16),
+    // marginBottom: getScaleSize(16),
   },
   signatureInput: {
     minWidth: getScaleSize(140),

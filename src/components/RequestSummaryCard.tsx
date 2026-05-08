@@ -35,9 +35,12 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   style,
   rightContent,
 }) => {
+  // Debug: log received patient data
+  console.log('RequestSummaryCard - patient prop:', patient);
+
   const name = patient?.fullName || 'N/A';
   const avatar = patient?.avatar;
-  const age = "ID: PT-" + patient?.id?.slice(-4).toUpperCase() + " • " + patient?.age + " yrs"
+  const age = "ID: PT-" + (patient?.id?.slice(-4).toUpperCase() || '0000') + " • " + (patient?.age || '0') + " yrs"
 
 
   return (

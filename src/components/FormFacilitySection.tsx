@@ -32,25 +32,25 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader("Prescriber's practice / facility", IMAGES.hospital)}
+      {renderSectionHeader("Prescriber's Practice / Facility")}
       <Input
         label="Hospital name"
         placeholder="Enter hospital name"
-        value={state.hospitalName}
-        onChangeText={text => setState({ ...state, hospitalName: text })}
+        value={state.hospital_name}
+        onChangeText={text => setState({ ...state, hospital_name: text })}
         style={styles.inputField}
       />
       <Input
         label="Address"
         placeholder="Enter address"
-        value={state.hospitalAddress}
-        onChangeText={text => setState({ ...state, hospitalAddress: text })}
+        value={state.hospital_address}
+        onChangeText={text => setState({ ...state, hospital_address: text })}
         style={styles.inputField}
       />
       <Input
         isLocked
         label="Geographic Finess No."
-        value={state.finessNo}
+        value={state.finess_number}
         style={styles.inputField}
       />
       {children}
