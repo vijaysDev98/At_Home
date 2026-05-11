@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import moment from 'moment';
 
@@ -14,14 +14,28 @@ import { STRING } from '../constant';
 export interface FormPrescriptionDetailsProps {
     state: any;
     setState: (state: any) => void;
+    errors?: { [key: string]: string };
 }
 
 const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
     state,
     setState,
+    errors = {},
 }) => {
     const [open, setOpen] = useState(false);
-    const [date, setDate] = useState(new Date());
+    const [date, setDate] = useState(() => {
+        if (state.prescription_date) {
+            return moment(state.prescription_date, 'DD/MM/YYYY').toDate();
+        }
+        return new Date();
+    });
+
+    useEffect(() => {
+        if (state.prescription_date) {
+            const parsedDate = moment(state.prescription_date, 'DD/MM/YYYY').toDate();
+            setDate(parsedDate);
+        }
+    }, [state.prescription_date]);
 
     const renderSectionHeader = (title: string, icon?: any) => (
         <View style={styles.sectionHeader}>
@@ -49,6 +63,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
                 value={state.prescription_date}
                 style={styles.inputField}
                 pointerEvents="none"
+                error={errors.prescription_date}
             />
 
             <DatePicker
@@ -60,7 +75,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
                     setOpen(false);
                     setDate(d);
                     const formattedDate = moment(d).format('DD/MM/YYYY');
-                    setState({ ...state, prescription_date: formattedDate });
+                    setState({ prescription_date: formattedDate });
                 }}
                 onCancel={() => setOpen(false)}
             />
@@ -70,7 +85,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
                     <AppCheckBox
                         value={state.therapy_type === 'start'}
                         onValueChange={value =>
-                            setState(prev => ({ ...prev, therapy_type: value ? 'start' : '' }))
+                            setState({ therapy_type: value ? 'start' : '' })
                         }
                         label="Start of home infusion therapy"
                     />
@@ -80,12 +95,17 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
                     <AppCheckBox
                         value={state.therapy_type === 'renewal'}
                         onValueChange={value =>
-                            setState(prev => ({ ...prev, therapy_type: value ? 'renewal' : '' }))
+                            setState({ therapy_type: value ? 'renewal' : '' })
                         }
                         label="Renewal or modification"
                     />
                 </View>
             </View>
+            {errors.therapy_type && (
+                <AppText size={getScaleSize(12)} color={COLORS.error} style={styles.errorText}>
+                    {errors.therapy_type}
+                </AppText>
+            )}
         </View>
     );
 };
@@ -104,22 +124,23 @@ const styles = StyleSheet.create({
         marginBottom: getScaleSize(12),
     },
     sectionIcon: {
-        height: getScaleSize(20),
         width: getScaleSize(20),
+        height: getScaleSize(20),
         resizeMode: 'contain',
     },
     inputField: {
         marginBottom: getScaleSize(12),
-        paddingHorizontal: 0,
+        paddingHorizontal: 0
     },
     checkboxGroup: {
-        marginTop: getScaleSize(4),
-        gap: getScaleSize(8),
+        marginBottom: getScaleSize(12),
     },
     checkboxItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: getScaleSize(4),
+        marginBottom: getScaleSize(8),
+    },
+    errorText: {
+        marginTop: getScaleSize(4),
+        marginBottom: getScaleSize(8),
     },
 });
 

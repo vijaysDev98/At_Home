@@ -20,6 +20,11 @@ const API_ROUTES = {
   getPatients: 'patients',
   getPatientDetails: 'patients',
   getServices: 'services',
+  createServiceRequest: 'service-requests',
+  getServiceRequests: 'service-requests',
+  getServiceRequestDetails: 'service-requests',
+  updateServiceRequest: 'service-requests',
+  listServiceRequests: 'service-requests',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

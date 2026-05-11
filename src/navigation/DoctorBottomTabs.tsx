@@ -18,7 +18,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { AppText } from '../components';
 import { DOCTOR_TAB_SCREENS } from './routes';
-import DoctorRequest from '../screens/doctor/Request';
+import DoctorRequest from '../screens/doctor/Request/DoctorRequest';
 
 export type BottomTabParamList = {
   Home: undefined;

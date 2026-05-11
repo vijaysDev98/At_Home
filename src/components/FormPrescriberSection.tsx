@@ -41,13 +41,13 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         <Input
           isLocked
           label="First name"
-          value={state.prescriberFirstName}
+          value={state.prescriber_first_name}
           style={[styles.inputField, { flex: 1 }]}
         />
         <Input
           isLocked
           label="Last name"
-          value={state.prescriberLastName}
+          value={state.prescriber_last_name}
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>
@@ -55,18 +55,18 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         {showFiness ? <Input
           isLocked
           label="FINESS"
-          value={state.prescriberFINESS}
+          value={state.prescriber_finess}
           style={[styles.inputField, { flex: 1 }]}
         /> : <Input
           isLocked
           label="Phone"
-          value={state.prescriberPhone || state.prescriberEmergencyPhone}
+          value={state.prescriber_phone || state.prescriber_emergency_phone}
           style={[styles.inputField, { flex: 1 }]}
         />}
         <Input
           isLocked
           label="RPPS ID"
-          value={state.prescriberRPPS}
+          value={state.rpps_id}
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>

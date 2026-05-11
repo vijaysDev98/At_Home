@@ -9,6 +9,7 @@ import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
+import { STRING } from '../../constant';
 
 export type RegisterSuccessProps = NativeStackScreenProps<
   RootStackParamList,
@@ -37,7 +38,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
             color={COLORS.slate900}
             align="center"
           >
-            Registration Successful
+            {STRING.registrationSuccessful}
           </AppText>
 
           <AppText
@@ -47,15 +48,15 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
             align="center"
             style={{ maxWidth: getScaleSize(320) }}
           >
-            Your account has been created and is currently{' '}
+            {STRING.yourAccountHasBeenCreatedAndIsCurrently}{' '}
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
               color={COLORS.primary}
             >
-              pending admin approval
+              {STRING.pendingAdminApproval}
             </AppText>
-            . We will notify you via email once your account is activated.
+            . {STRING.weWillNotifyYouViaEmailOnceYourAccountIsActivated}
           </AppText>
 
           {/* Info Card */}
@@ -70,7 +71,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.slate900}
               >
-                What happens next?
+                {STRING.whatHappensNext}
               </AppText>
               <AppText
                 size={getScaleSize(14)}
@@ -78,9 +79,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
                 color={COLORS.slate700}
                 style={{ marginTop: getScaleSize(4) }}
               >
-                Your registration will be reviewed by the admin. You will be
-                notified once your account is approved. You cannot log in until
-                your account is approved.
+                {STRING.yourRegDes}
               </AppText>
             </View>
           </View>
@@ -89,7 +88,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
         {/* CTA */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
-            title="Back to Login"
+            title={STRING.backToLogin}
             onPress={() => NavigationService.reset(SCREENS.LOGIN)}
           />
         </View>

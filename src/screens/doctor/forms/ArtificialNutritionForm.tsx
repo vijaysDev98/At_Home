@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
   TextInput,
   View,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
@@ -21,13 +22,24 @@ import {
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
-import { STRING } from '../../../constant';
+import { STRING, SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { IMAGES } from '../../../assets/images';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 
-const ArtificialNutritionForm: React.FC = () => {
+export interface ArtificialNutritionFormProps {
+  serviceId: string;
+  onLoadingChange?: (isLoading: boolean) => void;
+}
+
+const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(({
+  serviceId,
+  onLoadingChange,
+}, ref) => {
   const selectedPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
@@ -36,77 +48,82 @@ const ArtificialNutritionForm: React.FC = () => {
   );
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
+  const lastFirstErrorKey = useRef<string | null>(null);
+
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [pickerType, setPickerType] = useState<{
     type: string;
     index?: number;
   } | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const [state, setState] = useState({
-    prescriptionDate: moment().format('DD/MM/YYYY'),
-    startTherapy: false,
-    renewalTherapy: false,
+    prescription_date: moment().format('DD/MM/YYYY'),
+    therapy_type: '',
+    from_date: '',
+    prescription_duration_weeks: '',
+    renewal_times: '',
 
-    patientLastName: '',
-    patientFirstName: selectedPatient?.fullName || '',
-    patientDOB: selectedPatient?.dateOfBirth
+    patient_last_name: '',
+    patient_first_name: selectedPatient?.fullName || '',
+    dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    patientWeight: '',
-    patientNIR: '',
-    careRelatedToALD: false,
+    weight: '',
+    nir: '',
+    ald_condition: false,
 
-    prescriberLastName: '',
-    prescriberFirstName: profileData?.fullName || '',
-    prescriberPhone: profileData?.phoneNumber || '',
-    prescriberRPPS: profileData?.rppsNumber || '',
+    prescriber_last_name: profileData?.fullName?.split(' ').slice(-1)[0] || '',
+    prescriber_first_name: profileData?.fullName?.split(' ')[0] || '',
+    prescriber_phone: profileData?.phoneNumber || '',
+    rpps_id: profileData?.rppsNumber || '',
 
-    hospitalName: profileData?.businessAddress || '',
-    hospitalAddress: '',
-    finessNo: profileData?.finessNumber || '',
-    formsFor: '',
-    fromDateText: '',
-    prescriptionForWeeks: '',
-    renewedTimes: '',
-    gravityDurationWeeks: '',
-    initialSetupPackage: false,
-    weeklyEnteralNutritionPackage: false,
-    weeklyPackageGravity: false,
-    weeklyPackagePump: false,
-    nasogastricTubeLine: false,
-    nasogastricTubeCH: '',
-    nasogastricRate: '',
-    jejunostomyTubeLine: false,
-    jejunostomyTubeCH: '',
-    ivPoleRental: false,
-    equipmentNasogastricCareLine: false,
-    equipmentNasogastricCareEvery: '',
-    equipmentGastrostomyCare: false,
-    unrelatedToALD: false,
-    relatedToALD: false,
-    jejunostomyCareLine: false,
-    jejunostomyCareEveryDays: '',
-    equipmentGastrostomyReplacement: false,
-    gastrostomyButtonSet: false,
+    hospital_name: profileData?.businessAddress || '',
+    hospital_address: '',
+    finess_number: profileData?.finessNumber || '',
+
+    nutrition_duration_weeks: '',
+    feeding_mode: [] as string[], // checkbox array
+
+    initial_setup: false,
+    weekly_package: false,
+    nasogastric_tube_ch: '',
+    nasogastric_rate_per_month: '',
+    jejunostomy_tube_ch: '',
+    iv_pole_rental: false,
+    nasogastric_care_frequency_days: '',
+    gastrostomy_care_equipment: false,
+    jejunostomy_care_frequency_days: '',
+    gastrostomy_replacement_equipment: false,
+    button_extension_set: false,
+
+    non_ald_prescriptions: false,
+    ald_prescriptions: false,
+
+    // Nutrients (repeatable)
     nutrients: [
       {
-        name: '',
-        ml: '',
-        timesPerDay: '',
+        nutrient_name: '',
+        volume_ml: '',
+        times_per_day: '',
       },
       {
-        name: '',
-        ml: '',
-        timesPerDay: '',
+        nutrient_name: '',
+        volume_ml: '',
+        times_per_day: '',
       },
       {
-        name: '',
-        ml: '',
-        timesPerDay: '',
+        nutrient_name: '',
+        volume_ml: '',
+        times_per_day: '',
       },
     ],
-    signature: '',
+
+    physician_signature: '',
   });
 
   const renderSectionHeader = (title: string, icon?: any) => (
@@ -124,27 +141,60 @@ const ArtificialNutritionForm: React.FC = () => {
 
   const checkedBoxesCount = useMemo(() => {
     const boolFields = [
-      state.startTherapy,
-      state.renewalTherapy,
-      state.careRelatedToALD,
-      state.initialSetupPackage,
-      state.weeklyEnteralNutritionPackage,
-      state.weeklyPackageGravity,
-      state.weeklyPackagePump,
-      state.nasogastricTubeLine,
-      state.jejunostomyTubeLine,
-      state.ivPoleRental,
-      state.equipmentNasogastricCareLine,
-      state.equipmentGastrostomyCare,
-      state.unrelatedToALD,
-      state.relatedToALD,
-      state.jejunostomyCareLine,
-      state.equipmentGastrostomyReplacement,
-      state.gastrostomyButtonSet,
+      state.initial_setup,
+      state.weekly_package,
+      state.iv_pole_rental,
+      state.gastrostomy_care_equipment,
+      state.gastrostomy_replacement_equipment,
+      state.button_extension_set,
+      state.non_ald_prescriptions,
+      state.ald_prescriptions,
     ];
 
     return boolFields.filter(Boolean).length;
   }, [state]);
+
+  // Wrapper setter that clears errors immediately on any change
+  const setFormState = (updaterOrPartial: any): void => {
+    if (typeof updaterOrPartial === 'function') {
+      setState(prev => {
+        const next = updaterOrPartial(prev);
+        try {
+          const changedKeys = Object.keys(next).filter(k => (prev as any)[k] !== (next as any)[k]);
+          if (changedKeys.length) {
+            setErrors(prevErrs => {
+              const ne = { ...prevErrs } as any;
+              changedKeys.forEach(k => {
+                if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
+                if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
+                if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
+              });
+              return ne;
+            });
+          }
+        } catch { }
+        return next;
+      });
+    } else {
+      const partial = updaterOrPartial || {};
+      setState(prev => {
+        const next = { ...prev, ...partial } as any;
+        const changedKeys = Object.keys(partial);
+        if (changedKeys.length) {
+          setErrors(prevErrs => {
+            const ne = { ...prevErrs } as any;
+            changedKeys.forEach(k => {
+              if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
+              if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
+              if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
+            });
+            return ne;
+          });
+        }
+        return next;
+      });
+    }
+  };
 
   const updateNutrient = (index: number, field: string, value: any) => {
     setState(prev => ({
@@ -153,7 +203,123 @@ const ArtificialNutritionForm: React.FC = () => {
         i === index ? { ...nutrient, [field]: value } : nutrient,
       ),
     }));
+    // Clear error immediately when user starts typing
+    const errKey = `nutrients[${index}].${field}`;
+    if (errors[errKey]) {
+      setErrors(prev => {
+        const ne = { ...prev } as any;
+        delete ne[errKey];
+        return ne;
+      });
+    }
   };
+
+  // Validation function (aligned with schema required fields)
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    // Required (schema): prescription_date, patient_last_name, patient_first_name
+    if (!state.prescription_date) {
+      newErrors.prescriptionDate = 'Prescription date is required';
+    }
+    if (!state.patient_last_name.trim()) {
+      newErrors.patientLastName = 'Last name is required';
+    }
+    if (!state.patient_first_name.trim()) {
+      newErrors.patientFirstName = 'First name is required';
+    }
+
+    // Nutrients validation - at least 1 nutrient must be filled
+    const filledNutrients = state.nutrients.filter(n => n.nutrient_name.trim().length > 0);
+    if (filledNutrients.length === 0) {
+      newErrors.nutrients = 'At least one nutrient must be filled';
+    }
+
+    // Validate numeric fields for filled nutrients
+    state.nutrients.forEach((nutrient, index) => {
+      if (nutrient.nutrient_name.trim()) {
+        // Only validate numeric fields if nutrient name is filled
+        const numericFields: Array<{ key: keyof typeof nutrient; label: string }> = [
+          { key: 'volume_ml', label: 'Volume (ml)' },
+          { key: 'times_per_day', label: 'Times per Day' },
+        ];
+        numericFields.forEach(f => {
+          const val = (nutrient as any)[f.key];
+          if (val !== '' && val !== undefined && val !== null && isNaN(Number(val))) {
+            newErrors[`nutrients[${index}].${String(f.key)}`] = `${f.label} must be a number`;
+          }
+        });
+      }
+    });
+
+    setErrors(newErrors);
+    lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    validateAndSubmit: async () => {
+      const ok = validateForm();
+      if (!ok) {
+        // Show first error in toast
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage = errors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+
+        const match = firstErrorKey.match(/nutrients\[(\d+)\]/);
+        if (match) {
+          const idx = Number(match[1]);
+          const y = nutrientPositions[idx] ?? 0;
+          setTimeout(() => {
+            scrollRef.current?.scrollTo({ y: Math.max(y - 20, 0), animated: true });
+          }, 50);
+        } else {
+          setTimeout(() => {
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }, 50);
+        }
+        return false;
+      }
+
+      // Call API to create service request
+      try {
+        setIsLoading(true);
+        onLoadingChange?.(true);
+
+        const payload = {
+          serviceId: serviceId || '',
+          patientId: selectedPatient?.id || '',
+          priorityLevel: 'routine' as const,
+          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format('YYYY-MM-DD'),
+          requestedTime: moment().format('HH:mm'),
+          initialNotes: '',
+          formData: state,
+        };
+
+        const response = await serviceRequestApi.createServiceRequest(payload);
+
+        setIsLoading(false);
+        onLoadingChange?.(false);
+
+        if (response.success) {
+          SHOW_SUCCESS_TOAST('Service request created successfully');
+          console.log('Service request created:', response.data);
+          return true;
+        } else {
+          SHOW_TOAST(response.error || 'Failed to create service request', 'error');
+          return false;
+        }
+      } catch (error: any) {
+        setIsLoading(false);
+        onLoadingChange?.(false);
+        SHOW_TOAST(error.message || 'Failed to create service request', 'error');
+        return false;
+      }
+    },
+    getFormData: () => state,
+    getIsLoading: () => isLoading,
+  }));
 
   return (
     <View style={styles.container}>
@@ -173,40 +339,29 @@ const ArtificialNutritionForm: React.FC = () => {
         </View>
 
         {/* PRESCRIPTION DETAILS */}
-        <FormPrescriptionDetails state={state} setState={setState} />
+        <FormPrescriptionDetails
+          state={state}
+          setState={setFormState}
+          errors={errors}
+        />
 
         {/* PATIENT INFORMATION */}
         <FormPatientSection
-          state={{
-            patientLastName: state.patientLastName,
-            patientFirstName: state.patientFirstName,
-            patientDOB: state.patientDOB,
-            patientWeight: state.patientWeight,
-            patientNIR: state.patientNIR,
-            careRelatedToALD: state.careRelatedToALD,
-          }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          state={state}
+          setState={setFormState}
+          errors={errors}
         />
 
         {/* PRESCRIBER IDENTIFICATION */}
         <FormPrescriberSection
-          state={{
-            prescriberLastName: state.prescriberLastName,
-            prescriberFirstName: state.prescriberFirstName,
-            prescriberPhone: state.prescriberPhone,
-            prescriberRPPS: state.prescriberRPPS,
-          }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          state={state}
+          setState={setFormState}
         />
 
         {/* FACILITY INFORMATION */}
         <FormFacilitySection
-          state={{
-            hospitalName: state.hospitalName,
-            hospitalAddress: state.hospitalAddress,
-            finessNo: state.finessNo,
-          }}
-          setState={(updates) => setState(prev => ({ ...prev, ...updates }))}
+          state={state}
+          setState={setFormState}
         />
 
         <View style={styles.card}>
@@ -220,22 +375,23 @@ const ArtificialNutritionForm: React.FC = () => {
           /> */}
           <Input
             onPress={() => {
-              setPickerType({ type: 'fromDateText' });
+              setPickerType({ type: 'from_date' });
               setOpen(true);
             }}
             editable={false}
             label="From"
             placeholder="DD/MM/YYYY"
-            value={state.fromDateText}
+            value={state.from_date}
             style={styles.inputField}
             pointerEvents="none"
+            error={errors.from_date}
           />
           <View style={styles.row}>
             <Input
               label="Prescription for (weeks)"
-              value={state.prescriptionForWeeks}
+              value={state.prescription_duration_weeks}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, prescriptionForWeeks: value }))
+                setFormState({ prescription_duration_weeks: value })
               }
               placeholder="Weeks"
               style={styles.rowInput}
@@ -243,9 +399,9 @@ const ArtificialNutritionForm: React.FC = () => {
             />
             <Input
               label="To be renewed (times)"
-              value={state.renewedTimes}
+              value={state.renewal_times}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, renewedTimes: value }))
+                setFormState({ renewal_times: value })
               }
               placeholder="Times"
               style={styles.rowInput}
@@ -258,9 +414,9 @@ const ArtificialNutritionForm: React.FC = () => {
               nutrition by gravity (package 1), at home, for a duration of
             </AppText>
             <TextInput
-              value={state.gravityDurationWeeks}
+              value={state.nutrition_duration_weeks}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, gravityDurationWeeks: value }))
+                setFormState({ nutrition_duration_weeks: value })
               }
               keyboardType="numeric"
               style={styles.inlineBlankInput}
@@ -271,41 +427,50 @@ const ArtificialNutritionForm: React.FC = () => {
             </AppText>
           </View>
           <AppCheckBox
-            value={state.initialSetupPackage}
+            value={state.initial_setup}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, initialSetupPackage: value }))
+              setFormState({ initial_setup: value })
             }
             label="Initial setup package for enteral nutrition"
           />
           <AppCheckBox
-            value={state.weeklyEnteralNutritionPackage}
+            value={state.weekly_package}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, weeklyEnteralNutritionPackage: value }))
+              setFormState({ weekly_package: value })
             }
             label="Weekly enteral nutrition package by:"
           />
           <View style={styles.indentedCheckboxGroup}>
             <AppCheckBox
-              value={state.weeklyPackageGravity}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, weeklyPackageGravity: value }))
-              }
+              value={state.feeding_mode.includes('gravity')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'gravity']
+                  : state.feeding_mode.filter(m => m !== 'gravity');
+                setFormState({ feeding_mode: modes });
+              }}
               label="Gravity (package 1)"
             />
             <AppCheckBox
-              value={state.weeklyPackagePump}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, weeklyPackagePump: value }))
-              }
+              value={state.feeding_mode.includes('pump')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'pump']
+                  : state.feeding_mode.filter(m => m !== 'pump');
+                setFormState({ feeding_mode: modes });
+              }}
               label="Pump (package 2)"
             />
           </View>
           <View style={styles.pdfRow}>
             <AppCheckBox
-              value={state.nasogastricTubeLine}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, nasogastricTubeLine: value }))
-              }
+              value={state.feeding_mode.includes('nasogastric')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'nasogastric']
+                  : state.feeding_mode.filter(m => m !== 'nasogastric');
+                setFormState({ feeding_mode: modes });
+              }}
               label=""
               containerStyle={styles.inlinePdfCheckbox}
               labelStyle={styles.emptyCheckboxLabel}
@@ -314,9 +479,9 @@ const ArtificialNutritionForm: React.FC = () => {
               Nasogastric tube CH:
             </AppText>
             <TextInput
-              value={state.nasogastricTubeCH}
+              value={state.nasogastric_tube_ch}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, nasogastricTubeCH: value }))
+                setFormState({ nasogastric_tube_ch: value })
               }
               style={styles.pdfInlineInput}
               placeholder=""
@@ -325,9 +490,9 @@ const ArtificialNutritionForm: React.FC = () => {
               to be used at a rate of
             </AppText>
             <TextInput
-              value={state.nasogastricRate}
+              value={state.nasogastric_rate_per_month}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, nasogastricRate: value }))
+                setFormState({ nasogastric_rate_per_month: value })
               }
               keyboardType="numeric"
               style={styles.pdfInlineInput}
@@ -339,10 +504,13 @@ const ArtificialNutritionForm: React.FC = () => {
           </View>
           <View style={styles.pdfRow}>
             <AppCheckBox
-              value={state.jejunostomyTubeLine}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, jejunostomyTubeLine: value }))
-              }
+              value={state.feeding_mode.includes('jejunostomy')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'jejunostomy']
+                  : state.feeding_mode.filter(m => m !== 'jejunostomy');
+                setFormState({ feeding_mode: modes });
+              }}
               label=""
               containerStyle={styles.inlinePdfCheckbox}
               labelStyle={styles.emptyCheckboxLabel}
@@ -351,27 +519,30 @@ const ArtificialNutritionForm: React.FC = () => {
               Jejunostomy or gastrostomy tube CH:
             </AppText>
             <TextInput
-              value={state.jejunostomyTubeCH}
+              value={state.jejunostomy_tube_ch}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, jejunostomyTubeCH: value }))
+                setFormState({ jejunostomy_tube_ch: value })
               }
               style={styles.pdfInlineInput}
               placeholder=""
             />
           </View>
           <AppCheckBox
-            value={state.ivPoleRental}
+            value={state.iv_pole_rental}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, ivPoleRental: value }))
+              setFormState({ iv_pole_rental: value })
             }
             label="Rental of an IV pole"
           />
           <View style={styles.pdfRow}>
             <AppCheckBox
-              value={state.equipmentNasogastricCareLine}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, equipmentNasogastricCareLine: value }))
-              }
+              value={state.feeding_mode.includes('nasogastric_care')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'nasogastric_care']
+                  : state.feeding_mode.filter(m => m !== 'nasogastric_care');
+                setFormState({ feeding_mode: modes });
+              }}
               label=""
               containerStyle={styles.inlinePdfCheckbox}
               labelStyle={styles.emptyCheckboxLabel}
@@ -380,9 +551,9 @@ const ArtificialNutritionForm: React.FC = () => {
               Equipment for adult nasogastric tube care every
             </AppText>
             <TextInput
-              value={state.equipmentNasogastricCareEvery}
+              value={state.nasogastric_care_frequency_days}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, equipmentNasogastricCareEvery: value }))
+                setFormState({ nasogastric_care_frequency_days: value })
               }
               keyboardType="numeric"
               style={styles.pdfInlineInput}
@@ -393,18 +564,21 @@ const ArtificialNutritionForm: React.FC = () => {
             </AppText>
           </View>
           <AppCheckBox
-            value={state.equipmentGastrostomyCare}
+            value={state.gastrostomy_care_equipment}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, equipmentGastrostomyCare: value }))
+              setFormState({ gastrostomy_care_equipment: value })
             }
             label="Equipment for gastrostomy or jejunostomy care"
           />
           <View style={styles.pdfRow}>
             <AppCheckBox
-              value={state.jejunostomyCareLine}
-              onValueChange={(value) =>
-                setState(prev => ({ ...prev, jejunostomyCareLine: value }))
-              }
+              value={state.feeding_mode.includes('jejunostomy_care')}
+              onValueChange={(value) => {
+                const modes = value
+                  ? [...state.feeding_mode, 'jejunostomy_care']
+                  : state.feeding_mode.filter(m => m !== 'jejunostomy_care');
+                setFormState({ feeding_mode: modes });
+              }}
               label=""
               containerStyle={styles.inlinePdfCheckbox}
               labelStyle={styles.emptyCheckboxLabel}
@@ -413,9 +587,9 @@ const ArtificialNutritionForm: React.FC = () => {
               Jejunostomy care every
             </AppText>
             <TextInput
-              value={state.jejunostomyCareEveryDays}
+              value={state.jejunostomy_care_frequency_days}
               onChangeText={(value) =>
-                setState(prev => ({ ...prev, jejunostomyCareEveryDays: value }))
+                setFormState({ jejunostomy_care_frequency_days: value })
               }
               keyboardType="numeric"
               style={styles.pdfInlineInput}
@@ -426,23 +600,23 @@ const ArtificialNutritionForm: React.FC = () => {
             </AppText>
           </View>
           <AppCheckBox
-            value={state.equipmentGastrostomyReplacement}
+            value={state.gastrostomy_replacement_equipment}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, equipmentGastrostomyReplacement: value }))
+              setFormState({ gastrostomy_replacement_equipment: value })
             }
             label="Equipment in case of gastrostomy tube replacement"
           />
           <AppCheckBox
-            value={state.gastrostomyButtonSet}
+            value={state.button_extension_set}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, gastrostomyButtonSet: value }))
+              setFormState({ button_extension_set: value })
             }
             label="One gastrostomy button (statutory set), to be renewed every 7 days"
           />
           <AppCheckBox
-            value={state.unrelatedToALD}
+            value={state.non_ald_prescriptions}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, unrelatedToALD: value }))
+              setFormState({ non_ald_prescriptions: value })
             }
             label="Prescriptions unrelated to the recognized long-term condition"
           />
@@ -459,9 +633,9 @@ const ArtificialNutritionForm: React.FC = () => {
             </AppText>
           </View>
           <AppCheckBox
-            value={state.relatedToALD}
+            value={state.ald_prescriptions}
             onValueChange={(value) =>
-              setState(prev => ({ ...prev, relatedToALD: value }))
+              setFormState({ ald_prescriptions: value })
             }
             label="Prescriptions related to the treatment of the recognized long-term condition"
           />
@@ -485,9 +659,23 @@ const ArtificialNutritionForm: React.FC = () => {
         >
           Nutrients
         </AppText>
+        {errors.nutrients && (
+          <View style={styles.nutrientErrorRow}>
+            <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
+            <AppText
+              size={getScaleSize(12)}
+              color="#ef4444"
+              style={styles.nutrientErrorText}
+            >
+              {errors.nutrients}
+            </AppText>
+          </View>
+        )}
         <View style={styles.card}>
           {state.nutrients.map((nutrient, index) => (
-            <View key={index} style={styles.nutrientBoxRow}>
+            <View key={index} style={styles.nutrientBoxRow} onLayout={(e) => {
+              nutrientPositions[index] = e.nativeEvent.layout.y;
+            }}>
               <AppText
                 size={getScaleSize(13)}
                 color={COLORS._1A1D1F}
@@ -497,33 +685,36 @@ const ArtificialNutritionForm: React.FC = () => {
                 {index + 1}.
               </AppText>
               <Input
-                value={nutrient.name}
-                onChangeText={(value) => updateNutrient(index, 'name', value)}
+                value={nutrient.nutrient_name}
+                onChangeText={(value) => updateNutrient(index, 'nutrient_name', value)}
                 style={styles.nutrientInputRoot}
                 inputWrapperStyle={styles.nutrientNameBox}
                 placeholder="Nutrient name"
                 placeholderTextColor={COLORS._6F767E}
+                error={errors[`nutrients[${index}].nutrient_name`]}
               />
               <View style={styles.nutrientBottomRow}>
                 <Input
-                  value={nutrient.ml}
-                  onChangeText={(value) => updateNutrient(index, 'ml', value)}
+                  value={nutrient.volume_ml}
+                  onChangeText={(value) => updateNutrient(index, 'volume_ml', value)}
                   keyboardType="numeric"
                   style={styles.nutrientSmallInputRoot}
                   inputWrapperStyle={styles.nutrientSmallBox}
                   inputStyle={styles.nutrientSmallText}
                   placeholder="ml"
                   placeholderTextColor={COLORS._6F767E}
+                  error={errors[`nutrients[${index}].volume_ml`]}
                 />
                 <Input
-                  value={nutrient.timesPerDay}
-                  onChangeText={(value) => updateNutrient(index, 'timesPerDay', value)}
+                  value={nutrient.times_per_day}
+                  onChangeText={(value) => updateNutrient(index, 'times_per_day', value)}
                   keyboardType="numeric"
                   style={styles.nutrientSmallInputRoot}
                   inputWrapperStyle={styles.nutrientSmallBox}
                   inputStyle={styles.nutrientSmallText}
                   placeholder="times"
                   placeholderTextColor={COLORS._6F767E}
+                  error={errors[`nutrients[${index}].times_per_day`]}
                 />
                 <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
                   per day
@@ -576,7 +767,9 @@ const ArtificialNutritionForm: React.FC = () => {
       <WarningSheet ref={warningSheetRef} />
     </View>
   );
-};
+});
+
+ArtificialNutritionForm.displayName = 'ArtificialNutritionForm';
 
 const styles = StyleSheet.create({
   container: {
@@ -682,7 +875,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   nutrientSmallInputRoot: {
-    width: getScaleSize(58),
+    flex: 1,
     paddingHorizontal: 0,
   },
   nutrientNameBox: {
@@ -752,6 +945,16 @@ const styles = StyleSheet.create({
     borderColor: COLORS._10B981,
     backgroundColor: COLORS._E6F9F0,
     marginTop: getScaleSize(8),
+  },
+  nutrientErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    marginBottom: getScaleSize(8),
+    marginHorizontal: getScaleSize(16),
+  },
+  nutrientErrorText: {
+    marginBottom: 0,
   },
 });
 

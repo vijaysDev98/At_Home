@@ -112,9 +112,21 @@ export const updatePatient =
           response?.data?.message || 'Patient updated successfully',
           'success',
         );
-        if (response.data.data) {
-          dispatch(updatePatientInList(response.data.data));
+
+        // Fetch latest patient details from API
+        dispatch(setLoading(true));
+        const detailsResponse: any = await getPatientDetailsService(id);
+        dispatch(setLoading(false));
+
+        if (detailsResponse?.status && detailsResponse?.code === 200) {
+          const updatedPatient = detailsResponse.data.data;
+          console.log("Updated patient from API:", updatedPatient);
+
+          // Update both the patients list and selectedPatient with latest data
+          dispatch(updatePatientInList(updatedPatient));
+          dispatch(setSelectedPatient(updatedPatient));
         }
+
         NavigationService.goBack();
       } else if (response?.code === 400 || response?.code === 409) {
         SHOW_TOAST(response?.message || response?.data?.message, 'error');

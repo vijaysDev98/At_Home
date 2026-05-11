@@ -24,23 +24,35 @@ import { SCREENS } from '../../../navigation/routes';
 import { getServicesService } from '../../../services/patientService';
 import { STRING } from '../../../constant';
 
-const getServiceIcon = (name: string) => {
-  const query = name.toLowerCase();
-  if (query.includes('wound')) return IMAGES.bandegeIcon;
-  if (query.includes('iv therapy') || query.includes('antibiotherapy'))
-    return IMAGES.injectionIcon;
-  if (query.includes('oxygen')) return IMAGES.maskIcon;
-  if (query.includes('artificial nutrition')) return IMAGES.testTubeIcon;
-  if (query.includes('hygiene') || query.includes('pregnancy') || query.includes('cno'))
-    return IMAGES.nurseIcon;
-  if (
-    query.includes('pca') ||
-    query.includes('parenteral') ||
-    query.includes('hydration')
-  )
-    return IMAGES.ivfIcon;
-  if (query.includes('cno')) return IMAGES.stethoscopeIcon;
-  return IMAGES.nurseIcon; // Default
+export const getServiceIcon = (id: string) => {
+  switch (id) {
+    case '69ef359fd1c1c4252d4b8d4f':
+      return IMAGES.injectionIcon;
+    case '69ef3557d1c1c4252d4b8d2c':
+      return IMAGES.testTubeIcon
+    case '69ef3589d1c1c4252d4b8d45':
+      return IMAGES.nurseIcon;
+    case '69eb112a056b86c571c1a44f':
+      return IMAGES.nurseIcon;
+    case '69ef3592d1c1c4252d4b8d4a':
+      return IMAGES.nurseIcon;
+    case '69ef353fd1c1c4252d4b8d22':
+      return IMAGES.ivfIcon;
+    case '69ef354cd1c1c4252d4b8d27':
+      return IMAGES.maskIcon;
+    case '69ef356cd1c1c4252d4b8d36':
+      return IMAGES.ivfIcon;
+    case '69ef357cd1c1c4252d4b8d40':
+      return IMAGES.ivfIcon;
+    case '69ef3563d1c1c4252d4b8d31':
+      return IMAGES.nurseIcon;
+    case '69ef3575d1c1c4252d4b8d3b':
+      return IMAGES.nurseIcon;
+    case '69ef3534d1c1c4252d4b8d1d':
+      return IMAGES.bandegeIcon;
+    default:
+      return IMAGES.nurseIcon;
+  }
 };
 
 export type CreateRequestStep2Props = NativeStackScreenProps<
@@ -50,11 +62,12 @@ export type CreateRequestStep2Props = NativeStackScreenProps<
 
 const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   navigation,
+  route,
 }) => {
+  const patientId = route?.params?.patientId;
   const [apiServices, setApiServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<string>('');
-  const canContinue = useMemo(() => !!selected, [selected]);
 
   const fetchServices = async () => {
     try {
@@ -64,7 +77,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
         const list = response.data.data.services || [];
         setApiServices(list);
         if (list.length > 0) {
-          setSelected(list[0].id); // Select first by default
+          setSelected(list[0]); // Select first by default
         }
       }
     } catch (error) {
@@ -150,7 +163,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                     >
                       <View style={styles.cardTopRow}>
                         <Image
-                          source={getServiceIcon(service.serviceName)}
+                          source={getServiceIcon(service.id)}
                           style={{
                             height: getScaleSize(40),
                             width: getScaleSize(40),
@@ -191,10 +204,11 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
           </ScrollView>
           <View style={styles.bottomButtonContainer}>
             <AppButton
-              title={'Continue'}
+              title={STRING.continue}
               onPress={() =>
                 NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {
                   selected,
+                  patientId,
                 })
               }
             />
@@ -208,11 +222,11 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS._F8F9FA,
   },
   header: {
     height: 60,
@@ -223,7 +237,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
@@ -240,7 +254,7 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     fontSize: 18,
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   headerCenter: {
     alignItems: 'center',
@@ -266,11 +280,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#6f767e',
+    color: COLORS._6F767E,
   },
   grid: {
     flexDirection: 'row',
@@ -281,14 +295,14 @@ const styles = StyleSheet.create({
   card: {
     width: '48%',
     height: 164,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: COLORS._EFEFEF,
     paddingTop: getScaleSize(18),
     paddingHorizontal: getScaleSize(16),
     paddingBottom: getScaleSize(7),
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOpacity: 0.02,
     shadowRadius: 4,
     elevation: 1,
@@ -308,12 +322,12 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: COLORS._F1F5F9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconWrapActive: {
-    backgroundColor: '#e3e9ee',
+    backgroundColor: COLORS._E3E9EE,
   },
   iconText: {
     fontSize: 20,
@@ -323,28 +337,28 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#d1d5db',
+    borderColor: COLORS._D1D5DB,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
   },
   checkOuterActive: {
-    borderColor: '#526674',
+    borderColor: COLORS.primary,
   },
   checkInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#526674',
+    backgroundColor: COLORS.primary,
   },
   cardTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   cardDesc: {
     fontSize: 12,
-    color: '#6f767e',
+    color: COLORS._6F767E,
     lineHeight: 16,
   },
   bottomBar: {
@@ -356,30 +370,30 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: '#efefef',
+    borderTopColor: COLORS._EFEFEF,
   },
   backBtn: {
     flex: 1,
     height: 56,
     borderRadius: 14,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS._E5E7EB,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1a1d1f',
+    color: COLORS._1A1D1F,
   },
   nextBtn: {
     flex: 1.3,
     height: 56,
     borderRadius: 14,
-    backgroundColor: '#526674',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -389,7 +403,7 @@ const styles = StyleSheet.create({
   nextText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: COLORS.white,
   },
   crossIcon: {
     width: getScaleSize(15),

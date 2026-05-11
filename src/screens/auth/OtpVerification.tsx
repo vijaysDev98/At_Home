@@ -25,9 +25,6 @@ export type OtpVerificationProps = NativeStackScreenProps<
   'OtpVerification'
 >;
 
-const LOGO_URI =
-  'https://firebasestorage.googleapis.com/v0/b/uxpilot-auth.appspot.com/o/15291b70-179f-4318-ae20-681b9e102f9e.png?alt=media&token=c5602d33-149b-4654-8e4a-4643f8e5d0a6';
-
 const OtpVerification: React.FC<OtpVerificationProps> = ({
   navigation,
   route,
@@ -36,7 +33,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   const isForgotPassword = route.params?.isForgotPassword ?? false;
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading } = useSelector((state: RootState) => state.common);
-  
+
   const [code, setCode] = useState(Array(6).fill(''));
   const [touched, setTouched] = useState(false);
   const [timer, setTimer] = useState(179); // 2:59
@@ -64,16 +61,6 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     if (key === 'Backspace' && !code[idx] && idx > 0) {
       inputsRef.current[idx - 1]?.focus();
     }
-  };
-
-  const handlePaste = (text?: string) => {
-    if (!text) return;
-    const cleaned = text.replace(/\D/g, '').slice(0, 6).split('');
-    const next = Array(6).fill('');
-    cleaned.forEach((char, i) => (next[i] = char));
-    setCode(next);
-    const focusIdx = Math.min(cleaned.length, 5);
-    inputsRef.current[focusIdx]?.focus();
   };
 
   const isComplete = useMemo(() => code.every(c => c.length === 1), [code]);
@@ -150,7 +137,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
           </View>
           {showError ? (
             <Text style={styles.errorText}>
-              Invalid code. Please try again.
+              {STRING.invalidCode}
             </Text>
           ) : null}
         </View>

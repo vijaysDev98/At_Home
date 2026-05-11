@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Image,
   ScrollView,
@@ -15,27 +16,30 @@ import {
   AppText,
   Input,
   RequestSummaryCard,
+  AppLoader,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
-import AntibiotherapyInfusionForm from '../forms/AntibiotherapyInfusionForm';
-import CNOForm from '../forms/CNOForm';
-import EnteralArtificialNutritionForm from '../forms/ArtificialNutritionForm';
-import { STRING } from '../../../constant';
-import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
+import { STRING } from '../../../constant';
+
+
+// Import all form components
+import AntibiotherapyInfusionForm from '../forms/AntibiotherapyInfusionForm';
 import ArtificialNutritionForm from '../forms/ArtificialNutritionForm';
-import GenericForm from '../forms/FreePrescriptionForm';
+import CNOForm from '../forms/CNOForm';
 import FreePrescriptionForm from '../forms/FreePrescriptionForm';
+import GenericForm from '../forms/FreePrescriptionForm';
 import HydrationInfusionForm from '../forms/HydrationInfusion';
 import MedicalOxygen from '../forms/MedicalOxygen';
 import PcaForm from '../forms/PcaForm';
 import PersonalHygieneCare from '../forms/PersonalHygieneCare';
 import PregnancyCareForm from '../forms/PregnancyCareForm';
 import WoundCareForm from '../forms/WoundCareForm';
+import { getServiceIcon } from './createRequestStep2';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -44,50 +48,50 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 
 const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const service = route?.params?.selected || {};
+  const patientId = route?.params?.patientId;
+
   const serviceId = service?.id;
   const serviceName = service?.serviceName;
+  const serviceIcon = getServiceIcon(serviceName);
+
+  // Fetch patient from Redux using patientId
+  const allPatients = useSelector(
+    (state: any) => state.patient.patients,
+  );
   const selectedPatient = useSelector(
     (state: any) => state.patient.selectedPatient,
   );
 
-  const serviceIcon = useMemo(() => {
-    switch (serviceId) {
-      case 'prescription':
-        return IMAGES.ivfIcon;
-      case 'iv':
-        return IMAGES.ivfIcon;
-      case 'oxygen':
-        return IMAGES.maskIcon;
-      case 'pca':
-        return IMAGES.ivfIcon;
-      case 'pregnancy':
-        return IMAGES.nurseIcon;
-      case 'parenteral':
-        return IMAGES.ivfIcon;
-      case 'oral_nutrition':
-        return IMAGES.ivfIcon;
-      case 'nursing':
-        return IMAGES.nurseIcon;
-      case 'physio':
-        return IMAGES.injectionIcon;
-      case 'enteral':
-        return IMAGES.ivfIcon;
-      case 'lab':
-        return IMAGES.testTubeIcon;
-      default:
-        return IMAGES.bandegeIcon;
-    }
-  }, [serviceId]);
+  // Use selectedPatient from Redux, or find from patients list if needed
+  const patient = selectedPatient || allPatients?.find((p: any) => p.id === patientId || p._id === patientId);
 
   const [state, setState] = useState({
     primaryDiagnosis: '',
     secondaryDiagnosis: '',
     currentCondition: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmitRequest = () => {
-    console.log('state', state);
-    NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, { screen: 'Forms' });
+  // Form refs for different service types
+  const formRefs = useRef<{ [key: string]: any }>({});
+
+  const handleSubmitRequest = async () => {
+    const activeFormRef = formRefs.current[serviceId];
+
+    if (activeFormRef && activeFormRef.validateAndSubmit) {
+      const isValid = await activeFormRef.validateAndSubmit();
+
+      if (isValid) {
+        const formData = activeFormRef.getFormData();
+        // Navigate back after successful submission
+        // setTimeout(() => {
+        NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, { screen: 'DoctorRequest' });
+        // }, 1500);
+      }
+    } else {
+      // Fallback for forms that don't support ref forwarding yet
+      console.log('state', state);
+    }
   };
 
   const handleSaveAsDraft = () => {
@@ -96,6 +100,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
 
   return (
     <AppSafeAreaView edges={true}>
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={{ flex: 0.5 }}>
@@ -141,10 +146,12 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               }}
             >
               <RequestSummaryCard
-                patient={selectedPatient}
+                patient={patient}
                 serviceTitle={serviceName}
                 serviceIcon={serviceIcon}
                 showEdit={true}
+                onEditService={() => NavigationService.goBack()}
+                onEditPatient={() => NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })}
               />
             </View>
             <View>
@@ -156,15 +163,33 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               >
                 {/* Dynamic Form Content */}
                 {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
-                  <CNOForm />
+                  <CNOForm
+                    ref={(ref: any) => {
+                      formRefs.current[serviceId] = ref;
+                    }}
+                  />
                 ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
-                  <AntibiotherapyInfusionForm />
+                  <AntibiotherapyInfusionForm
+                    ref={(ref: any) => {
+                      formRefs.current[serviceId] = ref;
+                    }}
+                    serviceId={serviceId}
+                    onLoadingChange={setIsLoading}
+                  />
                 ) : serviceId === '69ef359fd1c1c4252d4b8d4d' ? (
-                  <CNOForm />
-                ) : serviceId === '69ef359fd1c1c4252d4b8d4e' ? (
-                  <ArtificialNutritionForm />
+                  <CNOForm
+                    ref={(ref: any) => {
+                      formRefs.current[serviceId] = ref;
+                    }}
+                  />
                 ) : serviceId === '69ef3557d1c1c4252d4b8d2c' ? (
-                  <EnteralArtificialNutritionForm />
+                  <ArtificialNutritionForm
+                    ref={(ref: any) => {
+                      formRefs.current[serviceId] = ref;
+                    }}
+                    serviceId={serviceId}
+                    onLoadingChange={setIsLoading}
+                  />
                 ) : serviceId === '69eb112a056b86c571c1a44f' ? (
                   <FreePrescriptionForm />
                 ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (

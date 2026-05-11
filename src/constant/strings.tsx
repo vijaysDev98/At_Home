@@ -35,6 +35,36 @@ export const STRING = {
   submitRegistration: 'Submit Registration',
   saveChanges: 'Save Changes',
   cancel: 'Cancel',
+  enterValidEmail: 'Enter a valid email address',
+  passwordRequired: 'Password is required',
+  passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number:
+    'Password must be 8–16 characters with at least 1 uppercase, 1 lowercase, and 1 number',
+  rppsNumberRequired: 'RPPS number is required',
+  rppsNumberMustBe11Digits: 'RPPS number must be exactly 11 digits',
+  finessNumberRequired: 'FINESS number is required',
+  finessNumberMustBe9Digits: 'FINESS number must be exactly 9 digits',
+  pleaseSelectYourSpecialty: 'Please select your specialty',
+  placeOfPracticeRequired: 'Place of practice is required',
+  addressRequired: 'Address is required',
+  youMustAcceptTheTermsToContinue: 'You must accept the terms to continue',
+  failedToUploadProfileImage: 'Failed to upload profile image',
+  updateYourProfessionalDetails: 'Update your professional details',
+  weWillSendVerificationToThisEmail: "We'll send verification to this email",
+  facilityIdentificationNumber: 'Facility identification number',
+  streetAddressCityPostalCode: 'Street address, city, postal code',
+  iAgreeToThe: 'I agree to the',
+  privacyPolicy: 'Privacy Policy',
+  termsOfService: 'Terms of Service',
+  and: 'and',
+  alreadyHaveAnAccount: "Don't have an account?",
+  registrationSuccessful: 'Registration Successful',
+  yourAccountHasBeenCreatedAndIsCurrently: 'Your account has been created and is currently',
+  pendingAdminApproval: 'pending admin approval',
+  weWillNotifyYouViaEmailOnceYourAccountIsActivated: 'We will notify you via email once your account is activated',
+  whatHappensNext: 'What happens next?',
+  yourRegDes: `Your registration will be reviewed by the admin. You will be
+                  notified once your account is approved. You cannot log in until
+                  your account is approved.`,
 
   // ─── Auth: Login ─────────────────────────────────────────────
   welcomeBack: 'Welcome Back',
@@ -46,7 +76,6 @@ export const STRING = {
   logInMessage:
     'Note: You cannot log in until your account is approved by admin.',
   emailRequired: 'Email is required',
-  passwordRequired: 'Password is required',
   invalidEmail: 'Please enter a valid email',
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
@@ -57,6 +86,7 @@ export const STRING = {
   forgetPasswordMessage:
     "Enter your registered email address and we'll send you an OTP to reset your password.",
   backToLogin: 'Back to Login',
+  passwordsDoNotMatch: 'Passwords do not match.',
 
   // ─── Auth: OTP Verification ──────────────────────────────────
   verifyEmail: 'Verify your email',
@@ -64,6 +94,7 @@ export const STRING = {
   codeExpiresIn: 'Code expires in',
   resendCode: 'Resend Code',
   verify: 'Verify',
+  invalidCode: 'Invalid code. Please try again.',
 
   // ─── Auth: Reset Password ────────────────────────────────────
   resetPassword: 'Reset Password',
@@ -108,8 +139,6 @@ export const STRING = {
   professionalDetails: 'Professional Details',
   appVersion: 'App Version',
   appVersionValue: 'v2.4.1 (Build 842)',
-  termsOfService: 'Terms of Service',
-  privacyPolicy: 'Privacy Policy',
   logOut: 'Log Out',
 
   // ─── Add Patient ─────────────────────────────────────────────
@@ -154,6 +183,12 @@ export const STRING = {
   selectService: 'Select Service',
   selectServiceDescription:
     'Choose the primary service required for the patient.',
+  p_id: 'ID: #P-',
+  yo: 'yo',
+  selectPatient: 'Select Patient',
+  searchByNameOrId: 'Search by name or ID...',
+  noPatientsFound: 'No patients found',
+  createNewPatient: 'Create New Patient',
 
   // ─── Validation / Errors ─────────────────────────────────────
   fullNameRequired: 'Full name is required.',
@@ -163,7 +198,6 @@ export const STRING = {
   invalidDateFormat: 'Use YYYY-MM-DD format.',
   specialtyRequired: 'Please select your specialty.',
   practiceTypeRequired: 'Place of practice is required.',
-  addressRequired: 'Business address is required.',
   rppsRequired: 'RPPS number is required.',
   finessRequired: 'FINESS number is required.',
   nameRequired: 'Name is required.',

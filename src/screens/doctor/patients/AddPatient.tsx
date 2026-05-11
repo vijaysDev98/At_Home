@@ -61,7 +61,6 @@ const AppDatePicker = ({
 const AddPatient: React.FC = () => {
   const dispatch = useDispatch<any>();
   const { isLoading } = useSelector((state: RootState) => state.common);
-  const sheetRef = useRef<any>(null);
 
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');

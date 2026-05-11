@@ -25,10 +25,6 @@ export type ForgotPasswordProps = NativeStackScreenProps<
   RootStackParamList,
   'ForgotPassword'
 >;
-
-const LOGO_URI =
-  'https://firebasestorage.googleapis.com/v0/b/uxpilot-auth.appspot.com/o/15291b70-179f-4318-ae20-681b9e102f9e.png?alt=media&token=c5602d33-149b-4654-8e4a-4643f8e5d0a6';
-
 const ForgotPassword: React.FC<ForgotPasswordProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);

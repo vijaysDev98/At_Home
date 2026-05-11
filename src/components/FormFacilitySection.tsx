@@ -37,14 +37,14 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
         label="Hospital name"
         placeholder="Enter hospital name"
         value={state.hospital_name}
-        onChangeText={text => setState({ ...state, hospital_name: text })}
+        onChangeText={text => setState({ hospital_name: text })}
         style={styles.inputField}
       />
       <Input
         label="Address"
         placeholder="Enter address"
         value={state.hospital_address}
-        onChangeText={text => setState({ ...state, hospital_address: text })}
+        onChangeText={text => setState({ hospital_address: text })}
         style={styles.inputField}
       />
       <Input

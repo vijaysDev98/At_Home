@@ -215,38 +215,38 @@ const Register: React.FC = () => {
     }
     if (!isEdit) {
       if (!email.trim()) {
-        newErrors.email = 'Email is required.';
+        newErrors.email = STRING.emailRequired;
       } else if (!EMAIL_REGEX.test(email.trim())) {
-        newErrors.email = 'Enter a valid email address.';
+        newErrors.email = STRING.enterValidEmail;
       }
       if (!password) {
-        newErrors.password = 'Password is required.';
+        newErrors.password = STRING.passwordRequired;
       } else if (!PASSWORD_REGEX.test(password)) {
         newErrors.password =
-          'Password must be 8–16 characters with at least 1 uppercase, 1 lowercase, and 1 number.';
+          STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number;
       }
       if (!rpps.trim()) {
-        newErrors.rpps = 'RPPS number is required.';
+        newErrors.rpps = STRING.rppsNumberRequired;
       } else if (!/^\d{11}$/.test(rpps.trim())) {
-        newErrors.rpps = 'RPPS number must be exactly 11 digits.';
+        newErrors.rpps = STRING.rppsNumberMustBe11Digits;
       }
       if (!finess.trim()) {
-        newErrors.finess = 'FINESS number is required.';
+        newErrors.finess = STRING.finessNumberRequired;
       } else if (!/^\d{9}$/.test(finess.trim())) {
-        newErrors.finess = 'FINESS number must be exactly 9 digits.';
+        newErrors.finess = STRING.finessNumberMustBe9Digits;
       }
     }
     if (!specialty) {
-      newErrors.specialty = 'Please select your specialty.';
+      newErrors.specialty = STRING.pleaseSelectYourSpecialty;
     }
     if (!placeOfPractice.trim()) {
-      newErrors.placeOfPractice = 'Place of practice is required.';
+      newErrors.placeOfPractice = STRING.placeOfPracticeRequired;
     }
     if (!address.trim()) {
-      newErrors.address = 'Business address is required.';
+      newErrors.address = STRING.addressRequired;
     }
     if (!isEdit && !agreed) {
-      newErrors.agreed = 'You must accept the terms to continue.';
+      newErrors.agreed = STRING.youMustAcceptTheTermsToContinue;
     }
 
     setErrors(newErrors);
@@ -285,8 +285,7 @@ const Register: React.FC = () => {
           );
           profileImageUrl = uploadResponse.data.filePath;
         } catch (error) {
-          console.error('Image upload failed:', error);
-          SHOW_TOAST('Failed to upload profile image', 'error');
+          SHOW_TOAST(STRING.failedToUploadProfileImage, 'error');
           return;
         }
       }
@@ -336,11 +335,11 @@ const Register: React.FC = () => {
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.title}>
-                {isEdit ? 'Update Your Profile' : STRING.createYourAccount}
+                {isEdit ? STRING.updateYourProfile : STRING.createYourAccount}
               </Text>
               <Text style={styles.subtitle}>
                 {isEdit
-                  ? 'Update your professional details'
+                  ? STRING.updateYourProfessionalDetails
                   : STRING.createAccountSubtitle}
               </Text>
             </View>
@@ -403,7 +402,7 @@ const Register: React.FC = () => {
                   helper={
                     errors.email
                       ? undefined
-                      : "We'll send verification to this email"
+                      : STRING.weWillSendVerificationToThisEmail
                   }
                   style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
                   helperStyle={{ marginTop: getScaleSize(8) }}
@@ -442,7 +441,7 @@ const Register: React.FC = () => {
                   }}
                   keyboardType="numeric"
                   error={errors.rpps}
-                  helper={errors.rpps ? undefined : 'RPPS number'}
+                  helper={errors.rpps ? undefined : STRING.rppsNumber}
                   style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
                   helperStyle={{ marginTop: getScaleSize(8) }}
                 />
@@ -460,7 +459,7 @@ const Register: React.FC = () => {
                   keyboardType="numeric"
                   error={errors.finess}
                   helper={
-                    errors.finess ? undefined : 'Facility identification number'
+                    errors.finess ? undefined : STRING.facilityIdentificationNumber
                   }
                   style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
                   helperStyle={{ marginTop: getScaleSize(8) }}
@@ -501,7 +500,7 @@ const Register: React.FC = () => {
             <Input
               label={STRING.businessAddress}
               isMandatory
-              placeholder="Street address, city, postal code"
+              placeholder={STRING.streetAddressCityPostalCode}
               leftIcon={IMAGES.location_pin}
               value={address}
               onChangeText={t => {
@@ -517,22 +516,20 @@ const Register: React.FC = () => {
               <>
                 <Checkbox
                   checked={agreed}
-                  onToggle={value => setAgreed(value)}
+                  onToggle={() => setAgreed(!agreed)}
                   label={
                     <Text>
-                      I agree to the{' '}
+                      {STRING.iAgreeToThe}{' '}
                       <Text
                         style={styles.link}
-                        onPress={() => console.log('Privacy Policy')}
                       >
-                        Privacy Policy
+                        {STRING.privacyPolicy}
                       </Text>{' '}
-                      and{' '}
+                      {STRING.and}{' '}
                       <Text
                         style={styles.link}
-                        onPress={() => console.log('Terms of Service')}
                       >
-                        Terms of Service
+                        {STRING.termsOfService}
                       </Text>
                     </Text>
                   }
@@ -564,10 +561,10 @@ const Register: React.FC = () => {
                 activeOpacity={0.7}
                 onPress={() => navigation.goBack()}
               >
-                <Text style={styles.cancelActionText}>Cancel</Text>
+                <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
               </TouchableOpacity>
               <PrimaryButton
-                title="Save Changes"
+                title={STRING.saveChanges}
                 onPress={() => handleSubmit()}
                 disabled={!isFormValid()}
                 style={styles.saveAction}
@@ -587,8 +584,8 @@ const Register: React.FC = () => {
                 onPress={() => NavigationService.navigate('Login')}
               >
                 <Text style={styles.signInText}>
-                  Already have an account?{' '}
-                  <Text style={styles.signInLink}>Sign In</Text>
+                  {STRING.alreadyHaveAnAccount}{' '}
+                  <Text style={styles.signInLink}>{STRING.signIn}</Text>
                 </Text>
               </TouchableOpacity>
             </>
@@ -612,7 +609,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F9FAFB,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(100), // Extra padding for sticky footer
+    paddingBottom: getScaleSize(100),
   },
   topBar: {
     flexDirection: 'row',

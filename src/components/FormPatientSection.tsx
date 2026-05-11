@@ -18,6 +18,7 @@ export interface PatientSectionProps {
   showALD?: boolean;
   showNALD?: boolean;
   showDate?: boolean;
+  errors?: { [key: string]: string };
 }
 
 const FormPatientSection: React.FC<PatientSectionProps> = ({
@@ -27,7 +28,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
   showNIR = true,
   showALD = true,
   showNALD = false,
-  showDate = false
+  showDate = false,
+  errors = {},
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
@@ -53,15 +55,17 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           label="First name"
           placeholder="Enter first name"
           value={state.patient_first_name}
-          onChangeText={text => setState({ ...state, patient_first_name: text })}
+          onChangeText={text => setState({ patient_first_name: text })}
           style={[styles.inputField, { flex: 1 }]}
+          error={errors.patientFirstName}
         />
         <Input
           label="Last name"
           placeholder="Enter last name"
           value={state.patient_last_name}
-          onChangeText={text => setState({ ...state, patient_last_name: text })}
+          onChangeText={text => setState({ patient_last_name: text })}
           style={[styles.inputField, { flex: 1 }]}
+          error={errors.patientLastName}
         />
       </View>
       <View style={styles.row}>
@@ -89,7 +93,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
             label="Weight (kg)"
             placeholder="e.g. 70"
             value={state.weight}
-            onChangeText={text => setState({ ...state, weight: text })}
+            onChangeText={text => setState({ weight: text })}
             style={[styles.inputField, { flex: 1 }]}
             keyboardType="numeric"
           />
@@ -105,7 +109,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           setOpenDob(false);
           setDobDate(d);
           const formattedDate = moment(d).format('DD/MM/YYYY');
-          setState({ ...state, dob: formattedDate });
+          setState({ dob: formattedDate });
         }}
         onCancel={() => setOpenDob(false)}
       />
@@ -115,7 +119,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           label="Social Insurance number (NIR)"
           placeholder="Enter NIR"
           value={state.nir}
-          onChangeText={text => setState({ ...state, nir: text })}
+          onChangeText={text => setState({ nir: text })}
           style={[styles.inputField, { marginBottom: 0 }]}
         />
       )}
@@ -133,7 +137,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
                   ? 'ALD'
                   : 'NOT_ALD'
                 : val;
-            setState({ ...state, ald_condition: newVal });
+            setState({ ald_condition: newVal });
           }}
           label="Care related to a long-term condition (ALD)"
           containerStyle={{ marginTop: getScaleSize(12) }}
@@ -153,7 +157,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
                   ? 'NALD'
                   : 'NOT_NALD'
                 : val;
-            setState({ ...state, careNotRelatedToALD: newVal });
+            setState({ careNotRelatedToALD: newVal });
           }}
           label="Care not related to long-term condition (ALD)"
           containerStyle={{ marginTop: getScaleSize(12) }}
@@ -188,8 +192,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: getScaleSize(12),
-    alignItems: 'center',
-    // marginBottom: getScaleSize(5),
+    alignItems: 'flex-start',
   },
   checkboxItem: {
     flexDirection: 'row',

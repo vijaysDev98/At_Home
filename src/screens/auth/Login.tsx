@@ -146,7 +146,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             label={STRING.password}
             labelRight={
               <TouchableOpacity
-                onPress={() => navigation.navigate('ForgotPassword')}
+                onPress={() => navigation.navigate(SCREENS.FORGOT_PASSWORD)}
                 activeOpacity={0.7}
               >
                 <AppText

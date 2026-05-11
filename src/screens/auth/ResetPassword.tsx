@@ -64,8 +64,6 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
     dispatch(resetPassword({ resetToken, newPassword: password, confirmPassword: confirm }));
   };
 
-  const meterColors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
-
   return (
     <SafeAreaView
       style={styles.safe}
@@ -176,7 +174,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               style={styles.inputField}
               error={
                 !isMatch && confirm.length > 0
-                  ? 'Passwords do not match.'
+                  ? STRING.passwordsDoNotMatch
                   : undefined
               }
             />

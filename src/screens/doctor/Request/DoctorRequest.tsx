@@ -1,15 +1,15 @@
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { AppSafeAreaView, AppText, Header, Input } from '../../../components';
+import { AppSafeAreaView, AppText, Header, Input, AppLoader } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import React, { useCallback, useMemo, useState } from 'react';
-import { serviceRequests } from '../../../utils/dummyData';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
 import RequestCard from '../../../components/RequestCard';
+import { serviceRequestListApi, ServiceRequest, PaginationInfo } from '../../../services/serviceRequestListApi';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -46,6 +46,11 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
 
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const [filter, setFilter] = useState<FilterType>('all');
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   // Filter options
   const filterOptions = useMemo(
@@ -58,22 +63,71 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     [],
   );
 
+  // Fetch service requests
+  const fetchServiceRequests = useCallback(async (page: number = 1) => {
+    setIsLoading(true);
+    try {
+      const response = await serviceRequestListApi.listServiceRequests({
+        page,
+        size: PAGE_SIZE,
+      });
+
+      if (response) {
+        console.log("requests", response.data.requests);
+
+        setRequests(response.data.requests);
+        setPagination(response.data.pagination);
+        setCurrentPage(page);
+      }
+    } catch (error) {
+      console.error('Error fetching service requests:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Load initial data
+  useEffect(() => {
+    fetchServiceRequests(1);
+  }, [fetchServiceRequests]);
+
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
   }, []);
 
-  const renderItem = ({ item }: { item: any }) => {
+  const handleLoadMore = useCallback(() => {
+    if (pagination && pagination.hasNextPage) {
+      fetchServiceRequests(currentPage + 1);
+    }
+  }, [pagination, currentPage, fetchServiceRequests]);
+
+  const renderItem = ({ item }: { item: ServiceRequest }) => {
+    const initials = item.patient.fullName
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+    console.log("item", item);
+
     return (
       <RequestCard
-        name={item.name}
-        initials={item.initials}
-        // service={item.service}
+        name={item.patient.fullName}
+        initials={initials}
         requestId={item.requestId}
-        formStatus={item.formStatus}
+        formStatus={item.service.serviceName}
         status={item.status}
-        buttonText={item.action}
-        onButtonPress={() => NavigationService.navigate(SCREENS.FORMS_SCREEN)}
+        buttonText="View"
+        onButtonPress={() => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })}
       />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!isLoading || requests.length === 0) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <AppLoader visible={true} />
+      </View>
     );
   };
 
@@ -110,22 +164,30 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           color={COLORS._6B7280}
           style={{ marginTop: getScaleSize(16) }}
         >
-          {'24 Forms Found '}
+          {`${pagination?.total || 0} Forms Found `}
         </AppText>
       </View>
 
-      <FlatList
-        data={serviceRequests}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: getScaleSize(16),
-          marginTop: getScaleSize(12),
-          gap: getScaleSize(12),
-          backgroundColor: COLORS._F8F9FA,
-          paddingBottom: getScaleSize(50),
-        }}
-      />
+      {isLoading && requests.length === 0 ? (
+        <AppLoader visible={true} />
+      ) : (
+        <FlatList
+          data={requests}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          contentContainerStyle={{
+            paddingHorizontal: getScaleSize(16),
+            marginTop: getScaleSize(12),
+            gap: getScaleSize(12),
+            backgroundColor: COLORS._F8F9FA,
+            paddingBottom: getScaleSize(50),
+          }}
+        />
+      )}
     </AppSafeAreaView>
   );
 };
@@ -160,5 +222,9 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: COLORS._526674,
     borderColor: COLORS._526674,
+  },
+  footerLoader: {
+    paddingVertical: getScaleSize(16),
+    alignItems: 'center',
   },
 });

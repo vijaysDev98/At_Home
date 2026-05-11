@@ -19,6 +19,7 @@ import { SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import { Assets } from '@react-navigation/elements';
 
 const metrics = [
   {
@@ -69,8 +70,11 @@ const HomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Image
-              source={{ uri: IMAGE_BASE_URL + profileData?.profileImg }}
-              style={styles.avatar}
+              source={
+                profileData?.profileImg
+                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                  : IMAGES.ic_profile
+              } style={styles.avatar}
             />
             <View>
               <AppText
@@ -262,6 +266,7 @@ const HomeScreen: React.FC = () => {
 
             <View style={styles.quickGrid}>
               <TouchableOpacity
+                onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST)}
                 activeOpacity={0.9}
                 style={[styles.quickBtn, styles.quickBtnPrimary]}
               >
@@ -435,7 +440,7 @@ const HomeScreen: React.FC = () => {
 
               <AppButton
                 title={STRING.updateAndSign}
-                onPress={() => {}}
+                onPress={() => { }}
                 style={{ marginTop: getScaleSize(12) }}
               />
             </View>
@@ -485,6 +490,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(48),
     height: getScaleSize(48),
     borderRadius: getScaleSize(24),
+    // resizeMode: 'contain'
   },
   notificationBtn: {
     width: getScaleSize(40),
