@@ -22,7 +22,8 @@ export const STRING = {
   agreeToTerms: 'I agree to the',
   termsAndConditions: 'Terms & Conditions',
   continue: 'Continue',
-  enterFullName: 'Enter full name',
+  enterFName: 'Enter first name',
+  enterLName: 'Enter last name',
   enterEmailAddress: 'Enter email address',
   createPassword: 'Create password',
   enterPassword: 'Enter password',
@@ -194,8 +195,8 @@ export const STRING = {
   createNewPatient: 'Create New Patient',
 
   // ─── Validation / Errors ─────────────────────────────────────
-  fullNameRequired: 'Full name is required.',
-  fullNameMinLength: 'Name must be at least 3 characters.',
+  fNameRequired: 'First name is required.',
+  lNameRequired: 'Last name is required.',
   phoneRequired: 'Phone number is required.',
   invalidEmailAddress: 'Please enter a valid email address.',
   invalidDateFormat: 'Use YYYY-MM-DD format.',

@@ -106,10 +106,10 @@ const AddPatient: React.FC = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!fName.trim()) {
-      newErrors.fName = 'First name is required';
+      newErrors.fName = STRING.fNameRequired;
     }
     if (!lName.trim()) {
-      newErrors.lName = 'Last name is required';
+      newErrors.lName = STRING.lNameRequired;
     }
 
     if (!phone.trim()) {
@@ -209,7 +209,7 @@ const AddPatient: React.FC = () => {
                         setFName(t);
                         setErrors(prev => ({ ...prev, fName: '' }));
                       }}
-                      placeholder={STRING.fName}
+                      placeholder={STRING.enterFName}
                       placeholderTextColor={COLORS._7A7A7A}
                       label={STRING.fName}
                       labelColor={COLORS.black}
@@ -234,7 +234,7 @@ const AddPatient: React.FC = () => {
                         setLName(t);
                         setErrors(prev => ({ ...prev, lName: '' }));
                       }}
-                      placeholder={STRING.lName}
+                      placeholder={STRING.enterLName}
                       placeholderTextColor={COLORS._7A7A7A}
                       label={STRING.lName}
                       labelColor={COLORS.black}

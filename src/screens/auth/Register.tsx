@@ -211,10 +211,10 @@ const Register: React.FC = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!fName.trim()) {
-      newErrors.fName = 'First name is required.';
+      newErrors.fName = STRING.fNameRequired;
     }
     if (!lName.trim()) {
-      newErrors.lName = 'Last name is required.';
+      newErrors.lName = STRING.lNameRequired;
     }
     if (!isEdit) {
       if (!email.trim()) {
@@ -380,7 +380,7 @@ const Register: React.FC = () => {
             <Input
               label={'First Name'}
               isMandatory
-              placeholder={'Enter first name'}
+              placeholder={STRING.enterFName}
               value={fName}
               style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
               onChangeText={t => {
@@ -394,7 +394,7 @@ const Register: React.FC = () => {
               label={'Last Name'}
               isMandatory
               style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
-              placeholder={'Enter last name'}
+              placeholder={STRING.enterLName}
               value={lName}
               onChangeText={t => {
                 setLName(t);

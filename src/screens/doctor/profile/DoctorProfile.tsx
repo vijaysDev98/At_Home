@@ -180,6 +180,16 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
+                label={STRING.lName}
+                style={styles.inputContainer}
+                value={lName}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.ic_profile}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
                 label={STRING.emailAddress}
                 style={styles.inputContainer}
                 isLocked={false}
