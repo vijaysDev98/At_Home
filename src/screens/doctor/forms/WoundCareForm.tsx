@@ -1,925 +1,760 @@
-import React, { useRef, useState } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import {
-  Image,
   ScrollView,
   StyleSheet,
   View,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import {
   AppCheckBox,
   AppText,
-  FormSignature,
-  WarningSheet,
   Input,
+  WarningSheet,
   FormPatientSection,
   FormPrescriberSection,
+  AppLoader,
 } from '../../../components';
 
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
+import FormSignature from '../../../components/FormSignature';
 
 import { RootState } from '../../../redux/store';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import {
+  PatientInfo,
+  ServiceRequestDetail,
+} from '../../../services/serviceRequestListApi';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
-const WoundCareForm: React.FC = () => {
-  const selectedPatient = useSelector(
-    (state: RootState) => state.patient.selectedPatient,
-  );
+export interface WoundCareFormProps {
+  serviceId?: string;
+  initialData?: ServiceRequestDetail | null;
+  patient?: PatientInfo;
+}
 
-  const profileData = useSelector(
-    (state: RootState) => state.profile.profileData,
-  );
+export interface WoundCareFormRef {
+  validateAndSubmit: () => Promise<void>;
+  saveAsDraft: () => Promise<void>;
+  getFormData: () => any;
+}
 
-  const warningSheetRef = useRef<ActionSheetRef>(null);
+const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
+  ({ serviceId, initialData, patient }, ref) => {
+    const dispatch = useDispatch();
 
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
+    const reduxPatient = useSelector(
+      (state: RootState) => state.patient.selectedPatient,
+    );
+    const selectedPatient = initialData ? patient : reduxPatient;
+    const profileData = useSelector(
+      (state: RootState) => state.profile.profileData,
+    );
 
-  const [pickerType, setPickerType] = useState<string | null>(null);
+    const warningSheetRef = useRef<ActionSheetRef>(null);
+    const scrollRef = useRef<ScrollView>(null);
 
-  const [state, setState] = useState({
-    prescriptionDate: moment().format('DD/MM/YYYY'),
+    const [open, setOpen] = useState(false);
+    const [date, setDate] = useState(new Date());
+    const [pickerType, setPickerType] = useState<{
+      type: string;
+    } | null>(null);
 
-    patientLastName: '',
-    patientFirstName: selectedPatient?.fullName || '',
-    patientDOB: selectedPatient?.dateOfBirth
-      ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
-      : '',
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const lastFirstErrorKey = useRef<string | null>(null);
 
-    careRelatedToALD: '',
-    careNotRelatedToALD: '',
+    const [state, setState] = useState({
+      // Physician Information
+      prescriber_last_name: profileData?.lName || '',
+      prescriber_first_name: profileData?.fName || '',
+      rpps_id: profileData?.rppsNumber || '',
+      prescriber_finess: profileData?.finessNumber || '',
 
-    prescriberLastName: '',
-    prescriberFirstName: profileData?.fullName || '',
-    prescriberPhone: profileData?.phoneNumber || '',
-    prescriberRPPS: profileData?.rppsNumber || '',
-    prescriberFINESS: profileData?.finessNumber || '',
+      // Patient Information
+      patient_last_name: selectedPatient?.lName || '',
+      patient_first_name: selectedPatient?.fName || '',
+      dob: selectedPatient?.dateOfBirth
+        ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+        : '',
 
-    woundSize: '',
-    woundType: '',
-    woundCategory: '',
-    otherWound: '',
+      // Condition
+      condition_type: '', // ald_related, ald_not_related
+      date: moment().format('DD/MM/YYYY'), // From schema Condition section
+      prescription_date: moment().format('DD/MM/YYYY'), // Top-level date
 
-    dressingType: '',
-    packing: false,
+      // Type of Wound
+      wound_type: [] as string[],
+      wound_size: '',
 
-    packingGoals: {
-      fillCavity: false,
-      occupyDeadSpace: false,
-      preventClosure: false,
-    },
+      // Desired Dressing Type
+      dressing_type: [] as string[],
 
-    exudate: '',
-    cavity: '',
-    septic: '',
+      // Wound Details
+      exudate: false,
+      cavity: false,
+      septic_wound: false,
 
-    materials: {
-      dressingKitsChecked: false,
-      kitsPerDay: '',
+      // Required Materials and Protocol
+      dressing_kits_per_day: '',
+      bandage_per_day: '',
+      cleaning_with: '',
+      disinfection_with: '',
+      first_layer: '',
+      second_layer: '',
+      treatment_duration: '',
+      until_healed: false,
+      physician_signature: '',
+    });
 
-      retentionBandageChecked: false,
-      bandagePerDay: '',
+    useEffect(() => {
+      if (initialData) {
+        setState(prev => ({
+          ...prev,
+          ...(initialData?.formData as any),
+        }));
+      }
+    }, [initialData]);
 
-      cleaningChecked: false,
-      cleaningWith: '',
-
-      disinfectionChecked: false,
-      disinfectionWith: '',
-
-      firstLayer: '',
-      secondLayer: '',
-    },
-
-    treatmentDuration: '',
-    untilHealed: false,
-  });
-
-  const renderSectionHeader = (
-    title: string,
-    icon?: any,
-  ) => (
-    <View style={styles.sectionHeader}>
-      {icon && (
-        <Image
-          source={icon}
-          style={styles.sectionIcon}
-        />
-      )}
-
-      <AppText
-        size={getScaleSize(15)}
-        font={FONTS.Inter.Bold}
-        color={COLORS._1A1D1F}
-      >
-        {title}
-      </AppText>
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerTextContainer}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            Wound Dressing Prescription Support Form
-          </AppText>
-        </View>
-
-        <FormPrescriptionDetails
-          state={state}
-          setState={setState}
-        />
-
-        <FormPrescriberSection
-          state={state}
-          setState={setState}
-          title={'Physician Information'}
-          showFiness={true}
-        />
-
-        <FormPatientSection
-          state={state}
-          setState={setState}
-          showDate={true}
-          showNALD={true}
-          showWeight={false}
-          showALD={true}
-          showNIR={false}
-        />
-
-        {/* WOUND CHARACTERISTICS */}
-        <View style={styles.card}>
-          {renderSectionHeader(
-            'Type Of Wound',
-          )}
-
-          <Input
-            label="Wound Size"
-            placeholder="e.g. 5x5 cm"
-            value={state.woundSize}
-            onChangeText={value =>
-              setState(prev => ({
-                ...prev,
-                woundSize: value,
-              }))
+    // Wrapper setter that clears errors for changed top-level keys
+    const setFormState = (updaterOrPartial: any) => {
+      if (typeof updaterOrPartial === 'function') {
+        setState(prev => {
+          const next = updaterOrPartial(prev);
+          try {
+            const changedKeys = Object.keys(next).filter(
+              k => (prev as any)[k] !== (next as any)[k],
+            );
+            if (changedKeys.length) {
+              setErrors(prevErrs => {
+                const ne = { ...prevErrs } as any;
+                changedKeys.forEach(k => {
+                  if (k === 'patient_last_name' && ne.patientLastName)
+                    delete ne.patientLastName;
+                  if (k === 'patient_first_name' && ne.patientFirstName)
+                    delete ne.patientFirstName;
+                  if (k === 'prescriber_last_name' && ne.physicianLastName)
+                    delete ne.physicianLastName;
+                  if (k === 'prescriber_first_name' && ne.physicianFirstName)
+                    delete ne.physicianFirstName;
+                  if (k === 'prescription_date' && ne.prescriptionDate)
+                    delete ne.prescriptionDate;
+                });
+                return ne;
+              });
             }
-            style={styles.inputField}
+          } catch {}
+          return next;
+        });
+      } else {
+        const partial = updaterOrPartial || {};
+        setState(prev => {
+          const next = { ...prev, ...partial } as any;
+          const changedKeys = Object.keys(partial);
+          if (changedKeys.length) {
+            setErrors(prevErrs => {
+              const ne = { ...prevErrs } as any;
+              changedKeys.forEach(k => {
+                if (k === 'patient_last_name' && ne.patientLastName)
+                  delete ne.patientLastName;
+                if (k === 'patient_first_name' && ne.patientFirstName)
+                  delete ne.patientFirstName;
+                if (k === 'prescriber_last_name' && ne.physicianLastName)
+                  delete ne.physicianLastName;
+                if (k === 'prescriber_first_name' && ne.physicianFirstName)
+                  delete ne.physicianFirstName;
+                if (k === 'prescription_date' && ne.prescriptionDate)
+                  delete ne.prescriptionDate;
+              });
+              return ne;
+            });
+          }
+          return next;
+        });
+      }
+    };
+
+    const validateForm = (): {
+      ok: boolean;
+      errors: { [key: string]: string };
+    } => {
+      const newErrors: { [key: string]: string } = {};
+
+      // Required: physician info
+      if (!state.prescriber_last_name?.trim()) {
+        newErrors.physicianLastName = 'Physician last name is required';
+      }
+      if (!state.prescriber_first_name?.trim()) {
+        newErrors.physicianFirstName = 'Physician first name is required';
+      }
+
+      // Required: patient info
+      if (!state.patient_last_name?.trim()) {
+        newErrors.patientLastName = 'Patient last name is required';
+      }
+      if (!state.patient_first_name?.trim()) {
+        newErrors.patientFirstName = 'Patient first name is required';
+      }
+
+      // Required: prescription date
+      if (!state.prescription_date) {
+        newErrors.prescription_date = 'Prescription date is required';
+      }
+
+      setErrors(newErrors);
+      lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
+      return { ok: Object.keys(newErrors).length === 0, errors: newErrors };
+    };
+
+    const handleSubmitRequest = async () => {
+      const { ok, errors: currentErrors } = validateForm();
+      if (!ok) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          currentErrors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 50);
+        return;
+      }
+
+      dispatch(setLoading(true));
+
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
+
+      try {
+        if (isExistingDraft && requestId) {
+          const submitResponse = await serviceRequestApi.submitForReview(
+            requestId,
+          );
+          if (submitResponse.success) {
+            SHOW_SUCCESS_TOAST(submitResponse.message);
+            dispatch(setLoading(false));
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              submitResponse.error ||
+                'Failed to submit service request for review',
+              'error',
+            );
+          }
+        } else {
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            priorityLevel: 'routine' as const,
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
+
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
+          dispatch(setLoading(false));
+
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
+
+            const newRequestId = response.data?.data?.id;
+            if (newRequestId) {
+              const submitResponse = await serviceRequestApi.submitForReview(
+                newRequestId,
+              );
+              if (submitResponse.success) {
+                SHOW_SUCCESS_TOAST(submitResponse.message);
+                dispatch(setLoading(false));
+                setTimeout(() => {
+                  NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                    screen: 'DoctorRequest',
+                  });
+                }, 500);
+              } else {
+                dispatch(setLoading(false));
+                SHOW_TOAST(
+                  submitResponse.error ||
+                    'Failed to submit service request for review',
+                  'error',
+                );
+              }
+            } else {
+              dispatch(setLoading(false));
+            }
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              response.error || 'Failed to create service request',
+              'error',
+            );
+          }
+        }
+      } catch (error: any) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      }
+    };
+
+    const handleSaveAsDraft = async () => {
+      const { ok, errors: currentErrors } = validateForm();
+      if (!ok) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          currentErrors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 50);
+        return;
+      }
+
+      dispatch(setLoading(true));
+
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
+
+      try {
+        if (isExistingDraft && requestId) {
+          const response = await serviceRequestApi.updateDraft(requestId, {
+            formData: state,
+          });
+          dispatch(setLoading(false));
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          }
+        } else {
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            priorityLevel: 'routine' as const,
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
+
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
+          dispatch(setLoading(false));
+
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+          }
+        }
+      } catch (error: any) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      validateAndSubmit: async () => {
+        await handleSubmitRequest();
+      },
+      saveAsDraft: async () => {
+        await handleSaveAsDraft();
+      },
+      getFormData: () => {
+        return state;
+      },
+    }));
+
+    const renderSectionHeader = (title: string) => (
+      <View style={styles.sectionHeader}>
+        <AppText
+          size={getScaleSize(15)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+        >
+          {title}
+        </AppText>
+      </View>
+    );
+
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerTextContainer}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Wound Dressing Prescription Support Form
+            </AppText>
+          </View>
+
+          <FormPrescriptionDetails
+            state={state}
+            setState={setFormState}
+            errors={errors}
           />
 
-          <View style={styles.checkboxRow}>
-            <AppCheckBox
-              value={
-                state.woundType ===
-                'Acute'
-              }
-              onValueChange={() =>
-                setState(prev => ({
-                  ...prev,
-                  woundType: 'Acute',
-                }))
-              }
-              label="Acute"
+          <FormPrescriberSection
+            state={state}
+            setState={setFormState}
+            title={'Physician Information'}
+            showFiness={true}
+          />
+
+          <FormPatientSection
+            state={state}
+            setState={setFormState}
+            showDate={true}
+            showNALD={true}
+            showWeight={false}
+            showALD={true}
+            showNIR={false}
+            errors={errors}
+          />
+
+          {/* TYPE OF WOUND */}
+          <View style={styles.card}>
+            {renderSectionHeader('Type Of Wound')}
+
+            <Input
+              label="Wound Size"
+              placeholder="e.g. 5x5 cm"
+              value={state.wound_size}
+              onChangeText={value => setFormState({ wound_size: value })}
+              style={styles.inputField}
             />
 
-            <AppCheckBox
-              value={
-                state.woundType ===
-                'Chronic'
-              }
-              onValueChange={() =>
-                setState(prev => ({
-                  ...prev,
-                  woundType:
-                    'Chronic',
-                }))
-              }
-              label="Chronic"
-            />
-          </View>
-
-          <View style={styles.checkboxGroup}>
-            {[
-              'Ulcer',
-              'Pressure ulcer',
-              'Postoperative wound',
-              'Cavity wound',
-              'Wound with fibrin',
-            ].map(item => (
-              <AppCheckBox
-                key={item}
-                value={
-                  state.woundCategory ===
-                  item
-                }
-                onValueChange={() =>
-                  setState(prev => ({
-                    ...prev,
-                    woundCategory:
-                      item,
-                  }))
-                }
-                label={item}
-              />
-            ))}
-          </View>
-
-          <Input
-            label="Other"
-            placeholder="Specify..."
-            value={state.otherWound}
-            onChangeText={value =>
-              setState(prev => ({
-                ...prev,
-                otherWound: value,
-              }))
-            }
-            style={styles.inputField}
-          />
-        </View>
-
-        {/* DRESSING */}
-        <View style={styles.card}>
-          {renderSectionHeader(
-            'Desired Dressing Type',
-          )}
-
-          <View style={styles.checkboxGroup}>
-            {[
-              'Hyperabsorbent',
-              'Post-op',
-              'Debridement',
-              'Hydrocolloid',
-            ].map(item => (
-              <AppCheckBox
-                key={item}
-                value={
-                  state.dressingType ===
-                  item
-                }
-                onValueChange={() =>
-                  setState(prev => ({
-                    ...prev,
-                    dressingType:
-                      item,
-                  }))
-                }
-                label={item}
-              />
-            ))}
-          </View>
-
-          <AppCheckBox
-            value={state.packing}
-            onValueChange={value =>
-              setState(prev => ({
-                ...prev,
-                packing: value,
-              }))
-            }
-            label="Packing"
-          />
-
-          {state.packing && (
-            <View
-              style={
-                styles.nestedCheckbox
-              }
-            >
-              <AppCheckBox
-                value={
-                  state.packingGoals
-                    .fillCavity
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    packingGoals:
-                    {
-                      ...prev.packingGoals,
-                      fillCavity:
-                        value,
-                    },
-                  }))
-                }
-                label="Fill cavity"
-              />
-
-              <AppCheckBox
-                value={
-                  state.packingGoals
-                    .occupyDeadSpace
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    packingGoals:
-                    {
-                      ...prev.packingGoals,
-                      occupyDeadSpace:
-                        value,
-                    },
-                  }))
-                }
-                label="Occupy dead space"
-              />
-
-              <AppCheckBox
-                value={
-                  state.packingGoals
-                    .preventClosure
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    packingGoals:
-                    {
-                      ...prev.packingGoals,
-                      preventClosure:
-                        value,
-                    },
-                  }))
-                }
-                label="Prevent premature closure"
-              />
-            </View>
-          )}
-        </View>
-
-        {/* WOUND STATUS */}
-        <View style={styles.card}>
-          {renderSectionHeader(
-            'Wound Status',
-          )}
-
-          {[
-            {
-              key: 'exudate',
-              title: 'Exudate',
-            },
-            {
-              key: 'cavity',
-              title: 'Cavity',
-            },
-            {
-              key: 'septic',
-              title: 'Septic wound',
-            },
-          ].map(item => (
-            <View
-              key={item.key}
-              style={
-                styles.statusRow
-              }
-            >
-              <AppText
-                size={getScaleSize(
-                  13,
-                )}
-                font={
-                  FONTS.Inter
-                    .SemiBold
-                }
-              >
-                {item.title}
-              </AppText>
-
-              <View
-                style={
-                  styles.checkboxRow
-                }
-              >
+            <View style={styles.checkboxGroup}>
+              {[
+                'Acute',
+                'Chronic',
+                'Ulcer',
+                'Pressure ulcer',
+                'Postoperative wound',
+                'Cavity wound',
+                'Wound with fibrin',
+                'Other',
+              ].map(item => (
                 <AppCheckBox
-                  value={
-                    (state as any)[
-                    item.key
-                    ] === 'Yes'
-                  }
-                  onValueChange={() =>
-                    setState(
-                      prev => ({
-                        ...prev,
-                        [item.key]:
-                          'Yes',
-                      }),
-                    )
-                  }
-                  label="Yes"
+                  key={item}
+                  value={(state.wound_type || []).includes(item)}
+                  onValueChange={value => {
+                    const current = [...(state.wound_type || [])];
+                    if (value) {
+                      current.push(item);
+                    } else {
+                      const idx = current.indexOf(item);
+                      if (idx > -1) current.splice(idx, 1);
+                    }
+                    setFormState({ wound_type: current });
+                  }}
+                  label={item}
                 />
+              ))}
+            </View>
+          </View>
 
+          {/* DESIRED DRESSING TYPE */}
+          <View style={styles.card}>
+            {renderSectionHeader('Desired Dressing Type')}
+
+            <View style={styles.checkboxGroup}>
+              {[
+                'Hyperabsorbent',
+                'Post-op',
+                'Debridement and healing dressing',
+                'Hydrocolloid',
+                'Packing',
+              ].map(item => (
                 <AppCheckBox
-                  value={
-                    (state as any)[
-                    item.key
-                    ] === 'No'
+                  key={item}
+                  value={(state.dressing_type || []).includes(item)}
+                  onValueChange={value => {
+                    const current = [...(state.dressing_type || [])];
+                    if (value) {
+                      current.push(item);
+                    } else {
+                      const idx = current.indexOf(item);
+                      if (idx > -1) current.splice(idx, 1);
+                    }
+                    setFormState({ dressing_type: current });
+                  }}
+                  label={item}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* WOUND DETAILS */}
+          <View style={styles.card}>
+            {renderSectionHeader('Wound Details')}
+
+            {[
+              { key: 'exudate', title: 'Exudate' },
+              { key: 'cavity', title: 'Cavity' },
+              { key: 'septic_wound', title: 'Septic wound' },
+            ].map(item => (
+              <View key={item.key} style={styles.statusRow}>
+                <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
+                  {item.title}
+                </AppText>
+
+                <View style={styles.checkboxRow}>
+                  <AppCheckBox
+                    value={(state as any)[item.key] === true}
+                    onValueChange={() => setFormState({ [item.key]: true })}
+                    label="Yes"
+                  />
+
+                  <AppCheckBox
+                    value={(state as any)[item.key] === false}
+                    onValueChange={() => setFormState({ [item.key]: false })}
+                    label="No"
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* REQUIRED MATERIALS AND PROTOCOL */}
+          <View style={styles.card}>
+            {renderSectionHeader('Required Materials And Applicable Protocol')}
+
+            <View style={styles.protocolContainer}>
+              <View style={styles.protocolRow}>
+                <AppText size={getScaleSize(13)}>Dressing kits</AppText>
+                <Input
+                  value={state.dressing_kits_per_day}
+                  onChangeText={value =>
+                    setFormState({ dressing_kits_per_day: value })
                   }
-                  onValueChange={() =>
-                    setState(
-                      prev => ({
-                        ...prev,
-                        [item.key]:
-                          'No',
-                      }),
-                    )
+                  style={styles.blankInputSmall}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  keyboardType="numeric"
+                  placeholder="..."
+                />
+                <AppText size={getScaleSize(13)}>per day</AppText>
+              </View>
+
+              <View style={styles.protocolRow}>
+                <AppText size={getScaleSize(13)}>Bandage</AppText>
+                <Input
+                  value={state.bandage_per_day}
+                  onChangeText={value =>
+                    setFormState({ bandage_per_day: value })
                   }
-                  label="No"
+                  style={styles.blankInputSmall}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  keyboardType="numeric"
+                  placeholder="..."
+                />
+                <AppText size={getScaleSize(13)}>per day</AppText>
+              </View>
+
+              <View style={styles.protocolRow}>
+                <AppText size={getScaleSize(13)}>Cleaning with</AppText>
+                <Input
+                  value={state.cleaning_with}
+                  onChangeText={value => setFormState({ cleaning_with: value })}
+                  style={styles.blankInputLarge}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  placeholder="..."
+                />
+              </View>
+
+              <View style={styles.protocolRow}>
+                <AppText size={getScaleSize(13)}>Disinfection with</AppText>
+                <Input
+                  value={state.disinfection_with}
+                  onChangeText={value =>
+                    setFormState({ disinfection_with: value })
+                  }
+                  style={styles.blankInputLarge}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  placeholder="..."
+                />
+              </View>
+
+              <View style={styles.protocolTextRow}>
+                <AppText size={getScaleSize(13)}>1st Layer</AppText>
+                <Input
+                  value={state.first_layer}
+                  onChangeText={value => setFormState({ first_layer: value })}
+                  style={styles.blankInputMedium}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  placeholder="..."
+                />
+              </View>
+
+              <View style={styles.protocolTextRow}>
+                <AppText size={getScaleSize(13)}>2nd Layer</AppText>
+                <Input
+                  value={state.second_layer}
+                  onChangeText={value => setFormState({ second_layer: value })}
+                  style={styles.blankInputMedium}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  placeholder="..."
                 />
               </View>
             </View>
-          ))}
-        </View>
+          </View>
 
-        {/* MATERIALS */}
-        <View style={styles.card}>
-          {renderSectionHeader(
-            'Required Materials And Applicable Protocol',
-          )}
+          {/* CONDITION */}
+          <View style={styles.card}>
+            {renderSectionHeader('Condition')}
 
-          <View
-            style={
-              styles.protocolContainer
-            }
-          >
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  state.materials
-                    .dressingKitsChecked
-                }
+            <View style={styles.checkboxGroup}>
+              <AppCheckBox
+                value={state.condition_type === 'ald_related'}
                 onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      dressingKitsChecked:
-                        value,
-                    },
-                  }))
+                  setFormState({ condition_type: value ? 'ald_related' : '' })
                 }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
+                label="Care related to long-term condition (ALD)"
               />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Dressing kits
-              </AppText>
-
-              <Input
-                value={
-                  state.materials
-                    .kitsPerDay
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      kitsPerDay:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputSmall
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-                keyboardType="numeric"
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                per day
-              </AppText>
-            </View>
-
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  state.materials
-                    .retentionBandageChecked
-                }
+              <AppCheckBox
+                value={state.condition_type === 'ald_not_related'}
                 onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      retentionBandageChecked:
-                        value,
-                    },
-                  }))
+                  setFormState({
+                    condition_type: value ? 'ald_not_related' : '',
+                  })
                 }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Nylex or Velpeau
-                retention bandage
-              </AppText>
-
-              <Input
-                value={
-                  state.materials
-                    .bandagePerDay
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      bandagePerDay:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputSmall
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-                keyboardType="numeric"
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                per day
-              </AppText>
-            </View>
-
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  state.materials
-                    .cleaningChecked
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      cleaningChecked:
-                        value,
-                    },
-                  }))
-                }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Cleaning with
-              </AppText>
-
-              <Input
-                value={
-                  state.materials
-                    .cleaningWith
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      cleaningWith:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputLarge
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
+                label="Not related to long-term condition (ALD)"
               />
             </View>
 
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  state.materials
-                    .disinfectionChecked
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      disinfectionChecked:
-                        value,
-                    },
-                  }))
-                }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
-              />
+            <Input
+              onPress={() => {
+                setPickerType({ type: 'date' });
+                setOpen(true);
+              }}
+              editable={false}
+              label="Date"
+              placeholder="DD/MM/YYYY"
+              value={state.date}
+              style={styles.inputField}
+              pointerEvents="none"
+            />
+          </View>
 
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Disinfection with
-              </AppText>
+          {/* TREATMENT DURATION */}
+          <View style={styles.card}>
+            {renderSectionHeader('Treatment Duration')}
 
-              <Input
-                value={
-                  state.materials
-                    .disinfectionWith
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      disinfectionWith:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputLarge
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-              />
-            </View>
+            <View style={styles.protocolContainer}>
+              <View style={styles.protocolRow}>
+                <AppText size={getScaleSize(13)}>Treatment duration</AppText>
+                <Input
+                  value={state.treatment_duration}
+                  onChangeText={value =>
+                    setFormState({
+                      treatment_duration: value,
+                      until_healed: false,
+                    })
+                  }
+                  style={styles.blankInputMedium}
+                  inputWrapperStyle={styles.blankInputWrapper}
+                  inputStyle={styles.blankInputText}
+                  placeholder="..."
+                />
+              </View>
 
-            <View
-              style={
-                styles.protocolTextRow
-              }
-            >
-              <AppText
-                size={getScaleSize(13)}
-              >
-                1st layer in contact
-                with the wound
-              </AppText>
-
-              <Input
-                value={
-                  state.materials
-                    .firstLayer
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      firstLayer:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputMedium
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-              />
-            </View>
-
-            <View
-              style={
-                styles.protocolTextRow
-              }
-            >
-              <AppText
-                size={getScaleSize(13)}
-              >
-                2nd overlapping
-                layer
-              </AppText>
-
-              <Input
-                value={
-                  state.materials
-                    .secondLayer
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    materials: {
-                      ...prev.materials,
-                      secondLayer:
-                        value,
-                    },
-                  }))
-                }
-                style={
-                  styles.blankInputMedium
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-              />
+              <View style={styles.protocolRow}>
+                <AppCheckBox
+                  value={state.until_healed}
+                  onValueChange={value => setFormState({ until_healed: value })}
+                  label="Until healed"
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* TREATMENT DURATION */}
-        <View style={styles.card}>
-          {renderSectionHeader(
-            'Treatment Duration',
-          )}
-
-          <View
-            style={
-              styles.protocolContainer
+          <FormSignature
+            signature={state.physician_signature}
+            onSignatureChange={val =>
+              setFormState({ physician_signature: val })
             }
-          >
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  !state.untilHealed
-                }
-                onValueChange={() =>
-                  setState(prev => ({
-                    ...prev,
-                    untilHealed: false,
-                  }))
-                }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
-              />
+          />
+        </ScrollView>
 
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Treatment duration
-              </AppText>
+        <DatePicker
+          modal
+          open={open}
+          date={date}
+          mode="date"
+          onConfirm={selectedDate => {
+            setOpen(false);
+            setDate(selectedDate);
 
-              <Input
-                value={
-                  state.treatmentDuration
-                }
-                onChangeText={value =>
-                  setState(prev => ({
-                    ...prev,
-                    treatmentDuration:
-                      value,
-                    untilHealed:
-                      false,
-                  }))
-                }
-                style={
-                  styles.blankInputMedium
-                }
-                inputWrapperStyle={
-                  styles.blankInputWrapper
-                }
-                inputStyle={
-                  styles.blankInputText
-                }
-              />
+            if (pickerType) {
+              const formattedDate = moment(selectedDate).format('DD/MM/YYYY');
+              setFormState({ [pickerType.type]: formattedDate });
+            }
+          }}
+          onCancel={() => {
+            setOpen(false);
+          }}
+        />
 
-              <AppText
-                size={getScaleSize(13)}
-              >
-                or
-              </AppText>
-            </View>
-
-            <View
-              style={styles.protocolRow}
-            >
-              <CheckBox
-                value={
-                  state.untilHealed
-                }
-                onValueChange={value =>
-                  setState(prev => ({
-                    ...prev,
-                    untilHealed:
-                      value,
-                  }))
-                }
-                tintColors={{
-                  true: COLORS.primary,
-                  false:
-                    COLORS._6F767E,
-                }}
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-              >
-                Until healed
-              </AppText>
-            </View>
-          </View>
-        </View>
-
-        <FormSignature />
-      </ScrollView>
-
-      <DatePicker
-        modal
-        open={open}
-        date={date}
-        mode="date"
-        onConfirm={selectedDate => {
-          setOpen(false);
-          setDate(selectedDate);
-
-          const formattedDate =
-            moment(selectedDate).format(
-              'DD/MM/YYYY',
-            );
-
-          if (pickerType) {
-            setState(prev => ({
-              ...prev,
-              [pickerType]:
-                formattedDate,
-            }));
-          }
-        }}
-        onCancel={() => {
-          setOpen(false);
-        }}
-      />
-
-      <WarningSheet
-        ref={warningSheetRef}
-      />
-    </View>
-  );
-};
+        <WarningSheet ref={warningSheetRef} />
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:
-      COLORS._F9FAFB,
+    backgroundColor: COLORS._F9FAFB,
   },
 
   scroll: {
@@ -927,24 +762,19 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom:
-      getScaleSize(190),
+    paddingBottom: getScaleSize(190),
     gap: getScaleSize(12),
-    marginHorizontal:
-      getScaleSize(16),
+    marginHorizontal: getScaleSize(16),
   },
 
   headerTextContainer: {
-    marginBottom:
-      getScaleSize(4),
+    marginBottom: getScaleSize(4),
   },
 
   card: {
-    backgroundColor:
-      COLORS.white,
+    backgroundColor: COLORS.white,
     padding: getScaleSize(17),
-    borderRadius:
-      getScaleSize(16),
+    borderRadius: getScaleSize(16),
     elevation: 4,
   },
 
@@ -952,8 +782,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(12),
-    marginBottom:
-      getScaleSize(16),
+    marginBottom: getScaleSize(16),
   },
 
   sectionIcon: {
@@ -963,8 +792,7 @@ const styles = StyleSheet.create({
   },
 
   inputField: {
-    marginBottom:
-      getScaleSize(12),
+    marginBottom: getScaleSize(12),
     paddingHorizontal: 0,
   },
 
@@ -976,13 +804,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: getScaleSize(16),
     flexWrap: 'wrap',
-    marginBottom:
-      getScaleSize(10),
+    marginBottom: getScaleSize(10),
   },
 
   nestedCheckbox: {
-    marginLeft:
-      getScaleSize(18),
+    marginLeft: getScaleSize(18),
     marginTop: getScaleSize(8),
     gap: getScaleSize(8),
   },
@@ -1016,13 +842,10 @@ const styles = StyleSheet.create({
   blankInputWrapper: {
     borderWidth: 0,
     borderBottomWidth: 1,
-    borderBottomColor:
-      COLORS._BFC8D0,
+    borderBottomColor: COLORS._BFC8D0,
     borderRadius: 0,
-    backgroundColor:
-      'transparent',
-    minHeight:
-      getScaleSize(34),
+    backgroundColor: 'transparent',
+    minHeight: getScaleSize(34),
     paddingHorizontal: 0,
   },
 
@@ -1031,8 +854,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: getScaleSize(13),
     color: COLORS._1A1D1F,
-    fontFamily:
-      FONTS.Inter.Medium,
+    fontFamily: FONTS.Inter.Medium,
   },
 
   blankInputSmall: {

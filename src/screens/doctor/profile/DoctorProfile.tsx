@@ -58,7 +58,8 @@ const DoctorProfile: React.FC = () => {
     navigation.navigate('Register', {
       isEdit: true,
       userData: {
-        fullName: profileData?.fullName,
+        fName: profileData?.fName,
+        lName: profileData?.lName,
         email: profileData?.email,
         rppsNumber: profileData?.rppsNumber,
         finessNumber: profileData?.finessNumber,
@@ -70,7 +71,8 @@ const DoctorProfile: React.FC = () => {
     });
   };
 
-  const fullName = profileData?.fullName || '';
+  const fName = profileData?.fName || '';
+  const lName = profileData?.lName || '';
   const userEmail = profileData?.email;
   const userSpecialty = profileData?.specialty;
   const userRpps = profileData?.rppsNumber;
@@ -129,7 +131,7 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  {fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`}
+                  {fName.startsWith('Dr.') ? fName : `Dr. ${fName} ${lName}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}
@@ -168,9 +170,9 @@ const DoctorProfile: React.FC = () => {
             </AppText>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.fullName}
+                label={STRING.fName}
                 style={styles.inputContainer}
-                value={fullName}
+                value={fName}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.ic_profile}

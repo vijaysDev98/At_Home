@@ -148,11 +148,13 @@ const PatientsScreen: React.FC = () => {
         <View style={styles.cardLeft}>
           <View style={styles.avatarWrapper}>
             <View style={styles.initialsWrap}>
-              <Text style={styles.initials}>{getInitials(item.fullName)}</Text>
+              <Text style={styles.initials}>
+                {getInitials(item.fName + ' ' + item.lName)}
+              </Text>
             </View>
           </View>
           <View>
-            <Text style={styles.name}>{item.fullName}</Text>
+            <Text style={styles.name}>{item.fName + ' ' + item.lName}</Text>
             <View style={styles.phoneRow}>
               <Image source={IMAGES.phone} style={styles.phoneIcon} />
               <Text style={styles.phone}>{item.phoneNumber}</Text>

@@ -97,7 +97,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                {getInitials(patient.fullName)}
+                {getInitials(`${patient.fName} ${patient.lName}`)}
               </AppText>
             </View>
           )}
@@ -108,14 +108,16 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {patient.fullName}
+            {`${patient.fName} ${patient.lName}`}
           </AppText>
           <AppText
             size={getScaleSize(12)}
             font={FONTS.Inter.Regular}
             color={COLORS._6F767E}
           >
-            {STRING.p_id}{patient.id.slice(-4).toUpperCase()} • {patient.age || 0}{STRING.yo}
+            {STRING.p_id}
+            {patient.id.slice(-4).toUpperCase()} • {patient.age || 0}
+            {STRING.yo}
           </AppText>
         </View>
         <View
@@ -187,7 +189,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
       const query = search.toLowerCase();
       result = result.filter(
         p =>
-          p.fullName?.toLowerCase().includes(query) ||
+          `${p.fName} ${p.lName}`?.toLowerCase().includes(query) ||
           p.id?.toLowerCase().includes(query),
       );
     }
@@ -238,7 +240,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     );
     if (patient) {
       dispatch(setSelectedPatient(patient));
-      NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2, { patientId: selectedId });
+      NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2, {
+        patientId: selectedId,
+      });
     }
   }, [selectedId, patients, dispatch]);
 
@@ -334,7 +338,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 ))}
                 {filteredAndSortedPatients.length === 0 && (
                   <View style={styles.emptyContainer}>
-                    <AppText color={COLORS._6F767E}>{STRING.noPatientsFound}</AppText>
+                    <AppText color={COLORS._6F767E}>
+                      {STRING.noPatientsFound}
+                    </AppText>
                   </View>
                 )}
               </View>

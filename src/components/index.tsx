@@ -16,3 +16,4 @@ export type { AppDurationPickerRef } from './AppDurationPicker';
 export { default as AppLoader } from './AppLoader';
 export { default as AppCheckBox } from './AppCheckBox';
 export { default as FormSignature } from './FormSignature';
+export { default as ProfileAvatar } from './ProfileAvatar';

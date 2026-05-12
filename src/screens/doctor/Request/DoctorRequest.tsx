@@ -1,5 +1,11 @@
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { AppSafeAreaView, AppText, Header, Input, AppLoader } from '../../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  Header,
+  Input,
+  AppLoader,
+} from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -9,7 +15,12 @@ import { SCREENS } from '../../../navigation/routes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
 import RequestCard from '../../../components/RequestCard';
-import { serviceRequestListApi, ServiceRequest, PaginationInfo } from '../../../services/serviceRequestListApi';
+import {
+  serviceRequestListApi,
+  ServiceRequest,
+  PaginationInfo,
+} from '../../../services/serviceRequestListApi';
+import { getButtonConfig } from '../../../constant';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -73,9 +84,16 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
       });
 
       if (response) {
-        console.log("requests", response.data.requests);
+        console.log('requests', response.data.requests);
 
-        setRequests(response.data.requests);
+        // For page 1, replace the entire list
+        // For subsequent pages, append to the existing list
+        if (page === 1) {
+          setRequests(response.data.requests);
+        } else {
+          setRequests(prev => [...prev, ...response.data.requests]);
+        }
+
         setPagination(response.data.pagination);
         setCurrentPage(page);
       }
@@ -102,22 +120,33 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   }, [pagination, currentPage, fetchServiceRequests]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    const initials = item.patient.fullName
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-    console.log("item", item);
+    const initials =
+      item.patient.fName +
+      ' ' +
+      item.patient.lName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase();
+
+    // Get button configuration based on form status (default to status if formStatus not available)
+    const formStatus = item.formStatus || item.status;
+    const buttonConfig = getButtonConfig(formStatus);
 
     return (
       <RequestCard
-        name={item.patient.fullName}
+        name={item.patient.fName + ' ' + item.patient.lName}
         initials={initials}
-        requestId={item.requestId}
-        formStatus={item.service.serviceName}
+        requestId={item.id}
+        requestType={item.service.serviceName}
+        formStatus={formStatus}
         status={item.status}
-        buttonText="View"
-        onButtonPress={() => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })}
+        buttonText={
+          buttonConfig.show ? buttonConfig.label || undefined : undefined
+        }
+        onButtonPress={() =>
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })
+        }
       />
     );
   };

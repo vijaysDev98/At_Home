@@ -74,7 +74,8 @@ const HomeScreen: React.FC = () => {
                 profileData?.profileImg
                   ? { uri: IMAGE_BASE_URL + profileData.profileImg }
                   : IMAGES.ic_profile
-              } style={styles.avatar}
+              }
+              style={styles.avatar}
             />
             <View>
               <AppText
@@ -89,7 +90,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
               >
-                Dr. {profileData?.fullName}
+                Dr. {profileData?.fName + ' ' + profileData?.lName}
               </AppText>
             </View>
           </View>
@@ -266,7 +267,9 @@ const HomeScreen: React.FC = () => {
 
             <View style={styles.quickGrid}>
               <TouchableOpacity
-                onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST)}
+                onPress={() =>
+                  NavigationService.navigate(SCREENS.CREATE_REQUEST)
+                }
                 activeOpacity={0.9}
                 style={[styles.quickBtn, styles.quickBtnPrimary]}
               >
@@ -440,7 +443,7 @@ const HomeScreen: React.FC = () => {
 
               <AppButton
                 title={STRING.updateAndSign}
-                onPress={() => { }}
+                onPress={() => {}}
                 style={{ marginTop: getScaleSize(12) }}
               />
             </View>

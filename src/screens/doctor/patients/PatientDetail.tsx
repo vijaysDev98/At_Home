@@ -105,7 +105,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Bold}
                     color={COLORS._526674}
                   >
-                    {getInitials(patient?.fullName)}
+                    {getInitials(patient?.fName + ' ' + patient?.lName)}
                   </AppText>
                 </View>
               </View>
@@ -115,7 +115,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._1A1D1F}
                   font={FONTS.Inter.Bold}
                 >
-                  {patient?.fullName || '---'}
+                  {patient?.fName + ' ' + patient?.lName || '---'}
                 </AppText>
                 <AppText
                   size={getScaleSize(13)}

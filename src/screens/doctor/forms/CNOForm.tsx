@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -25,493 +31,804 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { STRING } from '../../../constant';
 import { IMAGES } from '../../../assets/images';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import {
+  PatientInfo,
+  ServiceRequestDetail,
+} from '../../../services/serviceRequestListApi';
 
 export interface CNOFormProps {
-  onSubmit?: (data: any) => void;
-  serviceId?: string;
+  serviceId: string;
+  initialData?: ServiceRequestDetail | null;
+  patient?: PatientInfo;
 }
 
-const CNOForm = forwardRef<any, CNOFormProps>(({
-  onSubmit,
-  serviceId,
-}, ref) => {
-  const selectedPatient = useSelector(
-    (state: RootState) => state.patient.selectedPatient,
-  );
-  const profileData = useSelector(
-    (state: RootState) => state.profile.profileData,
-  );
+export interface CNOFormRef {
+  validateAndSubmit: () => Promise<void>;
+  saveAsDraft: () => Promise<void>;
+  getFormData: () => any;
+}
 
-  console.log("selectedPatient", selectedPatient);
+const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
+  ({ serviceId, initialData, patient }, ref) => {
+    const dispatch = useDispatch();
 
+    const reduxPatient = useSelector(
+      (state: RootState) => state.patient.selectedPatient,
+    );
+    const selectedPatient = initialData ? patient : reduxPatient;
+    const profileData = useSelector(
+      (state: RootState) => state.profile.profileData,
+    );
 
-  const warningSheetRef = useRef<ActionSheetRef>(null);
-  const scrollRef = useRef<ScrollView>(null);
-  const productPositions = useRef<{ [index: number]: number }>({}).current;
-  const lastFirstErrorKey = useRef<string | null>(null);
+    const warningSheetRef = useRef<ActionSheetRef>(null);
+    const scrollRef = useRef<ScrollView>(null);
+    const productPositions = useRef<{ [index: number]: number }>({}).current;
+    const lastFirstErrorKey = useRef<string | null>(null);
 
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [pickerType, setPickerType] = useState<{
-    type: string;
-    index?: number;
-  } | null>(null);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [open, setOpen] = useState(false);
+    const [date, setDate] = useState(new Date());
+    const [pickerType, setPickerType] = useState<{
+      type: string;
+      index?: number;
+    } | null>(null);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [state, setState] = useState({
-    // Prescription Context
-    prescription_place: '',
-    prescription_date: moment().format('DD/MM/YYYY'),
-    prescription_type: '', // 'outside_ald' or 'ald'
+    const [state, setState] = useState({
+      // Prescription Context
+      prescription_place: '',
+      prescription_date: moment().format('DD/MM/YYYY'),
+      prescription_type: '', // 'outside_ald' or 'ald'
 
-    // Patient
-    patient_last_name: selectedPatient?.lastName || '',
-    patient_first_name: selectedPatient?.fullName || '',
-    dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
-    weight: '',
-    nir: '',
-    ald_condition: false,
+      // Patient
+      patient_last_name: selectedPatient?.lName || '',
+      patient_first_name: selectedPatient?.fName || '',
+      dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
+      weight: '',
+      nir: '',
+      ald_condition: false,
 
-    // Patient Condition
-    patient_age: '',
-    patient_weight_confirm: '',
+      // Patient Condition
+      patient_age: '',
+      patient_weight_confirm: '',
 
-    // Prescriber
-    prescriber_last_name: profileData?.fullName?.split(' ').slice(-1)[0] || '',
-    prescriber_first_name: profileData?.fullName?.split(' ')[0] || '',
-    prescriber_phone: profileData?.phoneNumber || '',
-    rpps_id: profileData?.rppsNumber || '',
+      // Prescriber
+      prescriber_last_name: profileData?.lName || '',
+      prescriber_first_name: profileData?.fName || '',
+      prescriber_phone: profileData?.phoneNumber || '',
+      rpps_id: profileData?.rppsNumber || '',
 
-    // Facility
-    hospital_name: profileData?.businessAddress || '',
-    hospital_address: '',
-    finess_number: profileData?.finessNumber || '',
+      // Facility
+      hospital_name: profileData?.businessAddress || '',
+      hospital_address: '',
+      finess_number: profileData?.finessNumber || '',
 
-    // Nutrition Products (repeatable)
-    nutrition_products: [
-      { category: '', product_type: '', quantity_per_day: '' },
-      { category: '', product_type: '', quantity_per_day: '' },
-      { category: '', product_type: '', quantity_per_day: '' },
-    ],
+      // Nutrition Products (repeatable)
+      nutrition_products: [
+        { category: '', product_type: '', quantity_per_day: '' },
+        { category: '', product_type: '', quantity_per_day: '' },
+        { category: '', product_type: '', quantity_per_day: '' },
+      ],
 
-    // Other Nutrition
-    other_nutrition: '',
+      // Other Nutrition
+      other_nutrition: '',
 
-    // Instructions
-    texture: '',
+      // Instructions
+      texture: '',
 
-    // Reassessment
-    reassessment_after_month: '1',
-    renewal_months: '',
-    reassessment_criteria: [] as string[],
+      // Reassessment
+      reassessment_after_month: '1',
+      renewal_months: '',
+      reassessment_criteria: [] as string[],
 
-    // Signature
-    physician_signature: '',
-  });
+      // Signature
+      physician_signature: '',
+    });
 
-  // Wrapper setter that clears errors immediately on any change
-  const setFormState = (updaterOrPartial: any): void => {
-    if (typeof updaterOrPartial === 'function') {
-      setState(prev => {
-        const next = updaterOrPartial(prev);
-        try {
-          const changedKeys = Object.keys(next).filter(k => (prev as any)[k] !== (next as any)[k]);
+    // Hydrate form state from initialData when editing an existing draft
+    React.useEffect(() => {
+      if (initialData && initialData.formData) {
+        setState(prev => ({
+          ...prev,
+          ...initialData.formData,
+        }));
+      }
+    }, [initialData]);
+
+    // Wrapper setter that clears errors immediately on any change
+    const setFormState = (updaterOrPartial: any): void => {
+      if (typeof updaterOrPartial === 'function') {
+        setState(prev => {
+          const next = updaterOrPartial(prev);
+          try {
+            const changedKeys = Object.keys(next).filter(
+              k => (prev as any)[k] !== (next as any)[k],
+            );
+            if (changedKeys.length) {
+              setErrors(prevErrs => {
+                const ne = { ...prevErrs } as any;
+                changedKeys.forEach(k => {
+                  if (ne[k]) delete ne[k];
+                  // Map snake_case to camelCase for error clearing
+                  if (k === 'patient_first_name' && ne.patientFirstName)
+                    delete ne.patientFirstName;
+                  if (k === 'patient_last_name' && ne.patientLastName)
+                    delete ne.patientLastName;
+                  if (k === 'prescription_date' && ne.prescriptionDate)
+                    delete ne.prescriptionDate;
+                  if (k === 'patient_age' && ne.patient_age)
+                    delete ne.patient_age;
+                  if (
+                    k === 'patient_weight_confirm' &&
+                    ne.patient_weight_confirm
+                  )
+                    delete ne.patient_weight_confirm;
+                  if (
+                    k === 'reassessment_after_month' &&
+                    ne.reassessment_after_month
+                  )
+                    delete ne.reassessment_after_month;
+                  if (k === 'renewal_months' && ne.renewal_months)
+                    delete ne.renewal_months;
+                });
+                return ne;
+              });
+            }
+          } catch {}
+          return next;
+        });
+      } else {
+        const partial = updaterOrPartial || {};
+        setState(prev => {
+          const next = { ...prev, ...partial } as any;
+          const changedKeys = Object.keys(partial);
           if (changedKeys.length) {
             setErrors(prevErrs => {
               const ne = { ...prevErrs } as any;
               changedKeys.forEach(k => {
                 if (ne[k]) delete ne[k];
                 // Map snake_case to camelCase for error clearing
-                if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-                if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-                if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
-                if (k === 'patient_age' && ne.patient_age) delete ne.patient_age;
-                if (k === 'patient_weight_confirm' && ne.patient_weight_confirm) delete ne.patient_weight_confirm;
-                if (k === 'reassessment_after_month' && ne.reassessment_after_month) delete ne.reassessment_after_month;
-                if (k === 'renewal_months' && ne.renewal_months) delete ne.renewal_months;
+                if (k === 'patient_first_name' && ne.patientFirstName)
+                  delete ne.patientFirstName;
+                if (k === 'patient_last_name' && ne.patientLastName)
+                  delete ne.patientLastName;
+                if (k === 'prescription_date' && ne.prescriptionDate)
+                  delete ne.prescriptionDate;
+                if (k === 'patient_age' && ne.patient_age)
+                  delete ne.patient_age;
+                if (k === 'patient_weight_confirm' && ne.patient_weight_confirm)
+                  delete ne.patient_weight_confirm;
+                if (
+                  k === 'reassessment_after_month' &&
+                  ne.reassessment_after_month
+                )
+                  delete ne.reassessment_after_month;
+                if (k === 'renewal_months' && ne.renewal_months)
+                  delete ne.renewal_months;
               });
               return ne;
             });
           }
-        } catch { }
-        return next;
-      });
-    } else {
-      const partial = updaterOrPartial || {};
-      setState(prev => {
-        const next = { ...prev, ...partial } as any;
-        const changedKeys = Object.keys(partial);
-        if (changedKeys.length) {
-          setErrors(prevErrs => {
-            const ne = { ...prevErrs } as any;
-            changedKeys.forEach(k => {
-              if (ne[k]) delete ne[k];
-              // Map snake_case to camelCase for error clearing
-              if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-              if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-              if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
-              if (k === 'patient_age' && ne.patient_age) delete ne.patient_age;
-              if (k === 'patient_weight_confirm' && ne.patient_weight_confirm) delete ne.patient_weight_confirm;
-              if (k === 'reassessment_after_month' && ne.reassessment_after_month) delete ne.reassessment_after_month;
-              if (k === 'renewal_months' && ne.renewal_months) delete ne.renewal_months;
-            });
-            return ne;
-          });
-        }
-        return next;
-      });
-    }
-  };
-
-  const updateProduct = (index: number, field: string, value: any) => {
-    setState(prev => ({
-      ...prev,
-      nutrition_products: prev.nutrition_products.map((product, i) =>
-        i === index ? { ...product, [field]: value } : product,
-      ),
-    }));
-    // Clear error immediately when user starts typing
-    const errKey = `nutrition_products[${index}].${field}`;
-    if (errors[errKey]) {
-      setErrors(prev => {
-        const ne = { ...prev } as any;
-        delete ne[errKey];
-        return ne;
-      });
-    }
-  };
-
-  const checkedBoxesCount = useMemo(() => {
-    return state.reassessment_criteria.length;
-  }, [state]);
-
-  // Validation function (aligned with schema required fields)
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    // Patient Information - Required fields
-    if (!state.patient_last_name.trim()) {
-      newErrors.patientLastName = 'Last name is required';
-    }
-    if (!state.patient_first_name.trim()) {
-      newErrors.patientFirstName = 'First name is required';
-    }
-
-    // Prescription Context - Required fields
-    if (!state.prescription_date) {
-      newErrors.prescriptionDate = 'Prescription date is required';
-    }
-
-    // Nutrition Products validation - at least 1 product must be filled
-    const filledProducts = state.nutrition_products.filter(p => p.product_type.trim().length > 0);
-    if (filledProducts.length === 0) {
-      newErrors.nutrition_products = 'At least one nutrition product must be selected';
-    }
-
-    // Validate numeric fields for filled products
-    state.nutrition_products.forEach((product, index) => {
-      if (product.product_type.trim()) {
-        const val = product.quantity_per_day;
-        if (val !== '' && val !== undefined && val !== null && isNaN(Number(val))) {
-          newErrors[`nutrition_products[${index}].quantity_per_day`] = 'Quantity must be a number';
-        }
+          return next;
+        });
       }
-    });
+    };
 
-    // Patient Condition - Numeric validation
-    if (state.patient_age !== '' && isNaN(Number(state.patient_age))) {
-      newErrors.patient_age = 'Age must be a number';
-    }
-    if (state.patient_weight_confirm !== '' && isNaN(Number(state.patient_weight_confirm))) {
-      newErrors.patient_weight_confirm = 'Weight must be a number';
-    }
+    const updateProduct = (index: number, field: string, value: any) => {
+      setState(prev => ({
+        ...prev,
+        nutrition_products: prev.nutrition_products.map((product, i) =>
+          i === index ? { ...product, [field]: value } : product,
+        ),
+      }));
+      // Clear error immediately when user starts typing
+      const errKey = `nutrition_products[${index}].${field}`;
+      if (errors[errKey]) {
+        setErrors(prev => {
+          const ne = { ...prev } as any;
+          delete ne[errKey];
+          return ne;
+        });
+      }
+    };
 
-    // Reassessment - Numeric validation
-    if (state.reassessment_after_month !== '' && isNaN(Number(state.reassessment_after_month))) {
-      newErrors.reassessment_after_month = 'Must be a number';
-    }
-    if (state.renewal_months !== '' && isNaN(Number(state.renewal_months))) {
-      newErrors.renewal_months = 'Must be a number';
-    }
+    const checkedBoxesCount = useMemo(() => {
+      return state.reassessment_criteria.length;
+    }, [state]);
 
-    setErrors(newErrors);
-    lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
-    return Object.keys(newErrors).length === 0;
-  };
+    // Validation function (aligned with schema required fields)
+    const validateForm = (): boolean => {
+      const newErrors: { [key: string]: string } = {};
 
-  // Expose methods to parent via ref
-  useImperativeHandle(ref, () => ({
-    validateAndSubmit: () => {
+      // Patient Information - Required fields
+      if (!state.patient_last_name.trim()) {
+        newErrors.patientLastName = 'Last name is required';
+      }
+      if (!state.patient_first_name.trim()) {
+        newErrors.patientFirstName = 'First name is required';
+      }
+
+      // Prescription Context - Required fields
+      if (!state.prescription_date) {
+        newErrors.prescriptionDate = 'Prescription date is required';
+      }
+
+      // Nutrition Products validation - at least 1 product must be filled
+      let hasFilledProduct = false;
+      state.nutrition_products.forEach((product, index) => {
+        if (!product.product_type.trim()) {
+          newErrors[`nutrition_products[${index}].product_type`] =
+            'Product type is required';
+        } else {
+          hasFilledProduct = true;
+        }
+      });
+
+      if (!hasFilledProduct) {
+        newErrors.nutrition_products =
+          'At least one nutrition product name is required';
+      }
+
+      // Validate numeric fields for filled products
+      state.nutrition_products.forEach((product, index) => {
+        if (product.product_type.trim()) {
+          const val = product.quantity_per_day;
+          if (
+            val !== '' &&
+            val !== undefined &&
+            val !== null &&
+            isNaN(Number(val))
+          ) {
+            newErrors[`nutrition_products[${index}].quantity_per_day`] =
+              'Quantity must be a number';
+          }
+        }
+      });
+
+      // Patient Condition - Numeric validation
+      if (state.patient_age !== '' && isNaN(Number(state.patient_age))) {
+        newErrors.patient_age = 'Age must be a number';
+      }
+      if (
+        state.patient_weight_confirm !== '' &&
+        isNaN(Number(state.patient_weight_confirm))
+      ) {
+        newErrors.patient_weight_confirm = 'Weight must be a number';
+      }
+
+      // Reassessment - Numeric validation
+      if (
+        state.reassessment_after_month !== '' &&
+        isNaN(Number(state.reassessment_after_month))
+      ) {
+        newErrors.reassessment_after_month = 'Must be a number';
+      }
+      if (state.renewal_months !== '' && isNaN(Number(state.renewal_months))) {
+        newErrors.renewal_months = 'Must be a number';
+      }
+
+      setErrors(newErrors);
+      lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
+      return Object.keys(newErrors).length === 0;
+    };
+
+    // Handle form submission
+    const handleSubmitRequest = async () => {
+      // Always validate first
       const ok = validateForm();
       if (!ok) {
-        Alert.alert('Validation Error', 'Please fill in all required fields');
-        const key = lastFirstErrorKey.current || '';
-        const match = key.match(/nutrition_products\[(\d+)\]/);
+        // Show first error in toast
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+
+        const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
         if (match) {
           const idx = Number(match[1]);
           const y = productPositions[idx] ?? 0;
           setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: Math.max(y - 20, 0), animated: true });
+            scrollRef.current?.scrollTo({
+              y: Math.max(y - 20, 0),
+              animated: true,
+            });
           }, 50);
         } else {
           setTimeout(() => {
             scrollRef.current?.scrollTo({ y: 0, animated: true });
           }, 50);
         }
+        return;
       }
-      return ok;
-    },
-    getFormData: () => state,
-  }));
 
-  const renderSectionHeader = (title: string, icon?: any) => (
-    <View style={styles.sectionHeader}>
-      <AppText
-        size={getScaleSize(15)}
-        font={FONTS.Inter.Bold}
-        color={COLORS._1A1D1F}
-      >
-        {title}
-      </AppText>
-    </View>
-  );
+      // Show loader
+      dispatch(setLoading(true));
 
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerTextContainer}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {STRING.cnoForm}
-          </AppText>
-        </View>
+      // Check if it's an existing draft
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
 
-        {/* PRESCRIPTION DETAILS */}
-        <FormPrescriptionDetails
-          state={state}
-          setState={(updates: any) => {
-            const mapped: any = {};
-            if ('prescriptionDate' in updates) mapped.prescription_date = updates.prescriptionDate;
-            if ('therapyType' in updates) mapped.prescription_type = updates.therapyType;
-            setFormState(mapped);
-          }}
-          errors={errors}
-        />
+      try {
+        if (isExistingDraft && requestId) {
+          const submitResponse = await serviceRequestApi.submitForReview(
+            requestId,
+          );
+          if (submitResponse.success) {
+            SHOW_SUCCESS_TOAST(submitResponse.message);
+            dispatch(setLoading(false));
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              submitResponse.error ||
+                'Failed to submit service request for review',
+              'error',
+            );
+          }
+        } else {
+          // Create new service request
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
 
-        {/* PATIENT INFORMATION */}
-        <FormPatientSection
-          state={state}
-          setState={(updates) => {
-            setFormState(updates);
-          }}
-          errors={errors}
-        />
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
 
-        {/* PRESCRIBER IDENTIFICATION */}
-        <FormPrescriberSection
-          state={state}
-          setState={(updates) => {
-            const mapped: any = {};
-            if ('prescriberLastName' in updates) mapped.prescriber_last_name = updates.prescriberLastName;
-            if ('prescriberFirstName' in updates) mapped.prescriber_first_name = updates.prescriberFirstName;
-            if ('prescriberPhone' in updates) mapped.prescriber_phone = updates.prescriberPhone;
-            if ('prescriberRPPS' in updates) mapped.rpps_id = updates.prescriberRPPS;
-            setFormState(mapped);
-          }}
-        />
+          dispatch(setLoading(false));
 
-        {/* FACILITY INFORMATION */}
-        <FormFacilitySection
-          state={state}
-          setState={(updates) => {
-            const mapped: any = {};
-            if ('hospitalName' in updates) mapped.hospital_name = updates.hospitalName;
-            if ('hospitalAddress' in updates) mapped.hospital_address = updates.hospitalAddress;
-            if ('finessNo' in updates) mapped.finess_number = updates.finessNo;
-            setFormState(mapped);
-          }}
-        />
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
 
-        {/* PATIENT CONDITION */}
-        <View style={styles.card}>
-          {renderSectionHeader('Patient Condition')}
-          <View style={styles.row}>
-            <Input
-              label="Age"
-              value={state.patient_age}
-              onChangeText={(value) => setFormState({ patient_age: value })}
-              placeholder="Years"
-              style={styles.rowInput}
-              keyboardType="numeric"
-            />
-            <Input
-              label="Weight (kg)"
-              value={state.patient_weight_confirm}
-              onChangeText={(value) => setFormState({ patient_weight_confirm: value })}
-              placeholder="kg"
-              style={styles.rowInput}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
+            // Submit for review to lock the request
+            const newRequestId = response.data?.data?.id;
+            if (newRequestId) {
+              const submitResponse = await serviceRequestApi.submitForReview(
+                newRequestId,
+              );
+              if (submitResponse.success) {
+                SHOW_SUCCESS_TOAST(submitResponse.message);
+                dispatch(setLoading(false));
+                setTimeout(() => {
+                  NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                    screen: 'DoctorRequest',
+                  });
+                }, 500);
+              } else {
+                dispatch(setLoading(false));
+                SHOW_TOAST(
+                  submitResponse.error ||
+                    'Failed to submit service request for review',
+                  'error',
+                );
+              }
+            } else {
+              dispatch(setLoading(false));
+            }
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              response.error || 'Failed to create service request',
+              'error',
+            );
+          }
+        }
+      } catch (error: any) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      }
+    };
 
-        {/* NUTRITION PRODUCTS */}
+    // Handle save as draft
+    const handleSaveAsDraft = async () => {
+      // Always validate first
+      const ok = validateForm();
+      if (!ok) {
+        // Show first error in toast
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+
+        const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
+        if (match) {
+          const idx = Number(match[1]);
+          const y = productPositions[idx] ?? 0;
+          setTimeout(() => {
+            scrollRef.current?.scrollTo({
+              y: Math.max(y - 20, 0),
+              animated: true,
+            });
+          }, 50);
+        } else {
+          setTimeout(() => {
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }, 50);
+        }
+        return;
+      }
+
+      // Show loader
+      dispatch(setLoading(true));
+
+      // Check if it's an existing draft
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
+
+      try {
+        if (isExistingDraft && requestId) {
+          // Update existing draft
+          console.log('requestId update', requestId, state);
+
+          const response = await serviceRequestApi.updateDraft(requestId, {
+            formData: state,
+          });
+          dispatch(setLoading(false));
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          }
+        } else {
+          // Create new service request as draft
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
+
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
+          dispatch(setLoading(false));
+
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(
+              response.error || 'Failed to create service request',
+              'error',
+            );
+          }
+        }
+      } catch (error: any) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      }
+    };
+
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+      validateAndSubmit: handleSubmitRequest,
+      saveAsDraft: handleSaveAsDraft,
+      getFormData: () => state,
+    }));
+
+    const renderSectionHeader = (title: string, icon?: any) => (
+      <View style={styles.sectionHeader}>
         <AppText
           size={getScaleSize(15)}
           font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
         >
-          Nutrition Products
+          {title}
         </AppText>
-        {errors.nutrition_products && (
-          <View style={styles.productErrorRow}>
-            <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
+      </View>
+    );
+
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerTextContainer}>
             <AppText
-              size={getScaleSize(12)}
-              color="#ef4444"
-              style={styles.productErrorText}
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
             >
-              {errors.nutrition_products}
+              {STRING.cnoForm}
             </AppText>
           </View>
-        )}
-        <View style={styles.card}>
-          {state.nutrition_products.map((product, index) => (
-            <View key={index} style={styles.productBoxRow} onLayout={(e) => {
-              productPositions[index] = e.nativeEvent.layout.y;
-            }}>
-              <AppText
-                size={getScaleSize(13)}
-                color={COLORS._1A1D1F}
-                font={FONTS.Inter.SemiBold}
-                style={styles.productIndex}
-              >
-                {index + 1}.
-              </AppText>
+
+          {/* PRESCRIPTION DETAILS */}
+          <FormPrescriptionDetails
+            state={{
+              ...state,
+              therapy_type: state.prescription_type,
+            }}
+            setState={(updates: any) => {
+              const mapped: any = { ...updates };
+              if ('therapy_type' in updates) {
+                mapped.prescription_type = updates.therapy_type;
+                delete mapped.therapy_type;
+              }
+              setFormState(mapped);
+            }}
+            errors={errors}
+          />
+
+          {/* PATIENT INFORMATION */}
+          <FormPatientSection
+            state={state}
+            setState={updates => {
+              setFormState(updates);
+            }}
+            errors={errors}
+          />
+
+          {/* PRESCRIBER IDENTIFICATION */}
+          <FormPrescriberSection
+            state={state}
+            setState={updates => {
+              const mapped: any = {};
+              if ('prescriberLastName' in updates)
+                mapped.prescriber_last_name = updates.prescriberLastName;
+              if ('prescriberFirstName' in updates)
+                mapped.prescriber_first_name = updates.prescriberFirstName;
+              if ('prescriberPhone' in updates)
+                mapped.prescriber_phone = updates.prescriberPhone;
+              if ('prescriberRPPS' in updates)
+                mapped.rpps_id = updates.prescriberRPPS;
+              setFormState(mapped);
+            }}
+          />
+
+          {/* FACILITY INFORMATION */}
+          <FormFacilitySection
+            state={state}
+            setState={updates => {
+              const mapped: any = {};
+              if ('hospitalName' in updates)
+                mapped.hospital_name = updates.hospitalName;
+              if ('hospitalAddress' in updates)
+                mapped.hospital_address = updates.hospitalAddress;
+              if ('finessNo' in updates)
+                mapped.finess_number = updates.finessNo;
+              setFormState(mapped);
+            }}
+          />
+
+          {/* PATIENT CONDITION */}
+          <View style={styles.card}>
+            {renderSectionHeader('Patient Condition')}
+            <View style={styles.row}>
               <Input
-                value={product.category}
-                onChangeText={(value) => updateProduct(index, 'category', value)}
-                style={styles.productInputRoot}
-                inputWrapperStyle={styles.productNameBox}
-                placeholder="Category"
-                placeholderTextColor={COLORS._6F767E}
+                label="Age"
+                value={state.patient_age}
+                onChangeText={value => setFormState({ patient_age: value })}
+                placeholder="Years"
+                style={styles.rowInput}
+                keyboardType="numeric"
               />
               <Input
-                value={product.product_type}
-                onChangeText={(value) => updateProduct(index, 'product_type', value)}
-                style={styles.productInputRoot}
-                inputWrapperStyle={styles.productNameBox}
-                placeholder="Product type"
-                placeholderTextColor={COLORS._6F767E}
-                error={errors[`nutrition_products[${index}].product_type`]}
+                label="Weight (kg)"
+                value={state.patient_weight_confirm}
+                onChangeText={value =>
+                  setFormState({ patient_weight_confirm: value })
+                }
+                placeholder="kg"
+                style={styles.rowInput}
+                keyboardType="numeric"
               />
-              <View style={styles.productBottomRow}>
-                <Input
-                  value={product.quantity_per_day}
-                  onChangeText={(value) => updateProduct(index, 'quantity_per_day', value)}
-                  keyboardType="numeric"
-                  style={styles.productSmallInputRoot}
-                  inputWrapperStyle={styles.productSmallBox}
-                  inputStyle={styles.productSmallText}
-                  placeholder="qty"
-                  placeholderTextColor={COLORS._6F767E}
-                  error={errors[`nutrition_products[${index}].quantity_per_day`]}
-                />
-                <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-                  per day
-                </AppText>
-              </View>
             </View>
-          ))}
-        </View>
+          </View>
 
-        {/* OTHER NUTRITION */}
-        <View style={styles.card}>
-          {renderSectionHeader('Other Nutrition')}
-          <Input
-            label="Other Nutrition"
-            value={state.other_nutrition}
-            onChangeText={(value) => setFormState({ other_nutrition: value })}
-            placeholder="Enter other nutrition details"
-            multiline
-            numberOfLines={4}
-            style={styles.inputField}
-          />
-        </View>
-
-        {/* INSTRUCTIONS */}
-        <View style={styles.card}>
-          {renderSectionHeader('Instructions')}
-          <AppText size={getScaleSize(12)} color={COLORS._6F767E} style={{ marginBottom: getScaleSize(12) }}>
-            Consume at least 2 hours before or after meals for 1 month
+          {/* NUTRITION PRODUCTS */}
+          <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
+            Nutrition Products
           </AppText>
-          <Input
-            label="Texture"
-            value={state.texture}
-            onChangeText={(value) => setFormState({ texture: value })}
-            placeholder="Enter texture details"
-            style={styles.inputField}
-          />
-        </View>
+          {errors.nutrition_products && (
+            <View style={styles.productErrorRow}>
+              <Image
+                source={IMAGES.error_icon}
+                style={{ width: 11, height: 11 }}
+              />
+              <AppText
+                size={getScaleSize(12)}
+                color="#ef4444"
+                style={styles.productErrorText}
+              >
+                {errors.nutrition_products}
+              </AppText>
+            </View>
+          )}
+          <View style={styles.card}>
+            {state.nutrition_products.map((product, index) => (
+              <View
+                key={index}
+                style={styles.productBoxRow}
+                onLayout={e => {
+                  productPositions[index] = e.nativeEvent.layout.y;
+                }}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS._1A1D1F}
+                  font={FONTS.Inter.SemiBold}
+                  style={styles.productIndex}
+                >
+                  {index + 1}.
+                </AppText>
+                <Input
+                  value={product.category}
+                  onChangeText={value =>
+                    updateProduct(index, 'category', value)
+                  }
+                  style={styles.productInputRoot}
+                  inputWrapperStyle={styles.productNameBox}
+                  placeholder="Category"
+                  placeholderTextColor={COLORS._6F767E}
+                />
+                <Input
+                  value={product.product_type}
+                  onChangeText={value =>
+                    updateProduct(index, 'product_type', value)
+                  }
+                  style={styles.productInputRoot}
+                  inputWrapperStyle={styles.productNameBox}
+                  placeholder="Product type"
+                  placeholderTextColor={COLORS._6F767E}
+                  error={errors[`nutrition_products[${index}].product_type`]}
+                />
+                <View style={styles.productBottomRow}>
+                  <Input
+                    value={product.quantity_per_day}
+                    onChangeText={value =>
+                      updateProduct(index, 'quantity_per_day', value)
+                    }
+                    keyboardType="numeric"
+                    style={styles.productSmallInputRoot}
+                    inputWrapperStyle={styles.productSmallBox}
+                    inputStyle={styles.productSmallText}
+                    placeholder="qty"
+                    placeholderTextColor={COLORS._6F767E}
+                    error={
+                      errors[`nutrition_products[${index}].quantity_per_day`]
+                    }
+                  />
+                  <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                    per day
+                  </AppText>
+                </View>
+              </View>
+            ))}
+          </View>
 
-        {/* REASSESSMENT */}
-        <View style={styles.card}>
-          {renderSectionHeader('Reassessment')}
-          <View style={styles.row}>
+          {/* OTHER NUTRITION */}
+          <View style={styles.card}>
+            {renderSectionHeader('Other Nutrition')}
             <Input
-              label="Reassessment After (months)"
-              value={state.reassessment_after_month}
-              onChangeText={(value) => setFormState({ reassessment_after_month: value })}
-              placeholder="1"
-              style={styles.rowInput}
-              keyboardType="numeric"
-            />
-            <Input
-              label="Renewal (months)"
-              value={state.renewal_months}
-              onChangeText={(value) => setFormState({ renewal_months: value })}
-              placeholder="Months"
-              style={styles.rowInput}
-              keyboardType="numeric"
+              label="Other Nutrition"
+              value={state.other_nutrition}
+              onChangeText={value => setFormState({ other_nutrition: value })}
+              placeholder="Enter other nutrition details"
+              multiline
+              numberOfLines={4}
+              style={styles.inputField}
             />
           </View>
-          <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold} style={{ marginTop: getScaleSize(12), marginBottom: getScaleSize(8) }}>
-            Reassessment Criteria ({checkedBoxesCount} selected)
-          </AppText>
-          {['Weight', 'Nutritional status', 'Pathology progression', 'Oral intake level', 'ONS tolerance', 'Compliance with ONS'].map((criterion) => (
-            <AppCheckBox
-              key={criterion}
-              value={state.reassessment_criteria.includes(criterion)}
-              onValueChange={(val) => {
-                const updated = val
-                  ? [...state.reassessment_criteria, criterion]
-                  : state.reassessment_criteria.filter(c => c !== criterion);
-                setFormState({ reassessment_criteria: updated });
-              }}
-              label={criterion}
+
+          {/* INSTRUCTIONS */}
+          <View style={styles.card}>
+            {renderSectionHeader('Instructions')}
+            <AppText
+              size={getScaleSize(12)}
+              color={COLORS._6F767E}
+              style={{ marginBottom: getScaleSize(12) }}
+            >
+              Consume at least 2 hours before or after meals for 1 month
+            </AppText>
+            <Input
+              label="Texture"
+              value={state.texture}
+              onChangeText={value => setFormState({ texture: value })}
+              placeholder="Enter texture details"
+              style={styles.inputField}
             />
-          ))}
-        </View>
+          </View>
 
-        {/* SIGNATURE */}
-        <FormSignature title="Physician Signature" showDate={true} />
+          {/* REASSESSMENT */}
+          <View style={styles.card}>
+            {renderSectionHeader('Reassessment')}
+            <View style={styles.row}>
+              <Input
+                label="Reassessment After (months)"
+                value={state.reassessment_after_month}
+                onChangeText={value =>
+                  setFormState({ reassessment_after_month: value })
+                }
+                placeholder="1"
+                style={styles.rowInput}
+                keyboardType="numeric"
+              />
+              <Input
+                label="Renewal (months)"
+                value={state.renewal_months}
+                onChangeText={value => setFormState({ renewal_months: value })}
+                placeholder="Months"
+                style={styles.rowInput}
+                keyboardType="numeric"
+              />
+            </View>
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.SemiBold}
+              style={{
+                marginTop: getScaleSize(12),
+                marginBottom: getScaleSize(8),
+              }}
+            >
+              Reassessment Criteria ({checkedBoxesCount} selected)
+            </AppText>
+            {[
+              'Weight',
+              'Nutritional status',
+              'Pathology progression',
+              'Oral intake level',
+              'ONS tolerance',
+              'Compliance with ONS',
+            ].map(criterion => (
+              <AppCheckBox
+                key={criterion}
+                value={state.reassessment_criteria.includes(criterion)}
+                onValueChange={val => {
+                  const updated = val
+                    ? [...state.reassessment_criteria, criterion]
+                    : state.reassessment_criteria.filter(c => c !== criterion);
+                  setFormState({ reassessment_criteria: updated });
+                }}
+                label={criterion}
+              />
+            ))}
+          </View>
 
-        <WarningSheet ref={warningSheetRef} />
-      </ScrollView>
-    </View>
-  );
-});
+          {/* SIGNATURE */}
+          <FormSignature title="Physician Signature" showDate={true} />
+
+          <WarningSheet ref={warningSheetRef} />
+        </ScrollView>
+      </View>
+    );
+  },
+);
 
 CNOForm.displayName = 'CNOForm';
 

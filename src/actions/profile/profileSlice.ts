@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 interface ProfileData {
   id: string;
-  fullName: string;
+  fName: string;
+  lName: string;
   email: string;
   username?: string;
   profileImg?: string;

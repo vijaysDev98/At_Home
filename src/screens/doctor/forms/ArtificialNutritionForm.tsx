@@ -1,4 +1,11 @@
-import React, { useMemo, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,6 +13,7 @@ import {
   View,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
@@ -24,750 +32,914 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { STRING, SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
 import { IMAGES } from '../../../assets/images';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { setLoading } from '../../../actions/common/commonSlice';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import {
+  PatientInfo,
+  ServiceRequestDetail,
+} from '../../../services/serviceRequestListApi';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 export interface ArtificialNutritionFormProps {
   serviceId: string;
+  initialData?: ServiceRequestDetail | null;
+  patient?: PatientInfo;
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(({
-  serviceId,
-  onLoadingChange,
-}, ref) => {
-  const selectedPatient = useSelector(
-    (state: RootState) => state.patient.selectedPatient,
-  );
-  const profileData = useSelector(
-    (state: RootState) => state.profile.profileData,
-  );
+const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
+  ({ serviceId, initialData, patient, onLoadingChange }, ref) => {
+    const dispatch = useDispatch();
+    const reduxPatient = useSelector(
+      (state: RootState) => state.patient.selectedPatient,
+    );
+    const selectedPatient = initialData ? patient : reduxPatient;
+    const profileData = useSelector(
+      (state: RootState) => state.profile.profileData,
+    );
 
-  const warningSheetRef = useRef<ActionSheetRef>(null);
-  const scrollRef = useRef<ScrollView>(null);
-  const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
-  const lastFirstErrorKey = useRef<string | null>(null);
+    const warningSheetRef = useRef<ActionSheetRef>(null);
+    const scrollRef = useRef<ScrollView>(null);
+    const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
+    const lastFirstErrorKey = useRef<string | null>(null);
 
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [pickerType, setPickerType] = useState<{
-    type: string;
-    index?: number;
-  } | null>(null);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [date, setDate] = useState(new Date());
+    const [pickerType, setPickerType] = useState<{
+      type: string;
+      index?: number;
+    } | null>(null);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [state, setState] = useState({
-    prescription_date: moment().format('DD/MM/YYYY'),
-    therapy_type: '',
-    from_date: '',
-    prescription_duration_weeks: '',
-    renewal_times: '',
+    const [state, setState] = useState({
+      prescription_date: moment().format('DD/MM/YYYY'),
+      therapy_type: '',
+      from_date: '',
+      prescription_duration_weeks: '',
+      renewal_times: '',
 
-    patient_last_name: '',
-    patient_first_name: selectedPatient?.fullName || '',
-    dob: selectedPatient?.dateOfBirth
-      ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
-      : '',
-    weight: '',
-    nir: '',
-    ald_condition: false,
+      patient_last_name: selectedPatient?.lName || '',
+      patient_first_name: selectedPatient?.fName || '',
+      dob: selectedPatient?.dateOfBirth
+        ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+        : '',
+      weight: '',
+      nir: '',
+      ald_condition: false,
 
-    prescriber_last_name: profileData?.fullName?.split(' ').slice(-1)[0] || '',
-    prescriber_first_name: profileData?.fullName?.split(' ')[0] || '',
-    prescriber_phone: profileData?.phoneNumber || '',
-    rpps_id: profileData?.rppsNumber || '',
+      prescriber_last_name: profileData?.lName || '',
+      prescriber_first_name: profileData?.fName || '',
+      prescriber_phone: profileData?.phoneNumber || '',
+      rpps_id: profileData?.rppsNumber || '',
 
-    hospital_name: profileData?.businessAddress || '',
-    hospital_address: '',
-    finess_number: profileData?.finessNumber || '',
+      hospital_name: profileData?.businessAddress || '',
+      hospital_address: '',
+      finess_number: profileData?.finessNumber || '',
 
-    nutrition_duration_weeks: '',
-    feeding_mode: [] as string[], // checkbox array
+      nutrition_duration_weeks: '',
+      feeding_mode: [] as string[], // checkbox array
 
-    initial_setup: false,
-    weekly_package: false,
-    nasogastric_tube_ch: '',
-    nasogastric_rate_per_month: '',
-    jejunostomy_tube_ch: '',
-    iv_pole_rental: false,
-    nasogastric_care_frequency_days: '',
-    gastrostomy_care_equipment: false,
-    jejunostomy_care_frequency_days: '',
-    gastrostomy_replacement_equipment: false,
-    button_extension_set: false,
+      initial_setup: false,
+      weekly_package: false,
+      nasogastric_tube_ch: '',
+      nasogastric_rate_per_month: '',
+      jejunostomy_tube_ch: '',
+      iv_pole_rental: false,
+      nasogastric_care_frequency_days: '',
+      gastrostomy_care_equipment: false,
+      jejunostomy_care_frequency_days: '',
+      gastrostomy_replacement_equipment: false,
+      button_extension_set: false,
 
-    non_ald_prescriptions: false,
-    ald_prescriptions: false,
+      non_ald_prescriptions: false,
+      ald_prescriptions: false,
 
-    // Nutrients (repeatable)
-    nutrients: [
-      {
-        nutrient_name: '',
-        volume_ml: '',
-        times_per_day: '',
-      },
-      {
-        nutrient_name: '',
-        volume_ml: '',
-        times_per_day: '',
-      },
-      {
-        nutrient_name: '',
-        volume_ml: '',
-        times_per_day: '',
-      },
-    ],
+      // Nutrients (repeatable)
+      nutrients: [
+        {
+          nutrient_name: '',
+          volume_ml: '',
+          times_per_day: '',
+        },
+        {
+          nutrient_name: '',
+          volume_ml: '',
+          times_per_day: '',
+        },
+        {
+          nutrient_name: '',
+          volume_ml: '',
+          times_per_day: '',
+        },
+      ],
 
-    physician_signature: '',
-  });
+      physician_signature: '',
+    });
 
-  const renderSectionHeader = (title: string, icon?: any) => (
-    <View style={styles.sectionHeader}>
-      {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
-      <AppText
-        size={getScaleSize(15)}
-        font={FONTS.Inter.Bold}
-        color={COLORS._1A1D1F}
-      >
-        {title}
-      </AppText>
-    </View>
-  );
+    // Load initial data if editing an existing draft
+    useEffect(() => {
+      if (initialData?.formData) {
+        setState(initialData.formData);
+      }
+    }, [initialData]);
 
-  const checkedBoxesCount = useMemo(() => {
-    const boolFields = [
-      state.initial_setup,
-      state.weekly_package,
-      state.iv_pole_rental,
-      state.gastrostomy_care_equipment,
-      state.gastrostomy_replacement_equipment,
-      state.button_extension_set,
-      state.non_ald_prescriptions,
-      state.ald_prescriptions,
-    ];
+    const renderSectionHeader = (title: string, icon?: any) => (
+      <View style={styles.sectionHeader}>
+        {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
+        <AppText
+          size={getScaleSize(15)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+        >
+          {title}
+        </AppText>
+      </View>
+    );
 
-    return boolFields.filter(Boolean).length;
-  }, [state]);
+    const checkedBoxesCount = useMemo(() => {
+      const boolFields = [
+        state.initial_setup,
+        state.weekly_package,
+        state.iv_pole_rental,
+        state.gastrostomy_care_equipment,
+        state.gastrostomy_replacement_equipment,
+        state.button_extension_set,
+        state.non_ald_prescriptions,
+        state.ald_prescriptions,
+      ];
 
-  // Wrapper setter that clears errors immediately on any change
-  const setFormState = (updaterOrPartial: any): void => {
-    if (typeof updaterOrPartial === 'function') {
-      setState(prev => {
-        const next = updaterOrPartial(prev);
-        try {
-          const changedKeys = Object.keys(next).filter(k => (prev as any)[k] !== (next as any)[k]);
+      return boolFields.filter(Boolean).length;
+    }, [state]);
+
+    // Wrapper setter that clears errors immediately on any change
+    const setFormState = (updaterOrPartial: any): void => {
+      if (typeof updaterOrPartial === 'function') {
+        setState(prev => {
+          const next = updaterOrPartial(prev);
+          try {
+            const changedKeys = Object.keys(next).filter(
+              k => (prev as any)[k] !== (next as any)[k],
+            );
+            if (changedKeys.length) {
+              setErrors(prevErrs => {
+                const ne = { ...prevErrs } as any;
+                changedKeys.forEach(k => {
+                  if (k === 'patient_first_name' && ne.patientFirstName)
+                    delete ne.patientFirstName;
+                  if (k === 'patient_last_name' && ne.patientLastName)
+                    delete ne.patientLastName;
+                  if (k === 'prescription_date' && ne.prescriptionDate)
+                    delete ne.prescriptionDate;
+                });
+                return ne;
+              });
+            }
+          } catch {}
+          return next;
+        });
+      } else {
+        const partial = updaterOrPartial || {};
+        setState(prev => {
+          const next = { ...prev, ...partial } as any;
+          const changedKeys = Object.keys(partial);
           if (changedKeys.length) {
             setErrors(prevErrs => {
               const ne = { ...prevErrs } as any;
               changedKeys.forEach(k => {
-                if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-                if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-                if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
+                if (k === 'patient_first_name' && ne.patientFirstName)
+                  delete ne.patientFirstName;
+                if (k === 'patient_last_name' && ne.patientLastName)
+                  delete ne.patientLastName;
+                if (k === 'prescription_date' && ne.prescriptionDate)
+                  delete ne.prescriptionDate;
               });
               return ne;
             });
           }
-        } catch { }
-        return next;
-      });
-    } else {
-      const partial = updaterOrPartial || {};
-      setState(prev => {
-        const next = { ...prev, ...partial } as any;
-        const changedKeys = Object.keys(partial);
-        if (changedKeys.length) {
-          setErrors(prevErrs => {
-            const ne = { ...prevErrs } as any;
-            changedKeys.forEach(k => {
-              if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-              if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-              if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
-            });
-            return ne;
-          });
-        }
-        return next;
-      });
-    }
-  };
-
-  const updateNutrient = (index: number, field: string, value: any) => {
-    setState(prev => ({
-      ...prev,
-      nutrients: prev.nutrients.map((nutrient, i) =>
-        i === index ? { ...nutrient, [field]: value } : nutrient,
-      ),
-    }));
-    // Clear error immediately when user starts typing
-    const errKey = `nutrients[${index}].${field}`;
-    if (errors[errKey]) {
-      setErrors(prev => {
-        const ne = { ...prev } as any;
-        delete ne[errKey];
-        return ne;
-      });
-    }
-  };
-
-  // Validation function (aligned with schema required fields)
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    // Required (schema): prescription_date, patient_last_name, patient_first_name
-    if (!state.prescription_date) {
-      newErrors.prescriptionDate = 'Prescription date is required';
-    }
-    if (!state.patient_last_name.trim()) {
-      newErrors.patientLastName = 'Last name is required';
-    }
-    if (!state.patient_first_name.trim()) {
-      newErrors.patientFirstName = 'First name is required';
-    }
-
-    // Nutrients validation - at least 1 nutrient must be filled
-    const filledNutrients = state.nutrients.filter(n => n.nutrient_name.trim().length > 0);
-    if (filledNutrients.length === 0) {
-      newErrors.nutrients = 'At least one nutrient must be filled';
-    }
-
-    // Validate numeric fields for filled nutrients
-    state.nutrients.forEach((nutrient, index) => {
-      if (nutrient.nutrient_name.trim()) {
-        // Only validate numeric fields if nutrient name is filled
-        const numericFields: Array<{ key: keyof typeof nutrient; label: string }> = [
-          { key: 'volume_ml', label: 'Volume (ml)' },
-          { key: 'times_per_day', label: 'Times per Day' },
-        ];
-        numericFields.forEach(f => {
-          const val = (nutrient as any)[f.key];
-          if (val !== '' && val !== undefined && val !== null && isNaN(Number(val))) {
-            newErrors[`nutrients[${index}].${String(f.key)}`] = `${f.label} must be a number`;
-          }
+          return next;
         });
       }
-    });
+    };
 
-    setErrors(newErrors);
-    lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
-    return Object.keys(newErrors).length === 0;
-  };
+    const updateNutrient = (index: number, field: string, value: any) => {
+      setState(prev => ({
+        ...prev,
+        nutrients: prev.nutrients.map((nutrient, i) =>
+          i === index ? { ...nutrient, [field]: value } : nutrient,
+        ),
+      }));
+      // Clear error immediately when user starts typing
+      const errKey = `nutrients[${index}].${field}`;
+      if (errors[errKey]) {
+        setErrors(prev => {
+          const ne = { ...prev } as any;
+          delete ne[errKey];
+          return ne;
+        });
+      }
+    };
 
-  // Expose methods to parent via ref
-  useImperativeHandle(ref, () => ({
-    validateAndSubmit: async () => {
+    // Validation function (aligned with schema required fields)
+    const validateForm = (): boolean => {
+      const newErrors: { [key: string]: string } = {};
+
+      // Required (schema): prescription_date, patient_last_name, patient_first_name
+      if (!state.prescription_date) {
+        newErrors.prescriptionDate = 'Prescription date is required';
+      }
+      if (!state.patient_last_name.trim()) {
+        newErrors.patientLastName = 'Last name is required';
+      }
+      if (!state.patient_first_name.trim()) {
+        newErrors.patientFirstName = 'First name is required';
+      }
+
+      // Nutrients validation - at least 1 nutrient must be filled
+      let hasFilledNutrient = false;
+      state.nutrients.forEach((nutrient, index) => {
+        if (!nutrient.nutrient_name.trim()) {
+          newErrors[`nutrients[${index}].nutrient_name`] =
+            'Nutrient name is required';
+        } else {
+          hasFilledNutrient = true;
+        }
+      });
+
+      if (!hasFilledNutrient) {
+        newErrors.nutrients = 'At least one nutrient name is required';
+      }
+
+      // Validate numeric fields for filled nutrients
+      state.nutrients.forEach((nutrient, index) => {
+        if (nutrient.nutrient_name.trim()) {
+          // Only validate numeric fields if nutrient name is filled
+          const numericFields: Array<{
+            key: keyof typeof nutrient;
+            label: string;
+          }> = [
+            { key: 'volume_ml', label: 'Volume (ml)' },
+            { key: 'times_per_day', label: 'Times per Day' },
+          ];
+          numericFields.forEach(f => {
+            const val = (nutrient as any)[f.key];
+            if (
+              val !== '' &&
+              val !== undefined &&
+              val !== null &&
+              isNaN(Number(val))
+            ) {
+              newErrors[
+                `nutrients[${index}].${String(f.key)}`
+              ] = `${f.label} must be a number`;
+            }
+          });
+        }
+      });
+
+      setErrors(newErrors);
+      lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const scrollToFirstError = (firstErrorKey: string) => {
+      const match = firstErrorKey.match(/nutrients\[(\d+)\]/);
+      if (match) {
+        const idx = Number(match[1]);
+        const y = nutrientPositions[idx] ?? 0;
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            y: Math.max(y - 20, 0),
+            animated: true,
+          });
+        }, 50);
+      } else {
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 50);
+      }
+    };
+
+    // Handle form submission
+    const handleSubmitRequest = async () => {
       const ok = validateForm();
       if (!ok) {
-        // Show first error in toast
         const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage = errors[firstErrorKey] || 'Please fill in all required fields';
+        const firstErrorMessage =
+          errors[firstErrorKey] || 'Please fill in all required fields';
         SHOW_TOAST(firstErrorMessage, 'error');
-
-        const match = firstErrorKey.match(/nutrients\[(\d+)\]/);
-        if (match) {
-          const idx = Number(match[1]);
-          const y = nutrientPositions[idx] ?? 0;
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: Math.max(y - 20, 0), animated: true });
-          }, 50);
-        } else {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-          }, 50);
-        }
-        return false;
+        scrollToFirstError(firstErrorKey);
+        return;
       }
 
-      // Call API to create service request
+      dispatch(setLoading(true));
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
+
       try {
-        setIsLoading(true);
-        onLoadingChange?.(true);
-
-        const payload = {
-          serviceId: serviceId || '',
-          patientId: selectedPatient?.id || '',
-          priorityLevel: 'routine' as const,
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format('YYYY-MM-DD'),
-          requestedTime: moment().format('HH:mm'),
-          initialNotes: '',
-          formData: state,
-        };
-
-        const response = await serviceRequestApi.createServiceRequest(payload);
-
-        setIsLoading(false);
-        onLoadingChange?.(false);
-
-        if (response.success) {
-          SHOW_SUCCESS_TOAST('Service request created successfully');
-          console.log('Service request created:', response.data);
-          return true;
+        if (isExistingDraft && requestId) {
+          const submitResponse = await serviceRequestApi.submitForReview(
+            requestId,
+          );
+          if (submitResponse.success) {
+            SHOW_SUCCESS_TOAST(submitResponse.message);
+            dispatch(setLoading(false));
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              submitResponse.error ||
+                'Failed to submit service request for review',
+              'error',
+            );
+          }
         } else {
-          SHOW_TOAST(response.error || 'Failed to create service request', 'error');
-          return false;
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
+          dispatch(setLoading(false));
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
+            const newRequestId = response.data?.data?.id;
+            if (newRequestId) {
+              const submitResponse = await serviceRequestApi.submitForReview(
+                newRequestId,
+              );
+              if (submitResponse.success) {
+                SHOW_SUCCESS_TOAST(submitResponse.message);
+                dispatch(setLoading(false));
+                setTimeout(() => {
+                  NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                    screen: 'DoctorRequest',
+                  });
+                }, 500);
+              } else {
+                dispatch(setLoading(false));
+                SHOW_TOAST(
+                  submitResponse.error || 'Failed to submit for review',
+                  'error',
+                );
+              }
+            } else {
+              dispatch(setLoading(false));
+            }
+          } else {
+            dispatch(setLoading(false));
+            SHOW_TOAST(
+              response.error || 'Failed to create service request',
+              'error',
+            );
+          }
         }
       } catch (error: any) {
-        setIsLoading(false);
-        onLoadingChange?.(false);
-        SHOW_TOAST(error.message || 'Failed to create service request', 'error');
-        return false;
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to process request', 'error');
       }
-    },
-    getFormData: () => state,
-    getIsLoading: () => isLoading,
-  }));
+    };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerTextContainer}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {STRING.artificialNutritionForm}
-          </AppText>
-        </View>
+    // Handle save as draft
+    const handleSaveAsDraft = async () => {
+      const ok = validateForm();
+      if (!ok) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || 'Please fill in all required fields';
+        SHOW_TOAST(firstErrorMessage, 'error');
+        scrollToFirstError(firstErrorKey);
+        return;
+      }
 
-        {/* PRESCRIPTION DETAILS */}
-        <FormPrescriptionDetails
-          state={state}
-          setState={setFormState}
-          errors={errors}
-        />
+      dispatch(setLoading(true));
+      const isExistingDraft = initialData && initialData._id;
+      const requestId = isExistingDraft ? initialData._id : null;
 
-        {/* PATIENT INFORMATION */}
-        <FormPatientSection
-          state={state}
-          setState={setFormState}
-          errors={errors}
-        />
+      try {
+        if (isExistingDraft && requestId) {
+          const response = await serviceRequestApi.updateDraft(requestId, {
+            formData: state,
+          });
+          dispatch(setLoading(false));
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          }
+        } else {
+          const payload = {
+            serviceId: serviceId || '',
+            patientId: selectedPatient?.id || selectedPatient?._id || '',
+            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+              'YYYY-MM-DD',
+            ),
+            requestedTime: moment().format('HH:mm'),
+            initialNotes: '',
+            formData: state,
+          };
+          const response = await serviceRequestApi.createServiceRequest(
+            payload,
+          );
+          dispatch(setLoading(false));
+          if (response.success) {
+            SHOW_SUCCESS_TOAST(response?.message);
+            setTimeout(() => {
+              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                screen: 'DoctorRequest',
+              });
+            }, 500);
+          } else {
+            SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+          }
+        }
+      } catch (error: any) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+      }
+    };
 
-        {/* PRESCRIBER IDENTIFICATION */}
-        <FormPrescriberSection
-          state={state}
-          setState={setFormState}
-        />
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+      validateAndSubmit: async () => {
+        await handleSubmitRequest();
+      },
+      saveAsDraft: async () => {
+        await handleSaveAsDraft();
+      },
+      getFormData: () => state,
+    }));
 
-        {/* FACILITY INFORMATION */}
-        <FormFacilitySection
-          state={state}
-          setState={setFormState}
-        />
+    return (
+      <View style={styles.container}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerTextContainer}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {STRING.artificialNutritionForm}
+            </AppText>
+          </View>
 
-        <View style={styles.card}>
-          {renderSectionHeader('Prescription Plan')}
-          {/* <Input
+          {/* PRESCRIPTION DETAILS */}
+          <FormPrescriptionDetails
+            state={state}
+            setState={setFormState}
+            errors={errors}
+          />
+
+          {/* PATIENT INFORMATION */}
+          <FormPatientSection
+            state={state}
+            setState={setFormState}
+            errors={errors}
+          />
+
+          {/* PRESCRIBER IDENTIFICATION */}
+          <FormPrescriberSection state={state} setState={setFormState} />
+
+          {/* FACILITY INFORMATION */}
+          <FormFacilitySection state={state} setState={setFormState} />
+
+          <View style={styles.card}>
+            {renderSectionHeader('Prescription Plan')}
+            {/* <Input
             label="Forms for"
             value={state.formsFor}
             onChangeText={(value) => setState(prev => ({ ...prev, formsFor: value }))}
             placeholder="Enter details"
             style={styles.inputField}
           /> */}
-          <Input
-            onPress={() => {
-              setPickerType({ type: 'from_date' });
-              setOpen(true);
-            }}
-            editable={false}
-            label="From"
-            placeholder="DD/MM/YYYY"
-            value={state.from_date}
-            style={styles.inputField}
-            pointerEvents="none"
-            error={errors.from_date}
-          />
-          <View style={styles.row}>
             <Input
-              label="Prescription for (weeks)"
-              value={state.prescription_duration_weeks}
-              onChangeText={(value) =>
-                setFormState({ prescription_duration_weeks: value })
-              }
-              placeholder="Weeks"
-              style={styles.rowInput}
-              keyboardType="numeric"
-            />
-            <Input
-              label="To be renewed (times)"
-              value={state.renewal_times}
-              onChangeText={(value) =>
-                setFormState({ renewal_times: value })
-              }
-              placeholder="Times"
-              style={styles.rowInput}
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              The health condition of MR (Name of patient) requires enteral
-              nutrition by gravity (package 1), at home, for a duration of
-            </AppText>
-            <TextInput
-              value={state.nutrition_duration_weeks}
-              onChangeText={(value) =>
-                setFormState({ nutrition_duration_weeks: value })
-              }
-              keyboardType="numeric"
-              style={styles.inlineBlankInput}
-              placeholder=""
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              week(s), with:
-            </AppText>
-          </View>
-          <AppCheckBox
-            value={state.initial_setup}
-            onValueChange={(value) =>
-              setFormState({ initial_setup: value })
-            }
-            label="Initial setup package for enteral nutrition"
-          />
-          <AppCheckBox
-            value={state.weekly_package}
-            onValueChange={(value) =>
-              setFormState({ weekly_package: value })
-            }
-            label="Weekly enteral nutrition package by:"
-          />
-          <View style={styles.indentedCheckboxGroup}>
-            <AppCheckBox
-              value={state.feeding_mode.includes('gravity')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'gravity']
-                  : state.feeding_mode.filter(m => m !== 'gravity');
-                setFormState({ feeding_mode: modes });
+              onPress={() => {
+                setPickerType({ type: 'from_date' });
+                setOpen(true);
               }}
-              label="Gravity (package 1)"
+              editable={false}
+              label="From"
+              placeholder="DD/MM/YYYY"
+              value={state.from_date}
+              style={styles.inputField}
+              pointerEvents="none"
+              error={errors.from_date}
+            />
+            <View style={styles.row}>
+              <Input
+                label="Prescription for (weeks)"
+                value={state.prescription_duration_weeks}
+                onChangeText={value =>
+                  setFormState({ prescription_duration_weeks: value })
+                }
+                placeholder="Weeks"
+                style={styles.rowInput}
+                keyboardType="numeric"
+              />
+              <Input
+                label="To be renewed (times)"
+                value={state.renewal_times}
+                onChangeText={value => setFormState({ renewal_times: value })}
+                placeholder="Times"
+                style={styles.rowInput}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={styles.blankSentenceWrap}>
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                The health condition of MR (Name of patient) requires enteral
+                nutrition by gravity (package 1), at home, for a duration of
+              </AppText>
+              <TextInput
+                value={state.nutrition_duration_weeks}
+                onChangeText={value =>
+                  setFormState({ nutrition_duration_weeks: value })
+                }
+                keyboardType="numeric"
+                style={styles.inlineBlankInput}
+                placeholder=""
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                week(s), with:
+              </AppText>
+            </View>
+            <AppCheckBox
+              value={state.initial_setup}
+              onValueChange={value => setFormState({ initial_setup: value })}
+              label="Initial setup package for enteral nutrition"
             />
             <AppCheckBox
-              value={state.feeding_mode.includes('pump')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'pump']
-                  : state.feeding_mode.filter(m => m !== 'pump');
-                setFormState({ feeding_mode: modes });
-              }}
-              label="Pump (package 2)"
+              value={state.weekly_package}
+              onValueChange={value => setFormState({ weekly_package: value })}
+              label="Weekly enteral nutrition package by:"
             />
-          </View>
-          <View style={styles.pdfRow}>
+            <View style={styles.indentedCheckboxGroup}>
+              <AppCheckBox
+                value={state.feeding_mode.includes('gravity')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'gravity']
+                    : state.feeding_mode.filter(m => m !== 'gravity');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label="Gravity (package 1)"
+              />
+              <AppCheckBox
+                value={state.feeding_mode.includes('pump')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'pump']
+                    : state.feeding_mode.filter(m => m !== 'pump');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label="Pump (package 2)"
+              />
+            </View>
+            <View style={styles.pdfRow}>
+              <AppCheckBox
+                value={state.feeding_mode.includes('nasogastric')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'nasogastric']
+                    : state.feeding_mode.filter(m => m !== 'nasogastric');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label=""
+                containerStyle={styles.inlinePdfCheckbox}
+                labelStyle={styles.emptyCheckboxLabel}
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                Nasogastric tube CH:
+              </AppText>
+              <TextInput
+                value={state.nasogastric_tube_ch}
+                onChangeText={value =>
+                  setFormState({ nasogastric_tube_ch: value })
+                }
+                style={styles.pdfInlineInput}
+                placeholder=""
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                to be used at a rate of
+              </AppText>
+              <TextInput
+                value={state.nasogastric_rate_per_month}
+                onChangeText={value =>
+                  setFormState({ nasogastric_rate_per_month: value })
+                }
+                keyboardType="numeric"
+                style={styles.pdfInlineInput}
+                placeholder=""
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                per month.
+              </AppText>
+            </View>
+            <View style={styles.pdfRow}>
+              <AppCheckBox
+                value={state.feeding_mode.includes('jejunostomy')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'jejunostomy']
+                    : state.feeding_mode.filter(m => m !== 'jejunostomy');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label=""
+                containerStyle={styles.inlinePdfCheckbox}
+                labelStyle={styles.emptyCheckboxLabel}
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                Jejunostomy or gastrostomy tube CH:
+              </AppText>
+              <TextInput
+                value={state.jejunostomy_tube_ch}
+                onChangeText={value =>
+                  setFormState({ jejunostomy_tube_ch: value })
+                }
+                style={styles.pdfInlineInput}
+                placeholder=""
+              />
+            </View>
             <AppCheckBox
-              value={state.feeding_mode.includes('nasogastric')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'nasogastric']
-                  : state.feeding_mode.filter(m => m !== 'nasogastric');
-                setFormState({ feeding_mode: modes });
-              }}
-              label=""
-              containerStyle={styles.inlinePdfCheckbox}
-              labelStyle={styles.emptyCheckboxLabel}
+              value={state.iv_pole_rental}
+              onValueChange={value => setFormState({ iv_pole_rental: value })}
+              label="Rental of an IV pole"
             />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              Nasogastric tube CH:
-            </AppText>
-            <TextInput
-              value={state.nasogastric_tube_ch}
-              onChangeText={(value) =>
-                setFormState({ nasogastric_tube_ch: value })
-              }
-              style={styles.pdfInlineInput}
-              placeholder=""
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              to be used at a rate of
-            </AppText>
-            <TextInput
-              value={state.nasogastric_rate_per_month}
-              onChangeText={(value) =>
-                setFormState({ nasogastric_rate_per_month: value })
-              }
-              keyboardType="numeric"
-              style={styles.pdfInlineInput}
-              placeholder=""
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              per month.
-            </AppText>
-          </View>
-          <View style={styles.pdfRow}>
+            <View style={styles.pdfRow}>
+              <AppCheckBox
+                value={state.feeding_mode.includes('nasogastric_care')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'nasogastric_care']
+                    : state.feeding_mode.filter(m => m !== 'nasogastric_care');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label=""
+                containerStyle={styles.inlinePdfCheckbox}
+                labelStyle={styles.emptyCheckboxLabel}
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                Equipment for adult nasogastric tube care every
+              </AppText>
+              <TextInput
+                value={state.nasogastric_care_frequency_days}
+                onChangeText={value =>
+                  setFormState({ nasogastric_care_frequency_days: value })
+                }
+                keyboardType="numeric"
+                style={styles.pdfInlineInput}
+                placeholder=""
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                days
+              </AppText>
+            </View>
             <AppCheckBox
-              value={state.feeding_mode.includes('jejunostomy')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'jejunostomy']
-                  : state.feeding_mode.filter(m => m !== 'jejunostomy');
-                setFormState({ feeding_mode: modes });
-              }}
-              label=""
-              containerStyle={styles.inlinePdfCheckbox}
-              labelStyle={styles.emptyCheckboxLabel}
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              Jejunostomy or gastrostomy tube CH:
-            </AppText>
-            <TextInput
-              value={state.jejunostomy_tube_ch}
-              onChangeText={(value) =>
-                setFormState({ jejunostomy_tube_ch: value })
+              value={state.gastrostomy_care_equipment}
+              onValueChange={value =>
+                setFormState({ gastrostomy_care_equipment: value })
               }
-              style={styles.pdfInlineInput}
-              placeholder=""
+              label="Equipment for gastrostomy or jejunostomy care"
             />
-          </View>
-          <AppCheckBox
-            value={state.iv_pole_rental}
-            onValueChange={(value) =>
-              setFormState({ iv_pole_rental: value })
-            }
-            label="Rental of an IV pole"
-          />
-          <View style={styles.pdfRow}>
+            <View style={styles.pdfRow}>
+              <AppCheckBox
+                value={state.feeding_mode.includes('jejunostomy_care')}
+                onValueChange={value => {
+                  const modes = value
+                    ? [...state.feeding_mode, 'jejunostomy_care']
+                    : state.feeding_mode.filter(m => m !== 'jejunostomy_care');
+                  setFormState({ feeding_mode: modes });
+                }}
+                label=""
+                containerStyle={styles.inlinePdfCheckbox}
+                labelStyle={styles.emptyCheckboxLabel}
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                Jejunostomy care every
+              </AppText>
+              <TextInput
+                value={state.jejunostomy_care_frequency_days}
+                onChangeText={value =>
+                  setFormState({ jejunostomy_care_frequency_days: value })
+                }
+                keyboardType="numeric"
+                style={styles.pdfInlineInput}
+                placeholder=""
+              />
+              <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                days
+              </AppText>
+            </View>
             <AppCheckBox
-              value={state.feeding_mode.includes('nasogastric_care')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'nasogastric_care']
-                  : state.feeding_mode.filter(m => m !== 'nasogastric_care');
-                setFormState({ feeding_mode: modes });
-              }}
-              label=""
-              containerStyle={styles.inlinePdfCheckbox}
-              labelStyle={styles.emptyCheckboxLabel}
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              Equipment for adult nasogastric tube care every
-            </AppText>
-            <TextInput
-              value={state.nasogastric_care_frequency_days}
-              onChangeText={(value) =>
-                setFormState({ nasogastric_care_frequency_days: value })
+              value={state.gastrostomy_replacement_equipment}
+              onValueChange={value =>
+                setFormState({ gastrostomy_replacement_equipment: value })
               }
-              keyboardType="numeric"
-              style={styles.pdfInlineInput}
-              placeholder=""
+              label="Equipment in case of gastrostomy tube replacement"
             />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              days
-            </AppText>
-          </View>
-          <AppCheckBox
-            value={state.gastrostomy_care_equipment}
-            onValueChange={(value) =>
-              setFormState({ gastrostomy_care_equipment: value })
-            }
-            label="Equipment for gastrostomy or jejunostomy care"
-          />
-          <View style={styles.pdfRow}>
             <AppCheckBox
-              value={state.feeding_mode.includes('jejunostomy_care')}
-              onValueChange={(value) => {
-                const modes = value
-                  ? [...state.feeding_mode, 'jejunostomy_care']
-                  : state.feeding_mode.filter(m => m !== 'jejunostomy_care');
-                setFormState({ feeding_mode: modes });
-              }}
-              label=""
-              containerStyle={styles.inlinePdfCheckbox}
-              labelStyle={styles.emptyCheckboxLabel}
-            />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              Jejunostomy care every
-            </AppText>
-            <TextInput
-              value={state.jejunostomy_care_frequency_days}
-              onChangeText={(value) =>
-                setFormState({ jejunostomy_care_frequency_days: value })
+              value={state.button_extension_set}
+              onValueChange={value =>
+                setFormState({ button_extension_set: value })
               }
-              keyboardType="numeric"
-              style={styles.pdfInlineInput}
-              placeholder=""
+              label="One gastrostomy button (statutory set), to be renewed every 7 days"
             />
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              days
-            </AppText>
+            <AppCheckBox
+              value={state.non_ald_prescriptions}
+              onValueChange={value =>
+                setFormState({ non_ald_prescriptions: value })
+              }
+              label="Prescriptions unrelated to the recognized long-term condition"
+            />
+            <View style={styles.subTextBlock}>
+              <AppText size={getScaleSize(12)} color={COLORS._1A1D1F}>
+                (listed or not listed)
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                color={COLORS._1A1D1F}
+                style={styles.italicText}
+              >
+                (Intercurrent illnesses)
+              </AppText>
+            </View>
+            <AppCheckBox
+              value={state.ald_prescriptions}
+              onValueChange={value =>
+                setFormState({ ald_prescriptions: value })
+              }
+              label="Prescriptions related to the treatment of the recognized long-term condition"
+            />
+            <View style={styles.subTextBlock}>
+              <AppText size={getScaleSize(12)} color={COLORS._1A1D1F}>
+                (listed or not listed)
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                color={COLORS._1A1D1F}
+                style={styles.italicText}
+              >
+                (Exempting condition)
+              </AppText>
+            </View>
           </View>
-          <AppCheckBox
-            value={state.gastrostomy_replacement_equipment}
-            onValueChange={(value) =>
-              setFormState({ gastrostomy_replacement_equipment: value })
-            }
-            label="Equipment in case of gastrostomy tube replacement"
-          />
-          <AppCheckBox
-            value={state.button_extension_set}
-            onValueChange={(value) =>
-              setFormState({ button_extension_set: value })
-            }
-            label="One gastrostomy button (statutory set), to be renewed every 7 days"
-          />
-          <AppCheckBox
-            value={state.non_ald_prescriptions}
-            onValueChange={(value) =>
-              setFormState({ non_ald_prescriptions: value })
-            }
-            label="Prescriptions unrelated to the recognized long-term condition"
-          />
-          <View style={styles.subTextBlock}>
-            <AppText size={getScaleSize(12)} color={COLORS._1A1D1F}>
-              (listed or not listed)
-            </AppText>
-            <AppText
-              size={getScaleSize(12)}
-              color={COLORS._1A1D1F}
-              style={styles.italicText}
-            >
-              (Intercurrent illnesses)
-            </AppText>
-          </View>
-          <AppCheckBox
-            value={state.ald_prescriptions}
-            onValueChange={(value) =>
-              setFormState({ ald_prescriptions: value })
-            }
-            label="Prescriptions related to the treatment of the recognized long-term condition"
-          />
-          <View style={styles.subTextBlock}>
-            <AppText size={getScaleSize(12)} color={COLORS._1A1D1F}>
-              (listed or not listed)
-            </AppText>
-            <AppText
-              size={getScaleSize(12)}
-              color={COLORS._1A1D1F}
-              style={styles.italicText}
-            >
-              (Exempting condition)
-            </AppText>
-          </View>
-        </View>
 
-        <AppText
-          size={getScaleSize(15)}
-          font={FONTS.Inter.Bold}
-        >
-          Nutrients
-        </AppText>
-        {errors.nutrients && (
-          <View style={styles.nutrientErrorRow}>
-            <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
-            <AppText
-              size={getScaleSize(12)}
-              color="#ef4444"
-              style={styles.nutrientErrorText}
-            >
-              {errors.nutrients}
-            </AppText>
+          <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
+            Nutrients
+          </AppText>
+          {errors.nutrients && (
+            <View style={styles.nutrientErrorRow}>
+              <Image
+                source={IMAGES.error_icon}
+                style={{ width: 11, height: 11 }}
+              />
+              <AppText
+                size={getScaleSize(12)}
+                color="#ef4444"
+                style={styles.nutrientErrorText}
+              >
+                {errors.nutrients}
+              </AppText>
+            </View>
+          )}
+          <View style={styles.card}>
+            {state.nutrients.map((nutrient, index) => (
+              <View
+                key={index}
+                style={styles.nutrientBoxRow}
+                onLayout={e => {
+                  nutrientPositions[index] = e.nativeEvent.layout.y;
+                }}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS._1A1D1F}
+                  font={FONTS.Inter.SemiBold}
+                  style={styles.nutrientIndex}
+                >
+                  {index + 1}.
+                </AppText>
+                <Input
+                  value={nutrient.nutrient_name}
+                  onChangeText={value =>
+                    updateNutrient(index, 'nutrient_name', value)
+                  }
+                  style={styles.nutrientInputRoot}
+                  inputWrapperStyle={styles.nutrientNameBox}
+                  placeholder="Nutrient name"
+                  placeholderTextColor={COLORS._6F767E}
+                  error={errors[`nutrients[${index}].nutrient_name`]}
+                />
+                <View style={styles.nutrientBottomRow}>
+                  <Input
+                    value={nutrient.volume_ml}
+                    onChangeText={value =>
+                      updateNutrient(index, 'volume_ml', value)
+                    }
+                    keyboardType="numeric"
+                    style={styles.nutrientSmallInputRoot}
+                    inputWrapperStyle={styles.nutrientSmallBox}
+                    inputStyle={styles.nutrientSmallText}
+                    placeholder="ml"
+                    placeholderTextColor={COLORS._6F767E}
+                    error={errors[`nutrients[${index}].volume_ml`]}
+                  />
+                  <Input
+                    value={nutrient.times_per_day}
+                    onChangeText={value =>
+                      updateNutrient(index, 'times_per_day', value)
+                    }
+                    keyboardType="numeric"
+                    style={styles.nutrientSmallInputRoot}
+                    inputWrapperStyle={styles.nutrientSmallBox}
+                    inputStyle={styles.nutrientSmallText}
+                    placeholder="times"
+                    placeholderTextColor={COLORS._6F767E}
+                    error={errors[`nutrients[${index}].times_per_day`]}
+                  />
+                  <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
+                    per day
+                  </AppText>
+                </View>
+              </View>
+            ))}
           </View>
-        )}
-        <View style={styles.card}>
-          {state.nutrients.map((nutrient, index) => (
-            <View key={index} style={styles.nutrientBoxRow} onLayout={(e) => {
-              nutrientPositions[index] = e.nativeEvent.layout.y;
-            }}>
+
+          <View style={styles.card}>
+            <View style={styles.signatureRow}>
               <AppText
                 size={getScaleSize(13)}
                 color={COLORS._1A1D1F}
                 font={FONTS.Inter.SemiBold}
-                style={styles.nutrientIndex}
               >
-                {index + 1}.
+                Number of boxes checked:
               </AppText>
-              <Input
-                value={nutrient.nutrient_name}
-                onChangeText={(value) => updateNutrient(index, 'nutrient_name', value)}
-                style={styles.nutrientInputRoot}
-                inputWrapperStyle={styles.nutrientNameBox}
-                placeholder="Nutrient name"
-                placeholderTextColor={COLORS._6F767E}
-                error={errors[`nutrients[${index}].nutrient_name`]}
+              <TextInput
+                value={String(checkedBoxesCount)}
+                style={[styles.pdfInlineInput, styles.boxesCountInput]}
+                editable={false}
+                placeholder=""
               />
-              <View style={styles.nutrientBottomRow}>
-                <Input
-                  value={nutrient.volume_ml}
-                  onChangeText={(value) => updateNutrient(index, 'volume_ml', value)}
-                  keyboardType="numeric"
-                  style={styles.nutrientSmallInputRoot}
-                  inputWrapperStyle={styles.nutrientSmallBox}
-                  inputStyle={styles.nutrientSmallText}
-                  placeholder="ml"
-                  placeholderTextColor={COLORS._6F767E}
-                  error={errors[`nutrients[${index}].volume_ml`]}
-                />
-                <Input
-                  value={nutrient.times_per_day}
-                  onChangeText={(value) => updateNutrient(index, 'times_per_day', value)}
-                  keyboardType="numeric"
-                  style={styles.nutrientSmallInputRoot}
-                  inputWrapperStyle={styles.nutrientSmallBox}
-                  inputStyle={styles.nutrientSmallText}
-                  placeholder="times"
-                  placeholderTextColor={COLORS._6F767E}
-                  error={errors[`nutrients[${index}].times_per_day`]}
-                />
-                <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-                  per day
-                </AppText>
-              </View>
             </View>
-          ))}
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.signatureRow}>
-            <AppText
-              size={getScaleSize(13)}
-              color={COLORS._1A1D1F}
-              font={FONTS.Inter.SemiBold}
-            >
-              Number of boxes checked:
-            </AppText>
-            <TextInput
-              value={String(checkedBoxesCount)}
-              style={[styles.pdfInlineInput, styles.boxesCountInput]}
-              editable={false}
-              placeholder=""
-            />
           </View>
-        </View>
 
-        <FormSignature />
+          <FormSignature
+            signature={state.physician_signature}
+            onSignatureChange={value =>
+              setFormState({ physician_signature: value })
+            }
+          />
+        </ScrollView>
 
-      </ScrollView>
+        <DatePicker
+          modal
+          open={open}
+          date={date}
+          mode="date"
+          onConfirm={selectedDate => {
+            setOpen(false);
+            setDate(selectedDate);
+            if (pickerType) {
+              const formattedDate = moment(selectedDate).format('DD/MM/YYYY');
+              setState(prev => ({ ...prev, [pickerType.type]: formattedDate }));
+            }
+          }}
+          onCancel={() => {
+            setOpen(false);
+          }}
+        />
 
-      <DatePicker
-        modal
-        open={open}
-        date={date}
-        mode="date"
-        onConfirm={(selectedDate) => {
-          setOpen(false);
-          setDate(selectedDate);
-          if (pickerType) {
-            const formattedDate = moment(selectedDate).format('DD/MM/YYYY');
-            setState(prev => ({ ...prev, [pickerType.type]: formattedDate }));
-          }
-        }}
-        onCancel={() => {
-          setOpen(false);
-        }}
-      />
-
-      <WarningSheet ref={warningSheetRef} />
-    </View>
-  );
-});
+        <WarningSheet ref={warningSheetRef} />
+      </View>
+    );
+  },
+);
 
 ArtificialNutritionForm.displayName = 'ArtificialNutritionForm';
 

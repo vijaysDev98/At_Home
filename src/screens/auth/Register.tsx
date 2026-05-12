@@ -79,9 +79,8 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
 };
 
 const practiceOptions = [
-  { label: 'Private', value: 'private' },
-  { label: 'Public', value: 'public' },
-  { label: 'Mixed', value: 'mixed' },
+  { label: 'Hospital', value: 'hospital' },
+  { label: 'Office', value: 'office' },
 ];
 
 interface CustomDropdownProps {
@@ -164,7 +163,8 @@ const Register: React.FC = () => {
 
   const { isLoading } = useSelector((state: RootState) => state.common);
 
-  const [fullName, setFullName] = useState(userData.fullName || '');
+  const [fName, setFName] = useState(userData.fName || '');
+  const [lName, setLName] = useState(userData.lName || '');
   const [email, setEmail] = useState(userData.email || '');
   const [phone, setPhone] = useState(userData.phone || '');
   const [password, setPassword] = useState('');
@@ -210,8 +210,11 @@ const Register: React.FC = () => {
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required.';
+    if (!fName.trim()) {
+      newErrors.fName = 'First name is required.';
+    }
+    if (!lName.trim()) {
+      newErrors.lName = 'Last name is required.';
     }
     if (!isEdit) {
       if (!email.trim()) {
@@ -255,10 +258,11 @@ const Register: React.FC = () => {
 
   const isFormValid = () => {
     if (isEdit) {
-      return !!(fullName && specialty && address && placeOfPractice);
+      return !!(fName && lName && specialty && address && placeOfPractice);
     }
     return !!(
-      fullName &&
+      fName &&
+      lName &&
       email &&
       password &&
       rpps &&
@@ -291,7 +295,8 @@ const Register: React.FC = () => {
       }
 
       const updateData = {
-        fullName: fullName.trim(),
+        fName: fName.trim(),
+        lName: lName.trim(),
         specialty: specialty,
         businessAddress: address.trim(),
         practiceType: placeOfPractice.trim(),
@@ -305,7 +310,8 @@ const Register: React.FC = () => {
     }
 
     const registerData = {
-      fullName: fullName.trim(),
+      fName: fName.trim(),
+      lName: lName.trim(),
       email: email.trim(),
       password: password.trim(),
       role: 'doctor',
@@ -372,17 +378,29 @@ const Register: React.FC = () => {
 
             {/* Form Fields */}
             <Input
-              label={STRING.fullName}
+              label={'First Name'}
               isMandatory
-              placeholder={STRING.enterFullName}
-              leftIcon={IMAGES.person}
-              value={fullName}
+              placeholder={'Enter first name'}
+              value={fName}
+              style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
               onChangeText={t => {
-                setFullName(t);
-                setErrors(e => ({ ...e, fullName: '' }));
+                setFName(t);
+                setErrors(e => ({ ...e, fName: '' }));
               }}
-              error={errors.fullName}
-              style={{ marginBottom: getScaleSize(errors.fullName ? 4 : 20) }}
+              error={errors.fName}
+            />
+
+            <Input
+              label={'Last Name'}
+              isMandatory
+              style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
+              placeholder={'Enter last name'}
+              value={lName}
+              onChangeText={t => {
+                setLName(t);
+                setErrors(e => ({ ...e, lName: '' }));
+              }}
+              error={errors.lName}
             />
 
             {!isEdit && (
@@ -459,7 +477,9 @@ const Register: React.FC = () => {
                   keyboardType="numeric"
                   error={errors.finess}
                   helper={
-                    errors.finess ? undefined : STRING.facilityIdentificationNumber
+                    errors.finess
+                      ? undefined
+                      : STRING.facilityIdentificationNumber
                   }
                   style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
                   helperStyle={{ marginTop: getScaleSize(8) }}
@@ -520,17 +540,9 @@ const Register: React.FC = () => {
                   label={
                     <Text>
                       {STRING.iAgreeToThe}{' '}
-                      <Text
-                        style={styles.link}
-                      >
-                        {STRING.privacyPolicy}
-                      </Text>{' '}
+                      <Text style={styles.link}>{STRING.privacyPolicy}</Text>{' '}
                       {STRING.and}{' '}
-                      <Text
-                        style={styles.link}
-                      >
-                        {STRING.termsOfService}
-                      </Text>
+                      <Text style={styles.link}>{STRING.termsOfService}</Text>
                     </Text>
                   }
                 />
@@ -640,6 +652,12 @@ const styles = StyleSheet.create({
     fontSize: getScaleSize(14),
     fontFamily: FONTS.Inter.Regular,
     color: COLORS.slate700,
+  },
+  nameRow: {
+    // flexDirection: 'row',
+    marginBottom: getScaleSize(20),
+    // gap: getScaleSize(12),
+    // paddingHorizontal: getScaleSize(24),
   },
   label: {
     fontSize: getScaleSize(14),

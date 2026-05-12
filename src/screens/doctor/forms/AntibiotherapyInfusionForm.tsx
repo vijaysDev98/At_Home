@@ -1,4 +1,10 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import {
   Alert,
   Image,
@@ -22,36 +28,48 @@ import {
   FormFacilitySection,
   AppButton,
   AppCheckBox,
+  AppLoader,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { STRING, SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { setLoading } from '../../../actions/common/commonSlice';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import { PatientInfo, ServiceRequestDetail } from '../../../services/serviceRequestListApi';
+import {
+  PatientInfo,
+  ServiceRequestDetail,
+} from '../../../services/serviceRequestListApi';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 export interface AntibiotherapyInfusionFormProps {
   serviceId: string;
-  onLoadingChange?: (isLoading: boolean) => void;
-  initialData?: ServiceRequestDetail;
+  initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
 }
 
-const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormProps>(({
-  serviceId,
-  onLoadingChange,
-  initialData,
-  patient,
-}, ref) => {
+export interface AntibiotherapyInfusionFormRef {
+  validateAndSubmit: () => Promise<void>;
+  saveAsDraft: () => Promise<void>;
+  getFormData: () => any;
+}
 
-  const selectedPatient = useSelector(
+const AntibiotherapyInfusionForm = forwardRef<
+  AntibiotherapyInfusionFormRef,
+  AntibiotherapyInfusionFormProps
+>(({ serviceId, initialData, patient }, ref) => {
+  const dispatch = useDispatch();
+
+  const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
+  const selectedPatient = initialData ? patient : reduxPatient;
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
@@ -63,7 +81,6 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
     type: string;
     index?: number;
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Scroll helpers to focus first error in infusion products
   const scrollRef = useRef<ScrollView>(null);
@@ -76,8 +93,8 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
     therapy_type: '',
 
     // Patient Information
-    patient_last_name: '',
-    patient_first_name: selectedPatient?.fullName || '',
+    patient_last_name: selectedPatient?.lName || '',
+    patient_first_name: selectedPatient?.fName || '',
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
@@ -86,8 +103,8 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
     ald_condition: false,
 
     // Prescriber Identification (Auto-filled from doctor profile)
-    prescriber_last_name: profileData?.fullName?.split(' ').slice(-1)[0] || '',
-    prescriber_first_name: profileData?.fullName?.split(' ')[0] || '',
+    prescriber_last_name: profileData?.lName || '',
+    prescriber_first_name: profileData?.fName || '',
     prescriber_phone: profileData?.phoneNumber || '',
     rpps_id: profileData?.rppsNumber || '',
 
@@ -106,6 +123,7 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
         strength: '',
         diluent_type: '',
         diluent_volume_ml: '',
+        duration_hours: '',
         duration_minutes: '',
         frequency_per_day: '',
         route_of_access: '',
@@ -123,14 +141,25 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
 
   useEffect(() => {
     if (initialData) {
-      console.log("initialDatainitialData", initialData);
-
-      setState(initialData.formData);
+      setState(initialData?.formData);
     }
-  }, [initialData])
+  }, [initialData]);
 
   // Validation errors state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    validateAndSubmit: async () => {
+      await handleSubmitRequest();
+    },
+    saveAsDraft: async () => {
+      await handleSaveAsDraft();
+    },
+    getFormData: () => {
+      return state;
+    },
+  }));
 
   // Wrapper setter that clears errors for changed top-level keys (e.g., patient_first_name)
   const setFormState = (updaterOrPartial: any) => {
@@ -138,20 +167,25 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
       setState(prev => {
         const next = updaterOrPartial(prev);
         try {
-          const changedKeys = Object.keys(next).filter(k => (prev as any)[k] !== (next as any)[k]);
+          const changedKeys = Object.keys(next).filter(
+            k => (prev as any)[k] !== (next as any)[k],
+          );
           if (changedKeys.length) {
             setErrors(prevErrs => {
               const ne = { ...prevErrs } as any;
               changedKeys.forEach(k => {
                 const newVal = (next as any)[k];
-                if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-                if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-                if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
+                if (k === 'patient_first_name' && ne.patientFirstName)
+                  delete ne.patientFirstName;
+                if (k === 'patient_last_name' && ne.patientLastName)
+                  delete ne.patientLastName;
+                if (k === 'prescription_date' && ne.prescriptionDate)
+                  delete ne.prescriptionDate;
               });
               return ne;
             });
           }
-        } catch { }
+        } catch {}
         return next;
       });
     } else {
@@ -164,9 +198,12 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
             const ne = { ...prevErrs } as any;
             changedKeys.forEach(k => {
               const newVal = (next as any)[k];
-              if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-              if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-              if (k === 'prescription_date' && ne.prescriptionDate) delete ne.prescriptionDate;
+              if (k === 'patient_first_name' && ne.patientFirstName)
+                delete ne.patientFirstName;
+              if (k === 'patient_last_name' && ne.patientLastName)
+                delete ne.patientLastName;
+              if (k === 'prescription_date' && ne.prescriptionDate)
+                delete ne.prescriptionDate;
             });
             return ne;
           });
@@ -206,66 +243,78 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
   const removeProduct = (index: number) => {
     setState(prev => ({
       ...prev,
-      infusion_products: prev.infusion_products.filter((_: any, i: number) => i !== index),
+      infusion_products: prev.infusion_products.filter(
+        (_: any, i: number) => i !== index,
+      ),
     }));
   };
 
   const updateProduct = (index: number, field: string, value: any) => {
     setState(prev => {
-      const updatedProducts = prev.infusion_products.map((product: any, i: number) => {
-        if (i === index) {
-          const updatedProduct = { ...product, [field]: value };
-          // If user types duration days, clear dates (mutually exclusive)
-          if (field === 'treatment_duration_days') {
-            updatedProduct.start_date = '';
-            updatedProduct.end_date = '';
-          }
+      const updatedProducts = prev.infusion_products.map(
+        (product: any, i: number) => {
+          if (i === index) {
+            const updatedProduct = { ...product, [field]: value };
+            // If user types duration days, clear dates (mutually exclusive)
+            if (field === 'treatment_duration_days') {
+              updatedProduct.start_date = '';
+              updatedProduct.end_date = '';
+            }
 
-          // Calculate TNI per spec:
-          // Prefer inclusive day difference between start_date (p) and end_date (y): M = (y - p) + 1 when valid
-          // Otherwise use treatment_duration_days (n)
-          // TNI = (M or n) * a, where a = frequency_per_day
-          const freq = Number(updatedProduct.frequency_per_day) || 0;
-          let days = 0;
-          if (updatedProduct.start_date && updatedProduct.end_date) {
-            const start = moment(updatedProduct.start_date, 'DD/MM/YYYY', true);
-            const end = moment(updatedProduct.end_date, 'DD/MM/YYYY', true);
-            if (start.isValid() && end.isValid()) {
-              const diff = end.diff(start, 'days');
-              if (diff >= 0) {
-                days = diff + 1; // inclusive of start and end
+            // Calculate TNI per spec:
+            // Prefer inclusive day difference between start_date (p) and end_date (y): M = (y - p) + 1 when valid
+            // Otherwise use treatment_duration_days (n)
+            // TNI = (M or n) * a, where a = frequency_per_day
+            const freq = Number(updatedProduct.frequency_per_day) || 0;
+            let days = 0;
+            if (updatedProduct.start_date && updatedProduct.end_date) {
+              const start = moment(
+                updatedProduct.start_date,
+                'DD/MM/YYYY',
+                true,
+              );
+              const end = moment(updatedProduct.end_date, 'DD/MM/YYYY', true);
+              if (start.isValid() && end.isValid()) {
+                const diff = end.diff(start, 'days');
+                if (diff >= 0) {
+                  days = diff + 1; // inclusive of start and end
+                }
               }
             }
-          }
-          if (!days) {
-            const n = Number(updatedProduct.treatment_duration_days);
-            if (!isNaN(n) && n > 0) days = n;
-          }
-          // If dates are valid, reflect inclusive days into duration and make input read-only in UI
-          if (updatedProduct.start_date && updatedProduct.end_date) {
-            const start = moment(updatedProduct.start_date, 'DD/MM/YYYY', true);
-            const end = moment(updatedProduct.end_date, 'DD/MM/YYYY', true);
-            if (start.isValid() && end.isValid()) {
-              const diff = end.diff(start, 'days');
-              if (diff >= 0) {
-                updatedProduct.treatment_duration_days = String(diff + 1);
+            if (!days) {
+              const n = Number(updatedProduct.treatment_duration_days);
+              if (!isNaN(n) && n > 0) days = n;
+            }
+            // If dates are valid, reflect inclusive days into duration and make input read-only in UI
+            if (updatedProduct.start_date && updatedProduct.end_date) {
+              const start = moment(
+                updatedProduct.start_date,
+                'DD/MM/YYYY',
+                true,
+              );
+              const end = moment(updatedProduct.end_date, 'DD/MM/YYYY', true);
+              if (start.isValid() && end.isValid()) {
+                const diff = end.diff(start, 'days');
+                if (diff >= 0) {
+                  updatedProduct.treatment_duration_days = String(diff + 1);
+                }
               }
             }
-          }
-          let tniCalc = '';
-          if (days > 0) {
-            // Show 0 until frequency is set (or when it's zero)
-            tniCalc = String(freq > 0 ? days * freq : 0);
-          } else {
-            // No days provided (no dates or duration) -> keep blank
-            tniCalc = '';
-          }
-          updatedProduct.tni = tniCalc;
+            let tniCalc = '';
+            if (days > 0) {
+              // Show 0 until frequency is set (or when it's zero)
+              tniCalc = String(freq > 0 ? days * freq : 0);
+            } else {
+              // No days provided (no dates or duration) -> keep blank
+              tniCalc = '';
+            }
+            updatedProduct.tni = tniCalc;
 
-          return updatedProduct;
-        }
-        return product;
-      });
+            return updatedProduct;
+          }
+          return product;
+        },
+      );
 
       return { ...prev, infusion_products: updatedProducts };
     });
@@ -276,13 +325,32 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
       setErrors(prev => {
         const ne = { ...prev } as any;
         const val = (state.infusion_products[index] as any)[field];
-        const allowedRoutes = ['Implanted Port', 'Central Catheter', 'PICC', 'Perineural', 'Peripheral Venous', 'Subcutaneous'];
-        const allowedModes = ['Gravity', 'Elastomeric Diffuser', 'Electric Infusion Pump'];
+        const allowedRoutes = [
+          'Implanted Port',
+          'Central Catheter',
+          'PICC',
+          'Perineural',
+          'Peripheral Venous',
+          'Subcutaneous',
+        ];
+        const allowedModes = [
+          'Gravity',
+          'Elastomeric Diffuser',
+          'Electric Infusion Pump',
+        ];
 
         let isValid = false;
         if (field === 'product_name') {
-          isValid = !!(String(val || '').trim().length);
-        } else if (['diluent_volume_ml', 'duration_hours', 'duration_minutes', 'frequency_per_day', 'treatment_duration_days'].includes(field)) {
+          isValid = !!String(val || '').trim().length;
+        } else if (
+          [
+            'diluent_volume_ml',
+            'duration_hours',
+            'duration_minutes',
+            'frequency_per_day',
+            'treatment_duration_days',
+          ].includes(field)
+        ) {
           // Optional numerics: valid if empty or numeric
           isValid = val === '' || !isNaN(Number(val));
         } else if (field === 'route_of_access') {
@@ -305,12 +373,14 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    // Required (schema): prescription_date
+    // Validate only required fields from schema
+    // Required: prescription_date
     if (!state.prescription_date) {
       newErrors.prescriptionDate = 'Prescription date is required';
     }
 
-    // Required (schema): patient_last_name, patient_first_name
+    // Required: patient_last_name, patient_first_name
+    // Note: FormPatientSection uses camelCase keys internally
     if (!state.patient_last_name.trim()) {
       newErrors.patientLastName = 'Last name is required';
     }
@@ -318,54 +388,20 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
       newErrors.patientFirstName = 'First name is required';
     }
 
-    // Infusion Products validation (required product_name)
-    const allowedRoutes = [
-      'Implanted Port',
-      'Central Catheter',
-      'PICC',
-      'Perineural',
-      'Peripheral Venous',
-      'Subcutaneous',
-    ];
-    const allowedModes = ['Gravity', 'Elastomeric Diffuser', 'Electric Infusion Pump'];
-
+    // Infusion Products validation - at least 1 product must be filled
+    let hasValidProduct = false;
     state.infusion_products.forEach((product, index) => {
       if (!product.product_name.trim()) {
-        newErrors[`infusion_products[${index}].product_name`] = 'Product name is required';
-      }
-
-      // Optional numeric fields: validate if provided
-      const numericFields: Array<{ key: keyof typeof product; label: string }> = [
-        { key: 'diluent_volume_ml', label: 'Diluent Volume (ml)' },
-        { key: 'duration_hours', label: 'Duration (hours)' },
-        { key: 'duration_minutes', label: 'Duration (minutes)' },
-        { key: 'frequency_per_day', label: 'Frequency per day' },
-        { key: 'treatment_duration_days', label: 'Treatment Duration (days)' },
-      ];
-      numericFields.forEach(f => {
-        const val = (product as any)[f.key];
-        if (val !== '' && val !== undefined && val !== null && isNaN(Number(val))) {
-          newErrors[`infusion_products[${index}].${String(f.key)}`] = `${f.label} must be a number`;
-        }
-      });
-
-      // Validate select/radio fields if provided
-      if (product.route_of_access && !allowedRoutes.includes(product.route_of_access)) {
-        newErrors[`infusion_products[${index}].route_of_access`] = 'Invalid route of access';
-      }
-      if (
-        product.mode_of_administration &&
-        !allowedModes.includes(product.mode_of_administration)
-      ) {
-        newErrors[`infusion_products[${index}].mode_of_administration`] = 'Invalid mode of administration';
-      }
-      if (
-        product.diluent_type &&
-        !['with', 'without'].includes(product.diluent_type)
-      ) {
-        newErrors[`infusion_products[${index}].diluent_type`] = 'Invalid diluent option';
+        newErrors[`infusion_products[${index}].product_name`] =
+          'Product name is required';
+      } else {
+        hasValidProduct = true;
       }
     });
+
+    if (!hasValidProduct) {
+      newErrors.infusion_products = 'At least one product name is required';
+    }
 
     setErrors(newErrors);
     lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
@@ -373,52 +409,70 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    if (validateForm()) {
-      console.log('Form is valid, submitting:', state);
-      // TODO: Implement form submission logic
-      warningSheetRef.current?.show();
-    } else {
-      console.log('Form validation failed:', errors);
-      // Scroll to first error or show error message
-    }
-  };
+  const handleSubmitRequest = async () => {
+    // Always validate first
+    const ok = validateForm();
+    if (!ok) {
+      // Show first error in toast
+      const firstErrorKey = lastFirstErrorKey.current || '';
+      const firstErrorMessage =
+        errors[firstErrorKey] || 'Please fill in all required fields';
+      SHOW_TOAST(firstErrorMessage, 'error');
 
-  // Expose methods to parent via ref
-  useImperativeHandle(ref, () => ({
-    validateAndSubmit: async () => {
-      const ok = validateForm();
-      if (!ok) {
-        // Show first error in toast
-        const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage = errors[firstErrorKey] || 'Please fill in all required fields';
-        SHOW_TOAST(firstErrorMessage, 'error');
-
-        const match = firstErrorKey.match(/infusion_products\[(\d+)\]/);
-        if (match) {
-          const idx = Number(match[1]);
-          const y = productPositions[idx] ?? 0;
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: Math.max(y - 20, 0), animated: true });
-          }, 50);
-        } else {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-          }, 50);
-        }
-        return false;
+      const match = firstErrorKey.match(/infusion_products\[(\d+)\]/);
+      if (match) {
+        const idx = Number(match[1]);
+        const y = productPositions[idx] ?? 0;
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            y: Math.max(y - 20, 0),
+            animated: true,
+          });
+        }, 50);
+      } else {
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 50);
       }
+      return;
+    }
 
-      // Call API to create service request
-      try {
-        setIsLoading(true);
-        onLoadingChange?.(true);
+    // Show loader
+    dispatch(setLoading(true));
 
+    // Check if it's an existing draft
+    const isExistingDraft = initialData && initialData._id;
+    const requestId = isExistingDraft ? initialData._id : null;
+
+    try {
+      if (isExistingDraft && requestId) {
+        const submitResponse = await serviceRequestApi.submitForReview(
+          requestId,
+        );
+        if (submitResponse.success) {
+          SHOW_SUCCESS_TOAST(submitResponse.message);
+          dispatch(setLoading(false));
+          setTimeout(() => {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: 'DoctorRequest',
+            });
+          }, 500);
+        } else {
+          dispatch(setLoading(false));
+          SHOW_TOAST(
+            submitResponse.error ||
+              'Failed to submit service request for review',
+            'error',
+          );
+        }
+      } else {
+        // Create new service request
         const payload = {
           serviceId: serviceId || '',
-          patientId: selectedPatient?.id || '',
-          priorityLevel: 'routine' as const,
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format('YYYY-MM-DD'),
+          patientId: selectedPatient?.id || selectedPatient?._id || '',
+          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+            'YYYY-MM-DD',
+          ),
           requestedTime: moment().format('HH:mm'),
           initialNotes: '',
           formData: state,
@@ -426,27 +480,137 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
 
         const response = await serviceRequestApi.createServiceRequest(payload);
 
-        setIsLoading(false);
-        onLoadingChange?.(false);
+        dispatch(setLoading(false));
 
         if (response.success) {
-          SHOW_SUCCESS_TOAST('Service request created successfully');
-          console.log('Service request created:', response.data);
-          return true;
+          SHOW_SUCCESS_TOAST(response?.message);
+
+          // Submit for review to lock the request
+          const newRequestId = response.data?.data?.id;
+          if (newRequestId) {
+            const submitResponse = await serviceRequestApi.submitForReview(
+              newRequestId,
+            );
+            if (submitResponse.success) {
+              SHOW_SUCCESS_TOAST(submitResponse.message);
+              dispatch(setLoading(false));
+              setTimeout(() => {
+                NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                  screen: 'DoctorRequest',
+                });
+              }, 500);
+            } else {
+              dispatch(setLoading(false));
+              SHOW_TOAST(
+                submitResponse.error ||
+                  'Failed to submit service request for review',
+                'error',
+              );
+            }
+          } else {
+            dispatch(setLoading(false));
+          }
         } else {
-          SHOW_TOAST(response.error || 'Failed to create service request', 'error');
-          return false;
+          dispatch(setLoading(false));
+          SHOW_TOAST(
+            response.error || 'Failed to create service request',
+            'error',
+          );
         }
-      } catch (error: any) {
-        setIsLoading(false);
-        onLoadingChange?.(false);
-        SHOW_TOAST(error.message || 'Failed to create service request', 'error');
-        return false;
       }
-    },
-    getFormData: () => state,
-    getIsLoading: () => isLoading,
-  }));
+    } catch (error: any) {
+      dispatch(setLoading(false));
+      SHOW_TOAST(error.message || 'Failed to process request', 'error');
+    }
+  };
+
+  // Handle save as draft
+  const handleSaveAsDraft = async () => {
+    // Always validate first
+    const ok = validateForm();
+    if (!ok) {
+      // Show first error in toast
+      const firstErrorKey = lastFirstErrorKey.current || '';
+      const firstErrorMessage =
+        errors[firstErrorKey] || 'Please fill in all required fields';
+      SHOW_TOAST(firstErrorMessage, 'error');
+
+      const match = firstErrorKey.match(/infusion_products\[(\d+)\]/);
+      if (match) {
+        const idx = Number(match[1]);
+        const y = productPositions[idx] ?? 0;
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({
+            y: Math.max(y - 20, 0),
+            animated: true,
+          });
+        }, 50);
+      } else {
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 50);
+      }
+      return;
+    }
+
+    // Show loader
+    dispatch(setLoading(true));
+
+    // Check if it's an existing draft
+    const isExistingDraft = initialData && initialData._id;
+    const requestId = isExistingDraft ? initialData._id : null;
+
+    try {
+      if (isExistingDraft && requestId) {
+        // Update existing draft
+        console.log('requestId update', requestId, state);
+
+        const response = await serviceRequestApi.updateDraft(requestId, {
+          formData: state,
+        });
+        dispatch(setLoading(false));
+        if (response.success) {
+          SHOW_SUCCESS_TOAST(response.message);
+          setTimeout(() => {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: 'DoctorRequest',
+            });
+          }, 500);
+        } else {
+          SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+        }
+      } else {
+        // Create new service request as draft
+        const payload = {
+          serviceId: serviceId || '',
+          patientId: selectedPatient?.id || selectedPatient?._id || '',
+          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
+            'YYYY-MM-DD',
+          ),
+          requestedTime: moment().format('HH:mm'),
+          initialNotes: '',
+          formData: state,
+        };
+
+        const response = await serviceRequestApi.createServiceRequest(payload);
+        dispatch(setLoading(false));
+
+        if (response.success) {
+          SHOW_SUCCESS_TOAST(response?.message);
+          setTimeout(() => {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: 'DoctorRequest',
+            });
+          }, 500);
+        } else {
+          SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+        }
+      }
+    } catch (error: any) {
+      dispatch(setLoading(false));
+      SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -481,283 +645,303 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
         />
 
         {/* PRESCRIBER IDENTIFICATION */}
-        <FormPrescriberSection
-          state={state}
-          setState={setFormState}
-        />
+        <FormPrescriberSection state={state} setState={setFormState} />
 
         {/* FACILITY INFORMATION */}
-        <FormFacilitySection
-          state={state}
-          setState={setFormState}
-        />
+        <FormFacilitySection state={state} setState={setFormState} />
 
         {/* INFUSION PRODUCTS */}
         {/* {renderSectionHeader(STRING.infusionProducts, IMAGES.testTubeIcon)} */}
         <AppText
-          size={getScaleSize(15)}
-          font={FONTS.Inter.Bold}
+          size={getScaleSize(16)}
+          font={FONTS.Inter.SemiBold}
           color={COLORS._1A1D1F}
         >
           {STRING.infusionProducts}
         </AppText>
-        <View style={styles.card}>
-          {state.infusion_products.map((product: any, index: number) => (
-            <View
-              key={`product-${index}`}
-              onLayout={e => {
-                productPositions[index] = e.nativeEvent.layout.y;
-              }}
+        {state.infusion_products.map((product: any, index: number) => (
+          <View
+            key={`product-${index}`}
+            style={styles.card}
+            onLayout={e => {
+              productPositions[index] = e.nativeEvent.layout.y;
+            }}
+          >
+            <View style={[styles.productHeader]}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._1A1D1F}
+              >
+                {STRING.product}
+                {index + 1}
+              </AppText>
+              {state.infusion_products.length > 1 && (
+                <TouchableOpacity onPress={() => removeProduct(index)}>
+                  <Text style={{ color: COLORS.error }}>remove</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <Input
+              label={STRING.productName}
+              value={product.product_name}
+              onChangeText={value =>
+                updateProduct(index, 'product_name', value)
+              }
+              placeholder={STRING.enterProductName}
+              style={styles.inputField}
+              error={errors[`infusion_products[${index}].product_name`]}
+            />
+            <Input
+              label={STRING.strength}
+              value={product.strength}
+              onChangeText={value => updateProduct(index, 'strength', value)}
+              placeholder={STRING.concentration}
+              style={styles.inputField}
+            />
+
+            <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
+              <AppCheckBox
+                value={product.diluent_type === 'with'}
+                onValueChange={value => {
+                  updateProduct(index, 'diluent_type', value ? 'with' : '');
+                }}
+                label={STRING.withDiluent}
+              />
+              <AppCheckBox
+                value={product.diluent_type === 'without'}
+                onValueChange={value => {
+                  updateProduct(index, 'diluent_type', value ? 'without' : '');
+                }}
+                label={STRING.withoutDiluent}
+              />
+            </View>
+            {errors[`infusion_products[${index}].diluent_type`] ? (
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={COLORS.error}
+                style={{ marginBottom: getScaleSize(8) }}
+              >
+                {errors[`infusion_products[${index}].diluent_type`]}
+              </AppText>
+            ) : null}
+
+            <Input
+              label={STRING.diluentVolume}
+              value={product.diluent_volume_ml}
+              onChangeText={value =>
+                updateProduct(index, 'diluent_volume_ml', value)
+              }
+              placeholder={STRING.volumePerDay}
+              style={styles.inputField}
+              keyboardType="numeric"
+              error={errors[`infusion_products[${index}].diluent_volume_ml`]}
+            />
+            <Input
+              label={STRING.duration}
+              value={product.duration_hours}
+              onChangeText={value =>
+                updateProduct(index, 'duration_hours', value)
+              }
+              placeholder={STRING.hours}
+              style={styles.inputField}
+              keyboardType="numeric"
+              error={errors[`infusion_products[${index}].duration_hours`]}
+            />
+            <Input
+              label={STRING.durationMin}
+              value={product.duration_minutes}
+              onChangeText={value =>
+                updateProduct(index, 'duration_minutes', value)
+              }
+              placeholder={STRING.minutes}
+              style={styles.inputField}
+              keyboardType="numeric"
+              error={errors[`infusion_products[${index}].duration_minutes`]}
+            />
+            <Input
+              label={STRING.frequency}
+              value={product.frequency_per_day}
+              onChangeText={value =>
+                updateProduct(index, 'frequency_per_day', value)
+              }
+              placeholder={STRING.freqPerDay}
+              style={styles.inputField}
+              keyboardType="numeric"
+              error={errors[`infusion_products[${index}].frequency_per_day`]}
+            />
+
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._1A1D1F}
+              style={styles.sectionLabel}
             >
-              <View style={[styles.productHeader]}>
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.SemiBold}
-                  color={COLORS._1A1D1F}
-                >
-                  {STRING.product}
-                  {index + 1}
-                </AppText>
-                {state.infusion_products.length > 1 && (
-                  <TouchableOpacity onPress={() => removeProduct(index)}>
-                    <Text style={{ color: COLORS.error }}>remove</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <Input
-                label={STRING.productName}
-                value={product.product_name}
-                onChangeText={value =>
-                  updateProduct(index, 'product_name', value)
-                }
-                placeholder={STRING.enterProductName}
-                style={styles.inputField}
-                error={errors[`infusion_products[${index}].product_name`]}
-              />
-              <Input
-                label={STRING.strength}
-                value={product.strength}
-                onChangeText={value => updateProduct(index, 'strength', value)}
-                placeholder={STRING.concentration}
-                style={styles.inputField}
-              />
-
-              <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
+              {STRING.routeOfAccess}
+            </AppText>
+            <View style={styles.checkboxGroup}>
+              {[
+                'Implanted Port',
+                'Central Catheter',
+                'PICC',
+                'Perineural',
+                'Peripheral Venous',
+                'Subcutaneous',
+              ].map(route => (
                 <AppCheckBox
-                  value={product.diluent_type === 'with'}
-                  onValueChange={value => {
-                    updateProduct(index, 'diluent_type', value ? 'with' : '');
-                  }}
-                  label={STRING.withDiluent}
-                />
-                <AppCheckBox
-                  value={product.diluent_type === 'without'}
-                  onValueChange={value => {
-                    updateProduct(index, 'diluent_type', value ? 'without' : '');
-                  }}
-                  label={STRING.withoutDiluent}
-                />
-              </View>
-              {errors[`infusion_products[${index}].diluent_type`] ? (
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS.error}
-                  style={{ marginBottom: getScaleSize(8) }}
-                >
-                  {errors[`infusion_products[${index}].diluent_type`]}
-                </AppText>
-              ) : null}
-
-              <Input
-                label={STRING.diluentVolume}
-                value={product.diluent_volume_ml}
-                onChangeText={value =>
-                  updateProduct(index, 'diluent_volume_ml', value)
-                }
-                placeholder={STRING.volumePerDay}
-                style={styles.inputField}
-                keyboardType="numeric"
-                error={errors[`infusion_products[${index}].diluent_volume_ml`]}
-              />
-              <Input
-                label={STRING.duration}
-                value={product.duration_hours}
-                onChangeText={value =>
-                  updateProduct(index, 'duration_hours', value)
-                }
-                placeholder={STRING.hours}
-                style={styles.inputField}
-                keyboardType="numeric"
-                error={errors[`infusion_products[${index}].duration_hours`]}
-              />
-              <Input
-                label={STRING.durationMin}
-                value={product.duration_minutes}
-                onChangeText={value =>
-                  updateProduct(index, 'duration_minutes', value)
-                }
-                placeholder={STRING.minutes}
-                style={styles.inputField}
-                keyboardType="numeric"
-                error={errors[`infusion_products[${index}].duration_minutes`]}
-              />
-              <Input
-                label={STRING.frequency}
-                value={product.frequency_per_day}
-                onChangeText={value =>
-                  updateProduct(index, 'frequency_per_day', value)
-                }
-                placeholder={STRING.freqPerDay}
-                style={styles.inputField}
-                keyboardType="numeric"
-                error={errors[`infusion_products[${index}].frequency_per_day`]}
-              />
-
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._1A1D1F}
-                style={styles.sectionLabel}
-              >
-                {STRING.routeOfAccess}
-              </AppText>
-              <View style={styles.checkboxGroup}>
-                {['Implanted Port', 'Central Catheter', 'PICC', 'Perineural', 'Peripheral Venous', 'Subcutaneous'].map(
-                  route => (
-                    <AppCheckBox
-                      key={route}
-                      label={route}
-                      value={product.route_of_access === route}
-                      onValueChange={() =>
-                        updateProduct(index, 'route_of_access', product.route_of_access === route ? '' : route)
-                      }
-                    />
-                  ),
-                )}
-              </View>
-              {errors[`infusion_products[${index}].route_of_access`] && (
-                <AppText color={COLORS.error} size={getScaleSize(11)} style={{ marginTop: getScaleSize(4) }}>
-                  {errors[`infusion_products[${index}].route_of_access`]}
-                </AppText>
-              )}
-
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._1A1D1F}
-                style={[styles.sectionLabel, { marginTop: getScaleSize(16) }]}
-              >
-                Mode of Administration
-              </AppText>
-              <View style={styles.checkboxGroup}>
-                {['Gravity', 'Elastomeric Diffuser', 'Electric Infusion Pump'].map(mode => (
-                  <AppCheckBox
-                    key={mode}
-                    label={mode}
-                    value={product.mode_of_administration === mode}
-                    onValueChange={() =>
-                      updateProduct(index, 'mode_of_administration', product.mode_of_administration === mode ? '' : mode)
-                    }
-                  />
-                ))}
-              </View>
-              {errors[`infusion_products[${index}].mode_of_administration`] && (
-                <AppText color={COLORS.error} size={getScaleSize(11)} style={{ marginTop: getScaleSize(4) }}>
-                  {errors[`infusion_products[${index}].mode_of_administration`]}
-                </AppText>
-              )}
-
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._1A1D1F}
-                style={styles.sectionLabel}
-              >
-                The patient must remain ambulatory during treatment?:
-              </AppText>
-              <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
-                <AppCheckBox
-                  value={product.ambulatory_required}
-                  onValueChange={value =>
-                    updateProduct(index, 'ambulatory_required', value)
+                  key={route}
+                  label={route}
+                  value={product.route_of_access === route}
+                  onValueChange={() =>
+                    updateProduct(
+                      index,
+                      'route_of_access',
+                      product.route_of_access === route ? '' : route,
+                    )
                   }
-                  label="Yes"
                 />
+              ))}
+            </View>
+            {errors[`infusion_products[${index}].route_of_access`] && (
+              <AppText
+                color={COLORS.error}
+                size={getScaleSize(11)}
+                style={{ marginTop: getScaleSize(4) }}
+              >
+                {errors[`infusion_products[${index}].route_of_access`]}
+              </AppText>
+            )}
 
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._1A1D1F}
+              style={[styles.sectionLabel, { marginTop: getScaleSize(16) }]}
+            >
+              Mode of Administration
+            </AppText>
+            <View style={styles.checkboxGroup}>
+              {[
+                'Gravity',
+                'Elastomeric Diffuser',
+                'Electric Infusion Pump',
+              ].map(mode => (
                 <AppCheckBox
-                  value={!product.ambulatory_required}
-                  onValueChange={value =>
-                    updateProduct(index, 'ambulatory_required', !value)
+                  key={mode}
+                  label={mode}
+                  value={product.mode_of_administration === mode}
+                  onValueChange={() =>
+                    updateProduct(
+                      index,
+                      'mode_of_administration',
+                      product.mode_of_administration === mode ? '' : mode,
+                    )
                   }
-                  label="No"
                 />
-              </View>
+              ))}
+            </View>
+            {errors[`infusion_products[${index}].mode_of_administration`] && (
+              <AppText
+                color={COLORS.error}
+                size={getScaleSize(11)}
+                style={{ marginTop: getScaleSize(4) }}
+              >
+                {errors[`infusion_products[${index}].mode_of_administration`]}
+              </AppText>
+            )}
 
-              <View style={{ marginBottom: getScaleSize(10) }}>
-                <AppCheckBox
-                  value={product.prepared_in_facility}
-                  onValueChange={value =>
-                    updateProduct(index, 'prepared_in_facility', value)
-                  }
-                  label="If filled/prepared under the supervision of a healthcare facility, tick this box"
-                />
-              </View>
-
-              <View style={styles.dateInputsRow}>
-                <Input
-                  label="Start Date"
-                  value={product.start_date}
-                  onPress={() => {
-                    setPickerType({ type: 'start_date', index });
-                    setOpen(true);
-                  }}
-                  placeholder="DD/MM/YYYY"
-                  style={styles.halfWidthInput}
-                />
-                <Input
-                  label="End Date"
-                  value={product.end_date}
-                  onPress={() => {
-                    setPickerType({ type: 'end_date', index });
-                    setOpen(true);
-                  }}
-                  placeholder="DD/MM/YYYY"
-                  style={styles.halfWidthInput}
-                />
-              </View>
-              <Input
-                label="Treatment Duration (days)"
-                value={product.treatment_duration_days}
-                onChangeText={value =>
-                  updateProduct(index, 'treatment_duration_days', value)
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._1A1D1F}
+              style={styles.sectionLabel}
+            >
+              The patient must remain ambulatory during treatment?:
+            </AppText>
+            <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
+              <AppCheckBox
+                value={product.ambulatory_required}
+                onValueChange={value =>
+                  updateProduct(index, 'ambulatory_required', value)
                 }
-                placeholder="Enter treatment duration"
-                style={styles.inputField}
-                keyboardType="numeric"
-                error={errors[`infusion_products[${index}].treatment_duration_days`]}
-              />
-              <Input
-                label="Total Number of Infusions"
-                value={product.tni}
-                onChangeText={value => updateProduct(index, 'tni', value)}
-                placeholder="Auto-calculated"
-                style={styles.inputField}
-                keyboardType="numeric"
-                editable={false}
+                label="Yes"
               />
 
               <AppCheckBox
-                value={product.infuse_alone}
+                value={!product.ambulatory_required}
                 onValueChange={value =>
-                  updateProduct(index, 'infuse_alone', value)
+                  updateProduct(index, 'ambulatory_required', !value)
                 }
-                label="If this treatment must be infused ALONE, tick this box"
+                label="No"
               />
             </View>
-          ))}
-        </View>
+
+            <View style={{ marginBottom: getScaleSize(10) }}>
+              <AppCheckBox
+                value={product.prepared_in_facility}
+                onValueChange={value =>
+                  updateProduct(index, 'prepared_in_facility', value)
+                }
+                label="If filled/prepared under the supervision of a healthcare facility, tick this box"
+              />
+            </View>
+
+            <View style={styles.dateInputsRow}>
+              <Input
+                label="Start Date"
+                value={product.start_date}
+                onPress={() => {
+                  setPickerType({ type: 'start_date', index });
+                  setOpen(true);
+                }}
+                placeholder="DD/MM/YYYY"
+                style={styles.halfWidthInput}
+              />
+              <Input
+                label="End Date"
+                value={product.end_date}
+                onPress={() => {
+                  setPickerType({ type: 'end_date', index });
+                  setOpen(true);
+                }}
+                placeholder="DD/MM/YYYY"
+                style={styles.halfWidthInput}
+              />
+            </View>
+            <Input
+              label="Treatment Duration (days)"
+              value={product.treatment_duration_days}
+              onChangeText={value =>
+                updateProduct(index, 'treatment_duration_days', value)
+              }
+              placeholder="Enter treatment duration"
+              style={styles.inputField}
+              keyboardType="numeric"
+              error={
+                errors[`infusion_products[${index}].treatment_duration_days`]
+              }
+            />
+            <Input
+              label="Total Number of Infusions"
+              value={product.tni}
+              onChangeText={value => updateProduct(index, 'tni', value)}
+              placeholder="Auto-calculated"
+              style={styles.inputField}
+              keyboardType="numeric"
+              editable={false}
+            />
+
+            <AppCheckBox
+              value={product.infuse_alone}
+              onValueChange={value =>
+                updateProduct(index, 'infuse_alone', value)
+              }
+              label="If this treatment must be infused ALONE, tick this box"
+            />
+          </View>
+        ))}
 
         <TouchableOpacity style={styles.addButton} onPress={addProduct}>
           <Image source={IMAGES.add_patient} style={styles.addIcon} />
@@ -811,6 +995,8 @@ const AntibiotherapyInfusionForm = forwardRef<any, AntibiotherapyInfusionFormPro
 
 AntibiotherapyInfusionForm.displayName = 'AntibiotherapyInfusionForm';
 
+export default AntibiotherapyInfusionForm;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -823,7 +1009,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(190),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
     marginHorizontal: getScaleSize(16),
   },
@@ -837,9 +1023,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: getScaleSize(56),
     borderRadius: getScaleSize(14),
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS._E5E7EB,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -879,23 +1065,38 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F8F9FA,
   },
   bottomBar: {
-    // position: 'absolute',
-    left: getScaleSize(0),
-    right: getScaleSize(0),
-    bottom: getScaleSize(0),
     flexDirection: 'row',
     gap: getScaleSize(12),
     paddingHorizontal: getScaleSize(20),
     paddingVertical: getScaleSize(14),
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: '#efefef',
+    borderTopColor: COLORS._EFEFEF,
+    marginTop: getScaleSize(20),
   },
   nextBtn: {
     flex: 1,
     height: getScaleSize(56),
     borderRadius: getScaleSize(14),
-    backgroundColor: '#526674',
+    backgroundColor: COLORS._526674,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveBtn: {
+    flex: 1,
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitBtn: {
+    flex: 1.4,
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1007,5 +1208,3 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(8),
   },
 });
-
-export default AntibiotherapyInfusionForm;

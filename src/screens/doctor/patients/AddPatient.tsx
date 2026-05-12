@@ -62,7 +62,8 @@ const AddPatient: React.FC = () => {
   const dispatch = useDispatch<any>();
   const { isLoading } = useSelector((state: RootState) => state.common);
 
-  const [fullName, setFullName] = useState('');
+  const [fName, setFName] = useState('');
+  const [lName, setLName] = useState('');
   const [dob, setDob] = useState('');
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -82,7 +83,8 @@ const AddPatient: React.FC = () => {
 
   useEffect(() => {
     if (patientToEdit) {
-      setFullName(patientToEdit.fullName || '');
+      setFName(patientToEdit.fName || '');
+      setLName(patientToEdit.lName || '');
       setPhone(patientToEdit.phoneNumber || '');
       setEmail(patientToEdit.email || '');
       setDob(
@@ -103,10 +105,11 @@ const AddPatient: React.FC = () => {
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!fullName.trim()) {
-      newErrors.fullName = STRING.fullNameRequired;
-    } else if (fullName.trim().length < 3) {
-      newErrors.fullName = STRING.fullNameMinLength;
+    if (!fName.trim()) {
+      newErrors.fName = 'First name is required';
+    }
+    if (!lName.trim()) {
+      newErrors.lName = 'Last name is required';
     }
 
     if (!phone.trim()) {
@@ -128,7 +131,8 @@ const AddPatient: React.FC = () => {
   const handleSave = () => {
     if (validate()) {
       const payload = {
-        fullName: fullName.trim(),
+        fName: fName.trim(),
+        lName: lName.trim(),
         phoneNumber: phone.trim(),
         email: email.trim(),
         dateOfBirth: dob,
@@ -197,30 +201,57 @@ const AddPatient: React.FC = () => {
                 {STRING.personalInformation}
               </AppText>
               <View style={styles.card}>
-                <View style={styles.fieldGroup}>
-                  <Input
-                    value={fullName}
-                    onChangeText={t => {
-                      setFullName(t);
-                      setErrors(prev => ({ ...prev, fullName: '' }));
-                    }}
-                    placeholder={STRING.enterFullName}
-                    placeholderTextColor={COLORS._7A7A7A}
-                    label={STRING.fullName}
-                    labelColor={COLORS.black}
-                    labelFont={FONTS.Inter.SemiBold}
-                    labelSize={getScaleSize(13)}
-                    isMandatory={true}
-                    error={errors.fullName}
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.fullName && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
-                    style={styles.inputContainer}
-                  />
+                <View style={styles.nameRow}>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      value={fName}
+                      onChangeText={t => {
+                        setFName(t);
+                        setErrors(prev => ({ ...prev, fName: '' }));
+                      }}
+                      placeholder={STRING.fName}
+                      placeholderTextColor={COLORS._7A7A7A}
+                      label={STRING.fName}
+                      labelColor={COLORS.black}
+                      labelFont={FONTS.Inter.SemiBold}
+                      labelSize={getScaleSize(13)}
+                      isMandatory={true}
+                      error={errors.fName}
+                      inputWrapperStyle={[
+                        styles.inputWrapperStyle,
+                        errors.fName && {
+                          borderWidth: 1,
+                          borderColor: COLORS.error,
+                        },
+                      ]}
+                      style={styles.inputContainer}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      value={lName}
+                      onChangeText={t => {
+                        setLName(t);
+                        setErrors(prev => ({ ...prev, lName: '' }));
+                      }}
+                      placeholder={STRING.lName}
+                      placeholderTextColor={COLORS._7A7A7A}
+                      label={STRING.lName}
+                      labelColor={COLORS.black}
+                      labelFont={FONTS.Inter.SemiBold}
+                      labelSize={getScaleSize(13)}
+                      isMandatory={true}
+                      error={errors.lName}
+                      inputWrapperStyle={[
+                        styles.inputWrapperStyle,
+                        errors.lName && {
+                          borderWidth: 1,
+                          borderColor: COLORS.error,
+                        },
+                      ]}
+                      style={styles.inputContainer}
+                    />
+                  </View>
                 </View>
 
                 <View style={styles.fieldGroup}>
@@ -614,6 +645,10 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   rowGap: {
+    flexDirection: 'row',
+    gap: getScaleSize(12),
+  },
+  nameRow: {
     flexDirection: 'row',
     gap: getScaleSize(12),
   },

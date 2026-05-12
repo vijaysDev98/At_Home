@@ -23,14 +23,14 @@ interface RequestCardProps {
 }
 
 const RequestCard: React.FC<RequestCardProps> = ({
-  name = 'John Doe',
-  initials = 'JD',
-  requestType = 'Physical Therapy',
-  status = 'Submitted',
-  requestId = '#6534',
-  formStatus = 'Submitted',
-  buttonText = 'Update & Sign',
-  onButtonPress = () => {},
+  name,
+  initials,
+  requestType,
+  status,
+  requestId,
+  formStatus,
+  buttonText,
+  onButtonPress = () => { },
 }) => {
   const getStatusStyles = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -136,7 +136,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             font={FONTS.Inter.Medium}
             color={COLORS._1A1D1F}
           >
-            {requestId}
+            #{requestId.slice(-4).toUpperCase()}
           </AppText>
         </View>
         <View>
@@ -151,6 +151,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             size={getScaleSize(13)}
             font={FONTS.Inter.Medium}
             color={COLORS._1A1D1F}
+            align={'right'}
           >
             {formStatus}
           </AppText>

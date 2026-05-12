@@ -35,9 +35,14 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   style,
   rightContent,
 }) => {
-  const name = patient?.fullName || 'N/A';
+  const name = patient?.fName + ' ' + patient?.lName || 'N/A';
   const avatar = patient?.avatar;
-  const age = "ID: PT-" + (patient?.id?.slice(-4).toUpperCase() || '0000') + " • " + (patient?.age || '0') + " yrs"
+  const age =
+    'ID: PT-' +
+    (patient?.id?.slice(-4).toUpperCase() || '0000') +
+    ' • ' +
+    (patient?.age || '0') +
+    ' yrs';
 
   return (
     <View style={[styles.summaryCard, style]}>
@@ -49,8 +54,8 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
                 avatar
                   ? { uri: avatar }
                   : {
-                    uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-                  }
+                      uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+                    }
               }
               style={styles.avatar}
             />
@@ -75,16 +80,16 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
         {rightContent
           ? rightContent
           : showEdit && (
-            <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._526674}
-              >
-                Edit
-              </AppText>
-            </TouchableOpacity>
-          )}
+              <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._526674}
+                >
+                  Edit
+                </AppText>
+              </TouchableOpacity>
+            )}
       </View>
 
       <View style={styles.summaryRowDivider} />

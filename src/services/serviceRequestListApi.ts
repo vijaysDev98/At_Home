@@ -10,7 +10,8 @@ export interface DeletedInfo {
 // ===== FOR LIST VIEW (DoctorRequest) =====
 export interface PatientInfo {
   _id: string;
-  fullName: string;
+  fName: string;
+  lName: string;
   dateOfBirth: string;
   phoneNumber: string;
   email: string;
@@ -44,10 +45,16 @@ export interface ServiceInfo {
 export interface ServiceRequest {
   id: string;
   requestId: string;
-  priorityLevel: 'routine' | 'urgent' | 'emergency';
   requestedDate: string;
   requestedTime: string;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  formStatus?:
+    | 'draft'
+    | 'submitted'
+    | 'awaitingSignature'
+    | 'signed'
+    | 'returned'
+    | 'completed';
   createdAt: string;
   updatedAt: string;
   patient: PatientInfo;
@@ -60,12 +67,12 @@ export interface UserInfo {
   email?: string;
   fName?: string;
   lName?: string;
-  fullName?: string;
 }
 
 export interface PatientDetailInfo {
   _id: string;
-  fullName: string;
+  fName: string;
+  lName: string;
   dateOfBirth?: string;
   phoneNumber?: string;
   email?: string;
@@ -163,11 +170,17 @@ export interface ServiceRequestDetail {
   patientId: PatientDetailInfo;
   doctorId: UserInfo;
   serviceId: ServiceDetailInfo;
-  priorityLevel: 'routine' | 'urgent' | 'emergency';
   requestedDate: string;
   requestedTime: string;
   initialNotes: string | null;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'inProgress' | 'returned' | 'completed';
+  status:
+    | 'draft'
+    | 'submitted'
+    | 'approved'
+    | 'rejected'
+    | 'inProgress'
+    | 'returned'
+    | 'completed';
   formStatus: string;
   formData: FormData;
   formTemplateId: string;
@@ -232,12 +245,15 @@ export const serviceRequestListApi = {
     params: ListServiceRequestsParams = { page: 1, size: 10 },
   ): Promise<ListServiceRequestsResponse | null> => {
     try {
-      const response: any = await API.Instance.get(API_ROUTES.listServiceRequests, {
-        params: {
-          page: params.page || 1,
-          size: params.size || 10,
+      const response: any = await API.Instance.get(
+        API_ROUTES.listServiceRequests,
+        {
+          params: {
+            page: params.page || 1,
+            size: params.size || 10,
+          },
         },
-      });
+      );
 
       if (response.status) {
         return response.data as ListServiceRequestsResponse;

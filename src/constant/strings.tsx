@@ -10,7 +10,8 @@ export const STRING = {
   createAccountSubtitle: 'Please fill in your professional information',
   updateYourProfile: 'Update Your Profile',
   updateProfileSubtitle: 'Update your professional details',
-  fullName: 'Full Name',
+  fName: 'First Name',
+  lName: 'Last Name',
   emailAddress: 'Email Address',
   password: 'Password',
   rppsNumber: 'RPPS Number',
@@ -58,9 +59,11 @@ export const STRING = {
   and: 'and',
   alreadyHaveAnAccount: "Don't have an account?",
   registrationSuccessful: 'Registration Successful',
-  yourAccountHasBeenCreatedAndIsCurrently: 'Your account has been created and is currently',
+  yourAccountHasBeenCreatedAndIsCurrently:
+    'Your account has been created and is currently',
   pendingAdminApproval: 'pending admin approval',
-  weWillNotifyYouViaEmailOnceYourAccountIsActivated: 'We will notify you via email once your account is activated',
+  weWillNotifyYouViaEmailOnceYourAccountIsActivated:
+    'We will notify you via email once your account is activated',
   whatHappensNext: 'What happens next?',
   yourRegDes: `Your registration will be reviewed by the admin. You will be
                   notified once your account is approved. You cannot log in until

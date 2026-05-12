@@ -39,7 +39,8 @@ export const updateProfile =
       console.log('profileData for upload', profileData);
 
       let data = {
-        fullName: profileData.fullName,
+        fName: profileData.fName,
+        lName: profileData.lName,
         specialty: profileData.specialty,
         profileImg: profileData.profileImg || '',
         businessAddress: profileData.businessAddress,
