@@ -382,7 +382,7 @@ const Register: React.FC = () => {
               isMandatory
               placeholder={'Enter first name'}
               value={fName}
-              style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
+              style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
               onChangeText={t => {
                 setFName(t);
                 setErrors(e => ({ ...e, fName: '' }));
@@ -393,7 +393,7 @@ const Register: React.FC = () => {
             <Input
               label={'Last Name'}
               isMandatory
-              style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
+              style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
               placeholder={'Enter last name'}
               value={lName}
               onChangeText={t => {

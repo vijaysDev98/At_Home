@@ -120,14 +120,11 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   }, [pagination, currentPage, fetchServiceRequests]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    const initials =
-      item.patient.fName +
-      ' ' +
-      item.patient.lName
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase();
+    const initials = (item.patient.fName + ' ' + item.patient.lName)
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
 
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item.formStatus || item.status;
