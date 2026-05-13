@@ -371,6 +371,150 @@ export const STRING = {
   freePrescription: 'Free Prescription',
   additionalNotes: 'Additional Notes',
 
+  //Hydration Infusion
+  enterStrength: 'Enter strength',
+  diluentVolumeMl: 'Diluent Volume (ml)',
+  diluent: 'Diluent',
+  enterDiluent: 'Enter diluent',
+  enterVolume: 'Enter volume',
+  durationHours: 'Duration hours',
+  durationMinutes: 'Duration minutes',
+  frequencyPerDay: 'Frequency per day',
+  preparedUnderHealthcareFacilitySupervision:
+    'Prepared Under Healthcare Facility Supervision',
+  enterDuration: 'Enter Duration',
+  ifThisTreatmentMustBeInfusedAlone: 'If this treatment must be infused ALONE',
+
+  //medical-oxygen
+  medicalOxygenForm: 'Medical Oxygen Form',
+  oxygenPrescriptionDetails: 'Oxygen Prescription Details',
+  primaryOxygenSource: 'Primary Oxygen Source',
+  stationaryConcentrator: 'Stationary concentrator',
+  compressedOxygenCylinder: 'Compressed oxygen cylinder',
+  ambulatoryCylinder: 'Ambulatory cylinder',
+  deliveryMethod: 'Delivery Method',
+  nasalCannula: 'Nasal cannula',
+  oxygenMask: 'Oxygen mask',
+  durationHoursPerDay: 'Duration (hours/day)',
+  flowRateAtRest: 'Flow rate at rest (L/min)',
+  enterFlowRate: 'Enter flow rate',
+  flowRateDuringExertion: 'Flow rate during exertion (L/min)',
+  humidifierRequired: 'Humidifier required (ISO 8185)',
+  backupOxygenCylinder: 'Backup oxygen cylinder',
+  mobilityOxygenCylinder: 'Mobility oxygen cylinder',
+  pulseOximeterProvided: 'Pulse oximeter provided',
+  nonKinking: 'Non-kinking tubing',
+  targetSpO2: 'Target SpO2 (%)',
+  enterTargetSpO2: 'Enter target SpO2',
+  emergencyContactPhone: 'Emergency Contact Phone',
+  patientInstructions: 'Patient Instructions',
+
+  ItIsEssentialToFollowTheInstructionsCarefully:
+    'It is essential to follow the instructions carefully.',
+  UseYourOxygenDailyForAtLeastTheDurationIndicatedOnYour:
+    'Use your oxygen daily for at least the duration indicated on your prescription',
+  IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns:
+    'If oxygen comes into contact with a flame or combustible material, there is a risk of explosion, fire, and/or serious burns.',
+  NEVERSmokeOrVapeWhileUsingOxygen: 'NEVER smoke or vape while using oxygen.',
+  NEVERSmokeInTheRoomWhereYourOxygenIsInstalled:
+    'NEVER smoke in the room where your oxygen is installed.',
+  NEVERcookWhileUsingOxygen: 'NEVER cook while using oxygen.',
+
+  NEVERuseAerosolSpraysOrFlammableSolventsNearOxygen:
+    'NEVER use aerosol sprays or flammable solvents near oxygen (alcohol, gasoline, etc.).',
+
+  NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands:
+    'NEVER apply greasy ointment to the face and never handle the equipment with greasy hands.',
+
+  NEVERkeepTheEquipmentNearHeatSources:
+    'NEVER keep the equipment near heat sources.',
+  partOfPalliativeCare: 'Part of palliative care',
+  patientacknowledgesinstructions: 'Patient acknowledges safety instructions',
+
+  //PCA
+  pcaInfusionPrescriptionForm: 'PCA Infusion Prescription Form',
+  nursingCareTasks: 'Nursing Care Tasks',
+  preparationAndProgrammingOfPortablePump:
+    'Preparation and programming of portable pump',
+  fillingAndSetupOfPump: 'Filling and setup of pump',
+  connectingInfusionAndStartingDevice:
+    'Connecting infusion and starting device',
+  reservoirChange: 'Reservoir change',
+  stoppingAndRemovingDevice: 'Stopping and removing device',
+  flushHeparinization: 'Flush / heparinization',
+  weeklyDressingChangeHuberNeedleReplacement:
+    'Weekly dressing change & Huber needle replacement',
+  monitoringAndCoordinationOfCare: 'Monitoring and coordination of care',
+  morphineAdministration: 'Morphine Administration',
+  totalMorphine: 'Total Morphine (mg)',
+  volume: 'Volume (ml)',
+  bagCapacity: 'Bag Capacity (ml)',
+  pumpSettings: 'Pump settings',
+  basalRate: 'Basal rate (mg/h)',
+  bolusDose: 'Bolus dose (mg)',
+  lockoutMin: 'Lockout (min)',
+  maxBolusPerHour: 'Max Bolus per hour',
+  connectionsPerWeek: 'Connections per Week',
+
+  //PERSONAL HYGINE
+  patientNameIsRequired: 'Patient name is required',
+  prescriptionDateIsRequired: 'Prescription date is required',
+  personalHygieneCare: 'Personal Hygiene Care',
+  basicInformation: 'Basic Information',
+  enterPrescriberIdentification: 'Enter prescriber identification',
+  dailyCareHomeNurse: 'Daily Care (Home Nurse)',
+  vitalSignsMonitoring: 'Vital Signs Monitoring',
+  weeklyMonitoringOfBodyWeight: 'Weekly monitoring of body weight',
+  treatmentAdministration: 'Treatment Administration',
+  capillaryBloodGlucoseMonitoringAndInsulinInjection:
+    'Capillary blood glucose monitoring & insulin injection',
+  timesPerDay: 'Times per day',
+  dressingCare: 'Dressing Care',
+  location: 'Location',
+  enterLocation: 'Enter location',
+  dressingType: 'Dressing Type',
+  everyXDays: 'Every X days',
+  enterDays: 'Enter days',
+  RemovalOfSuturesStaples: 'Removal of sutures/staples',
+  inXdays: 'In X days',
+  urinaryCatheterCare: 'Urinary catheter care',
+  catheterRemovalDate: 'Catheter Removal Date',
+  monitoringOfUrineOutput: 'Monitoring of urine output',
+  conditionClassification: 'Condition Classification',
+  notRelatedToLongTermCondition: 'Not related to long-term condition',
+  relatedToLongTermCondition: 'Related to long-term condition',
+  medicalCertification: 'Medical Certification',
+  doctorName: 'Doctor Name',
+  enterDoctorName: 'Enter doctor name',
+  requiresNursingCareAtHome: 'Requires nursing care at home',
+  prescriptionDurationDays: 'Prescription Duration (days)',
+  renewable: 'Renewable',
+
+  //wound care
+  woundDressingPrescriptionSupportForm:
+    'Wound Dressing Prescription Support Form',
+  physicianInformation: 'Physician Information',
+  condition: 'Condition',
+  careRelatedToLongTermConditionAld:
+    'Care related to long-term condition (ALD)',
+  notRelatedToLongTermConditionAld: 'Not related to long-term condition (ALD)',
+  typeOfWound: 'Type Of Wound',
+  woundSize: 'Wound Size',
+  example5x5cm: 'e.g. 5x5 cm',
+  desiredDressingType: 'Desired Dressing Type',
+  woundDetails: 'Wound Details',
+  requiredMaterialsAndProtocol: 'Required Materials and Protocol',
+  dressingKitsPerDay: 'Dressing kits per day',
+  bandagePerDay: 'Bandage per day',
+  cleaningWith: 'Cleaning with',
+  disinfectionWith: 'Disinfection with',
+  enterProduct: 'Enter product',
+  layer1: '1st Layer',
+  layer2: '2nd Layer',
+  treatmentDuration: 'Treatment Duration',
+  eg15days: 'e.g. 15 days',
+  untilHealed: 'Until healed',
+
   recentlyAdded: 'Recently Added',
   recentlyUpdated: 'Recently Updated',
   all: 'All',

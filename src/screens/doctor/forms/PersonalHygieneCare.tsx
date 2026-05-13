@@ -5,39 +5,19 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-  TouchableOpacity,
-  Text,
-  Alert,
-} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
 
-import {
-  AppText,
-  Input,
-  FormPatientSection,
-  FormPrescriberSection,
-  AppCheckBox,
-  AppLoader,
-  AppButton,
-} from '../../../components';
-
-import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
-import FormSignature from '../../../components/FormSignature';
+import { AppText, Input, AppCheckBox } from '../../../components';
 
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
@@ -52,6 +32,19 @@ export interface PersonalHygieneCareProps {
   patient?: PatientInfo;
   readOnly?: boolean;
 }
+
+const hygieneCareOptions = [
+  'Assistance with hygiene care twice a day',
+  'Complete bed hygiene care twice a day',
+];
+
+const vitalSignsOptions = [
+  'Blood pressure / Pulse',
+  'Temperature',
+  'Oxygen saturation',
+];
+
+const dressingType = ['Simple', 'Complex'];
 
 export interface PersonalHygieneCareRef {
   validateAndSubmit: () => Promise<void>;
@@ -190,12 +183,12 @@ const PersonalHygieneCare = forwardRef<
 
     // Required: patient_name
     if (!state.patient_name.trim()) {
-      newErrors.patientName = 'Patient name is required';
+      newErrors.patientName = STRING.patientNameIsRequired;
     }
 
     // Required: prescription_date
     if (!state.prescription_date) {
-      newErrors.prescriptionDate = 'Prescription date is required';
+      newErrors.prescriptionDate = STRING.prescriptionDateIsRequired;
     }
 
     setErrors(newErrors);
@@ -208,7 +201,7 @@ const PersonalHygieneCare = forwardRef<
     if (!ok) {
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -232,16 +225,12 @@ const PersonalHygieneCare = forwardRef<
           dispatch(setLoading(false));
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            submitResponse.error ||
-              'Failed to submit service request for review',
-            'error',
-          );
+          SHOW_TOAST(submitResponse.error, 'error');
         }
       } else {
         const payload = {
@@ -272,42 +261,34 @@ const PersonalHygieneCare = forwardRef<
               dispatch(setLoading(false));
               setTimeout(() => {
                 NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: 'DoctorRequest',
+                  screen: SCREENS.DOCTOR_REQUEST,
                 });
               }, 500);
             } else {
               dispatch(setLoading(false));
-              SHOW_TOAST(
-                submitResponse.error ||
-                  'Failed to submit service request for review',
-                'error',
-              );
+              SHOW_TOAST(submitResponse.error, 'error');
             }
           } else {
             dispatch(setLoading(false));
           }
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            response.error || 'Failed to create service request',
-            'error',
-          );
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      SHOW_TOAST(error.message, 'error');
     }
   };
 
   const handleSaveAsDraft = async () => {
     const ok = validateForm();
-    console.log('validate', ok);
 
     if (!ok) {
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -331,11 +312,11 @@ const PersonalHygieneCare = forwardRef<
           SHOW_SUCCESS_TOAST(response.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          SHOW_TOAST(response.error, 'error');
         }
       } else {
         const payload = {
@@ -357,24 +338,26 @@ const PersonalHygieneCare = forwardRef<
           SHOW_SUCCESS_TOAST(response?.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+      SHOW_TOAST(error.message, 'error');
     }
   };
 
   // Handle update & sign (for already-submitted requests)
-  const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+  const handleUpdateAndSign = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
     const requestId = initialData?._id || initialData?.id;
     if (!requestId) {
-      SHOW_TOAST('Unable to identify the request', 'error');
       return { success: false, error: 'No request ID' };
     }
     try {
@@ -384,11 +367,11 @@ const PersonalHygieneCare = forwardRef<
       if (response.success) {
         return { success: true };
       } else {
-        SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+        SHOW_TOAST(response.error, 'error');
         return { success: false, error: response.error };
       }
     } catch (error: any) {
-      const msg = error.message || 'Failed to update form data';
+      const msg = error.message;
       SHOW_TOAST(msg, 'error');
       return { success: false, error: msg };
     }
@@ -433,20 +416,20 @@ const PersonalHygieneCare = forwardRef<
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            Personal Hygiene Care
+            {STRING.personalHygieneCare}
           </AppText>
         </View>
 
         {/* BASIC INFORMATION */}
         <View style={styles.card}>
-          {renderSectionHeader('Basic Information')}
+          {renderSectionHeader(STRING.basicInformation)}
 
           <Input
-            label="Patient Name"
+            label={STRING.patientName}
             value={state.patient_name}
             isMandatory
             onChangeText={value => setFormState({ patient_name: value })}
-            placeholder="Enter patient name"
+            placeholder={STRING.enterPatientName}
             style={styles.inputField}
             error={errors.patientName}
           />
@@ -457,7 +440,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label="Date of Birth"
+            label={STRING.dateOfBirth}
             placeholder="DD/MM/YYYY"
             value={state.dob}
             style={styles.inputField}
@@ -465,10 +448,10 @@ const PersonalHygieneCare = forwardRef<
           />
 
           <Input
-            label="Prescriber Identification"
+            label={STRING.prescriberIdentification}
             value={state.prescriber_name}
             onChangeText={value => setFormState({ prescriber_name: value })}
-            placeholder="Enter prescriber identification"
+            placeholder={STRING.enterPrescriberIdentification}
             style={styles.inputField}
           />
 
@@ -478,7 +461,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label="Date"
+            label={STRING.date}
             placeholder="DD/MM/YYYY"
             value={state.prescription_date}
             style={styles.inputField}
@@ -489,10 +472,10 @@ const PersonalHygieneCare = forwardRef<
 
         {/* DAILY CARE */}
         <View style={styles.card}>
-          {renderSectionHeader('Daily Care (Home Nurse)')}
+          {renderSectionHeader(STRING.dailyCareHomeNurse)}
 
           <View style={styles.checkboxGroup}>
-            {['Assistance with hygiene care twice a day', 'Complete bed hygiene care twice a day'].map(care => (
+            {hygieneCareOptions.map(care => (
               <AppCheckBox
                 disabled={readOnly}
                 key={care}
@@ -506,18 +489,17 @@ const PersonalHygieneCare = forwardRef<
                 label={care}
               />
             ))}
-
           </View>
         </View>
 
         {/* VITAL SIGNS MONITORING */}
         <View style={styles.card}>
-          {renderSectionHeader('Vital Signs Monitoring')}
+          {renderSectionHeader(STRING.vitalSignsMonitoring)}
 
           <View
             style={[styles.checkboxGroup, { marginLeft: getScaleSize(12) }]}
           >
-            {['Blood pressure / Pulse', 'Temperature', 'Oxygen saturation'].map(vital => (
+            {vitalSignsOptions.map(vital => (
               <AppCheckBox
                 disabled={readOnly}
                 key={vital}
@@ -539,13 +521,13 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ weekly_weight_monitoring: value })
             }
-            label="Weekly monitoring of body weight"
+            label={STRING.weeklyMonitoringOfBodyWeight}
           />
         </View>
 
         {/* TREATMENT ADMINISTRATION */}
         <View style={styles.card}>
-          {renderSectionHeader('Treatment Administration')}
+          {renderSectionHeader(STRING.treatmentAdministration)}
 
           <AppCheckBox
             disabled={readOnly}
@@ -556,14 +538,14 @@ const PersonalHygieneCare = forwardRef<
                 glucose_frequency: value ? state.glucose_frequency : '',
               })
             }
-            label="Capillary blood glucose monitoring & insulin injection"
+            label={STRING.capillaryBloodGlucoseMonitoringAndInsulinInjection}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.glucose_monitoring && (
             <Input
               isLocked={readOnly}
-              label="Times per day"
+              label={STRING.timesPerDay}
               value={state.glucose_frequency}
               onChangeText={value => setFormState({ glucose_frequency: value })}
               placeholder="0"
@@ -575,20 +557,20 @@ const PersonalHygieneCare = forwardRef<
 
         {/* DRESSING CARE */}
         <View style={styles.card}>
-          {renderSectionHeader('Dressing Care')}
+          {renderSectionHeader(STRING.dressingCare)}
 
           <Input
             isLocked={readOnly}
-            label="Location"
-            placeholder="Enter location"
+            label={STRING.location}
+            placeholder={STRING.enterLocation}
             value={state.dressing_location}
             onChangeText={value => setFormState({ dressing_location: value })}
             style={styles.inputField}
           />
 
           <View style={styles.checkboxGroup}>
-            <AppText size={getScaleSize(13)}>Dressing Type </AppText>
-            {['Simple', 'Complex'].map(type => (
+            <AppText size={getScaleSize(13)}>{STRING.dressingType}</AppText>
+            {dressingType.map(type => (
               <AppCheckBox
                 disabled={readOnly}
                 key={type}
@@ -603,24 +585,24 @@ const PersonalHygieneCare = forwardRef<
 
           <Input
             isLocked={readOnly}
-            label="Times per day"
+            label={STRING.timesPerDay}
             value={state.dressing_frequency_per_day}
             onChangeText={value =>
               setFormState({ dressing_frequency_per_day: value })
             }
-            placeholder="Enter frequency"
+            placeholder={STRING.enterFrequency}
             keyboardType="numeric"
             style={styles.inputField}
           />
 
           <Input
             isLocked={readOnly}
-            label="Every X days"
+            label={STRING.everyXDays}
             value={state.dressing_frequency_days}
             onChangeText={value =>
               setFormState({ dressing_frequency_days: value })
             }
-            placeholder="Enter days"
+            placeholder={STRING.enterDays}
             keyboardType="numeric"
             style={styles.inputField}
           />
@@ -628,7 +610,7 @@ const PersonalHygieneCare = forwardRef<
 
         {/* PROCEDURES */}
         <View style={styles.card}>
-          {renderSectionHeader('Procedures')}
+          {renderSectionHeader(STRING.procedures)}
 
           <AppCheckBox
             disabled={readOnly}
@@ -639,14 +621,14 @@ const PersonalHygieneCare = forwardRef<
                 suture_removal_days: value ? state.suture_removal_days : '',
               })
             }
-            label="Removal of sutures/staples"
+            label={STRING.RemovalOfSuturesStaples}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.suture_removal && (
             <Input
               isLocked={readOnly}
-              label="In X days"
+              label={STRING.inXdays}
               value={state.suture_removal_days}
               onChangeText={value =>
                 setFormState({ suture_removal_days: value })
@@ -666,14 +648,14 @@ const PersonalHygieneCare = forwardRef<
                 catheter_frequency: value ? state.catheter_frequency : '',
               })
             }
-            label="Urinary catheter care"
+            label={STRING.urinaryCatheterCare}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.urinary_catheter_care && (
             <Input
               isLocked={readOnly}
-              label="Times per day"
+              label={STRING.timesPerDay}
               value={state.catheter_frequency}
               onChangeText={value =>
                 setFormState({ catheter_frequency: value })
@@ -692,7 +674,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label="Catheter Removal Date"
+            label={STRING.catheterRemovalDate}
             placeholder="DD/MM/YYYY"
             value={state.catheter_removal_date}
             style={styles.inputField}
@@ -705,13 +687,13 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ urine_output_monitoring: value })
             }
-            label="Monitoring of urine output"
+            label={STRING.monitoringOfUrineOutput}
           />
         </View>
 
         {/* CONDITION CLASSIFICATION */}
         <View style={styles.card}>
-          {renderSectionHeader('Condition Classification')}
+          {renderSectionHeader(STRING.conditionClassification)}
 
           <AppCheckBox
             disabled={readOnly}
@@ -719,38 +701,38 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ non_ald_prescriptions: value })
             }
-            label="Not related to long-term condition"
+            label={STRING.notRelatedToLongTermCondition}
           />
 
           <AppCheckBox
             disabled={readOnly}
             value={state.ald_prescriptions}
             onValueChange={value => setFormState({ ald_prescriptions: value })}
-            label="Related to long-term condition"
+            label={STRING.relatedToLongTermCondition}
           />
         </View>
 
         {/* MEDICAL CERTIFICATION */}
         <View style={styles.card}>
-          {renderSectionHeader('Medical Certification')}
+          {renderSectionHeader(STRING.medicalCertification)}
 
           <Input
             isLocked={readOnly}
-            label="Doctor Name"
+            label={STRING.doctorName}
             value={state.doctor_name}
             onChangeText={value => setFormState({ doctor_name: value })}
-            placeholder="Enter doctor name"
+            placeholder={STRING.enterDoctorName}
             style={styles.inputField}
           />
 
           <Input
             isLocked={readOnly}
-            label="Patient Name"
+            label={STRING.patientName}
             value={state.certified_patient_name}
             onChangeText={value =>
               setFormState({ certified_patient_name: value })
             }
-            placeholder="Enter patient name"
+            placeholder={STRING.enterPatientName}
             style={styles.inputField}
           />
 
@@ -758,17 +740,17 @@ const PersonalHygieneCare = forwardRef<
             disabled={readOnly}
             value={state.care_required}
             onValueChange={value => setFormState({ care_required: value })}
-            label="Requires nursing care at home"
+            label={STRING.requiresNursingCareAtHome}
           />
 
           <Input
             isLocked={readOnly}
-            label="Prescription Duration (days)"
+            label={STRING.prescriptionDurationDays}
             value={state.prescription_duration_days}
             onChangeText={value =>
               setFormState({ prescription_duration_days: value })
             }
-            placeholder="Enter duration"
+            placeholder={STRING.enterDuration}
             keyboardType="numeric"
             style={[styles.inputField, { marginTop: getScaleSize(5) }]}
           />
@@ -777,7 +759,7 @@ const PersonalHygieneCare = forwardRef<
             disabled={readOnly}
             value={state.renewable}
             onValueChange={value => setFormState({ renewable: value })}
-            label="Renewable"
+            label={STRING.renewable}
           />
         </View>
 

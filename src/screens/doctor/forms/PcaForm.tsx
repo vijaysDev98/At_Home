@@ -27,7 +27,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
@@ -191,15 +191,15 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     // Validate only required fields from schema
     // Required: prescription_date
     if (!state.prescription_date) {
-      newErrors.prescriptionDate = 'Prescription date is required';
+      newErrors.prescriptionDate = STRING.prescriptionDateRequired;
     }
 
     // Required: patient_last_name, patient_first_name
     if (!state.patient_last_name.trim()) {
-      newErrors.patientLastName = 'Last name is required';
+      newErrors.patientLastName = STRING.lastNameRequired;
     }
     if (!state.patient_first_name.trim()) {
-      newErrors.patientFirstName = 'First name is required';
+      newErrors.patientFirstName = STRING.firstNameRequired;
     }
 
     setErrors(newErrors);
@@ -214,7 +214,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       // Show first error in toast
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -240,16 +240,12 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           dispatch(setLoading(false));
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            submitResponse.error ||
-              'Failed to submit service request for review',
-            'error',
-          );
+          SHOW_TOAST(submitResponse.error, 'error');
         }
       } else {
         // Create new service request
@@ -282,31 +278,24 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               dispatch(setLoading(false));
               setTimeout(() => {
                 NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: 'DoctorRequest',
+                  screen: SCREENS.DOCTOR_REQUEST,
                 });
               }, 500);
             } else {
               dispatch(setLoading(false));
-              SHOW_TOAST(
-                submitResponse.error ||
-                  'Failed to submit service request for review',
-                'error',
-              );
+              SHOW_TOAST(submitResponse.error, 'error');
             }
           } else {
             dispatch(setLoading(false));
           }
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            response.error || 'Failed to create service request',
-            'error',
-          );
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      SHOW_TOAST(error.message, 'error');
     }
   };
 
@@ -317,7 +306,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       // Show first error in toast
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -344,11 +333,11 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           SHOW_SUCCESS_TOAST(response.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          SHOW_TOAST(response.error, 'error');
         }
       } else {
         // Create new service request as draft
@@ -370,24 +359,26 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           SHOW_SUCCESS_TOAST(response?.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+      SHOW_TOAST(error.message, 'error');
     }
   };
 
   // Handle update & sign (for already-submitted requests)
-  const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+  const handleUpdateAndSign = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
     const requestId = initialData?._id || initialData?.id;
     if (!requestId) {
-      SHOW_TOAST('Unable to identify the request', 'error');
       return { success: false, error: 'No request ID' };
     }
     try {
@@ -397,11 +388,11 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       if (response.success) {
         return { success: true };
       } else {
-        SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+        SHOW_TOAST(response.error, 'error');
         return { success: false, error: response.error };
       }
     } catch (error: any) {
-      const msg = error.message || 'Failed to update form data';
+      const msg = error.message;
       SHOW_TOAST(msg, 'error');
       return { success: false, error: msg };
     }
@@ -446,7 +437,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            PCA Infusion Prescription Form
+            {STRING.pcaInfusionPrescriptionForm}
           </AppText>
         </View>
 
@@ -476,64 +467,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         />
 
         <View style={styles.card}>
-          {/* <View style={styles.warningContainer}>
-            <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._B42318}
-            >
-              **This form must be accompanied by a handwritten secure
-              prescription.
-            </AppText>
-          </View> */}
-
-          {renderSectionHeader('Prescription Plan')}
-
-          {/* <Input
-            onPress={() => {
-              setPickerType({ type: 'effective_from' });
-              setOpen(true);
-            }}
-            editable={false}
-            label="Effective from"
-            placeholder="DD/MM/YYYY"
-            value={state.effective_from}
-            style={styles.inputField}
-            pointerEvents="none"
-          /> */}
-
-          {/* <View style={styles.topRight}>
-            <View style={styles.blankSentenceWrap}>
-              <AppText size={getScaleSize(13)}>Prescription for</AppText>
-
-              <TextInput
-                value={state.duration_weeks}
-                onChangeText={value => setFormState({ duration_weeks: value })}
-                style={styles.inlineBlankInput}
-                keyboardType="numeric"
-              />
-
-              <AppText size={getScaleSize(13)}>week(s), to be renewed</AppText>
-
-              <TextInput
-                value={state.renewal_times}
-                onChangeText={value => setFormState({ renewal_times: value })}
-                style={styles.inlineBlankInput}
-                keyboardType="numeric"
-              />
-
-              <AppText size={getScaleSize(13)}>times</AppText>
-            </View>
-          </View> */}
-
-          {/* <View style={styles.descriptionBlock}>
-            <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-              To be carried out at home by a home care nurse (RN), every day,
-              including Sundays and public holidays, for PCA morphine
-              administration.
-            </AppText>
-          </View> */}
-
+          {renderSectionHeader(STRING.prescriptionPlan)}
           {/* NURSING CARE */}
           <View style={styles.descriptionBlock}>
             <AppText
@@ -541,172 +475,174 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               font={FONTS.Inter.SemiBold}
               color={COLORS._1A1D1F}
             >
-              Nursing Care Tasks
+              {STRING.nursingCareTasks}
             </AppText>
 
             <View style={styles.checkboxGroup}>
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Preparation and programming of portable pump',
+                  STRING.preparationAndProgrammingOfPortablePump,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Preparation and programming of portable pump');
+                    tasks.push(STRING.preparationAndProgrammingOfPortablePump);
                   } else {
                     const index = tasks.indexOf(
-                      'Preparation and programming of portable pump',
+                      STRING.preparationAndProgrammingOfPortablePump,
                     );
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Preparation and programming of portable pump"
+                label={STRING.preparationAndProgrammingOfPortablePump}
               />
 
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Filling and setup of pump',
+                  STRING.fillingAndSetupOfPump,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Filling and setup of pump');
+                    tasks.push(STRING.fillingAndSetupOfPump);
                   } else {
-                    const index = tasks.indexOf('Filling and setup of pump');
+                    const index = tasks.indexOf(STRING.fillingAndSetupOfPump);
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Filling and setup of pump"
+                label={STRING.fillingAndSetupOfPump}
               />
 
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Connecting infusion and starting device',
+                  STRING.connectingInfusionAndStartingDevice,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Connecting infusion and starting device');
+                    tasks.push(STRING.connectingInfusionAndStartingDevice);
                   } else {
                     const index = tasks.indexOf(
-                      'Connecting infusion and starting device',
+                      STRING.connectingInfusionAndStartingDevice,
                     );
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Connecting infusion and starting device"
+                label={STRING.connectingInfusionAndStartingDevice}
               />
 
               <AppCheckBox
                 disabled={readOnly}
-                value={state.nursing_tasks.includes('Reservoir change')}
+                value={state.nursing_tasks.includes(STRING.reservoirChange)}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Reservoir change');
+                    tasks.push(STRING.reservoirChange);
                   } else {
-                    const index = tasks.indexOf('Reservoir change');
+                    const index = tasks.indexOf(STRING.reservoirChange);
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Reservoir change"
+                label={STRING.reservoirChange}
               />
 
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Stopping and removing device',
+                  STRING.stoppingAndRemovingDevice,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Stopping and removing device');
+                    tasks.push(STRING.stoppingAndRemovingDevice);
                   } else {
-                    const index = tasks.indexOf('Stopping and removing device');
+                    const index = tasks.indexOf(
+                      STRING.stoppingAndRemovingDevice,
+                    );
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Stopping and removing device"
+                label={STRING.stoppingAndRemovingDevice}
               />
 
               <AppCheckBox
                 disabled={readOnly}
-                value={state.nursing_tasks.includes('Flush / heparinization')}
+                value={state.nursing_tasks.includes(STRING.flushHeparinization)}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Flush / heparinization');
+                    tasks.push(STRING.flushHeparinization);
                   } else {
-                    const index = tasks.indexOf('Flush / heparinization');
+                    const index = tasks.indexOf(STRING.flushHeparinization);
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Flush / heparinization"
+                label={STRING.flushHeparinization}
               />
 
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Weekly dressing change & Huber needle replacement',
+                  STRING.weeklyDressingChangeHuberNeedleReplacement,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
                     tasks.push(
-                      'Weekly dressing change & Huber needle replacement',
+                      STRING.weeklyDressingChangeHuberNeedleReplacement,
                     );
                   } else {
                     const index = tasks.indexOf(
-                      'Weekly dressing change & Huber needle replacement',
+                      STRING.weeklyDressingChangeHuberNeedleReplacement,
                     );
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Weekly dressing change & Huber needle replacement"
+                label={STRING.weeklyDressingChangeHuberNeedleReplacement}
               />
 
               <AppCheckBox
                 disabled={readOnly}
                 value={state.nursing_tasks.includes(
-                  'Monitoring and coordination of care',
+                  STRING.monitoringAndCoordinationOfCare,
                 )}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
                   if (value) {
-                    tasks.push('Monitoring and coordination of care');
+                    tasks.push(STRING.monitoringAndCoordinationOfCare);
                   } else {
                     const index = tasks.indexOf(
-                      'Monitoring and coordination of care',
+                      STRING.monitoringAndCoordinationOfCare,
                     );
                     if (index > -1) tasks.splice(index, 1);
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label="Monitoring and coordination of care"
+                label={STRING.monitoringAndCoordinationOfCare}
               />
             </View>
           </View>
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              Morphine Administration
+              {STRING.morphineAdministration}
             </AppText>
           </View>
 
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label="Concentration (mg/h)"
+              label={`${STRING.concentration} (mg/hr)`}
               value={state.morphine_concentration_mg_per_hr}
               onChangeText={value =>
                 setFormState({ morphine_concentration_mg_per_hr: value })
@@ -718,7 +654,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label="Total Morphine (mg)"
+              label={STRING.totalMorphine}
               value={state.morphine_total_mg}
               onChangeText={value => setFormState({ morphine_total_mg: value })}
               placeholder="0"
@@ -729,7 +665,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.inputRow}>
             <Input
-              label="Volume (ml)"
+              label={STRING.volume}
               value={state.solution_volume_ml}
               onChangeText={value =>
                 setFormState({ solution_volume_ml: value })
@@ -740,7 +676,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              label="Bag Capacity (ml)"
+              label={`${STRING.bagCapacity}`}
               value={state.bag_capacity_ml}
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
               placeholder="50"
@@ -751,13 +687,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              Pump settings
+              {STRING.pumpSettings}
             </AppText>
           </View>
 
           <View style={styles.inputRow}>
             <Input
-              label="Basal rate (mg/h)"
+              label={STRING.basalRate}
               value={state.basal_rate_mg_per_hr}
               onChangeText={value =>
                 setFormState({ basal_rate_mg_per_hr: value })
@@ -768,7 +704,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              label="Bolus dose (mg)"
+              label={STRING.bolusDose}
               value={state.bolus_dose_mg}
               onChangeText={value => setFormState({ bolus_dose_mg: value })}
               placeholder="0"
@@ -779,7 +715,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.inputRow}>
             <Input
-              label="Lockout (min)"
+              label={STRING.lockoutMin}
               value={state.lockout_minutes}
               onChangeText={value => setFormState({ lockout_minutes: value })}
               placeholder="0"
@@ -788,7 +724,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              label="Max bolus per hour"
+              label={STRING.maxBolusPerHour}
               value={state.max_bolus_per_hour}
               onChangeText={value =>
                 setFormState({ max_bolus_per_hour: value })
@@ -801,13 +737,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              Treatment Plan
+              {STRING.treatmentPlan}
             </AppText>
           </View>
 
           <View style={styles.inputRow}>
             <Input
-              label="Connections per Week"
+              label={STRING.connectionsPerWeek}
               value={state.connections_per_week}
               onChangeText={value =>
                 setFormState({ connections_per_week: value })
@@ -818,7 +754,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              label="Treatment Duration (days)"
+              label={`${STRING.treatmentDurationDays}`}
               value={state.treatment_duration_days}
               onChangeText={value =>
                 setFormState({ treatment_duration_days: value })

@@ -36,7 +36,7 @@ import { RootState } from '../../../redux/store';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
@@ -210,10 +210,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
       // Patient Information - Required fields
       if (!state.patient_last_name.trim()) {
-        newErrors.patientLastName = 'Last name is required';
+        newErrors.patientLastName = STRING.lNameRequired;
       }
       if (!state.patient_first_name.trim()) {
-        newErrors.patientFirstName = 'First name is required';
+        newErrors.patientFirstName = STRING.fNameRequired;
       }
 
       setErrors(newErrors);
@@ -227,7 +227,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       if (!ok) {
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          errors[firstErrorKey] || 'Please fill in all required fields';
+          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         setTimeout(() => {
@@ -251,16 +251,12 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             dispatch(setLoading(false));
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              submitResponse.error ||
-                'Failed to submit service request for review',
-              'error',
-            );
+            SHOW_TOAST(submitResponse.error, 'error');
           }
         } else {
           const payload = {
@@ -293,31 +289,24 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 dispatch(setLoading(false));
                 setTimeout(() => {
                   NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                    screen: 'DoctorRequest',
+                    screen: SCREENS.DOCTOR_REQUEST,
                   });
                 }, 500);
               } else {
                 dispatch(setLoading(false));
-                SHOW_TOAST(
-                  submitResponse.error ||
-                    'Failed to submit service request for review',
-                  'error',
-                );
+                SHOW_TOAST(submitResponse.error, 'error');
               }
             } else {
               dispatch(setLoading(false));
             }
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              response.error || 'Failed to create service request',
-              'error',
-            );
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+        SHOW_TOAST(error.message, 'error');
       }
     };
 
@@ -327,7 +316,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       if (!ok) {
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          errors[firstErrorKey] || 'Please fill in all required fields';
+          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         setTimeout(() => {
@@ -351,11 +340,11 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             SHOW_SUCCESS_TOAST(response.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+            SHOW_TOAST(response.error, 'error');
           }
         } else {
           const payload = {
@@ -378,27 +367,26 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             SHOW_SUCCESS_TOAST(response?.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(
-              response.error || 'Failed to create service request',
-              'error',
-            );
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+        SHOW_TOAST(error.message, 'error');
       }
     };
 
     // Handle update & sign (for already-submitted requests)
-    const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+    const handleUpdateAndSign = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
       const requestId = initialData?._id || initialData?.id;
       if (!requestId) {
-        SHOW_TOAST('Unable to identify the request', 'error');
         return { success: false, error: 'No request ID' };
       }
       try {
@@ -408,11 +396,11 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         if (response.success) {
           return { success: true };
         } else {
-          SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+          SHOW_TOAST(response.error, 'error');
           return { success: false, error: response.error };
         }
       } catch (error: any) {
-        const msg = error.message || 'Failed to update form data';
+        const msg = error.message;
         SHOW_TOAST(msg, 'error');
         return { success: false, error: msg };
       }
@@ -439,7 +427,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Medical Oxygen Form
+              {STRING.medicalOxygenForm}
             </AppText>
           </View>
 
@@ -475,7 +463,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               color={COLORS._1A1D1F}
               style={styles.sectionTitle}
             >
-              Oxygen Prescription Details
+              {STRING.oxygenPrescriptionDetails}
             </AppText>
 
             <View style={styles.checkboxGroup}>
@@ -484,37 +472,38 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 color={COLORS._1A1D1F}
                 font={FONTS.Inter.Medium}
               >
-                Primary Oxygen Source:
+                {STRING.primaryOxygenSource}
               </AppText>
               <AppCheckBox
                 disabled={readOnly}
                 value={
-                  state.primary_oxygen_source === 'Stationary concentrator'
+                  state.primary_oxygen_source === STRING.stationaryConcentrator
                 }
                 onValueChange={value =>
                   setFormState({
                     primary_oxygen_source: value
-                      ? 'Stationary concentrator'
+                      ? STRING.stationaryConcentrator
                       : '',
                   })
                 }
                 containerStyle={{ marginLeft: getScaleSize(10) }}
-                label="Stationary concentrator"
+                label={STRING.stationaryConcentrator}
               />
               <AppCheckBox
                 disabled={readOnly}
                 value={
-                  state.primary_oxygen_source === 'Compressed oxygen cylinder'
+                  state.primary_oxygen_source ===
+                  STRING.compressedOxygenCylinder
                 }
                 onValueChange={value =>
                   setFormState({
                     primary_oxygen_source: value
-                      ? 'Compressed oxygen cylinder'
+                      ? STRING.compressedOxygenCylinder
                       : '',
                   })
                 }
                 containerStyle={{ marginLeft: getScaleSize(10) }}
-                label="Compressed oxygen cylinder"
+                label={STRING.compressedOxygenCylinder}
               />
             </View>
 
@@ -524,7 +513,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ ambulatory_cylinder: value })
               }
-              label="Ambulatory cylinder"
+              label={STRING.ambulatoryCylinder}
             />
 
             <View style={styles.checkboxGroup}>
@@ -536,39 +525,39 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                   marginTop: getScaleSize(12),
                 }}
               >
-                Delivery Method:
+                {STRING.deliveryMethod}
               </AppText>
               <AppCheckBox
                 disabled={readOnly}
-                value={state.delivery_method === 'Nasal cannula'}
+                value={state.delivery_method === STRING.nasalCannula}
                 onValueChange={value =>
                   setFormState({
-                    delivery_method: value ? 'Nasal cannula' : '',
+                    delivery_method: value ? STRING.nasalCannula : '',
                   })
                 }
-                label="Nasal cannula"
+                label={STRING.nasalCannula}
               />
               <AppCheckBox
                 disabled={readOnly}
-                value={state.delivery_method === 'Oxygen mask'}
+                value={state.delivery_method === STRING.oxygenMask}
                 onValueChange={value =>
                   setFormState({
-                    delivery_method: value ? 'Oxygen mask' : '',
+                    delivery_method: value ? STRING.oxygenMask : '',
                   })
                 }
-                label="Oxygen mask"
+                label={STRING.oxygenMask}
               />
             </View>
 
             {/* Duration input */}
             <Input
               isLocked={readOnly}
-              label="Duration (hours/day)"
+              label={STRING.durationHoursPerDay}
               value={state.duration_hours_per_day}
               onChangeText={value =>
                 setFormState({ duration_hours_per_day: value })
               }
-              placeholder="Enter duration"
+              placeholder={STRING.enterDuration}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -576,22 +565,22 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             {/* Flow rate inputs */}
             <Input
               isLocked={readOnly}
-              label="Flow rate at rest (L/min)"
+              label={STRING.flowRateAtRest}
               value={state.flow_rate_rest}
               onChangeText={value => setFormState({ flow_rate_rest: value })}
-              placeholder="Enter flow rate"
+              placeholder={STRING.enterFlowRate}
               keyboardType="numeric"
               style={styles.inputField}
             />
 
             <Input
               isLocked={readOnly}
-              label="Flow rate during exertion (L/min)"
+              label={STRING.flowRateDuringExertion}
               value={state.flow_rate_exertion}
               onChangeText={value =>
                 setFormState({ flow_rate_exertion: value })
               }
-              placeholder="Enter flow rate"
+              placeholder={STRING.enterFlowRate}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -603,7 +592,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ humidifier_required: value })
               }
-              label="Humidifier required (ISO 8185)"
+              label={STRING.humidifierRequired}
             />
 
             {/* Backup and mobility checkboxes */}
@@ -611,14 +600,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               disabled={readOnly}
               value={state.backup_source}
               onValueChange={value => setFormState({ backup_source: value })}
-              label="Backup oxygen cylinder"
+              label={STRING.backupOxygenCylinder}
             />
 
             <AppCheckBox
               disabled={readOnly}
               value={state.mobility_source}
               onValueChange={value => setFormState({ mobility_source: value })}
-              label="Mobility oxygen cylinder"
+              label={STRING.mobilityOxygenCylinder}
             />
 
             {/* Pulse oximeter and tubing checkboxes */}
@@ -628,7 +617,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ pulse_oximeter_provided: value })
               }
-              label="Pulse oximeter provided"
+              label={STRING.pulseOximeterProvided}
             />
 
             <AppCheckBox
@@ -637,17 +626,17 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ non_kinking_tubing: value })
               }
-              label="Non-kinking tubing"
+              label={STRING.nonKinking}
               containerStyle={{ marginBottom: getScaleSize(10) }}
             />
 
             {/* Target SpO2 input */}
             <Input
               isLocked={readOnly}
-              label="Target SpO2 (%)"
+              label={STRING.targetSpO2}
               value={state.target_spo2}
               onChangeText={value => setFormState({ target_spo2: value })}
-              placeholder="Enter target SpO2"
+              placeholder={STRING.enterTargetSpO2}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -655,10 +644,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             {/* Emergency contact phone */}
             <Input
               isLocked={readOnly}
-              label="Emergency Contact Phone"
+              label={STRING.emergencyContactPhone}
               value={state.contact_phone}
               onChangeText={value => setFormState({ contact_phone: value })}
-              placeholder="Enter phone number"
+              placeholder={STRING.enterPhoneNumber}
               keyboardType="phone-pad"
               style={styles.inputField}
             />
@@ -671,47 +660,47 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               color={COLORS._1A1D1F}
               style={styles.sectionTitle}
             >
-              PATIENT INSTRUCTIONS
+              {STRING.patientInstructions}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              It is essential to follow the instructions carefully.
+              {STRING.ItIsEssentialToFollowTheInstructionsCarefully}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              Use your oxygen daily for at least the duration indicated on your
-              prescription.
+              {STRING.UseYourOxygenDailyForAtLeastTheDurationIndicatedOnYour}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              If oxygen comes into contact with a flame or combustible material,
-              there is a risk of explosion, fire, and/or serious burns.
+              {
+                STRING.IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns
+              }
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER smoke or vape while using oxygen.
+              {STRING.NEVERSmokeOrVapeWhileUsingOxygen}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER smoke in the room where your oxygen is installed.
+              {STRING.NEVERSmokeInTheRoomWhereYourOxygenIsInstalled}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER cook while using oxygen.
+              {STRING.NEVERcookWhileUsingOxygen}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER use aerosol sprays or flammable solvents near oxygen
-              (alcohol, gasoline, etc.).
+              {STRING.NEVERuseAerosolSpraysOrFlammableSolventsNearOxygen}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER apply greasy ointment to the face and never handle the
-              equipment with greasy hands.
+              {
+                STRING.NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands
+              }
             </AppText>
 
             <AppText style={styles.instructionText}>
-              NEVER keep the equipment near heat sources.
+              {STRING.NEVERkeepTheEquipmentNearHeatSources}
             </AppText>
           </View>
 
@@ -720,7 +709,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             disabled={readOnly}
             value={state.palliative_care}
             onValueChange={value => setFormState({ palliative_care: value })}
-            label="Part of palliative care"
+            label={STRING.partOfPalliativeCare}
           />
 
           {/* Instructions Acknowledged */}
@@ -730,7 +719,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             onValueChange={value =>
               setFormState({ instructions_acknowledged: value })
             }
-            label="Patient acknowledges safety instructions"
+            label={STRING.patientacknowledgesinstructions}
           />
 
           <FormSignature readOnly={readOnly} />

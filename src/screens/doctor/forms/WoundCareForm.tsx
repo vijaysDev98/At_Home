@@ -33,7 +33,7 @@ import { RootState } from '../../../redux/store';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
@@ -48,6 +48,31 @@ export interface WoundCareFormProps {
   patient?: PatientInfo;
   readOnly?: boolean;
 }
+
+const WOUND_TYPE_OPTIONS = [
+  'Acute',
+  'Chronic',
+  'Ulcer',
+  'Pressure ulcer',
+  'Postoperative wound',
+  'Cavity wound',
+  'Wound with fibrin',
+  'Other',
+];
+
+const DRESSING_TYPE_OPTIONS = [
+  'Hyperabsorbent',
+  'Post-op',
+  'Debridement and healing dressing',
+  'Hydrocolloid',
+  'Packing',
+];
+
+const WOUND_DETAILS_OPTIONS = [
+  { key: 'exudate', title: 'Exudate' },
+  { key: 'cavity', title: 'Cavity' },
+  { key: 'septic_wound', title: 'Septic wound' },
+];
 
 export interface WoundCareFormRef {
   validateAndSubmit: () => Promise<void>;
@@ -194,25 +219,25 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
     } => {
       const newErrors: { [key: string]: string } = {};
 
-      // Required: physician info
-      if (!state.prescriber_last_name?.trim()) {
-        newErrors.physicianLastName = 'Physician last name is required';
-      }
-      if (!state.prescriber_first_name?.trim()) {
-        newErrors.physicianFirstName = 'Physician first name is required';
-      }
+      // // Required: physician info
+      // if (!state.prescriber_last_name?.trim()) {
+      //   newErrors.physicianLastName = STRING.lNameRequired;
+      // }
+      // if (!state.prescriber_first_name?.trim()) {
+      //   newErrors.physicianFirstName = STRING.fNameRequired;
+      // }
 
       // Required: patient info
       if (!state.patient_last_name?.trim()) {
-        newErrors.patientLastName = 'Patient last name is required';
+        newErrors.patientLastName = STRING.lNameRequired;
       }
       if (!state.patient_first_name?.trim()) {
-        newErrors.patientFirstName = 'Patient first name is required';
+        newErrors.patientFirstName = STRING.fNameRequired;
       }
 
       // Required: prescription date
       if (!state.prescription_date) {
-        newErrors.prescription_date = 'Prescription date is required';
+        newErrors.prescription_date = STRING.prescriptionDateIsRequired;
       }
 
       setErrors(newErrors);
@@ -225,7 +250,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       if (!ok) {
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          currentErrors[firstErrorKey] || 'Please fill in all required fields';
+          currentErrors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         setTimeout(() => {
@@ -249,16 +274,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             dispatch(setLoading(false));
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              submitResponse.error ||
-                'Failed to submit service request for review',
-              'error',
-            );
+            SHOW_TOAST(submitResponse.error, 'error');
           }
         } else {
           const payload = {
@@ -291,31 +312,24 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 dispatch(setLoading(false));
                 setTimeout(() => {
                   NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                    screen: 'DoctorRequest',
+                    screen: SCREENS.DOCTOR_REQUEST,
                   });
                 }, 500);
               } else {
                 dispatch(setLoading(false));
-                SHOW_TOAST(
-                  submitResponse.error ||
-                    'Failed to submit service request for review',
-                  'error',
-                );
+                SHOW_TOAST(submitResponse.error, 'error');
               }
             } else {
               dispatch(setLoading(false));
             }
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              response.error || 'Failed to create service request',
-              'error',
-            );
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+        SHOW_TOAST(error.message, 'error');
       }
     };
 
@@ -324,7 +338,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       if (!ok) {
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          currentErrors[firstErrorKey] || 'Please fill in all required fields';
+          currentErrors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         setTimeout(() => {
@@ -348,11 +362,11 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             SHOW_SUCCESS_TOAST(response.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+            SHOW_TOAST(response.error, 'error');
           }
         } else {
           const payload = {
@@ -376,24 +390,26 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             SHOW_SUCCESS_TOAST(response?.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(response.error || 'Failed to save draft', 'error');
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to save draft', 'error');
+        SHOW_TOAST(error.message, 'error');
       }
     };
 
     // Handle update & sign (for already-submitted requests)
-    const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+    const handleUpdateAndSign = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
       const requestId = initialData?._id || initialData?.id;
       if (!requestId) {
-        SHOW_TOAST('Unable to identify the request', 'error');
         return { success: false, error: 'No request ID' };
       }
       try {
@@ -403,11 +419,11 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         if (response.success) {
           return { success: true };
         } else {
-          SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+          SHOW_TOAST(response.error, 'error');
           return { success: false, error: response.error };
         }
       } catch (error: any) {
-        const msg = error.message || 'Failed to update form data';
+        const msg = error.message;
         SHOW_TOAST(msg, 'error');
         return { success: false, error: msg };
       }
@@ -452,7 +468,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Wound Dressing Prescription Support Form
+              {STRING.woundDressingPrescriptionSupportForm}
             </AppText>
           </View>
 
@@ -465,7 +481,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
           <FormPrescriberSection
             state={state}
             setState={setFormState}
-            title={'Physician Information'}
+            title={STRING.physicianInformation}
             showFiness={true}
           />
 
@@ -483,7 +499,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* CONDITION */}
           <View style={styles.card}>
-            {renderSectionHeader('Condition')}
+            {renderSectionHeader(STRING.condition)}
 
             <View style={styles.checkboxGroup}>
               <AppCheckBox
@@ -492,7 +508,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 onValueChange={value =>
                   setFormState({ condition_type: value ? 'ald_related' : '' })
                 }
-                label="Care related to long-term condition (ALD)"
+                label={STRING.careRelatedToLongTermConditionAld}
               />
               <AppCheckBox
                 disabled={readOnly}
@@ -502,7 +518,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     condition_type: value ? 'ald_not_related' : '',
                   })
                 }
-                label="Not related to long-term condition (ALD)"
+                label={STRING.notRelatedToLongTermConditionAld}
               />
             </View>
 
@@ -514,7 +530,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 setOpen(true);
               }}
               editable={false}
-              label="Date"
+              label={STRING.date}
               placeholder="DD/MM/YYYY"
               value={state.date}
               style={styles.inputField}
@@ -524,28 +540,19 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* TYPE OF WOUND */}
           <View style={styles.card}>
-            {renderSectionHeader('Type Of Wound')}
+            {renderSectionHeader(STRING.typeOfWound)}
 
             <Input
               isLocked={readOnly}
-              label="Wound Size"
-              placeholder="e.g. 5x5 cm"
+              label={STRING.woundSize}
+              placeholder={STRING.example5x5cm}
               value={state.wound_size}
               onChangeText={value => setFormState({ wound_size: value })}
               style={styles.inputField}
             />
 
             <View style={styles.checkboxGroup}>
-              {[
-                'Acute',
-                'Chronic',
-                'Ulcer',
-                'Pressure ulcer',
-                'Postoperative wound',
-                'Cavity wound',
-                'Wound with fibrin',
-                'Other',
-              ].map(item => (
+              {WOUND_TYPE_OPTIONS.map(item => (
                 <AppCheckBox
                   disabled={readOnly}
                   key={item}
@@ -568,16 +575,10 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* DESIRED DRESSING TYPE */}
           <View style={styles.card}>
-            {renderSectionHeader('Desired Dressing Type')}
+            {renderSectionHeader(STRING.desiredDressingType)}
 
             <View style={styles.checkboxGroup}>
-              {[
-                'Hyperabsorbent',
-                'Post-op',
-                'Debridement and healing dressing',
-                'Hydrocolloid',
-                'Packing',
-              ].map(item => (
+              {DRESSING_TYPE_OPTIONS.map(item => (
                 <AppCheckBox
                   disabled={readOnly}
                   key={item}
@@ -600,13 +601,9 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* WOUND DETAILS */}
           <View style={styles.card}>
-            {renderSectionHeader('Wound Details')}
+            {renderSectionHeader(STRING.woundDetails)}
 
-            {[
-              { key: 'exudate', title: 'Exudate' },
-              { key: 'cavity', title: 'Cavity' },
-              { key: 'septic_wound', title: 'Septic wound' },
-            ].map(item => (
+            {WOUND_DETAILS_OPTIONS.map(item => (
               <View key={item.key} style={styles.statusRow}>
                 <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
                   {item.title}
@@ -617,14 +614,14 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     disabled={readOnly}
                     value={(state as any)[item.key] === true}
                     onValueChange={() => setFormState({ [item.key]: true })}
-                    label="Yes"
+                    label={STRING.yes}
                   />
 
                   <AppCheckBox
                     disabled={readOnly}
                     value={(state as any)[item.key] === false}
                     onValueChange={() => setFormState({ [item.key]: false })}
-                    label="No"
+                    label={STRING.no}
                   />
                 </View>
               </View>
@@ -633,12 +630,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* REQUIRED MATERIALS AND PROTOCOL */}
           <View style={styles.card}>
-            {renderSectionHeader('Required Materials and Protocol')}
+            {renderSectionHeader(STRING.requiredMaterialsAndProtocol)}
 
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label="Dressing kits per day"
+                label={STRING.dressingKitsPerDay}
                 value={state.dressing_kits_per_day}
                 onChangeText={value =>
                   setFormState({ dressing_kits_per_day: value })
@@ -650,7 +647,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
               <Input
                 isLocked={readOnly}
-                label="Bandage per day"
+                label={STRING.bandagePerDay}
                 value={state.bandage_per_day}
                 onChangeText={value => setFormState({ bandage_per_day: value })}
                 placeholder="0"
@@ -662,7 +659,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label="Cleaning with"
+                label={STRING.cleaningWith}
                 value={state.cleaning_with}
                 onChangeText={value => setFormState({ cleaning_with: value })}
                 placeholder="Enter product"
@@ -671,12 +668,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
               <Input
                 isLocked={readOnly}
-                label="Disinfection with"
+                label={STRING.disinfectionWith}
                 value={state.disinfection_with}
                 onChangeText={value =>
                   setFormState({ disinfection_with: value })
                 }
-                placeholder="Enter product"
+                placeholder={STRING.enterProduct}
                 style={styles.halfWidthInput}
               />
             </View>
@@ -684,26 +681,26 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label="1st Layer"
+                label={STRING.layer1}
                 value={state.first_layer}
                 onChangeText={value => setFormState({ first_layer: value })}
-                placeholder="..."
+                placeholder=""
                 style={styles.halfWidthInput}
               />
 
               <Input
                 isLocked={readOnly}
-                label="2nd Layer"
+                label={STRING.layer2}
                 value={state.second_layer}
                 onChangeText={value => setFormState({ second_layer: value })}
-                placeholder="..."
+                placeholder=""
                 style={styles.halfWidthInput}
               />
             </View>
 
             <Input
               isLocked={readOnly}
-              label="Treatment Duration"
+              label={STRING.treatmentDuration}
               value={state.treatment_duration}
               onChangeText={value =>
                 setFormState({
@@ -711,7 +708,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                   until_healed: false,
                 })
               }
-              placeholder="e.g. 15 days"
+              placeholder={STRING.eg15days}
               style={styles.inputField}
             />
 
@@ -724,17 +721,17 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                   treatment_duration: value ? '' : state.treatment_duration,
                 })
               }
-              label="Until healed"
+              label={STRING.untilHealed}
             />
           </View>
 
-          <FormSignature
+          {/* <FormSignature
             readOnly={readOnly}
             signature={state.physician_signature}
             onSignatureChange={val =>
               setFormState({ physician_signature: val })
             }
-          />
+          /> */}
         </ScrollView>
 
         <DatePicker
