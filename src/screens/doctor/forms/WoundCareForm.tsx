@@ -21,7 +21,6 @@ import {
   AppCheckBox,
   AppText,
   Input,
-  WarningSheet,
   FormPatientSection,
   FormPrescriberSection,
   AppLoader,
@@ -47,6 +46,7 @@ export interface WoundCareFormProps {
   serviceId?: string;
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
+  readOnly?: boolean;
 }
 
 export interface WoundCareFormRef {
@@ -56,7 +56,7 @@ export interface WoundCareFormRef {
 }
 
 const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
-  ({ serviceId, initialData, patient }, ref) => {
+  ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
 
     const reduxPatient = useSelector(
@@ -67,7 +67,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const warningSheetRef = useRef<ActionSheetRef>(null);
     const scrollRef = useRef<ScrollView>(null);
 
     const [open, setOpen] = useState(false);
@@ -96,7 +95,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       // Condition
       condition_type: '', // ald_related, ald_not_related
       date: moment().format('DD/MM/YYYY'), // From schema Condition section
-      prescription_date: moment().format('DD/MM/YYYY'), // Top-level date
+      prescription_date: '', // Top-level date
 
       // Type of Wound
       wound_type: [] as string[],
@@ -106,9 +105,9 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       dressing_type: [] as string[],
 
       // Wound Details
-      exudate: false,
-      cavity: false,
-      septic_wound: false,
+      exudate: null,
+      cavity: null,
+      septic_wound: null,
 
       // Required Materials and Protocol
       dressing_kits_per_day: '',
@@ -390,6 +389,30 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       }
     };
 
+    // Handle update & sign (for already-submitted requests)
+    const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+      const requestId = initialData?._id || initialData?.id;
+      if (!requestId) {
+        SHOW_TOAST('Unable to identify the request', 'error');
+        return { success: false, error: 'No request ID' };
+      }
+      try {
+        const response = await serviceRequestApi.updateFormData(requestId, {
+          formData: state,
+        });
+        if (response.success) {
+          return { success: true };
+        } else {
+          SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+          return { success: false, error: response.error };
+        }
+      } catch (error: any) {
+        const msg = error.message || 'Failed to update form data';
+        SHOW_TOAST(msg, 'error');
+        return { success: false, error: msg };
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       validateAndSubmit: async () => {
         await handleSubmitRequest();
@@ -397,6 +420,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       saveAsDraft: async () => {
         await handleSaveAsDraft();
       },
+      updateAndSign: handleUpdateAndSign,
       getFormData: () => {
         return state;
       },
@@ -432,11 +456,11 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             </AppText>
           </View>
 
-          <FormPrescriptionDetails
+          {/* <FormPrescriptionDetails
             state={state}
             setState={setFormState}
             errors={errors}
-          />
+          /> */}
 
           <FormPrescriberSection
             state={state}
@@ -446,21 +470,64 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
           />
 
           <FormPatientSection
+            readOnly={readOnly}
             state={state}
             setState={setFormState}
-            showDate={true}
-            showNALD={true}
+            showDate={false}
+            showNALD={false}
             showWeight={false}
-            showALD={true}
+            showALD={false}
             showNIR={false}
             errors={errors}
           />
+
+          {/* CONDITION */}
+          <View style={styles.card}>
+            {renderSectionHeader('Condition')}
+
+            <View style={styles.checkboxGroup}>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.condition_type === 'ald_related'}
+                onValueChange={value =>
+                  setFormState({ condition_type: value ? 'ald_related' : '' })
+                }
+                label="Care related to long-term condition (ALD)"
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.condition_type === 'ald_not_related'}
+                onValueChange={value =>
+                  setFormState({
+                    condition_type: value ? 'ald_not_related' : '',
+                  })
+                }
+                label="Not related to long-term condition (ALD)"
+              />
+            </View>
+
+            <Input
+              isLocked={readOnly}
+              onPress={() => {
+                if (readOnly) return;
+                setPickerType({ type: 'date' });
+                setOpen(true);
+              }}
+              editable={false}
+              label="Date"
+              placeholder="DD/MM/YYYY"
+              value={state.date}
+              style={styles.inputField}
+              pointerEvents="none"
+            />
+          </View>
 
           {/* TYPE OF WOUND */}
           <View style={styles.card}>
             {renderSectionHeader('Type Of Wound')}
 
             <Input
+              isLocked={readOnly}
               label="Wound Size"
               placeholder="e.g. 5x5 cm"
               value={state.wound_size}
@@ -480,6 +547,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 'Other',
               ].map(item => (
                 <AppCheckBox
+                  disabled={readOnly}
                   key={item}
                   value={(state.wound_type || []).includes(item)}
                   onValueChange={value => {
@@ -511,6 +579,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 'Packing',
               ].map(item => (
                 <AppCheckBox
+                  disabled={readOnly}
                   key={item}
                   value={(state.dressing_type || []).includes(item)}
                   onValueChange={value => {
@@ -545,12 +614,14 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
                 <View style={styles.checkboxRow}>
                   <AppCheckBox
+                    disabled={readOnly}
                     value={(state as any)[item.key] === true}
                     onValueChange={() => setFormState({ [item.key]: true })}
                     label="Yes"
                   />
 
                   <AppCheckBox
+                    disabled={readOnly}
                     value={(state as any)[item.key] === false}
                     onValueChange={() => setFormState({ [item.key]: false })}
                     label="No"
@@ -562,163 +633,103 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* REQUIRED MATERIALS AND PROTOCOL */}
           <View style={styles.card}>
-            {renderSectionHeader('Required Materials And Applicable Protocol')}
+            {renderSectionHeader('Required Materials and Protocol')}
 
-            <View style={styles.protocolContainer}>
-              <View style={styles.protocolRow}>
-                <AppText size={getScaleSize(13)}>Dressing kits</AppText>
-                <Input
-                  value={state.dressing_kits_per_day}
-                  onChangeText={value =>
-                    setFormState({ dressing_kits_per_day: value })
-                  }
-                  style={styles.blankInputSmall}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  keyboardType="numeric"
-                  placeholder="..."
-                />
-                <AppText size={getScaleSize(13)}>per day</AppText>
-              </View>
-
-              <View style={styles.protocolRow}>
-                <AppText size={getScaleSize(13)}>Bandage</AppText>
-                <Input
-                  value={state.bandage_per_day}
-                  onChangeText={value =>
-                    setFormState({ bandage_per_day: value })
-                  }
-                  style={styles.blankInputSmall}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  keyboardType="numeric"
-                  placeholder="..."
-                />
-                <AppText size={getScaleSize(13)}>per day</AppText>
-              </View>
-
-              <View style={styles.protocolRow}>
-                <AppText size={getScaleSize(13)}>Cleaning with</AppText>
-                <Input
-                  value={state.cleaning_with}
-                  onChangeText={value => setFormState({ cleaning_with: value })}
-                  style={styles.blankInputLarge}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  placeholder="..."
-                />
-              </View>
-
-              <View style={styles.protocolRow}>
-                <AppText size={getScaleSize(13)}>Disinfection with</AppText>
-                <Input
-                  value={state.disinfection_with}
-                  onChangeText={value =>
-                    setFormState({ disinfection_with: value })
-                  }
-                  style={styles.blankInputLarge}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  placeholder="..."
-                />
-              </View>
-
-              <View style={styles.protocolTextRow}>
-                <AppText size={getScaleSize(13)}>1st Layer</AppText>
-                <Input
-                  value={state.first_layer}
-                  onChangeText={value => setFormState({ first_layer: value })}
-                  style={styles.blankInputMedium}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  placeholder="..."
-                />
-              </View>
-
-              <View style={styles.protocolTextRow}>
-                <AppText size={getScaleSize(13)}>2nd Layer</AppText>
-                <Input
-                  value={state.second_layer}
-                  onChangeText={value => setFormState({ second_layer: value })}
-                  style={styles.blankInputMedium}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  placeholder="..."
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* CONDITION */}
-          <View style={styles.card}>
-            {renderSectionHeader('Condition')}
-
-            <View style={styles.checkboxGroup}>
-              <AppCheckBox
-                value={state.condition_type === 'ald_related'}
-                onValueChange={value =>
-                  setFormState({ condition_type: value ? 'ald_related' : '' })
+            <View style={styles.inputRow}>
+              <Input
+                isLocked={readOnly}
+                label="Dressing kits per day"
+                value={state.dressing_kits_per_day}
+                onChangeText={value =>
+                  setFormState({ dressing_kits_per_day: value })
                 }
-                label="Care related to long-term condition (ALD)"
+                placeholder="0"
+                keyboardType="numeric"
+                style={styles.halfWidthInput}
               />
-              <AppCheckBox
-                value={state.condition_type === 'ald_not_related'}
-                onValueChange={value =>
-                  setFormState({
-                    condition_type: value ? 'ald_not_related' : '',
-                  })
+
+              <Input
+                isLocked={readOnly}
+                label="Bandage per day"
+                value={state.bandage_per_day}
+                onChangeText={value => setFormState({ bandage_per_day: value })}
+                placeholder="0"
+                keyboardType="numeric"
+                style={styles.halfWidthInput}
+              />
+            </View>
+
+            <View style={styles.inputRow}>
+              <Input
+                isLocked={readOnly}
+                label="Cleaning with"
+                value={state.cleaning_with}
+                onChangeText={value => setFormState({ cleaning_with: value })}
+                placeholder="Enter product"
+                style={styles.halfWidthInput}
+              />
+
+              <Input
+                isLocked={readOnly}
+                label="Disinfection with"
+                value={state.disinfection_with}
+                onChangeText={value =>
+                  setFormState({ disinfection_with: value })
                 }
-                label="Not related to long-term condition (ALD)"
+                placeholder="Enter product"
+                style={styles.halfWidthInput}
+              />
+            </View>
+
+            <View style={styles.inputRow}>
+              <Input
+                isLocked={readOnly}
+                label="1st Layer"
+                value={state.first_layer}
+                onChangeText={value => setFormState({ first_layer: value })}
+                placeholder="..."
+                style={styles.halfWidthInput}
+              />
+
+              <Input
+                isLocked={readOnly}
+                label="2nd Layer"
+                value={state.second_layer}
+                onChangeText={value => setFormState({ second_layer: value })}
+                placeholder="..."
+                style={styles.halfWidthInput}
               />
             </View>
 
             <Input
-              onPress={() => {
-                setPickerType({ type: 'date' });
-                setOpen(true);
-              }}
-              editable={false}
-              label="Date"
-              placeholder="DD/MM/YYYY"
-              value={state.date}
+              isLocked={readOnly}
+              label="Treatment Duration"
+              value={state.treatment_duration}
+              onChangeText={value =>
+                setFormState({
+                  treatment_duration: value,
+                  until_healed: false,
+                })
+              }
+              placeholder="e.g. 15 days"
               style={styles.inputField}
-              pointerEvents="none"
+            />
+
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.until_healed}
+              onValueChange={value =>
+                setFormState({
+                  until_healed: value,
+                  treatment_duration: value ? '' : state.treatment_duration,
+                })
+              }
+              label="Until healed"
             />
           </View>
 
-          {/* TREATMENT DURATION */}
-          <View style={styles.card}>
-            {renderSectionHeader('Treatment Duration')}
-
-            <View style={styles.protocolContainer}>
-              <View style={styles.protocolRow}>
-                <AppText size={getScaleSize(13)}>Treatment duration</AppText>
-                <Input
-                  value={state.treatment_duration}
-                  onChangeText={value =>
-                    setFormState({
-                      treatment_duration: value,
-                      until_healed: false,
-                    })
-                  }
-                  style={styles.blankInputMedium}
-                  inputWrapperStyle={styles.blankInputWrapper}
-                  inputStyle={styles.blankInputText}
-                  placeholder="..."
-                />
-              </View>
-
-              <View style={styles.protocolRow}>
-                <AppCheckBox
-                  value={state.until_healed}
-                  onValueChange={value => setFormState({ until_healed: value })}
-                  label="Until healed"
-                />
-              </View>
-            </View>
-          </View>
-
           <FormSignature
+            readOnly={readOnly}
             signature={state.physician_signature}
             onSignatureChange={val =>
               setFormState({ physician_signature: val })
@@ -744,8 +755,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             setOpen(false);
           }}
         />
-
-        <WarningSheet ref={warningSheetRef} />
       </View>
     );
   },
@@ -873,6 +882,17 @@ const styles = StyleSheet.create({
     width: getScaleSize(180),
     paddingHorizontal: 0,
     marginBottom: 0,
+  },
+
+  inputRow: {
+    flexDirection: 'row',
+    gap: getScaleSize(12),
+  },
+
+  halfWidthInput: {
+    flex: 1,
+    paddingHorizontal: 0,
+    marginBottom: getScaleSize(12),
   },
 });
 

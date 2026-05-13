@@ -22,6 +22,7 @@ interface AppDropdownProps {
   labelFont?:String;
   style?:ViewStyle;
   error?: string;
+  disabled?: boolean;
 }
 
 const AppDropdown: React.FC<AppDropdownProps> = ({
@@ -35,7 +36,8 @@ const AppDropdown: React.FC<AppDropdownProps> = ({
   onChange,
   isMandatory,
   style,
-  error
+  error,
+  disabled = false,
 }) => {
   return (
     <View style={[styles.container,style]}>
@@ -52,7 +54,11 @@ const AppDropdown: React.FC<AppDropdownProps> = ({
       )}
 
       <Dropdown
-        style={[styles.dropdown, error && styles.dropdownError]}
+        style={[
+          styles.dropdown,
+          error && styles.dropdownError,
+          disabled && styles.dropdownDisabled,
+        ]}
         placeholderStyle={styles.placeholder}
         selectedTextStyle={styles.selectedText}
         data={data}
@@ -61,6 +67,7 @@ const AppDropdown: React.FC<AppDropdownProps> = ({
         placeholder={placeholder}
         value={value}
         onChange={item => onChange(item.value)}
+        disable={disabled}
       />
       {error && (
         <AppText style={styles.errorText}>{error}</AppText>
@@ -96,6 +103,10 @@ const styles = StyleSheet.create({
   dropdownError: {
     borderColor: COLORS.error,
     backgroundColor: COLORS.errorBg,
+  },
+  dropdownDisabled: {
+    backgroundColor: COLORS._F1F5F9,
+    borderColor: COLORS._E2E8F0,
   },
   errorText: {
     fontSize: 11,

@@ -15,13 +15,16 @@ export interface FormPrescriptionDetailsProps {
   state: any;
   setState: (state: any) => void;
   errors?: { [key: string]: string };
+  readOnly?: boolean;
 }
 
 const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
   state,
   setState,
   errors = {},
+  readOnly = false,
 }) => {
+  console.log('readOnly re', readOnly);
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(() => {
     if (state.prescription_date) {
@@ -55,11 +58,13 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
       {renderSectionHeader(STRING.prescriptionDetails)}
 
       <Input
+        isLocked={readOnly}
         onPress={() => {
-          setOpen(true);
+          !readOnly && setOpen(true);
         }}
-        editable={false}
+        // editable={!readOnly}
         label="Prescription Date"
+        isMandatory
         placeholder="DD/MM/YYYY"
         value={state.prescription_date}
         style={styles.inputField}
@@ -88,6 +93,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
             onValueChange={value =>
               setState({ therapy_type: value ? 'start' : '' })
             }
+            disabled={readOnly}
             label="Start of home infusion therapy"
           />
         </View>
@@ -98,6 +104,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
             onValueChange={value =>
               setState({ therapy_type: value ? 'renewal' : '' })
             }
+            disabled={readOnly}
             label="Renewal or modification"
           />
         </View>

@@ -5,8 +5,9 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { setLoading } from '../../../actions/common/commonSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
@@ -24,6 +25,8 @@ import {
   Input,
   RequestSummaryCard,
   AppLoader,
+  WarningSheet,
+  Header,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -34,6 +37,7 @@ import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
 import { API } from '../../../api';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import {
   ServiceDetailInfo,
@@ -56,6 +60,8 @@ import PregnancyCareForm from '../forms/PregnancyCareForm';
 import WoundCareForm from '../forms/WoundCareForm';
 import FormRequestHeader from '../../../components/FormRequestHeader';
 import { getServiceIcon } from '../createRequest/createRequestStep2';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -66,22 +72,23 @@ const FormsScreen: React.FC = () => {
   const route = useRoute();
   const request: ServiceRequest = (route.params as any)?.request;
   const requestId = request?.id;
-
-  console.log('requestId', requestId);
+  const dispatch = useDispatch();
+  const { profileData } = useSelector((state: RootState) => state.profile);
+  console.log('profileData', profileData);
 
   // Extract service and patient from request object
   const service: ServiceInfo = request?.service || {};
   const patientData = request?.patient || {};
 
   const serviceId = service?._id;
-  console.log('service', service);
-
   const serviceName = service?.serviceName;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
+
+  const warningSheetRef = useRef<ActionSheetRef>(null);
 
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
@@ -97,8 +104,58 @@ const FormsScreen: React.FC = () => {
   };
 
   const handleRightButtonPress = async () => {
+    if (
+      (requestData?.status === REQUEST_STATUS.SUBMITTED ||
+        request?.status === REQUEST_STATUS.SUBMITTED) &&
+      requestData?.formStatus === FORM_STATUS.SUBMITTED
+    ) {
+      dispatch(setLoading(true));
+
+      try {
+        // Step 1: If the form exposes updateAndSign, call it first to persist changes
+        if (formRef.current?.updateAndSign) {
+          const updateResult = await formRef.current.updateAndSign();
+          if (!updateResult.success) {
+            dispatch(setLoading(false));
+            return;
+          }
+        }
+
+        // Step 2: Fetch review data and navigate to FormReviewScreen
+        const reviewResponse = await serviceRequestApi.getReviewData(
+          requestId || '',
+        );
+        if (reviewResponse.success) {
+          NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+            request: { ...request, ...reviewResponse.data },
+          });
+        } else {
+          SHOW_TOAST(
+            reviewResponse.error || 'Failed to get review data',
+            'error',
+          );
+        }
+      } catch (error: any) {
+        SHOW_TOAST(error?.message || 'Error preparing review', 'error');
+      } finally {
+        dispatch(setLoading(false));
+      }
+      return;
+    }
+
     if (formRef.current?.validateAndSubmit) {
       await formRef.current.validateAndSubmit();
+    }
+  };
+
+  const acquireFormLock = async () => {
+    try {
+      const response = await serviceRequestApi.acquireFormLock(requestId || '');
+      if (response.success) {
+        console.log('Form lock acquired successfully');
+      }
+    } catch (error) {
+      console.log('Error acquiring form lock:', error);
     }
   };
 
@@ -109,19 +166,46 @@ const FormsScreen: React.FC = () => {
     }
   }, [requestId]);
 
+  useEffect(() => {
+    if (requestData && requestData?.isLocked) {
+      if (requestData?.formLock?.lockedBy !== profileData?.id) {
+        // Only show warning for preview/testing
+        const timer = setTimeout(() => {
+          warningSheetRef.current?.show();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [requestData]);
+
   const fetchServiceRequestDetails = async () => {
+    dispatch(setLoading(true));
     try {
       const response = await API.Instance.get(`/service-requests/${requestId}`);
       if (response?.data?.status) {
-        setRequestData(response.data.data);
+        const data = response.data.data;
+        console.log('requestDataresponse', response);
+
+        setRequestData(data);
         console.log('Service request details:', response);
-        console.log('Form data to pre-fill:', response.data.data?.formData);
+        console.log('Form data to pre-fill:', data?.formData);
+
+        // Acquire lock if both statuses are 'submitted'
+        if (
+          !data?.isLocked &&
+          data.status === REQUEST_STATUS.SUBMITTED &&
+          data.formStatus === FORM_STATUS.SUBMITTED
+        ) {
+          acquireFormLock();
+        }
       } else {
         SHOW_TOAST('Failed to fetch service request details', 'error');
       }
     } catch (error: any) {
       console.log('Error fetching service request:', error);
       SHOW_TOAST(error?.message || 'Failed to fetch service request', 'error');
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -129,27 +213,7 @@ const FormsScreen: React.FC = () => {
     <AppSafeAreaView edges={true}>
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={{ flex: 0.5 }}>
-            <TouchableOpacity
-              style={styles.circleBtn}
-              activeOpacity={0.8}
-              onPress={() => NavigationService.goBack()}
-            >
-              <Image source={IMAGES.arrowLeft} style={styles.crossIcon} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.headerCenter}>
-            <AppText
-              size={getScaleSize(16)}
-              color={COLORS._1A1D1F}
-              font={FONTS.Inter.Bold}
-            >
-              Medical Form
-            </AppText>
-          </View>
-          <View style={{ flex: 0.5 }} />
-        </View>
+        <Header title="Medical Form" isBack={true} style={styles.header} />
 
         <View style={styles.content}>
           <ScrollView
@@ -292,12 +356,16 @@ const FormsScreen: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              {requestData ? 'Update & Sign' : 'Submit Request'}
+              {requestData?.status === REQUEST_STATUS.SUBMITTED ||
+              request?.status === REQUEST_STATUS.SUBMITTED
+                ? 'Update & sign'
+                : 'Submit Request'}
             </AppText>
           </TouchableOpacity>
         </View>
       </View>
       <AppLoader visible={isLoading} />
+      <WarningSheet isLock={true} ref={warningSheetRef} />
     </AppSafeAreaView>
   );
 };

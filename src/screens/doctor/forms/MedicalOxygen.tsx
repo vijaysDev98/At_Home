@@ -26,7 +26,6 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormSignature,
-  WarningSheet,
   Input,
 } from '../../../components';
 
@@ -50,6 +49,7 @@ export interface MedicalOxygenProps {
   serviceId?: string;
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
+  readOnly?: boolean;
 }
 
 export interface MedicalOxygenRef {
@@ -59,7 +59,7 @@ export interface MedicalOxygenRef {
 }
 
 const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
-  ({ serviceId = '', initialData, patient }, ref) => {
+  ({ serviceId = '', initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
 
     const reduxPatient = useSelector(
@@ -71,7 +71,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const warningSheetRef = useRef<ActionSheetRef>(null);
     const scrollRef = useRef<ScrollView>(null);
     const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -86,7 +85,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
     const [state, setState] = useState({
       // Prescription Details
-      prescription_date: moment().format('DD/MM/YYYY'),
+      prescription_date: '',
 
       // Patient Information
       patient_last_name: selectedPatient?.lName || '',
@@ -105,7 +104,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       rpps_id: profileData?.rppsNumber || '',
 
       // Facility Information
-      hospital_name: profileData?.businessAddress || '',
+      hospital_name: '',
       hospital_address: '',
       finess_number: profileData?.finessNumber || '',
 
@@ -146,10 +145,8 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         // Update patient info from selectedPatient if not editing
         setState(prev => ({
           ...prev,
-          patient_last_name:
-            selectedPatient?.lName || '',
-          patient_first_name:
-            selectedPatient?.fName || '',
+          patient_last_name: selectedPatient?.lName || '',
+          patient_first_name: selectedPatient?.fName || '',
           dob: selectedPatient?.dateOfBirth
             ? moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY')
             : '',
@@ -397,10 +394,35 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       }
     };
 
+    // Handle update & sign (for already-submitted requests)
+    const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+      const requestId = initialData?._id || initialData?.id;
+      if (!requestId) {
+        SHOW_TOAST('Unable to identify the request', 'error');
+        return { success: false, error: 'No request ID' };
+      }
+      try {
+        const response = await serviceRequestApi.updateFormData(requestId, {
+          formData: state,
+        });
+        if (response.success) {
+          return { success: true };
+        } else {
+          SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+          return { success: false, error: response.error };
+        }
+      } catch (error: any) {
+        const msg = error.message || 'Failed to update form data';
+        SHOW_TOAST(msg, 'error');
+        return { success: false, error: msg };
+      }
+    };
+
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
       validateAndSubmit: handleSubmitRequest,
       saveAsDraft: handleSaveAsDraft,
+      updateAndSign: handleUpdateAndSign,
       getFormData: () => state,
     }));
 
@@ -421,13 +443,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             </AppText>
           </View>
 
-          <FormPrescriptionDetails
+          {/* <FormPrescriptionDetails
             state={state}
             setState={setFormState}
             errors={errors}
-          />
+          /> */}
 
           <FormPatientSection
+            readOnly={readOnly}
             state={state}
             setState={updates => setFormState(updates)}
             errors={errors}
@@ -439,6 +462,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           />
 
           <FormFacilitySection
+            readOnly={readOnly}
             state={state}
             setState={updates => setFormState(updates)}
           />
@@ -463,6 +487,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 Primary Oxygen Source:
               </AppText>
               <AppCheckBox
+                disabled={readOnly}
                 value={
                   state.primary_oxygen_source === 'Stationary concentrator'
                 }
@@ -473,9 +498,11 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                       : '',
                   })
                 }
+                containerStyle={{ marginLeft: getScaleSize(10) }}
                 label="Stationary concentrator"
               />
               <AppCheckBox
+                disabled={readOnly}
                 value={
                   state.primary_oxygen_source === 'Compressed oxygen cylinder'
                 }
@@ -486,11 +513,13 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                       : '',
                   })
                 }
+                containerStyle={{ marginLeft: getScaleSize(10) }}
                 label="Compressed oxygen cylinder"
               />
             </View>
 
             <AppCheckBox
+              disabled={readOnly}
               value={state.ambulatory_cylinder}
               onValueChange={value =>
                 setFormState({ ambulatory_cylinder: value })
@@ -503,10 +532,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 size={getScaleSize(14)}
                 color={COLORS._1A1D1F}
                 font={FONTS.Inter.Medium}
+                style={{
+                  marginTop: getScaleSize(12),
+                }}
               >
                 Delivery Method:
               </AppText>
               <AppCheckBox
+                disabled={readOnly}
                 value={state.delivery_method === 'Nasal cannula'}
                 onValueChange={value =>
                   setFormState({
@@ -516,6 +549,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 label="Nasal cannula"
               />
               <AppCheckBox
+                disabled={readOnly}
                 value={state.delivery_method === 'Oxygen mask'}
                 onValueChange={value =>
                   setFormState({
@@ -528,6 +562,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Duration input */}
             <Input
+              isLocked={readOnly}
               label="Duration (hours/day)"
               value={state.duration_hours_per_day}
               onChangeText={value =>
@@ -540,6 +575,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Flow rate inputs */}
             <Input
+              isLocked={readOnly}
               label="Flow rate at rest (L/min)"
               value={state.flow_rate_rest}
               onChangeText={value => setFormState({ flow_rate_rest: value })}
@@ -549,6 +585,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             />
 
             <Input
+              isLocked={readOnly}
               label="Flow rate during exertion (L/min)"
               value={state.flow_rate_exertion}
               onChangeText={value =>
@@ -561,6 +598,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Humidifier checkbox */}
             <AppCheckBox
+              disabled={readOnly}
               value={state.humidifier_required}
               onValueChange={value =>
                 setFormState({ humidifier_required: value })
@@ -570,12 +608,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Backup and mobility checkboxes */}
             <AppCheckBox
+              disabled={readOnly}
               value={state.backup_source}
               onValueChange={value => setFormState({ backup_source: value })}
               label="Backup oxygen cylinder"
             />
 
             <AppCheckBox
+              disabled={readOnly}
               value={state.mobility_source}
               onValueChange={value => setFormState({ mobility_source: value })}
               label="Mobility oxygen cylinder"
@@ -583,6 +623,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Pulse oximeter and tubing checkboxes */}
             <AppCheckBox
+              disabled={readOnly}
               value={state.pulse_oximeter_provided}
               onValueChange={value =>
                 setFormState({ pulse_oximeter_provided: value })
@@ -591,15 +632,18 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             />
 
             <AppCheckBox
+              disabled={readOnly}
               value={state.non_kinking_tubing}
               onValueChange={value =>
                 setFormState({ non_kinking_tubing: value })
               }
               label="Non-kinking tubing"
+              containerStyle={{ marginBottom: getScaleSize(10) }}
             />
 
             {/* Target SpO2 input */}
             <Input
+              isLocked={readOnly}
               label="Target SpO2 (%)"
               value={state.target_spo2}
               onChangeText={value => setFormState({ target_spo2: value })}
@@ -610,6 +654,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Emergency contact phone */}
             <Input
+              isLocked={readOnly}
               label="Emergency Contact Phone"
               value={state.contact_phone}
               onChangeText={value => setFormState({ contact_phone: value })}
@@ -672,6 +717,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
           {/* Palliative Care Section */}
           <AppCheckBox
+            disabled={readOnly}
             value={state.palliative_care}
             onValueChange={value => setFormState({ palliative_care: value })}
             label="Part of palliative care"
@@ -679,6 +725,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
           {/* Instructions Acknowledged */}
           <AppCheckBox
+            disabled={readOnly}
             value={state.instructions_acknowledged}
             onValueChange={value =>
               setFormState({ instructions_acknowledged: value })
@@ -686,7 +733,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             label="Patient acknowledges safety instructions"
           />
 
-          <FormSignature />
+          <FormSignature readOnly={readOnly} />
         </ScrollView>
 
         <DatePicker
@@ -705,8 +752,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           }}
           onCancel={() => setOpen(false)}
         />
-
-        <WarningSheet ref={warningSheetRef} />
       </View>
     );
   },

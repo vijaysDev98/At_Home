@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Image,
   ScrollView,
@@ -8,60 +8,154 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppButton, AppSafeAreaView, AppText } from '../../../components';
+import RequestCard from '../../../components/RequestCard';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
+import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { Assets } from '@react-navigation/elements';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { getButtonConfig } from '../../../constant';
 
-const metrics = [
-  {
-    id: 'inprogress',
-    value: '12',
-    label: STRING.inprogress,
-    icon: IMAGES.clipboard,
-  },
-  {
-    id: 'submitted',
-    value: '5',
-    label: STRING.submitted,
-    icon: IMAGES.document_icon,
-  },
-  {
-    id: 'returned',
-    value: '5',
-    label: STRING.returned,
-    icon: IMAGES.document_icon,
-  },
-];
+// Dashboard interfaces
+interface DashboardPatient {
+  id: string;
+  fullName: string;
+}
 
-const actionRequired = [
-  {
-    id: 'signature',
-    title: STRING.formAwaitingSignature,
-    value: '148',
-    icon: IMAGES.document_icon, // Fallback for document_icon
-  },
-];
+interface DashboardService {
+  id: string;
+  serviceName: string;
+}
 
-const patientMetrics = [
-  {
-    id: 'patients',
-    title: STRING.totalPatients,
-    value: '148',
-    icon: IMAGES.patients_icon, // Fallback for patients_icon
-  },
-];
+interface DashboardRecentQueue {
+  id: string;
+  requestId: string;
+  status: string;
+  formStatus: string;
+  updatedAt: string;
+  patient: DashboardPatient;
+  service: DashboardService;
+}
+
+interface DashboardRequestsOverview {
+  inProgressCount: number;
+  submittedCount: number;
+  returnedCount: number;
+}
+
+interface DashboardActionRequired {
+  awaitingSignatureCount: number;
+}
+
+interface DashboardPatients {
+  totalPatients: number;
+}
+
+interface DashboardData {
+  requestsOverview: DashboardRequestsOverview;
+  actionRequired: DashboardActionRequired;
+  patients: DashboardPatients;
+  recentQueue: DashboardRecentQueue[];
+}
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
+
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  // Fetch dashboard data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, []),
+  );
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const response = await serviceRequestApi.getDashboardOverview(5);
+      console.log('dashdata', response);
+
+      if (response.success) {
+        setDashboardData(response.data);
+      }
+    } catch (error) {
+      console.log('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare metrics from API data or use defaults
+  const metrics = [
+    {
+      id: REQUEST_STATUS.DRAFT,
+      value:
+        dashboardData?.requestsOverview?.inProgressCount?.toString() || '0',
+      label: STRING.inprogress,
+      icon: IMAGES.clipboard,
+    },
+    {
+      id: REQUEST_STATUS.SUBMITTED,
+      value: dashboardData?.requestsOverview?.submittedCount?.toString() || '0',
+      label: STRING.submitted,
+      icon: IMAGES.document_icon,
+    },
+    {
+      id: REQUEST_STATUS.RETURNED,
+      value: dashboardData?.requestsOverview?.returnedCount?.toString() || '0',
+      label: STRING.returned,
+      icon: IMAGES.document_icon,
+    },
+  ];
+
+  const actionRequired = [
+    {
+      id: 'signature',
+      title: STRING.formAwaitingSignature,
+      value:
+        dashboardData?.actionRequired?.awaitingSignatureCount?.toString() ||
+        '0',
+      icon: IMAGES.document_icon,
+    },
+  ];
+
+  const patientMetrics = [
+    {
+      id: 'patients',
+      title: STRING.totalPatients,
+      value: dashboardData?.patients?.totalPatients?.toString() || '0',
+      icon: IMAGES.patients_icon,
+    },
+  ];
+
+  const recentQueue = dashboardData?.recentQueue || [];
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else if (hour < 21) {
+      return 'Good Evening';
+    } else {
+      return 'Good Night';
+    }
+  };
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
@@ -83,7 +177,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Regular}
                 color={COLORS._1A1D1F}
               >
-                {STRING.goodMorning}
+                {getGreeting()}
               </AppText>
               <AppText
                 size={getScaleSize(18)}
@@ -307,146 +401,73 @@ const HomeScreen: React.FC = () => {
           </View>
 
           {/* Recent Queue */}
-          <View>
+          <View style={{ marginTop: getScaleSize(24) }}>
             <AppText
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1A1A}
-              style={[styles.sectionTitle, { marginTop: getScaleSize(24) }]}
+              style={[styles.sectionTitle]}
             >
               {STRING.recentQueue}
             </AppText>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: COLORS._EFEFEF,
-                borderRadius: getScaleSize(16),
-                padding: getScaleSize(16),
-                backgroundColor: COLORS.white,
-                marginHorizontal: getScaleSize(24),
-              }}
-            >
+            {recentQueue.length > 0 ? (
+              recentQueue.map((item: DashboardRecentQueue, index: number) => {
+                const initials =
+                  item.patient?.fullName
+                    ?.split(' ')
+                    .map((n: string) => n[0])
+                    .join('')
+                    .toUpperCase() || 'N/A';
+
+                const formStatus = item.formStatus || item.status;
+                const buttonConfig = getButtonConfig(formStatus);
+
+                return (
+                  <View
+                    key={item.id || index}
+                    style={{
+                      marginHorizontal: getScaleSize(24),
+                      marginBottom: getScaleSize(12),
+                    }}
+                  >
+                    <RequestCard
+                      name={item.patient?.fullName || 'N/A'}
+                      initials={initials}
+                      requestId={item.requestId || item.id}
+                      requestType={item.service?.serviceName || 'N/A'}
+                      formStatus={formStatus}
+                      status={item.status}
+                      buttonText={
+                        buttonConfig.show
+                          ? buttonConfig.label || undefined
+                          : undefined
+                      }
+                      onButtonPress={() =>
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                        })
+                      }
+                    />
+                  </View>
+                );
+              })
+            ) : (
               <View
                 style={{
-                  flexDirection: 'row',
+                  marginHorizontal: getScaleSize(24),
+                  paddingVertical: getScaleSize(20),
                   alignItems: 'center',
                 }}
               >
-                {/* <Image
-               source={IMAGES.patient}
-               style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
-               /> */}
-                <View
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: getScaleSize(40),
-                    width: getScaleSize(40),
-                    borderWidth: 1,
-                    borderColor: COLORS._DBEAFE,
-                    backgroundColor: COLORS._EFF6FF,
-                    borderRadius: getScaleSize(20),
-                  }}
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Regular}
+                  color={COLORS._6F767E}
                 >
-                  <AppText
-                    size={getScaleSize(16)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS._2563EB}
-                  >
-                    {'JD'}
-                  </AppText>
-                </View>
-
-                <View style={{ marginLeft: getScaleSize(12), flex: 0.8 }}>
-                  <AppText
-                    size={getScaleSize(16)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS._1A1A1A}
-                  >
-                    {'John Doe'}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(14)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6B7280}
-                  >
-                    {'Physical Therapy'}
-                  </AppText>
-                </View>
-                <View
-                  style={{
-                    alignItems: 'center',
-                    backgroundColor: COLORS._EFF6FF,
-                    borderRadius: getScaleSize(20),
-                    paddingHorizontal: getScaleSize(8),
-                    paddingVertical: getScaleSize(3),
-                  }}
-                >
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._2563EB}
-                  >
-                    {'Submitted'}
-                  </AppText>
-                </View>
+                  No recent requests
+                </AppText>
               </View>
-
-              <View
-                style={{
-                  height: 1,
-                  backgroundColor: COLORS._E5E7EB,
-                  marginVertical: getScaleSize(12),
-                }}
-              />
-
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View>
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.SemiBold}
-                    color={COLORS._6F767E}
-                  >
-                    {STRING.requestId}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(13)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}
-                  >
-                    {'#6534'}
-                  </AppText>
-                </View>
-                <View>
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.SemiBold}
-                    color={COLORS._6F767E}
-                  >
-                    {STRING.formStatus}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(13)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}
-                  >
-                    {'Submitted'}
-                  </AppText>
-                </View>
-              </View>
-
-              <AppButton
-                title={STRING.updateAndSign}
-                onPress={() => {}}
-                style={{ marginTop: getScaleSize(12) }}
-              />
-            </View>
+            )}
           </View>
         </ScrollView>
       </View>

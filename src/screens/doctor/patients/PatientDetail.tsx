@@ -83,7 +83,6 @@ const PatientDetail: React.FC = () => {
               style={styles.editBtn}
               activeOpacity={0.8}
               hitSlop={20}
-              // delayPressIn={0}
               onPress={() =>
                 NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
               }
@@ -122,7 +121,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._6F767E}
                   font={FONTS.Inter.Regular}
                 >
-                  DOB:{' '}
+                  {STRING.dob}{' '}
                   {patient?.dateOfBirth
                     ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
                     : '---'}{' '}
@@ -244,7 +243,7 @@ const PatientDetail: React.FC = () => {
               >
                 {STRING.medicalDescription}:
               </AppText>{' '}
-              {patient?.medicalDescription || 'No description provided.'}
+              {patient?.medicalDescription}
             </AppText>
           </View>
 

@@ -26,6 +26,7 @@ import {
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 interface RouteParams {
   requestStatus?: string;
@@ -46,11 +47,12 @@ const SERVICE_TYPES = [
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
-    case 'returned':
+    case REQUEST_STATUS.RETURNED:
       return COLORS.error;
-    case 'submitted':
-    case 'signed':
+    case REQUEST_STATUS.SUBMITTED:
+    case REQUEST_STATUS.SIGNED:
       return '#2F80ED';
+    case REQUEST_STATUS.IN_PROGRESS:
     case 'inprogress':
     case 'in progress':
       return '#F2994A';

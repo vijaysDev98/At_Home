@@ -15,9 +15,10 @@ import DatePicker from 'react-native-date-picker';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { AppText, Input, WarningSheet } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import NavigationService from '../../../navigation/NavigationService';
+import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { AppText, Input } from '../../../components';
 
 interface RouteParams {
   mode?: 'view' | 'update';
@@ -52,28 +53,19 @@ const ProviderForm: React.FC = () => {
   >(null);
   const [servicePickerVisible, setServicePickerVisible] = useState(false);
 
-  const warningSheetRef = useRef<ActionSheetRef>(null);
-
-  useEffect(() => {
-    // Only show warning for preview/testing
-    const timer = setTimeout(() => {
-      warningSheetRef.current?.show();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
   const getStatusColor = (status: string) => {
     console.log(status);
 
     switch (status.toLowerCase()) {
-      case 'returned':
+      case REQUEST_STATUS.RETURNED:
         return COLORS.returned;
-      case 'submitted':
-      case 'signed':
+      case REQUEST_STATUS.SUBMITTED:
+      case REQUEST_STATUS.SIGNED:
         return COLORS.submitted;
+      case REQUEST_STATUS.IN_PROGRESS:
       case 'inprogress':
         return COLORS.inProgress;
-      case 'completed':
+      case REQUEST_STATUS.COMPLETED:
         return COLORS.completed;
       default:
         return COLORS._6F767E;
@@ -416,9 +408,6 @@ const ProviderForm: React.FC = () => {
             </TouchableOpacity>
           </Modal>
         )}
-
-        {/* Warning Bottom Sheet Modal */}
-        <WarningSheet ref={warningSheetRef} />
       </View>
     </SafeAreaView>
   );

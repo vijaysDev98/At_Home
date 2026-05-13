@@ -49,7 +49,7 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
 
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(API.API_ROUTES.login, data);
-    console.log("log in data", data, response);
+    console.log('logindata', data, response);
 
     if (response?.status) {
       const responseData = response?.data;
@@ -101,6 +101,8 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
 
 export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
   try {
+    console.log('profileData for upload', data);
+
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(
       API.API_ROUTES.register,

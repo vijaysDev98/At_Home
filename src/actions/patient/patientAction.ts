@@ -18,32 +18,32 @@ import {
 
 export const fetchPatients =
   (p: number = 1, s: string = '', f?: string) =>
-    async (dispatch: AppDispatch, getState: () => RootState) => {
-      try {
-        const { patients } = getState().patient;
-        // Only show loader on first page if list is empty
-        if (p === 1 && patients.length === 0) dispatch(setLoading(true));
-        const response: any = await getPatientsService(p, 10, s, f);
-        console.log('patientssss', JSON.stringify(response));
+  async (dispatch: AppDispatch, getState: () => RootState) => {
+    try {
+      const { patients } = getState().patient;
+      // Only show loader on first page if list is empty
+      if (p === 1 && patients.length === 0) dispatch(setLoading(true));
+      const response: any = await getPatientsService(p, 10, s, f);
+      console.log('patientssss', JSON.stringify(response));
 
-        dispatch(setLoading(false));
+      dispatch(setLoading(false));
 
-        if (response?.status && response?.code === 200) {
-          const { patients, pagination } = response.data.data;
-          if (p === 1) {
-            dispatch(setPatients({ patients, pagination }));
-          } else {
-            dispatch(appendPatients({ patients, pagination }));
-          }
+      if (response?.status && response?.code === 200) {
+        const { patients, pagination } = response.data.data;
+        if (p === 1) {
+          dispatch(setPatients({ patients, pagination }));
         } else {
-          SHOW_TOAST(response?.message, 'error');
+          dispatch(appendPatients({ patients, pagination }));
         }
-      } catch (e: any) {
-        dispatch(setLoading(false));
-        console.log('Fetch Patients Error', e);
-        SHOW_TOAST(e?.message, 'error');
+      } else {
+        SHOW_TOAST(response?.message, 'error');
       }
-    };
+    } catch (e: any) {
+      dispatch(setLoading(false));
+      console.log('Fetch Patients Error', e);
+      SHOW_TOAST(e?.message, 'error');
+    }
+  };
 
 export const fetchPatientDetails =
   (id: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
@@ -120,7 +120,7 @@ export const updatePatient =
 
         if (detailsResponse?.status && detailsResponse?.code === 200) {
           const updatedPatient = detailsResponse.data.data;
-          console.log("Updated patient from API:", updatedPatient);
+          console.log('Updated patient from API:', updatedPatient);
 
           // Update both the patients list and selectedPatient with latest data
           dispatch(updatePatientInList(updatedPatient));

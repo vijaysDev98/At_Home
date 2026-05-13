@@ -5,27 +5,17 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-  TouchableOpacity,
-  Alert,
-  Image,
-} from 'react-native';
-import { ActionSheetRef } from 'react-native-actions-sheet';
-import DatePicker from 'react-native-date-picker';
+import { ScrollView, StyleSheet, View, Image } from 'react-native';
 import moment from 'moment';
 
 import {
   AppText,
   Input,
-  WarningSheet,
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
   AppCheckBox,
+  AppDropDown,
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -45,10 +35,49 @@ import {
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
 
+const NUTRITION_CATEGORIES = [
+  { label: 'Diabetic Range', value: 'Diabetic Range' },
+  {
+    label: 'Standard Carbohydrate Range',
+    value: 'Standard Carbohydrate Range',
+  },
+];
+
+const NUTRITION_PRODUCT_TYPES = [
+  { label: 'ONS drink 1.5 kcal/ml', value: 'ONS drink 1.5 kcal/ml' },
+  {
+    label: 'ONS drink 1.5 kcal/ml + fiber',
+    value: 'ONS drink 1.5 kcal/ml + fiber',
+  },
+  { label: 'ONS drink 2 kcal/ml', value: 'ONS drink 2 kcal/ml' },
+  { label: 'ONS concentrated 2 kcal/ml', value: 'ONS concentrated 2 kcal/ml' },
+  { label: 'ONS cream 1.5 kcal/ml', value: 'ONS cream 1.5 kcal/ml' },
+  { label: 'ONS soup 1.5 kcal', value: 'ONS soup 1.5 kcal' },
+  {
+    label: 'Blended high-protein meal (300g, 500 kcal)',
+    value: 'Blended high-protein meal (300g, 500 kcal)',
+  },
+  { label: 'Fruit juice ONS', value: 'Fruit juice ONS' },
+  {
+    label: 'Compote (250 kcal, 6–9g protein)',
+    value: 'Compote (250 kcal, 6–9g protein)',
+  },
+];
+
+const CNO_REASSESSMENT_CRITERIA = [
+  'Weight',
+  'Nutritional status',
+  'Pathology progression',
+  'Oral intake level',
+  'ONS tolerance',
+  'Compliance with ONS',
+];
+
 export interface CNOFormProps {
   serviceId: string;
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
+  readOnly?: boolean;
 }
 
 export interface CNOFormRef {
@@ -58,7 +87,7 @@ export interface CNOFormRef {
 }
 
 const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
-  ({ serviceId, initialData, patient }, ref) => {
+  ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
 
     const reduxPatient = useSelector(
@@ -69,23 +98,16 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const warningSheetRef = useRef<ActionSheetRef>(null);
     const scrollRef = useRef<ScrollView>(null);
     const productPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
 
-    const [open, setOpen] = useState(false);
-    const [date, setDate] = useState(new Date());
-    const [pickerType, setPickerType] = useState<{
-      type: string;
-      index?: number;
-    } | null>(null);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     const [state, setState] = useState({
       // Prescription Context
       prescription_place: '',
-      prescription_date: moment().format('DD/MM/YYYY'),
+      prescription_date: '',
       prescription_type: '', // 'outside_ald' or 'ald'
 
       // Patient
@@ -107,7 +129,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       rpps_id: profileData?.rppsNumber || '',
 
       // Facility
-      hospital_name: profileData?.businessAddress || '',
+      hospital_name: '',
       hospital_address: '',
       finess_number: profileData?.finessNumber || '',
 
@@ -250,31 +272,25 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
       // Patient Information - Required fields
       if (!state.patient_last_name.trim()) {
-        newErrors.patientLastName = 'Last name is required';
+        newErrors.patientLastName = STRING.lNameRequired;
       }
       if (!state.patient_first_name.trim()) {
-        newErrors.patientFirstName = 'First name is required';
+        newErrors.patientFirstName = STRING.fNameRequired;
       }
 
       // Prescription Context - Required fields
       if (!state.prescription_date) {
-        newErrors.prescriptionDate = 'Prescription date is required';
+        newErrors.prescriptionDate = STRING.prescriptionDateRequired;
       }
 
       // Nutrition Products validation - at least 1 product must be filled
-      let hasFilledProduct = false;
-      state.nutrition_products.forEach((product, index) => {
-        if (!product.product_type.trim()) {
-          newErrors[`nutrition_products[${index}].product_type`] =
-            'Product type is required';
-        } else {
-          hasFilledProduct = true;
-        }
-      });
+      const filledProductIndices = state.nutrition_products
+        .map((p, i) => (p.product_type.trim() ? i : -1))
+        .filter(i => i !== -1);
 
-      if (!hasFilledProduct) {
-        newErrors.nutrition_products =
-          'At least one nutrition product name is required';
+      if (filledProductIndices.length === 0) {
+        newErrors['nutrition_products[0].product_type'] =
+          STRING.atLeastOneProductRequired;
       }
 
       // Validate numeric fields for filled products
@@ -288,20 +304,20 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             isNaN(Number(val))
           ) {
             newErrors[`nutrition_products[${index}].quantity_per_day`] =
-              'Quantity must be a number';
+              STRING.quantityMustBeNumber;
           }
         }
       });
 
       // Patient Condition - Numeric validation
       if (state.patient_age !== '' && isNaN(Number(state.patient_age))) {
-        newErrors.patient_age = 'Age must be a number';
+        newErrors.patient_age = STRING.ageMustBeNumber;
       }
       if (
         state.patient_weight_confirm !== '' &&
         isNaN(Number(state.patient_weight_confirm))
       ) {
-        newErrors.patient_weight_confirm = 'Weight must be a number';
+        newErrors.patient_weight_confirm = STRING.weightMustBeNumber;
       }
 
       // Reassessment - Numeric validation
@@ -309,10 +325,10 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state.reassessment_after_month !== '' &&
         isNaN(Number(state.reassessment_after_month))
       ) {
-        newErrors.reassessment_after_month = 'Must be a number';
+        newErrors.reassessment_after_month = STRING.mustBeNumber;
       }
       if (state.renewal_months !== '' && isNaN(Number(state.renewal_months))) {
-        newErrors.renewal_months = 'Must be a number';
+        newErrors.renewal_months = STRING.mustBeNumber;
       }
 
       setErrors(newErrors);
@@ -328,7 +344,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         // Show first error in toast
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          errors[firstErrorKey] || 'Please fill in all required fields';
+          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
@@ -366,16 +382,12 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             dispatch(setLoading(false));
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              submitResponse.error ||
-                'Failed to submit service request for review',
-              'error',
-            );
+            SHOW_TOAST(submitResponse.error, 'error');
           }
         } else {
           // Create new service request
@@ -410,31 +422,24 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 dispatch(setLoading(false));
                 setTimeout(() => {
                   NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                    screen: 'DoctorRequest',
+                    screen: SCREENS.DOCTOR_REQUEST,
                   });
                 }, 500);
               } else {
                 dispatch(setLoading(false));
-                SHOW_TOAST(
-                  submitResponse.error ||
-                    'Failed to submit service request for review',
-                  'error',
-                );
+                SHOW_TOAST(submitResponse.error, 'error');
               }
             } else {
               dispatch(setLoading(false));
             }
           } else {
             dispatch(setLoading(false));
-            SHOW_TOAST(
-              response.error || 'Failed to create service request',
-              'error',
-            );
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+        SHOW_TOAST(error.message, 'error');
       }
     };
 
@@ -446,7 +451,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         // Show first error in toast
         const firstErrorKey = lastFirstErrorKey.current || '';
         const firstErrorMessage =
-          errors[firstErrorKey] || 'Please fill in all required fields';
+          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
         SHOW_TOAST(firstErrorMessage, 'error');
 
         const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
@@ -477,8 +482,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       try {
         if (isExistingDraft && requestId) {
           // Update existing draft
-          console.log('requestId update', requestId, state);
-
           const response = await serviceRequestApi.updateDraft(requestId, {
             formData: state,
           });
@@ -487,11 +490,11 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             SHOW_SUCCESS_TOAST(response.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+            SHOW_TOAST(response.error, 'error');
           }
         } else {
           // Create new service request as draft
@@ -515,19 +518,42 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             SHOW_SUCCESS_TOAST(response?.message);
             setTimeout(() => {
               NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: 'DoctorRequest',
+                screen: SCREENS.DOCTOR_REQUEST,
               });
             }, 500);
           } else {
-            SHOW_TOAST(
-              response.error || 'Failed to create service request',
-              'error',
-            );
+            SHOW_TOAST(response.error, 'error');
           }
         }
       } catch (error: any) {
         dispatch(setLoading(false));
-        SHOW_TOAST(error.message || 'Failed to process request', 'error');
+        SHOW_TOAST(error.message, 'error');
+      }
+    };
+
+    // Handle update & sign (for already-submitted requests)
+    const handleUpdateAndSign = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      const requestId = initialData?._id || initialData?.id;
+      if (!requestId) {
+        return { success: false, error: 'No request ID' };
+      }
+      try {
+        const response = await serviceRequestApi.updateFormData(requestId, {
+          formData: state,
+        });
+        if (response.success) {
+          return { success: true };
+        } else {
+          SHOW_TOAST(response.error, 'error');
+          return { success: false, error: response.error };
+        }
+      } catch (error: any) {
+        const msg = error.message;
+        SHOW_TOAST(msg, 'error');
+        return { success: false, error: msg };
       }
     };
 
@@ -535,10 +561,11 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     useImperativeHandle(ref, () => ({
       validateAndSubmit: handleSubmitRequest,
       saveAsDraft: handleSaveAsDraft,
+      updateAndSign: handleUpdateAndSign,
       getFormData: () => state,
     }));
 
-    const renderSectionHeader = (title: string, icon?: any) => (
+    const renderSectionHeader = (title: string) => (
       <View style={styles.sectionHeader}>
         <AppText
           size={getScaleSize(15)}
@@ -568,25 +595,9 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             </AppText>
           </View>
 
-          {/* PRESCRIPTION DETAILS */}
-          <FormPrescriptionDetails
-            state={{
-              ...state,
-              therapy_type: state.prescription_type,
-            }}
-            setState={(updates: any) => {
-              const mapped: any = { ...updates };
-              if ('therapy_type' in updates) {
-                mapped.prescription_type = updates.therapy_type;
-                delete mapped.therapy_type;
-              }
-              setFormState(mapped);
-            }}
-            errors={errors}
-          />
-
           {/* PATIENT INFORMATION */}
           <FormPatientSection
+            readOnly={readOnly}
             state={state}
             setState={updates => {
               setFormState(updates);
@@ -613,6 +624,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* FACILITY INFORMATION */}
           <FormFacilitySection
+            readOnly={readOnly}
             state={state}
             setState={updates => {
               const mapped: any = {};
@@ -626,25 +638,35 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             }}
           />
 
+          {/* PRESCRIPTION DETAILS */}
+          <FormPrescriptionDetails
+            readOnly={readOnly}
+            state={state}
+            setState={setState}
+            errors={errors}
+          />
+
           {/* PATIENT CONDITION */}
           <View style={styles.card}>
-            {renderSectionHeader('Patient Condition')}
+            {renderSectionHeader(STRING.patientCondition)}
             <View style={styles.row}>
               <Input
-                label="Age"
+                isLocked={readOnly}
+                label={STRING.age}
                 value={state.patient_age}
                 onChangeText={value => setFormState({ patient_age: value })}
-                placeholder="Years"
+                placeholder={STRING.years}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
               <Input
-                label="Weight (kg)"
+                isLocked={readOnly}
+                label={STRING.weightKg}
                 value={state.patient_weight_confirm}
                 onChangeText={value =>
                   setFormState({ patient_weight_confirm: value })
                 }
-                placeholder="kg"
+                placeholder={STRING.kg}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
@@ -653,7 +675,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* NUTRITION PRODUCTS */}
           <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
-            Nutrition Products
+            {STRING.nutritionProducts}
           </AppText>
           {errors.nutrition_products && (
             <View style={styles.productErrorRow}>
@@ -687,29 +709,30 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 >
                   {index + 1}.
                 </AppText>
-                <Input
+                <AppDropDown
+                  disabled={readOnly}
+                  label={STRING.category}
+                  data={NUTRITION_CATEGORIES}
                   value={product.category}
-                  onChangeText={value =>
-                    updateProduct(index, 'category', value)
-                  }
+                  onChange={value => updateProduct(index, 'category', value)}
                   style={styles.productInputRoot}
-                  inputWrapperStyle={styles.productNameBox}
-                  placeholder="Category"
-                  placeholderTextColor={COLORS._6F767E}
+                  placeholder={STRING.selectCategory}
                 />
-                <Input
+                <AppDropDown
+                  disabled={readOnly}
+                  label={STRING.productType}
+                  data={NUTRITION_PRODUCT_TYPES}
                   value={product.product_type}
-                  onChangeText={value =>
+                  onChange={value =>
                     updateProduct(index, 'product_type', value)
                   }
                   style={styles.productInputRoot}
-                  inputWrapperStyle={styles.productNameBox}
-                  placeholder="Product type"
-                  placeholderTextColor={COLORS._6F767E}
+                  placeholder={STRING.selectProductType}
                   error={errors[`nutrition_products[${index}].product_type`]}
                 />
                 <View style={styles.productBottomRow}>
                   <Input
+                    isLocked={readOnly}
                     value={product.quantity_per_day}
                     onChangeText={value =>
                       updateProduct(index, 'quantity_per_day', value)
@@ -718,14 +741,14 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                     style={styles.productSmallInputRoot}
                     inputWrapperStyle={styles.productSmallBox}
                     inputStyle={styles.productSmallText}
-                    placeholder="qty"
+                    placeholder={STRING.qty}
                     placeholderTextColor={COLORS._6F767E}
                     error={
                       errors[`nutrition_products[${index}].quantity_per_day`]
                     }
                   />
                   <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-                    per day
+                    {STRING.perDay}
                   </AppText>
                 </View>
               </View>
@@ -734,12 +757,13 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* OTHER NUTRITION */}
           <View style={styles.card}>
-            {renderSectionHeader('Other Nutrition')}
+            {renderSectionHeader(STRING.otherNutrition)}
             <Input
-              label="Other Nutrition"
+              isLocked={readOnly}
+              // label="Other Nutrition"
               value={state.other_nutrition}
               onChangeText={value => setFormState({ other_nutrition: value })}
-              placeholder="Enter other nutrition details"
+              placeholder={STRING.enterOtherNutritionDetails}
               multiline
               numberOfLines={4}
               style={styles.inputField}
@@ -748,29 +772,31 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* INSTRUCTIONS */}
           <View style={styles.card}>
-            {renderSectionHeader('Instructions')}
+            {renderSectionHeader(STRING.instructions)}
             <AppText
               size={getScaleSize(12)}
               color={COLORS._6F767E}
               style={{ marginBottom: getScaleSize(12) }}
             >
-              Consume at least 2 hours before or after meals for 1 month
+              {STRING.consumeAtLeast2HoursBeforeOrAfterMealsFor1Month}
             </AppText>
             <Input
-              label="Texture"
+              isLocked={readOnly}
+              label={STRING.texture}
               value={state.texture}
               onChangeText={value => setFormState({ texture: value })}
-              placeholder="Enter texture details"
+              placeholder={STRING.enterTextureDetails}
               style={styles.inputField}
             />
           </View>
 
           {/* REASSESSMENT */}
           <View style={styles.card}>
-            {renderSectionHeader('Reassessment')}
+            {renderSectionHeader(STRING.reassessment)}
             <View style={styles.row}>
               <Input
-                label="Reassessment After (months)"
+                isLocked={readOnly}
+                label={STRING.reassessmentAfterMonths}
                 value={state.reassessment_after_month}
                 onChangeText={value =>
                   setFormState({ reassessment_after_month: value })
@@ -780,10 +806,11 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 keyboardType="numeric"
               />
               <Input
-                label="Renewal (months)"
+                isLocked={readOnly}
+                label={STRING.renewalMonths}
                 value={state.renewal_months}
                 onChangeText={value => setFormState({ renewal_months: value })}
-                placeholder="Months"
+                placeholder={STRING.months}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
@@ -796,17 +823,12 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 marginBottom: getScaleSize(8),
               }}
             >
-              Reassessment Criteria ({checkedBoxesCount} selected)
+              {STRING.reassessmentCriteria} ({checkedBoxesCount}{' '}
+              {STRING.selected})
             </AppText>
-            {[
-              'Weight',
-              'Nutritional status',
-              'Pathology progression',
-              'Oral intake level',
-              'ONS tolerance',
-              'Compliance with ONS',
-            ].map(criterion => (
+            {CNO_REASSESSMENT_CRITERIA.map(criterion => (
               <AppCheckBox
+                disabled={readOnly}
                 key={criterion}
                 value={state.reassessment_criteria.includes(criterion)}
                 onValueChange={val => {
@@ -821,9 +843,11 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
           </View>
 
           {/* SIGNATURE */}
-          <FormSignature title="Physician Signature" showDate={true} />
-
-          <WarningSheet ref={warningSheetRef} />
+          {/* <FormSignature
+            readOnly={readOnly}
+            title="Physician Signature"
+            showDate={true}
+          /> */}
         </ScrollView>
       </View>
     );

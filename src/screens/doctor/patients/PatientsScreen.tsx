@@ -55,11 +55,11 @@ const PatientsScreen: React.FC = () => {
   // Map chip selection to filter parameter
   const getFilterValue = (chip: string): string | undefined => {
     switch (chip) {
-      case 'All':
+      case STRING.all:
         return undefined;
-      case 'Recently Added':
+      case STRING.recentlyAdded:
         return 'recently_added';
-      case 'Recently Updated':
+      case STRING.recentlyUpdated:
         return 'recently_updated';
       default:
         return undefined;
@@ -188,7 +188,7 @@ const PatientsScreen: React.FC = () => {
             color={COLORS._1A1D1F}
             style={styles.headerTitle}
           >
-            {'Patients'}
+            {STRING.patients}
           </AppText>
 
           {/* Search */}

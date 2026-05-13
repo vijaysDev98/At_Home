@@ -21,6 +21,7 @@ import {
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig } from '../../../constant';
+import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -67,9 +68,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const filterOptions = useMemo(
     () => [
       { key: 'all' as FilterType, label: 'All ' },
-      { key: 'draft' as FilterType, label: 'Draft' },
-      { key: 'inprogress' as FilterType, label: 'In Progress' },
-      { key: 'active' as FilterType, label: 'Returned' },
+      { key: REQUEST_STATUS.DRAFT as FilterType, label: 'Draft' },
+      { key: REQUEST_STATUS.IN_PROGRESS as FilterType, label: 'In Progress' },
+      { key: REQUEST_STATUS.RETURNED as FilterType, label: 'Returned' },
     ],
     [],
   );
@@ -188,32 +189,32 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           size={getScaleSize(12)}
           font={FONTS.Inter.SemiBold}
           color={COLORS._6B7280}
-          style={{ marginTop: getScaleSize(16) }}
+          style={{ marginVertical: getScaleSize(16) }}
         >
           {`${pagination?.total || 0} Forms Found `}
         </AppText>
       </View>
-
-      {isLoading && requests.length === 0 ? (
-        <AppLoader visible={true} />
-      ) : (
-        <FlatList
-          data={requests}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={renderFooter}
-          contentContainerStyle={{
-            paddingHorizontal: getScaleSize(16),
-            marginTop: getScaleSize(12),
-            gap: getScaleSize(12),
-            backgroundColor: COLORS._F8F9FA,
-            paddingBottom: getScaleSize(50),
-          }}
-        />
-      )}
+      <View style={{ flex: 1, backgroundColor: COLORS._F8F9FA }}>
+        {isLoading && requests.length === 0 ? (
+          <AppLoader visible={true} />
+        ) : (
+          <FlatList
+            data={requests}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
+            contentContainerStyle={{
+              paddingHorizontal: getScaleSize(16),
+              marginTop: getScaleSize(12),
+              gap: getScaleSize(12),
+              paddingBottom: getScaleSize(50),
+            }}
+          />
+        )}
+      </View>
     </AppSafeAreaView>
   );
 };
@@ -222,10 +223,7 @@ export default DoctorRequest;
 
 const styles = StyleSheet.create({
   container: {
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
     paddingTop: getScaleSize(16),
-    paddingBottom: getScaleSize(8),
     paddingHorizontal: getScaleSize(20),
   },
   searchInput: {

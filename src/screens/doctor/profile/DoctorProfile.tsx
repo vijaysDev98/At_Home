@@ -39,7 +39,6 @@ const DoctorProfile: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const { isLoading } = useSelector((state: RootState) => state.common);
-  console.log('profileData', profileData);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -62,6 +61,7 @@ const DoctorProfile: React.FC = () => {
         lName: profileData?.lName,
         email: profileData?.email,
         rppsNumber: profileData?.rppsNumber,
+        phoneNumber: profileData?.phoneNumber,
         finessNumber: profileData?.finessNumber,
         specialty: profileData?.specialty,
         practiceType: profileData?.practiceType,
@@ -74,6 +74,7 @@ const DoctorProfile: React.FC = () => {
   const fName = profileData?.fName || '';
   const lName = profileData?.lName || '';
   const userEmail = profileData?.email;
+  const userPhone = profileData?.phoneNumber;
   const userSpecialty = profileData?.specialty;
   const userRpps = profileData?.rppsNumber;
   const userFiness = profileData?.finessNumber;
@@ -238,6 +239,16 @@ const DoctorProfile: React.FC = () => {
                 editable={false}
                 leftIcon={IMAGES.location_pin}
                 multiline
+                style={styles.inputContainer}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={STRING.phoneNumber}
+                value={userPhone}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.phone}
                 style={styles.inputContainer}
               />
             </View>

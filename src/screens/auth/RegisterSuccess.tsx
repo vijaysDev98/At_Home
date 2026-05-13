@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { AppText, PrimaryButton } from '../../components';
+import { AppSafeAreaView, AppText, PrimaryButton } from '../../components';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
@@ -18,9 +18,9 @@ export type RegisterSuccessProps = NativeStackScreenProps<
 
 const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
   return (
-    <SafeAreaView
+    <AppSafeAreaView
       style={styles.safe}
-      edges={['top', 'left', 'right', 'bottom']}
+      // edges={['top', 'left', 'right', 'bottom']}
     >
       <View style={styles.container}>
         {/* Hero */}
@@ -93,7 +93,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 

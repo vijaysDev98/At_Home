@@ -19,6 +19,7 @@ const COLORS = {
   slate200: '#e2e8f0',
   _E5E7EB: '#E5E7EB',
   _1E293B: '#1E293B',
+  _1E293B80: '#1E293B80',
   _64748B: '#64748B',
   _F8F9FA: '#f8f9fa',
   _F9FAFB: '#f9fafb',
@@ -62,6 +63,11 @@ const COLORS = {
   submitted: '#2563EB',
   inProgress: '#FFB800',
   completed: '#10B981',
+  awaitingSignature: '#1E3A8A',
+  draft: '#FFB800',
+  approved: '#10B981',
+  rejected: '#ef4444',
+  signed: '#629DFF',
 };
 
 export default COLORS;

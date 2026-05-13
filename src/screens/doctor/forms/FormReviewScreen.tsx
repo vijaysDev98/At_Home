@@ -7,7 +7,8 @@ import React, {
 } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
-import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   Image,
   ScrollView,
@@ -23,15 +24,25 @@ import {
   Input,
   RequestSummaryCard,
   AppLoader,
+  Header,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
+import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
+import { API } from '../../../api';
 import { REQUEST_STATUS } from '../../../constant/RequestStatus';
-import NavigationService from '../../../navigation/NavigationService';
+import { SHOW_TOAST } from '../../../constant/showToast';
+import {
+  ServiceDetailInfo,
+  ServiceInfo,
+  ServiceRequest,
+  ServiceRequestDetail,
+} from '../../../services/serviceRequestListApi';
 
 // Import all form components
 import AntibiotherapyInfusionForm from '../forms/AntibiotherapyInfusionForm';
@@ -45,59 +56,42 @@ import PcaForm from '../forms/PcaForm';
 import PersonalHygieneCare from '../forms/PersonalHygieneCare';
 import PregnancyCareForm from '../forms/PregnancyCareForm';
 import WoundCareForm from '../forms/WoundCareForm';
-import { getServiceIcon } from './createRequestStep2';
+import FormRequestHeader from '../../../components/FormRequestHeader';
+import { getServiceIcon } from '../createRequest/createRequestStep2';
 
-export type CreateRequestStep3Props = NativeStackScreenProps<
-  RootStackParamList,
-  'CreateRequestStep3'
->;
+const FormReviewScreen: React.FC = () => {
+  const route = useRoute();
+  console.log('route.params', route.params);
 
-const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
-  const service = route?.params?.selected || {};
-  const patientId = route?.params?.patientId;
-  const initialData = (route?.params as any)?.initialData; // Existing request data if editing
-  const requestStatus = (route?.params as any)?.requestStatus; // 'draft', 'submitted', or undefined for new
+  const request: ServiceRequest = (route.params as any)?.request;
+  const requestId = request?.id;
 
-  const serviceId = service?.id;
-  const serviceName = service?.serviceName;
-  const serviceIcon = getServiceIcon(serviceName);
-
-  // Fetch patient from Redux using patientId
-  const allPatients = useSelector((state: any) => state.patient.patients);
-  const selectedPatient = useSelector(
-    (state: any) => state.patient.selectedPatient,
+  // Use patient from request, or fallback to Redux
+  const [requestData, setRequestData] = useState<ServiceRequestDetail | any>(
+    request || null,
   );
-
-  // Use selectedPatient from Redux, or find from patients list if needed
-  const patient =
-    selectedPatient ||
-    allPatients?.find((p: any) => p.id === patientId || p._id === patientId);
 
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
 
-  const [state, setState] = useState({
-    primaryDiagnosis: '',
-    secondaryDiagnosis: '',
-    currentCondition: '',
-  });
-
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
-  // Determine button labels based on request status
-  const isNewRequest = !initialData && !requestStatus;
-  const isDraft = requestStatus === REQUEST_STATUS.DRAFT;
-  const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
+  // Map patient data if needed (fullName to fName/lName)
+  const patientData = useMemo(() => {
+    return request?.patient || requestData?.patient || {};
+  }, [request, requestData]);
 
-  const leftButtonLabel = isNewRequest ? 'Save as Draft' : 'Save Progress';
-  const rightButtonLabel = isSubmitted ? 'Update & Sign' : 'Submit Request';
+  const isReadOnly = useMemo(() => {
+    return (
+      requestData?.status === REQUEST_STATUS.SUBMITTED ||
+      request?.status === REQUEST_STATUS.SUBMITTED
+    );
+  }, [requestData, request]);
 
   // Button handlers - call the form's methods via ref
   const handleLeftButtonPress = async () => {
-    if (formRef.current?.saveAsDraft) {
-      await formRef.current.saveAsDraft();
-    }
+    NavigationService.goBack();
   };
 
   const handleRightButtonPress = async () => {
@@ -106,64 +100,52 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
     }
   };
 
+  const service = requestData?.service || request?.service || {};
+  const serviceId = service?._id || service?.id;
+  const serviceName = service?.serviceName;
+
+  // Fetch service request details when in view mode
+  useEffect(() => {
+    // Only fetch if we don't have complete data already
+    if (requestId && !requestData?.formData) {
+      fetchServiceRequestDetails();
+    }
+  }, [requestId]);
+
+  const fetchServiceRequestDetails = async () => {
+    try {
+      const response = await API.Instance.get(`/service-requests/${requestId}`);
+      if (response?.data?.status) {
+        setRequestData(response.data.data);
+        console.log('Service request details fetched:', response);
+      } else {
+        SHOW_TOAST('Failed to fetch service request details', 'error');
+      }
+    } catch (error: any) {
+      console.log('Error fetching service request:', error);
+      SHOW_TOAST(error?.message || 'Failed to fetch service request', 'error');
+    }
+  };
+
   return (
     <AppSafeAreaView edges={true}>
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <AppLoader visible={isLoading} />
-        <View style={styles.header}>
-          <View style={{ flex: 0.5 }}>
-            <TouchableOpacity
-              style={styles.circleBtn}
-              activeOpacity={0.8}
-              onPress={() => NavigationService.goBack()}
-            >
-              <Image source={IMAGES.arrowLeft} style={styles.crossIcon} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.headerCenter}>
-            <AppText
-              size={getScaleSize(12)}
-              color={COLORS._1A1D1F}
-              font={FONTS.Inter.Bold}
-            >
-              {STRING.createRequest}
-            </AppText>
-            <AppText
-              size={getScaleSize(16)}
-              color={COLORS._526674}
-              font={FONTS.Inter.SemiBold}
-            >
-              {STRING.step3Of3}
-            </AppText>
-          </View>
-          <View style={{ flex: 0.5 }} />
-        </View>
-
+        <Header title="Review & Sign" isBack={true} style={styles.header} />
         <View style={styles.content}>
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View
-              style={{
-                gap: getScaleSize(14),
-                paddingVertical: getScaleSize(18),
-                backgroundColor: COLORS.white,
-                paddingHorizontal: getScaleSize(16),
-              }}
-            >
-              <RequestSummaryCard
-                patient={patient}
-                serviceTitle={serviceName}
-                serviceIcon={serviceIcon}
-                showEdit={true}
-                onEditService={() => NavigationService.goBack()}
-                onEditPatient={() =>
-                  NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
-                }
-              />
-            </View>
+            {/* Patient Info Header */}
+            <FormRequestHeader
+              fromReview={true}
+              patientData={patientData}
+              serviceName={serviceName}
+              requestData={requestData}
+            />
+
             <View>
               <View
                 style={{
@@ -174,176 +156,105 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 {/* Dynamic Form Content */}
                 {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
                   <CNOForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
                   <AntibiotherapyInfusionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
-                ) : serviceId === '69ef359fd1c1c4252d4b8d4d' ? (
-                  <CNOForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId === '69ef3557d1c1c4252d4b8d2c' ? (
+                ) : serviceId == '69ef3557d1c1c4252d4b8d2c' ? (
                   <ArtificialNutritionForm
-                    serviceId={serviceId}
+                    readOnly={isReadOnly}
                     ref={formRef}
-                    initialData={initialData}
-                    patient={patient}
+                    serviceId={serviceId || ''}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId === '69eb112a056b86c571c1a44f' ? (
                   <FreePrescriptionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (
                   <HydrationInfusionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef353fd1c1c4252d4b8d22' ? (
                   <HydrationInfusionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                     title={'IV Therapy Prescription Form'}
                   />
                 ) : serviceId == '69ef354cd1c1c4252d4b8d27' ? (
                   <MedicalOxygen
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef356cd1c1c4252d4b8d36' ? (
                   <PcaForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef357cd1c1c4252d4b8d40' ? (
                   <HydrationInfusionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                     title="Parenteral Nutrition (Central Line) Prescription Form"
                   />
                 ) : serviceId == '69ef3563d1c1c4252d4b8d31' ? (
                   <PersonalHygieneCare
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef3534d1c1c4252d4b8d1d' ? (
                   <WoundCareForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                   />
                 ) : serviceId == '69ef3575d1c1c4252d4b8d3b' ? (
                   <HydrationInfusionForm
+                    readOnly={isReadOnly}
                     ref={formRef}
                     serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
+                    initialData={requestData}
+                    patient={patientData}
                     title={'Pregnancy-Related Care Prescription Form'}
                   />
                 ) : (
-                  <View
-                    style={{
-                      backgroundColor: COLORS._F8F9FA,
-                      borderRadius: getScaleSize(16),
-                      borderWidth: 1,
-                      borderColor: COLORS._EFEFEF,
-                      padding: getScaleSize(16),
-                      gap: getScaleSize(16),
-                    }}
-                  >
-                    {/* Diagnosis Header */}
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                      }}
-                    >
-                      <Image
-                        source={IMAGES.stethoscopeIcon}
-                        style={{ width: 20, height: 20 }}
-                      />
-                      <AppText
-                        size={getScaleSize(16)}
-                        font={FONTS.Inter.Bold}
-                        color={COLORS._1A1D1F}
-                      >
-                        Diagnosis
-                      </AppText>
-                    </View>
-
-                    {/* Primary Diagnosis */}
-                    <Input
-                      label="Primary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Enter ICD-10 or description"
-                      value={state?.primaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, primaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    {/* Secondary Diagnosis */}
-                    <Input
-                      label="Secondary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Optional secondary diagnosis"
-                      value={state?.secondaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, secondaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS._1A1D1F}
-                    >
-                      Current Condition
-                    </AppText>
-                    <TextInput
-                      placeholder="Describe patient's current state..."
-                      value={state?.currentCondition}
-                      onChangeText={text =>
-                        setState({ ...state, currentCondition: text })
-                      }
-                      style={styles.textArea}
-                      multiline
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-                  </View>
+                  <></>
                 )}
               </View>
             </View>
@@ -351,6 +262,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
         </View>
 
         {/* Floating Bottom Buttons */}
+        {/* {!isReadOnly && ( */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
             activeOpacity={0.9}
@@ -362,7 +274,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {leftButtonLabel}
+              Edit Form
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -375,11 +287,13 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              {rightButtonLabel}
+              {'Submit Form'}
             </AppText>
           </TouchableOpacity>
         </View>
+        {/* )} */}
       </View>
+      <AppLoader visible={isLoading} />
     </AppSafeAreaView>
   );
 };
@@ -558,24 +472,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS._EFEFEF,
     elevation: 10,
   },
-  backBtn: {
-    flex: 1,
-    height: getScaleSize(56),
-    borderRadius: getScaleSize(14),
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextBtn: {
-    flex: 1.4,
-    height: getScaleSize(56),
-    borderRadius: getScaleSize(14),
-    backgroundColor: COLORS._526674,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   saveBtn: {
     flex: 1,
     height: getScaleSize(56),
@@ -599,4 +495,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateRequestStep3;
+export default FormReviewScreen;

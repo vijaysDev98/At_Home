@@ -5,17 +5,21 @@ import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
 import { PatientInfo } from '../services/serviceRequestListApi';
 import { ServiceRequestDetail } from '../services/serviceRequestListApi';
+import { FORM_STATUS } from '../constant';
+import { DISPLAY_FORM_STATUS } from '../constant/RequestStatus';
 
 interface FormRequestHeaderProps {
   patientData?: PatientInfo;
   serviceName?: string;
   requestData?: ServiceRequestDetail | null;
+  fromReview?: boolean;
 }
 
 const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
   patientData,
   serviceName,
   requestData,
+  fromReview = false,
 }) => {
   return (
     <View style={styles.container}>
@@ -41,8 +45,8 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             color={COLORS._526674}
             font={FONTS.Inter.Regular}
           >
-            {serviceName} • Req #
-            {requestData?._id?.slice(-4).toUpperCase() || 'N/A'}
+            {serviceName} • ID #
+            {requestData?.id?.slice(-4).toUpperCase() || 'N/A'}
           </AppText>
           <View style={styles.statusRow}>
             <View style={styles.statusBadge}>
@@ -55,7 +59,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
               </AppText>
               <AppText
                 size={getScaleSize(12)}
-                color={'#0066CC'}
+                color={COLORS[requestData?.status]}
                 font={FONTS.Inter.SemiBold}
               >
                 {requestData?.status
@@ -74,13 +78,18 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
               </AppText>
               <AppText
                 size={getScaleSize(12)}
-                color={'#0066CC'}
+                color={
+                  COLORS[
+                    fromReview
+                      ? FORM_STATUS.AWAITING_SIGNATURE
+                      : requestData?.status
+                  ]
+                }
                 font={FONTS.Inter.SemiBold}
               >
-                {requestData?.formStatus
-                  ? requestData.formStatus.charAt(0).toUpperCase() +
-                    requestData.formStatus.slice(1)
-                  : 'Draft'}
+                {fromReview
+                  ? DISPLAY_FORM_STATUS[FORM_STATUS.AWAITING_SIGNATURE]
+                  : DISPLAY_FORM_STATUS[requestData?.status] || 'Draft'}
               </AppText>
             </View>
           </View>

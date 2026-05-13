@@ -297,6 +297,7 @@ const Register: React.FC = () => {
       const updateData = {
         fName: fName.trim(),
         lName: lName.trim(),
+        phoneNumber: phone.trim(),
         specialty: specialty,
         businessAddress: address.trim(),
         practiceType: placeOfPractice.trim(),
@@ -314,6 +315,7 @@ const Register: React.FC = () => {
       lName: lName.trim(),
       email: email.trim(),
       password: password.trim(),
+      phoneNumber: phone.trim(),
       role: 'doctor',
       country: 'France',
       rppsNumber: rpps.trim(),
@@ -326,7 +328,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={['top', 'bottom']} style={styles.container}>
+    <AppSafeAreaView style={styles.container}>
       <AppLoader visible={isLoading} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -378,10 +380,11 @@ const Register: React.FC = () => {
 
             {/* Form Fields */}
             <Input
-              label={'First Name'}
+              label={STRING.fName}
               isMandatory
               placeholder={STRING.enterFName}
               value={fName}
+              leftIcon={IMAGES.ic_profile}
               style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
               onChangeText={t => {
                 setFName(t);
@@ -391,8 +394,9 @@ const Register: React.FC = () => {
             />
 
             <Input
-              label={'Last Name'}
+              label={STRING.lName}
               isMandatory
+              leftIcon={IMAGES.ic_profile}
               style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
               placeholder={STRING.enterLName}
               value={lName}
@@ -462,6 +466,21 @@ const Register: React.FC = () => {
                   helper={errors.rpps ? undefined : STRING.rppsNumber}
                   style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
                   helperStyle={{ marginTop: getScaleSize(8) }}
+                />
+
+                <Input
+                  label={STRING.phoneNumber}
+                  isMandatory
+                  placeholder={`${STRING.enterPhoneNumber}`}
+                  leftIcon={IMAGES.phone}
+                  value={phone}
+                  onChangeText={t => {
+                    setPhone(t);
+                    setErrors(e => ({ ...e, phone: '' }));
+                  }}
+                  keyboardType="numeric"
+                  error={errors.phone}
+                  style={{ marginBottom: getScaleSize(errors.phone ? 4 : 20) }}
                 />
 
                 <Input
@@ -796,7 +815,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(100),
     height: getScaleSize(100),
     borderRadius: getScaleSize(50),
-    backgroundColor: COLORS.slate100,
+    backgroundColor: COLORS.slate200,
     borderWidth: 4,
     borderColor: COLORS.white,
     shadowColor: '#000',

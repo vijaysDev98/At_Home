@@ -52,17 +52,21 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         />
       </View>
       <View style={styles.row}>
-        {showFiness ? <Input
-          isLocked
-          label="FINESS"
-          value={state.prescriber_finess}
-          style={[styles.inputField, { flex: 1 }]}
-        /> : <Input
-          isLocked
-          label="Phone"
-          value={state.prescriber_phone || state.prescriber_emergency_phone}
-          style={[styles.inputField, { flex: 1 }]}
-        />}
+        {showFiness ? (
+          <Input
+            isLocked
+            label="FINESS"
+            value={state.prescriber_finess}
+            style={[styles.inputField, { flex: 1 }]}
+          />
+        ) : (
+          <Input
+            isLocked
+            label="Phone"
+            value={state.prescriber_phone || state.prescriber_emergency_phone}
+            style={[styles.inputField, { flex: 1 }]}
+          />
+        )}
         <Input
           isLocked
           label="RPPS ID"
@@ -70,7 +74,11 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>
-      <AppText size={getScaleSize(12)} color={COLORS._6F767E} style={{ marginTop: getScaleSize(-4), marginBottom: getScaleSize(8) }}>
+      <AppText
+        size={getScaleSize(12)}
+        color={COLORS._6F767E}
+        style={{ marginTop: getScaleSize(-4), marginBottom: getScaleSize(8) }}
+      >
         *Shared directory of healthcare professionals
       </AppText>
       {children}
@@ -83,7 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
-    elevation: 4
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',

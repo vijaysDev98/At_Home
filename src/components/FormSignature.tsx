@@ -15,6 +15,7 @@ export interface FormSignatureProps {
     onDateChange?: (date: string) => void;
     signature?: string;
     onSignatureChange?: (signature: string) => void;
+    readOnly?: boolean;
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
@@ -24,6 +25,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     onDateChange,
     signature = '',
     onSignatureChange,
+    readOnly = false,
 }) => {
     const [open, setOpen] = useState(false);
     const [date, setDate] = useState(new Date());
@@ -36,12 +38,22 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 </AppText>
             </View>
             <View style={styles.signatureInputContainer}>
-                <Input style={{ paddingHorizontal: 0 }} label="Sign here" value={signature} onChangeText={onSignatureChange} />
+                <Input
+                    isLocked={readOnly}
+                    style={{ paddingHorizontal: 0 }}
+                    label="Sign here"
+                    value={signature}
+                    onChangeText={onSignatureChange}
+                />
             </View>
             {showDate && (
                 <View style={styles.dateRow}>
                     <Input
-                        onPress={() => setOpen(true)}
+                        isLocked={readOnly}
+                        onPress={() => {
+                            if (readOnly) return;
+                            setOpen(true);
+                        }}
                         editable={false}
                         label="Signature Date"
                         placeholder="DD/MM/YYYY"

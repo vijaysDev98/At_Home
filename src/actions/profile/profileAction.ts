@@ -41,6 +41,7 @@ export const updateProfile =
       let data = {
         fName: profileData.fName,
         lName: profileData.lName,
+        phoneNumber: profileData.phoneNumber,
         specialty: profileData.specialty,
         profileImg: profileData.profileImg || '',
         businessAddress: profileData.businessAddress,

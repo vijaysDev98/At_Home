@@ -19,6 +19,7 @@ export interface PatientSectionProps {
   showNALD?: boolean;
   showDate?: boolean;
   errors?: { [key: string]: string };
+  readOnly?: boolean;
 }
 
 const FormPatientSection: React.FC<PatientSectionProps> = ({
@@ -30,6 +31,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
   showNALD = false,
   showDate = false,
   errors = {},
+  readOnly = false,
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
@@ -52,15 +54,19 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       {renderSectionHeader('Patient Information', IMAGES.person)}
       <View style={styles.row}>
         <Input
+          isLocked={readOnly}
           label="First name"
           placeholder="Enter first name"
+          isMandatory
           value={state.patient_first_name}
           onChangeText={text => setState({ patient_first_name: text })}
           style={[styles.inputField, { flex: 1 }]}
           error={errors.patientFirstName}
         />
         <Input
+          isLocked={readOnly}
           label="Last name"
+          isMandatory
           placeholder="Enter last name"
           value={state.patient_last_name}
           onChangeText={text => setState({ patient_last_name: text })}
@@ -69,27 +75,29 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         />
       </View>
       <View style={styles.row}>
-
         <Input
-          onPress={() => setOpenDob(true)}
-          editable={false}
+          isLocked={readOnly}
+          onPress={() => !readOnly && setOpenDob(true)}
           label="Date of birth"
           placeholder="DD/MM/YYYY"
           value={state.dob}
           style={[styles.inputField, { flex: 1 }]}
           pointerEvents="none"
         />
-        {showDate && <Input
-          onPress={() => setOpenDob(true)}
-          editable={false}
-          label="Date"
-          placeholder="DD/MM/YYYY"
-          value={state.dob}
-          style={[styles.inputField, { flex: 1 }]}
-          pointerEvents="none"
-        />}
+        {showDate && (
+          <Input
+            isLocked={readOnly}
+            onPress={() => !readOnly && setOpenDob(true)}
+            label="Date"
+            placeholder="DD/MM/YYYY"
+            value={state.dob}
+            style={[styles.inputField, { flex: 1 }]}
+            pointerEvents="none"
+          />
+        )}
         {showWeight && (
           <Input
+            isLocked={readOnly}
             label="Weight (kg)"
             placeholder="e.g. 70"
             value={state.weight}
@@ -116,6 +124,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
       {showNIR && (
         <Input
+          isLocked={readOnly}
           label="Social Insurance number (NIR)"
           placeholder="Enter NIR"
           value={state.nir}
@@ -126,10 +135,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
       {showALD && (
         <AppCheckBox
-          value={
-            state.ald_condition === true ||
-            state.ald_condition === 'ALD'
-          }
+          disabled={readOnly}
+          value={state.ald_condition === true || state.ald_condition === 'ALD'}
           onValueChange={val => {
             const newVal =
               typeof state.ald_condition === 'string'
@@ -172,7 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
-    elevation: 4
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',

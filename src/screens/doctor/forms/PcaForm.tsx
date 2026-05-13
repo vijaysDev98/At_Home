@@ -14,7 +14,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   AppText,
   Input,
-  WarningSheet,
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
@@ -41,6 +40,7 @@ export interface PcaFormProps {
   serviceId?: string;
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
+  readOnly?: boolean;
 }
 
 export interface PcaFormRef {
@@ -50,7 +50,7 @@ export interface PcaFormRef {
 }
 
 const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
-  const { serviceId, initialData, patient } = props;
+  const { serviceId, initialData, patient, readOnly = false } = props;
   const dispatch = useDispatch();
 
   const reduxPatient = useSelector(
@@ -62,8 +62,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     (state: RootState) => state.profile.profileData,
   );
 
-  const warningSheetRef = useRef<ActionSheetRef>(null);
-
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
 
@@ -73,7 +71,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
   const [state, setState] = useState({
     // Prescription Details
-    prescription_date: moment().format('DD/MM/YYYY'),
+    prescription_date: '',
     therapy_type: '',
     effective_from: '',
     duration_weeks: '',
@@ -96,7 +94,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     rpps_id: profileData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: profileData?.businessAddress || '',
+    hospital_name: '',
     hospital_address: '',
     finess_number: profileData?.finessNumber || '',
 
@@ -385,6 +383,30 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     }
   };
 
+  // Handle update & sign (for already-submitted requests)
+  const handleUpdateAndSign = async (): Promise<{ success: boolean; error?: string }> => {
+    const requestId = initialData?._id || initialData?.id;
+    if (!requestId) {
+      SHOW_TOAST('Unable to identify the request', 'error');
+      return { success: false, error: 'No request ID' };
+    }
+    try {
+      const response = await serviceRequestApi.updateFormData(requestId, {
+        formData: state,
+      });
+      if (response.success) {
+        return { success: true };
+      } else {
+        SHOW_TOAST(response.error || 'Failed to update form data', 'error');
+        return { success: false, error: response.error };
+      }
+    } catch (error: any) {
+      const msg = error.message || 'Failed to update form data';
+      SHOW_TOAST(msg, 'error');
+      return { success: false, error: msg };
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     validateAndSubmit: async () => {
       await handleSubmitRequest();
@@ -392,6 +414,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     saveAsDraft: async () => {
       await handleSaveAsDraft();
     },
+    updateAndSign: handleUpdateAndSign,
     getFormData: () => {
       return state;
     },
@@ -428,12 +451,14 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         </View>
 
         <FormPrescriptionDetails
+          readOnly={readOnly}
           state={state}
           setState={updates => setFormState(updates)}
           errors={errors}
         />
 
         <FormPatientSection
+          readOnly={readOnly}
           state={state}
           setState={updates => setFormState(updates)}
           errors={errors}
@@ -445,12 +470,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         />
 
         <FormFacilitySection
+          readOnly={readOnly}
           state={state}
           setState={updates => setFormState(updates)}
         />
 
         <View style={styles.card}>
-          <View style={styles.warningContainer}>
+          {/* <View style={styles.warningContainer}>
             <AppText
               size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
@@ -459,11 +485,11 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               **This form must be accompanied by a handwritten secure
               prescription.
             </AppText>
-          </View>
+          </View> */}
 
           {renderSectionHeader('Prescription Plan')}
 
-          <Input
+          {/* <Input
             onPress={() => {
               setPickerType({ type: 'effective_from' });
               setOpen(true);
@@ -474,9 +500,9 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             value={state.effective_from}
             style={styles.inputField}
             pointerEvents="none"
-          />
+          /> */}
 
-          <View style={styles.topRight}>
+          {/* <View style={styles.topRight}>
             <View style={styles.blankSentenceWrap}>
               <AppText size={getScaleSize(13)}>Prescription for</AppText>
 
@@ -498,15 +524,15 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
               <AppText size={getScaleSize(13)}>times</AppText>
             </View>
-          </View>
+          </View> */}
 
-          <View style={styles.descriptionBlock}>
+          {/* <View style={styles.descriptionBlock}>
             <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
               To be carried out at home by a home care nurse (RN), every day,
               including Sundays and public holidays, for PCA morphine
               administration.
             </AppText>
-          </View>
+          </View> */}
 
           {/* NURSING CARE */}
           <View style={styles.descriptionBlock}>
@@ -515,11 +541,12 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               font={FONTS.Inter.SemiBold}
               color={COLORS._1A1D1F}
             >
-              Nursing care to be provided:
+              Nursing Care Tasks
             </AppText>
 
             <View style={styles.checkboxGroup}>
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Preparation and programming of portable pump',
                 )}
@@ -539,6 +566,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Filling and setup of pump',
                 )}
@@ -556,6 +584,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Connecting infusion and starting device',
                 )}
@@ -575,6 +604,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes('Reservoir change')}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
@@ -590,6 +620,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Stopping and removing device',
                 )}
@@ -607,6 +638,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes('Flush / heparinization')}
                 onValueChange={value => {
                   const tasks = [...state.nursing_tasks];
@@ -622,6 +654,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Weekly dressing change & Huber needle replacement',
                 )}
@@ -643,6 +676,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               />
 
               <AppCheckBox
+                disabled={readOnly}
                 value={state.nursing_tasks.includes(
                   'Monitoring and coordination of care',
                 )}
@@ -665,58 +699,54 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              Administration by continuous infusion PCA pump
+              Morphine Administration
             </AppText>
           </View>
 
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>
-              Morphine hydrochloride injectable, concentration of
-            </AppText>
-
-            <TextInput
+          <View style={styles.inputRow}>
+            <Input
+              isLocked={readOnly}
+              label="Concentration (mg/h)"
               value={state.morphine_concentration_mg_per_hr}
               onChangeText={value =>
                 setFormState({ morphine_concentration_mg_per_hr: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
 
-            <AppText size={getScaleSize(13)}>mg/h</AppText>
-          </View>
-
-          <View style={styles.blankSentenceWrap}>
-            <TextInput
+            <Input
+              isLocked={readOnly}
+              label="Total Morphine (mg)"
               value={state.morphine_total_mg}
               onChangeText={value => setFormState({ morphine_total_mg: value })}
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
+          </View>
 
-            <AppText size={getScaleSize(13)}>mg of pure morphine, i.e.</AppText>
-
-            <TextInput
+          <View style={styles.inputRow}>
+            <Input
+              label="Volume (ml)"
               value={state.solution_volume_ml}
               onChangeText={value =>
                 setFormState({ solution_volume_ml: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
 
-            <AppText size={getScaleSize(13)}>
-              ml in a flexible bag with maximum capacity of
-            </AppText>
-
-            <TextInput
+            <Input
+              label="Bag Capacity (ml)"
               value={state.bag_capacity_ml}
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
-              style={styles.inlineBlankInput}
+              placeholder="50"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
-
-            <AppText size={getScaleSize(13)}>ml</AppText>
           </View>
 
           <View style={styles.sectionSpacing}>
@@ -725,95 +755,95 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             </AppText>
           </View>
 
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>Basal rate:</AppText>
-
-            <TextInput
+          <View style={styles.inputRow}>
+            <Input
+              label="Basal rate (mg/h)"
               value={state.basal_rate_mg_per_hr}
               onChangeText={value =>
                 setFormState({ basal_rate_mg_per_hr: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
 
-            <AppText size={getScaleSize(13)}>mg/h</AppText>
-          </View>
-
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>Bolus dose:</AppText>
-
-            <TextInput
+            <Input
+              label="Bolus dose (mg)"
               value={state.bolus_dose_mg}
               onChangeText={value => setFormState({ bolus_dose_mg: value })}
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
-
-            <AppText size={getScaleSize(13)}>mg</AppText>
           </View>
 
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>Lockout period:</AppText>
-
-            <TextInput
+          <View style={styles.inputRow}>
+            <Input
+              label="Lockout (min)"
               value={state.lockout_minutes}
               onChangeText={value => setFormState({ lockout_minutes: value })}
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
 
-            <AppText size={getScaleSize(13)}>minutes</AppText>
-          </View>
-
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>
-              Maximum number of boluses per hour:
-            </AppText>
-
-            <TextInput
+            <Input
+              label="Max bolus per hour"
               value={state.max_bolus_per_hour}
               onChangeText={value =>
                 setFormState({ max_bolus_per_hour: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
           </View>
 
-          <View style={styles.blankSentenceWrap}>
-            <AppText size={getScaleSize(13)}>
-              To be renewed for connection
+          <View style={styles.sectionSpacing}>
+            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
+              Treatment Plan
             </AppText>
+          </View>
 
-            <TextInput
+          <View style={styles.inputRow}>
+            <Input
+              label="Connections per Week"
               value={state.connections_per_week}
               onChangeText={value =>
                 setFormState({ connections_per_week: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="0"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
 
-            <AppText size={getScaleSize(13)}>times per week for</AppText>
-
-            <TextInput
+            <Input
+              label="Treatment Duration (days)"
               value={state.treatment_duration_days}
               onChangeText={value =>
                 setFormState({ treatment_duration_days: value })
               }
-              style={styles.inlineBlankInput}
+              placeholder="28"
               keyboardType="numeric"
+              style={styles.halfWidthInput}
             />
-
-            <AppText size={getScaleSize(13)}>
-              days for administration by continuous infusion PCA pump of
-              injectable morphine hydrochloride.
-            </AppText>
           </View>
+
+          {/* <View style={[styles.sectionSpacing, { marginTop: getScaleSize(20) }]}>
+            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
+              Compliance Note
+            </AppText>
+          </View> */}
+
+          {/* <AppCheckBox
+            value={state.requires_handwritten_prescription}
+            onValueChange={() => {}}
+            disabled
+            label="This form must be accompanied by a handwritten secure prescription."
+          /> */}
         </View>
 
-        <FormSignature state={state} setState={setFormState} />
+        {/* <FormSignature state={state} setState={setFormState} /> */}
       </ScrollView>
 
       <DatePicker
@@ -832,8 +862,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         }}
         onCancel={() => setOpen(false)}
       />
-
-      <WarningSheet ref={warningSheetRef} />
     </View>
   );
 });
@@ -898,7 +926,7 @@ const styles = StyleSheet.create({
   },
 
   checkboxGroup: {
-    marginTop: getScaleSize(8),
+    // marginTop: getScaleSize(8),
     gap: getScaleSize(4),
   },
 
@@ -924,6 +952,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: getScaleSize(2),
     paddingHorizontal: getScaleSize(6),
+  },
+
+  inputRow: {
+    flexDirection: 'row',
+    gap: getScaleSize(15),
+  },
+
+  halfWidthInput: {
+    flex: 1,
+    paddingHorizontal: getScaleSize(0),
+    marginBottom: getScaleSize(10),
   },
 });
 

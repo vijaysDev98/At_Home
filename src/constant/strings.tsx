@@ -66,9 +66,7 @@ export const STRING = {
   weWillNotifyYouViaEmailOnceYourAccountIsActivated:
     'We will notify you via email once your account is activated',
   whatHappensNext: 'What happens next?',
-  yourRegDes: `Your registration will be reviewed by the admin. You will be
-                  notified once your account is approved. You cannot log in until
-                  your account is approved.`,
+  yourRegDes: `Your registration will be reviewed by the admin. You will be notified once your account is approved. You cannot log in until your account is approved.`,
 
   // ─── Auth: Login ─────────────────────────────────────────────
   welcomeBack: 'Welcome Back',
@@ -284,4 +282,97 @@ export const STRING = {
   followUp: 'Follow-up',
   weightMonitoringFrequency: 'Weight Monitoring Frequency',
   signature: 'Signature',
+
+  //ANTI-Biotherpy
+  youCanOnlyAddUpto10Products: 'You can only add up to 10 products',
+  prescriptionDateRequired: 'Prescription date is required',
+  lastNameRequired: 'Last name is required',
+  firstNameRequired: 'First name is required',
+  atLeastOneProductRequired: 'At least one product name is required',
+  pleaseFillAllRequiredFields: 'Please fill in all required fields',
+  modeOfAdministration: 'Mode of Administration',
+  thePatientMustRemainAmbulatoryDuringTreatment:
+    'The patient must remain ambulatory during treatment?:',
+  yes: 'Yes',
+  no: 'No',
+  preparedInFacility:
+    'If filled/prepared under the supervision of a healthcare facility, tick this box',
+  treatmentDurationDays: 'Treatment Duration (days)',
+  enterTreatmentDuration: 'Enter treatment duration',
+  totalNumberOfInfusions: 'Total Number of Infusions',
+  ifThisTreatmentMustBeInfused:
+    'If this treatment must be infused ALONE, tick this box',
+  addAntibioticProduct: '+ Add Product',
+
+  //ARTIFICIAL NUTRITION
+  nutrientsRequired: 'At least one nutrient is required',
+  prescriptionPlan: 'Prescription Plan',
+  from: 'From',
+  prescriptionDurationWeeks: 'Prescription Duration (weeks)',
+  weeks: 'Weeks',
+  number: 'Number',
+  renewalTimes: 'To be renewed (times)',
+  treatmentPlan: 'Treatment Plan',
+  nutritionDurationWeeks: 'Nutrition Duration (weeks)',
+  feedingMode: 'Feeding Mode',
+  equipmentAndPackages: 'Equipment & Packages',
+  initialSetupPackage: 'Initial Setup Package',
+  weeklyPackage: 'Weekly Package',
+  nasogastricTubeCh: 'Nasogastric Tube CH',
+  enterTubeDetails: 'Enter tube details',
+  nasogastricRatePerMonth: 'Nasogastric Rate per Month (ml)',
+  enterRate: 'Enter rate',
+  jejunostomyTubeCh: 'Jejunostomy Tube CH',
+  ivPoleRental: 'IV Pole Rental',
+  nasogastricCareFrequencyDays: 'Nasogastric Care Frequency (days)',
+  gastrostomyCareEquipment: 'Gastrostomy Care Equipment',
+  enterFrequency: 'Enter frequency',
+  gastrostomyReplacementEquipment: 'Gastrostomy Replacement Equipment',
+  buttonExtensionSet: 'Gastrostomy Button Extension Set',
+  jejunostomyCareFrequencyDays: 'Jejunostomy Care Frequency (days)',
+  nonAldPrescriptions: 'Non-ALD Prescriptions',
+  aldPrescriptions: 'ALD Prescriptions',
+  nutrients: 'Nutrients',
+  nutrientName: 'Nutrient name',
+  ml: 'ml',
+  qty: 'qty',
+  perDay: 'per day',
+  numberOfBoxesChecked: 'Number of boxes checked:',
+  weightKg: 'Weight (kg)',
+  kg: 'kg',
+  nutritionProducts: 'Nutrition Products',
+  category: 'Category',
+  selectCategory: 'Select Category',
+  productType: 'Product Type',
+  selectProductType: 'Select Product Type',
+
+  //CNO
+  quantityMustBeNumber: 'Quantity must be a number',
+  ageMustBeNumber: 'Age must be a number',
+  weightMustBeNumber: 'Weight must be a number',
+  mustBeNumber: 'Must be a number',
+  age: 'Age',
+  years: 'Years',
+  otherNutrition: 'Other Nutrition',
+  enterOtherNutritionDetails: 'Enter other nutrition details',
+  instructions: 'Instructions',
+  consumeAtLeast2HoursBeforeOrAfterMealsFor1Month:
+    'Consume at least 2 hours before or after meals for 1 month',
+  texture: 'Texture',
+  enterTextureDetails: 'Enter texture details',
+  reassessment: 'Reassessment',
+  reassessmentAfterMonths: 'Reassessment After (months)',
+  renewalMonths: 'Renewal (months)',
+  months: 'Months',
+  reassessmentCriteria: 'Reassessment Criteria',
+  selected: 'selected',
+
+  //generic
+  freePrescription: 'Free Prescription',
+  additionalNotes: 'Additional Notes',
+
+  recentlyAdded: 'Recently Added',
+  recentlyUpdated: 'Recently Updated',
+  all: 'All',
+  dob: 'DOB:',
 };

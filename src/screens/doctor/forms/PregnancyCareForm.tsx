@@ -18,7 +18,6 @@ import {
   AppDurationPickerRef,
   Input,
   AppText,
-  WarningSheet,
   FormPatientSection,
   FormPrescriberSection,
 } from '../../../components';
@@ -27,7 +26,6 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 
 const PregnancyCareForm: React.FC = () => {
-  const warningSheetRef = useRef<ActionSheetRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [open, setOpen] = useState(false);
@@ -701,7 +699,6 @@ const PregnancyCareForm: React.FC = () => {
           </TouchableOpacity>
         </ScrollView>
       </View>
-      <WarningSheet ref={warningSheetRef} />
     </>
   );
 };

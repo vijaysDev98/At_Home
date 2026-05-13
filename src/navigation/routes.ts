@@ -22,6 +22,7 @@ export const SCREENS = {
   SERVICE_SCREEN: 'ServiceScreen',
   DOCTOR_REQUEST: 'DoctorRequest',
   FORMS_SCREEN: 'Forms_Screen',
+  FORM_REVIEW_SCREEN: 'FormReviewScreen',
 } as const;
 
 // Doctor Bottom Tab Screen Names

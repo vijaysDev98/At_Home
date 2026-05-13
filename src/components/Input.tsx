@@ -138,7 +138,7 @@ const Input: React.FC<InputProps> = ({
           {...rest}
           editable={isLocked ? false : onPress ? false : rest.editable}
           style={[styles.input, isLocked && styles.inputLocked, inputStyle]}
-          placeholderTextColor={placeholderTextColor || COLORS._1E293B}
+          placeholderTextColor={placeholderTextColor || COLORS._1E293B80}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
         />
 

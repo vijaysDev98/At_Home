@@ -10,12 +10,14 @@ export interface FacilitySectionProps {
   state: any;
   setState: (state: any) => void;
   children?: React.ReactNode;
+  readOnly?: boolean;
 }
 
 const FormFacilitySection: React.FC<FacilitySectionProps> = ({
   state,
   setState,
   children,
+  readOnly = false,
 }) => {
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
@@ -34,6 +36,7 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
     <View style={styles.card}>
       {renderSectionHeader("Prescriber's Practice / Facility")}
       <Input
+        isLocked={readOnly}
         label="Hospital name"
         placeholder="Enter hospital name"
         value={state.hospital_name}
@@ -42,6 +45,7 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
       />
       <Input
         label="Address"
+        isLocked={readOnly}
         placeholder="Enter address"
         value={state.hospital_address}
         onChangeText={text => setState({ hospital_address: text })}
@@ -63,7 +67,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
-    elevation: 4
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',

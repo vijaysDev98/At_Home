@@ -10,6 +10,7 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
+import { DISPLAY_FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
 
 interface RequestCardProps {
   name?: string;
@@ -30,47 +31,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
   requestId,
   formStatus,
   buttonText,
-  onButtonPress = () => { },
+  onButtonPress = () => {},
 }) => {
-  const getStatusStyles = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'draft':
-        return {
-          bg: COLORS._FFF4E5,
-          text: COLORS.inProgress,
-        };
-
-      case 'submitted':
-        return {
-          bg: COLORS._EFF6FF,
-          text: COLORS.submitted,
-        };
-
-      case 'in progress':
-        return {
-          bg: COLORS._FFF4E5,
-          text: COLORS.inProgress,
-        };
-
-      case 'returned':
-        return {
-          bg: COLORS._FEF2F2,
-          text: COLORS.returned,
-        };
-
-      case 'completed':
-        return {
-          bg: COLORS._E6F9F0,
-          text: COLORS.completed,
-        };
-
-      default:
-        return {
-          bg: COLORS._EFF6FF,
-          text: COLORS.submitted,
-        };
-    }
-  };
   return (
     <View style={styles.requestCardContainer}>
       <View style={styles.requestHeaderRow}>
@@ -107,15 +69,15 @@ const RequestCard: React.FC<RequestCardProps> = ({
         <View
           style={[
             styles.statusBadgeContainer,
-            { backgroundColor: getStatusStyles(status).bg },
+            { backgroundColor: `${COLORS[status]}10` },
           ]}
         >
           <AppText
             size={getScaleSize(11)}
             font={FONTS.Inter.Regular}
-            color={getStatusStyles(status).text}
+            color={COLORS[status]}
           >
-            {status}
+            {DISPLAY_FORM_STATUS[status]}
           </AppText>
         </View>
       </View>
@@ -153,7 +115,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'right'}
           >
-            {formStatus}
+            {DISPLAY_FORM_STATUS[formStatus]}
           </AppText>
         </View>
       </View>

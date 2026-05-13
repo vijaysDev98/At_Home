@@ -61,14 +61,17 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   const onSubmit = () => {
     if (!canSubmit || isLoading) return;
 
-    dispatch(resetPassword({ resetToken, newPassword: password, confirmPassword: confirm }));
+    dispatch(
+      resetPassword({
+        resetToken,
+        newPassword: password,
+        confirmPassword: confirm,
+      }),
+    );
   };
 
   return (
-    <SafeAreaView
-      style={styles.safe}
-      edges={['top', 'left', 'right', 'bottom']}
-    >
+    <AppSafeAreaView style={styles.safe}>
       <AppLoader visible={isLoading} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -190,7 +193,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 

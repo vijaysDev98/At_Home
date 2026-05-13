@@ -21,12 +21,8 @@ import moment from 'moment';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
-  AppSafeAreaView,
   AppText,
-  Header,
   Input,
-  WarningSheet,
-  RequestSummaryCard,
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
@@ -40,7 +36,7 @@ import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails
 import FormSignature from '../../../components/FormSignature';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
@@ -51,6 +47,7 @@ export interface FreePrescriptionFormProps {
   serviceId: string;
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
+  readOnly?: boolean;
 }
 
 export interface FreePrescriptionFormRef {
@@ -62,7 +59,7 @@ export interface FreePrescriptionFormRef {
 const FreePrescriptionForm = forwardRef<
   FreePrescriptionFormRef,
   FreePrescriptionFormProps
->(({ serviceId, initialData, patient }, ref) => {
+>(({ serviceId, initialData, patient, readOnly = false }, ref) => {
   const dispatch = useDispatch();
 
   const reduxPatient = useSelector(
@@ -72,19 +69,14 @@ const FreePrescriptionForm = forwardRef<
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
-  const warningSheetRef = useRef<ActionSheetRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
-  const productPositions = useRef<{ [index: number]: number }>({}).current;
   const lastFirstErrorKey = useRef<string | null>(null);
 
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [pickerType, setPickerType] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [state, setState] = useState({
     // Prescription Details
-    prescription_date: moment().format('DD/MM/YYYY'),
+    prescription_date: '',
     therapy_type: '', // 'start' or 'renewal'
 
     // Patient Information
@@ -102,7 +94,7 @@ const FreePrescriptionForm = forwardRef<
     rpps_id: profileData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: profileData?.businessAddress || '',
+    hospital_name: '',
     hospital_address: '',
     finess_number: profileData?.finessNumber || '',
 
@@ -183,18 +175,15 @@ const FreePrescriptionForm = forwardRef<
 
     // Prescription Details - Required fields
     if (!state.prescription_date) {
-      newErrors.prescriptionDate = 'Prescription date is required';
-    }
-    if (!state.therapy_type) {
-      newErrors.therapyType = 'Therapy type is required';
+      newErrors.prescription_date = STRING.prescriptionDateRequired;
     }
 
     // Patient Information - Required fields
     if (!state.patient_last_name.trim()) {
-      newErrors.patientLastName = 'Last name is required';
+      newErrors.patientLastName = STRING.lNameRequired;
     }
     if (!state.patient_first_name.trim()) {
-      newErrors.patientFirstName = 'First name is required';
+      newErrors.patientFirstName = STRING.fNameRequired;
     }
 
     setErrors(newErrors);
@@ -210,7 +199,7 @@ const FreePrescriptionForm = forwardRef<
       // Show first error in toast
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -236,16 +225,12 @@ const FreePrescriptionForm = forwardRef<
           dispatch(setLoading(false));
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            submitResponse.error ||
-              'Failed to submit service request for review',
-            'error',
-          );
+          SHOW_TOAST(submitResponse.error, 'error');
         }
       } else {
         // Create new service request
@@ -278,31 +263,24 @@ const FreePrescriptionForm = forwardRef<
               dispatch(setLoading(false));
               setTimeout(() => {
                 NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: 'DoctorRequest',
+                  screen: SCREENS.DOCTOR_REQUEST,
                 });
               }, 500);
             } else {
               dispatch(setLoading(false));
-              SHOW_TOAST(
-                submitResponse.error ||
-                  'Failed to submit service request for review',
-                'error',
-              );
+              SHOW_TOAST(submitResponse.error, 'error');
             }
           } else {
             dispatch(setLoading(false));
           }
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(
-            response.error || 'Failed to create service request',
-            'error',
-          );
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      SHOW_TOAST(error.message, 'error');
     }
   };
 
@@ -314,7 +292,7 @@ const FreePrescriptionForm = forwardRef<
       // Show first error in toast
       const firstErrorKey = lastFirstErrorKey.current || '';
       const firstErrorMessage =
-        errors[firstErrorKey] || 'Please fill in all required fields';
+        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
       SHOW_TOAST(firstErrorMessage, 'error');
 
       setTimeout(() => {
@@ -333,8 +311,6 @@ const FreePrescriptionForm = forwardRef<
     try {
       if (isExistingDraft && requestId) {
         // Update existing draft
-        console.log('requestId update', requestId, state);
-
         const response = await serviceRequestApi.updateDraft(requestId, {
           formData: state,
         });
@@ -343,11 +319,11 @@ const FreePrescriptionForm = forwardRef<
           SHOW_SUCCESS_TOAST(response.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(response.error || 'Failed to update draft', 'error');
+          SHOW_TOAST(response.error, 'error');
         }
       } else {
         // Create new service request as draft
@@ -369,19 +345,54 @@ const FreePrescriptionForm = forwardRef<
           SHOW_SUCCESS_TOAST(response?.message);
           setTimeout(() => {
             NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: 'DoctorRequest',
+              screen: SCREENS.DOCTOR_REQUEST,
             });
           }, 500);
         } else {
-          SHOW_TOAST(
-            response.error || 'Failed to create service request',
-            'error',
-          );
+          SHOW_TOAST(response.error, 'error');
         }
       }
     } catch (error: any) {
       dispatch(setLoading(false));
-      SHOW_TOAST(error.message || 'Failed to process request', 'error');
+      SHOW_TOAST(error.message, 'error');
+    }
+  };
+
+  // Handle update & sign (for already-submitted requests)
+  const handleUpdateAndSign = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    const ok = validateForm();
+    if (!ok) {
+      const firstErrorKey = lastFirstErrorKey.current || '';
+      const firstErrorMessage = errors[firstErrorKey];
+      SHOW_TOAST(firstErrorMessage, 'error');
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }, 50);
+      return { success: false, error: firstErrorMessage };
+    }
+
+    const requestId = initialData?._id || initialData?.id;
+    if (!requestId) {
+      return { success: false, error: 'No request ID' };
+    }
+
+    try {
+      const response = await serviceRequestApi.updateFormData(requestId, {
+        formData: state,
+      });
+      if (response.success) {
+        return { success: true };
+      } else {
+        SHOW_TOAST(response.error, 'error');
+        return { success: false, error: response.error };
+      }
+    } catch (error: any) {
+      const msg = error.message;
+      SHOW_TOAST(msg, 'error');
+      return { success: false, error: msg };
     }
   };
 
@@ -389,6 +400,7 @@ const FreePrescriptionForm = forwardRef<
   useImperativeHandle(ref, () => ({
     validateAndSubmit: handleSubmitRequest,
     saveAsDraft: handleSaveAsDraft,
+    updateAndSign: handleUpdateAndSign,
     getFormData: () => state,
   }));
 
@@ -420,23 +432,21 @@ const FreePrescriptionForm = forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Free Prescription Form
+              {STRING.freePrescription}
             </AppText>
           </View>
 
           {/* PRESCRIPTION DETAILS */}
           <FormPrescriptionDetails
+            readOnly={readOnly}
             state={state}
             setState={setFormState}
-            errors={{
-              ...errors,
-              prescription_date: errors.prescriptionDate,
-              therapy_type: errors.therapyType,
-            }}
+            errors={errors}
           />
 
           {/* PATIENT SECTION */}
           <FormPatientSection
+            readOnly={readOnly}
             state={state}
             setState={setFormState}
             errors={errors}
@@ -445,23 +455,28 @@ const FreePrescriptionForm = forwardRef<
           <FormPrescriberSection state={state} setState={setFormState} />
 
           {/* FACILITY SECTION */}
-          <FormFacilitySection state={state} setState={setFormState} />
+          <FormFacilitySection
+            readOnly={readOnly}
+            state={state}
+            setState={setFormState}
+          />
 
           <View style={[styles.card, { elevation: 4 }]}>
-            {renderSectionHeader('Additional Notes')}
+            {renderSectionHeader(STRING.additionalNotes)}
             <Input
+              isLocked={readOnly}
               multiline
-              placeholder=".........."
+              placeholder=""
               value={state.free_text}
               onChangeText={text => setFormState({ free_text: text })}
+              maxLength={1000}
               style={[styles.inputField]}
             />
           </View>
 
-          <FormSignature />
+          {/* <FormSignature readOnly={readOnly} /> */}
         </ScrollView>
       </View>
-      <WarningSheet ref={warningSheetRef} />
     </>
   );
 });

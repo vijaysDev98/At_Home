@@ -11,6 +11,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { IMAGES } from '../assets/images';
 import { COLORS, FONTS } from '../utils';
 import React from 'react';
+import NavigationService from '../navigation/NavigationService';
 
 /**
  * Constants
@@ -27,70 +28,83 @@ const DETAILS_MAX = 500;
 /**
  * Warning Bottom Sheet (Used in ProviderForm)
  */
-export const WarningSheet = React.forwardRef<ActionSheetRef>((_, ref) => {
-  const sheetRef = React.useRef<ActionSheetRef>(null);
+interface WarningSheetProps {
+  isLock?: boolean;
+}
 
-  React.useImperativeHandle(
-    ref,
-    () =>
-      ({
-        show: () => sheetRef.current?.show(),
-        hide: () => sheetRef.current?.hide(),
-        snapToOffset: (offset: number) =>
-          sheetRef.current?.snapToOffset(offset),
-        snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
-      } as ActionSheetRef),
-  );
+export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
+  ({ isLock }, ref) => {
+    const sheetRef = React.useRef<ActionSheetRef>(null);
 
-  return (
-    <ActionSheet
-      ref={sheetRef}
-      gestureEnabled
-      containerStyle={[
-        styles.sheetContainer,
-        { backgroundColor: COLORS.white },
-      ]}
-      indicatorStyle={styles.indicator}
-    >
-      <View style={styles.sheetContent}>
-        <View style={styles.warningHeader}>
-          <Image source={IMAGES.ic_warning} style={styles.warningIcon} />
-          <AppText
-            size={getScaleSize(18)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            Warning
-          </AppText>
-        </View>
+    React.useImperativeHandle(
+      ref,
+      () =>
+        ({
+          show: () => sheetRef.current?.show(),
+          hide: () => sheetRef.current?.hide(),
+          snapToOffset: (offset: number) =>
+            sheetRef.current?.snapToOffset(offset),
+          snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+        } as ActionSheetRef),
+    );
 
-        <AppText
-          size={getScaleSize(14)}
-          color={COLORS._6F767E}
-          align="center"
-          style={styles.warningText}
-        >
-          Form Temporarily Unavailable. This form is currently being updated by
-          another user. Please try again shortly.
-        </AppText>
+    return (
+      <ActionSheet
+        ref={sheetRef}
+        gestureEnabled={!isLock}
+        closeOnTouchBackdrop={!isLock}
+        closeOnPressBack={!isLock}
+        containerStyle={[
+          styles.sheetContainer,
+          { backgroundColor: COLORS.white },
+        ]}
+        indicatorStyle={styles.indicator}
+      >
+        <View style={styles.sheetContent}>
+          <View style={styles.warningHeader}>
+            <Image source={IMAGES.ic_warning} style={styles.warningIcon} />
+            <AppText
+              size={getScaleSize(18)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Warning
+            </AppText>
+          </View>
 
-        <TouchableOpacity
-          style={styles.warningBackBtn}
-          onPress={() => sheetRef.current?.hide()}
-          activeOpacity={0.8}
-        >
           <AppText
             size={getScaleSize(14)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
+            color={COLORS._6F767E}
+            align="center"
+            style={styles.warningText}
           >
-            Back
+            Form Temporarily Unavailable. This form is currently being updated
+            by another user. Please try again shortly.
           </AppText>
-        </TouchableOpacity>
-      </View>
-    </ActionSheet>
-  );
-});
+
+          <TouchableOpacity
+            style={styles.warningBackBtn}
+            onPress={() => {
+              sheetRef.current?.hide();
+              if (isLock) {
+                NavigationService.goBack();
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Back
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </ActionSheet>
+    );
+  },
+);
 
 /**
  * Request Review Bottom Sheet (Used in Service Detail)
