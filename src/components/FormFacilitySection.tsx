@@ -19,6 +19,8 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
   children,
   readOnly = false,
 }) => {
+  console.log('state', state);
+
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
       {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}

@@ -1,4 +1,11 @@
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  RefreshControl,
+} from 'react-native';
 import {
   AppSafeAreaView,
   AppText,
@@ -22,13 +29,22 @@ import {
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig } from '../../../constant';
 import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { useRoute } from '@react-navigation/native';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
   'DoctorRequest'
 >;
 // Filter Types
-type FilterType = 'all' | 'recent' | 'active';
+type FilterType =
+  | 'all'
+  | typeof REQUEST_STATUS.DRAFT
+  // | typeof REQUEST_STATUS.IN_PROGRESS
+  | typeof REQUEST_STATUS.RETURNED
+  | typeof REQUEST_STATUS.SUBMITTED
+  | typeof REQUEST_STATUS.SIGNED
+  | typeof REQUEST_STATUS.COMPLETED
+  | string;
 
 interface FilterChipProps {
   key: string;
@@ -57,11 +73,15 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
 );
 
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
+  const route = useRoute();
+  const formStatus = route.params?.formStatus || 'all';
   const [filter, setFilter] = useState<FilterType>('all');
+  const [searchText, setSearchText] = useState('');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
   const PAGE_SIZE = 10;
 
   // Filter options
@@ -69,50 +89,87 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     () => [
       { key: 'all' as FilterType, label: 'All ' },
       { key: REQUEST_STATUS.DRAFT as FilterType, label: 'Draft' },
-      { key: REQUEST_STATUS.IN_PROGRESS as FilterType, label: 'In Progress' },
+      // { key: REQUEST_STATUS.IN_PROGRESS as FilterType, label: 'In Progress' },
+      { key: REQUEST_STATUS.SUBMITTED as FilterType, label: 'Submitted' },
+      { key: REQUEST_STATUS.SIGNED as FilterType, label: 'Signed' },
       { key: REQUEST_STATUS.RETURNED as FilterType, label: 'Returned' },
+      { key: REQUEST_STATUS.COMPLETED as FilterType, label: 'Completed' },
     ],
     [],
   );
 
   // Fetch service requests
-  const fetchServiceRequests = useCallback(async (page: number = 1) => {
-    setIsLoading(true);
-    try {
-      const response = await serviceRequestListApi.listServiceRequests({
-        page,
-        size: PAGE_SIZE,
-      });
+  const fetchServiceRequests = useCallback(
+    async (page: number = 1, isRefresh: boolean = false) => {
+      if (!isRefresh) setIsLoading(true);
+      try {
+        const response = await serviceRequestListApi.listServiceRequests({
+          page,
+          size: PAGE_SIZE,
+        });
 
-      if (response) {
-        console.log('requests', response.data.requests);
+        if (response) {
+          // For page 1, replace the entire list
+          // For subsequent pages, append to the existing list
+          if (page === 1) {
+            setRequests(response.data.requests);
+          } else {
+            setRequests(prev => [...prev, ...response.data.requests]);
+          }
 
-        // For page 1, replace the entire list
-        // For subsequent pages, append to the existing list
-        if (page === 1) {
-          setRequests(response.data.requests);
-        } else {
-          setRequests(prev => [...prev, ...response.data.requests]);
+          setPagination(response.data.pagination);
+          setCurrentPage(page);
         }
-
-        setPagination(response.data.pagination);
-        setCurrentPage(page);
+      } catch (error) {
+        console.error('Error fetching service requests:', error);
+      } finally {
+        if (!isRefresh) setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching service requests:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Load initial data
   useEffect(() => {
     fetchServiceRequests(1);
   }, [fetchServiceRequests]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchServiceRequests(1, true);
+    setRefreshing(false);
+  }, [fetchServiceRequests]);
+
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
   }, []);
+
+  useEffect(() => {
+    setFilter(formStatus);
+  }, [formStatus]);
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter(request => {
+      // Search filter
+      const searchStr = searchText.toLowerCase();
+      const patientName =
+        `${request.patient.fName} ${request.patient.lName}`.toLowerCase();
+      const serviceName = request.service.serviceName.toLowerCase();
+      const matchesSearch =
+        !searchText ||
+        patientName.includes(searchStr) ||
+        serviceName.includes(searchStr);
+
+      // Status filter
+      let matchesStatus = true;
+      if (filter !== 'all') {
+        const formStatus = request.formStatus || request.status;
+        matchesStatus = formStatus === filter;
+      }
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, searchText, filter]);
 
   const handleLoadMore = useCallback(() => {
     if (pagination && pagination.hasNextPage) {
@@ -172,9 +229,15 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           inputWrapperStyle={{ backgroundColor: COLORS._F8F9FA }}
           placeholder="Search patients, services..."
           placeholderTextColor={COLORS._6F767E}
+          value={searchText}
+          onChangeText={setSearchText}
         />
 
-        <View style={styles.filters}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filters}
+        >
           {filterOptions.map(option => (
             <FilterChip
               key={option.key}
@@ -183,7 +246,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
               onPress={() => handleFilterChange(option.key)}
             />
           ))}
-        </View>
+        </ScrollView>
 
         <AppText
           size={getScaleSize(12)}
@@ -191,7 +254,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           color={COLORS._6B7280}
           style={{ marginVertical: getScaleSize(16) }}
         >
-          {`${pagination?.total || 0} Forms Found `}
+          {`${filteredRequests.length} Forms Found `}
         </AppText>
       </View>
       <View style={{ flex: 1, backgroundColor: COLORS._F8F9FA }}>
@@ -199,19 +262,45 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           <AppLoader visible={true} />
         ) : (
           <FlatList
-            data={requests}
+            data={filteredRequests}
             renderItem={renderItem}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS._526674]}
+                tintColor={COLORS._526674}
+              />
+            }
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={renderFooter}
-            contentContainerStyle={{
-              paddingHorizontal: getScaleSize(16),
-              marginTop: getScaleSize(12),
-              gap: getScaleSize(12),
-              paddingBottom: getScaleSize(50),
-            }}
+            ListEmptyComponent={
+              !isLoading ? (
+                <View
+                  style={{ alignItems: 'center', marginTop: getScaleSize(40) }}
+                >
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                  >
+                    No any request found
+                  </AppText>
+                </View>
+              ) : null
+            }
+            contentContainerStyle={[
+              {
+                paddingHorizontal: getScaleSize(16),
+                marginTop: getScaleSize(12),
+                gap: getScaleSize(12),
+                paddingBottom: getScaleSize(50),
+              },
+              filteredRequests.length === 0 && { flexGrow: 1 },
+            ]}
           />
         )}
       </View>
@@ -223,7 +312,7 @@ export default DoctorRequest;
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: getScaleSize(16),
+    paddingTop: getScaleSize(10),
     paddingHorizontal: getScaleSize(20),
   },
   searchInput: {
@@ -231,14 +320,14 @@ const styles = StyleSheet.create({
   },
   filters: {
     flexDirection: 'row',
-    gap: 10,
     marginTop: getScaleSize(16),
     marginBottom: 4,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(18),
+    marginRight: getScaleSize(5),
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,

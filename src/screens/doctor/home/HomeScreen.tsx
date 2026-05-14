@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  RefreshControl,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -15,9 +17,9 @@ import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
+import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
@@ -74,6 +76,7 @@ const HomeScreen: React.FC = () => {
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -98,15 +101,14 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
+  }, []);
+
   // Prepare metrics from API data or use defaults
   const metrics = [
-    {
-      id: REQUEST_STATUS.DRAFT,
-      value:
-        dashboardData?.requestsOverview?.inProgressCount?.toString() || '0',
-      label: STRING.inprogress,
-      icon: IMAGES.clipboard,
-    },
     {
       id: REQUEST_STATUS.SUBMITTED,
       value: dashboardData?.requestsOverview?.submittedCount?.toString() || '0',
@@ -118,6 +120,12 @@ const HomeScreen: React.FC = () => {
       value: dashboardData?.requestsOverview?.returnedCount?.toString() || '0',
       label: STRING.returned,
       icon: IMAGES.document_icon,
+    },
+    {
+      id: REQUEST_STATUS.COMPLETED,
+      value: dashboardData?.requestsOverview?.completedCount?.toString() || '0',
+      label: STRING.completed,
+      icon: IMAGES.clipboard,
     },
   ];
 
@@ -206,6 +214,14 @@ const HomeScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           style={{ paddingTop: getScaleSize(20) }}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
+          }
         >
           {/* Requests Overview */}
           <View>
@@ -265,7 +281,24 @@ const HomeScreen: React.FC = () => {
 
                 <View style={styles.actionList}>
                   {actionRequired.map(item => (
-                    <View key={item.id} style={styles.actionItem}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        if (item.id === 'signature') {
+                          NavigationService.navigate(
+                            SCREENS.DOCTOR_BOTTOM_TABS,
+                            {
+                              screen: DOCTOR_TAB_SCREENS.DOCTOR_REQUEST,
+                              params: {
+                                formStatus: FORM_STATUS.RETURNED,
+                              },
+                            },
+                          );
+                        }
+                      }}
+                      key={item.id}
+                      style={styles.actionItem}
+                    >
                       <Image source={item.icon} style={styles.actionIcon} />
                       <View style={styles.actionContent}>
                         <AppText
@@ -283,19 +316,14 @@ const HomeScreen: React.FC = () => {
                           {item.value}
                         </AppText>
                       </View>
-                      <TouchableOpacity
-                        activeOpacity={0.7}
-                        style={styles.viewAllBtn}
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS._526674}
                       >
-                        <AppText
-                          size={getScaleSize(13)}
-                          font={FONTS.Inter.SemiBold}
-                          color={COLORS._526674}
-                        >
-                          {STRING.viewAll} {'>'}
-                        </AppText>
-                      </TouchableOpacity>
-                    </View>
+                        {STRING.viewAll} {'>'}
+                      </AppText>
+                    </TouchableOpacity>
                   ))}
                 </View>
 
@@ -311,7 +339,16 @@ const HomeScreen: React.FC = () => {
 
                 <View style={styles.actionList}>
                   {patientMetrics.map(item => (
-                    <View key={item.id} style={styles.actionItem}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                          screen: DOCTOR_TAB_SCREENS.PATIENTS,
+                        });
+                      }}
+                      key={item.id}
+                      style={styles.actionItem}
+                    >
                       <Image source={item.icon} style={styles.actionIcon} />
                       <View style={styles.actionContent}>
                         <AppText
@@ -329,19 +366,15 @@ const HomeScreen: React.FC = () => {
                           {item.value}
                         </AppText>
                       </View>
-                      <TouchableOpacity
-                        activeOpacity={0.7}
-                        style={styles.viewAllBtn}
+
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS._526674}
                       >
-                        <AppText
-                          size={getScaleSize(13)}
-                          font={FONTS.Inter.SemiBold}
-                          color={COLORS._526674}
-                        >
-                          {STRING.viewAll} {'>'}
-                        </AppText>
-                      </TouchableOpacity>
-                    </View>
+                        {STRING.viewAll} {'>'}
+                      </AppText>
+                    </TouchableOpacity>
                   ))}
                 </View>
               </View>
@@ -417,10 +450,12 @@ const HomeScreen: React.FC = () => {
                     ?.split(' ')
                     .map((n: string) => n[0])
                     .join('')
-                    .toUpperCase() || 'N/A';
+                    .toUpperCase() || '';
 
                 const formStatus = item.formStatus || item.status;
                 const buttonConfig = getButtonConfig(formStatus);
+
+                console.log('recentQueue', item);
 
                 return (
                   <View
@@ -431,10 +466,10 @@ const HomeScreen: React.FC = () => {
                     }}
                   >
                     <RequestCard
-                      name={item.patient?.fullName || 'N/A'}
+                      name={item.patient?.fullName || ''}
                       initials={initials}
-                      requestId={item.requestId || item.id}
-                      requestType={item.service?.serviceName || 'N/A'}
+                      requestId={item.id}
+                      requestType={item.service?.serviceName || ''}
                       formStatus={formStatus}
                       status={item.status}
                       buttonText={

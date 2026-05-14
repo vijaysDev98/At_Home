@@ -33,6 +33,7 @@ import { STRING } from '../../../constant/strings';
 import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import { SCREENS } from '../../../navigation/routes';
 
 const DoctorProfile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -54,7 +55,7 @@ const DoctorProfile: React.FC = () => {
   };
 
   const handleEditProfile = () => {
-    navigation.navigate('Register', {
+    navigation.navigate(SCREENS.REGISTER, {
       isEdit: true,
       userData: {
         fName: profileData?.fName,
@@ -80,6 +81,7 @@ const DoctorProfile: React.FC = () => {
   const userFiness = profileData?.finessNumber;
   const userAddress = profileData?.businessAddress;
   const userPracticeType = profileData?.practiceType;
+  const userFacilityName = profileData?.facilityName;
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
@@ -132,7 +134,9 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  {fName.startsWith('Dr.') ? fName : `Dr. ${fName} ${lName}`}
+                  {fName.startsWith('Dr.')
+                    ? fName + ' ' + lName
+                    : `Dr. ${fName} ${lName}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}
@@ -176,7 +180,7 @@ const DoctorProfile: React.FC = () => {
                 value={fName}
                 isLocked={false}
                 editable={false}
-                leftIcon={IMAGES.ic_profile}
+                leftIcon={IMAGES.person}
               />
             </View>
             <View style={styles.fieldBlock}>
@@ -186,7 +190,7 @@ const DoctorProfile: React.FC = () => {
                 value={lName}
                 isLocked={false}
                 editable={false}
-                leftIcon={IMAGES.ic_profile}
+                leftIcon={IMAGES.person}
               />
             </View>
             <View style={styles.fieldBlock}>
@@ -266,6 +270,16 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.placeOfPractice}
                 value={userPracticeType}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.hospital}
+                style={styles.inputContainer}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={STRING.facilityName}
+                value={userFacilityName}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.hospital}

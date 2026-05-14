@@ -28,7 +28,7 @@ export const DISPLAY_FORM_STATUS = {
   [FORM_STATUS.APPROVED]: 'Approved',
   [FORM_STATUS.REJECTED]: 'Rejected',
   [FORM_STATUS.IN_PROGRESS]: 'In Progress',
-  [FORM_STATUS.AWAITING_SIGNATURE]: 'Awaiting Signature',
+  [FORM_STATUS.AWAITING_SIGNATURE]: 'Awaiting\nSignature',
   [FORM_STATUS.SIGNED]: 'Signed',
   [FORM_STATUS.RETURNED]: 'Returned',
   [FORM_STATUS.COMPLETED]: 'Completed',

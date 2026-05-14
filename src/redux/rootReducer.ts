@@ -4,11 +4,18 @@ import profileReducer from '../actions/profile/profileSlice';
 import commonReducer from '../actions/common/commonSlice';
 import patientReducer from '../actions/patient/patientSlice';
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   login: authReducer,
   profile: profileReducer,
   common: commonReducer,
   patient: patientReducer,
 });
+
+const rootReducer = (state: any, action: any) => {
+  if (action.type === 'USER_LOGOUT') {
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
 
 export default rootReducer;

@@ -25,6 +25,7 @@ import {
   FormPrescriberSection,
   FormFacilitySection,
   AppCheckBox,
+  FormSignature,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -74,10 +75,13 @@ const AntibiotherapyInfusionForm = forwardRef<
   AntibiotherapyInfusionFormRef,
   AntibiotherapyInfusionFormProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
+  console.log('initialData', JSON.stringify(initialData));
+
   const dispatch = useDispatch();
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
+  const requestId = initialData?._id;
   const selectedPatient = initialData ? patient : reduxPatient;
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
@@ -118,7 +122,7 @@ const AntibiotherapyInfusionForm = forwardRef<
 
     // Facility Information
     hospital_name: '',
-    hospital_address: '',
+    hospital_address: profileData?.businessAddress || '',
     finess_number: profileData?.finessNumber || '',
 
     // Signature
@@ -161,7 +165,6 @@ const AntibiotherapyInfusionForm = forwardRef<
     success: boolean;
     error?: string;
   }> => {
-    const requestId = initialData?._id || initialData?.id;
     if (!requestId) {
       return { success: false, error: 'No request ID' };
     }
@@ -425,8 +428,8 @@ const AntibiotherapyInfusionForm = forwardRef<
     dispatch(setLoading(true));
 
     // Check if it's an existing draft
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
+    const isExistingDraft = initialData && initialData?._id;
+    const requestId = isExistingDraft ? initialData?._id : null;
 
     try {
       if (isExistingDraft && requestId) {
@@ -530,8 +533,8 @@ const AntibiotherapyInfusionForm = forwardRef<
     dispatch(setLoading(true));
 
     // Check if it's an existing draft
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
+    const isExistingDraft = initialData && initialData?._id;
+    const requestId = isExistingDraft ? initialData?._id : null;
 
     try {
       if (isExistingDraft && requestId) {
@@ -933,8 +936,22 @@ const AntibiotherapyInfusionForm = forwardRef<
         )}
 
         {/* SIGNATURE */}
-        {/* <FormSignature readOnly={readOnly} /> */}
-
+        <FormSignature
+          requestId={initialData?._id}
+          readOnly={readOnly}
+          doctorName={`${initialData?.doctorId?.fName || ''} ${
+            initialData?.doctorId?.lName || ''
+          }`}
+          signedAt={
+            initialData?.digitalSignature?.signedAt
+              ? moment(initialData?.digitalSignature?.signedAt).format(
+                  'MMM DD, YYYY • hh:mm A',
+                )
+              : ''
+          }
+          signatureImage={initialData?.digitalSignature?.signatureData}
+          signatureStatus={initialData?.signatureMetadata?.signatureStatus}
+        />
         {/* SUBMIT BUTTON */}
         {/* <AppButton
           title="Submit Form"

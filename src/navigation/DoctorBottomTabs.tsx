@@ -113,6 +113,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
                 style={({ pressed }) => [
                   styles.fab,
                   pressed ? styles.plusBtnPressed : null,
+                  {
+                    backgroundColor: isFocused
+                      ? COLORS.primary
+                      : COLORS._E8EDF1,
+                  },
                 ]}
                 onPress={() =>
                   navigation.navigate(
@@ -122,7 +127,10 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
               >
                 <Image
                   source={IMAGES.new_request}
-                  style={[styles.icon, { tintColor: COLORS.primary }]}
+                  style={[
+                    styles.icon,
+                    { tintColor: isFocused ? COLORS.white : COLORS.primary },
+                  ]}
                 />
               </Pressable>
             );
@@ -209,7 +217,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(56),
     height: getScaleSize(56),
     borderRadius: getScaleSize(28),
-    backgroundColor: '#E8EDF1',
+    backgroundColor: COLORS._E8EDF1,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: COLORS.shadow,

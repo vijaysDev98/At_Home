@@ -221,15 +221,17 @@ const PatientsScreen: React.FC = () => {
                 ]}
                 onPress={() => setSelectedChip(chip)}
               >
-                <Text
-                  style={
+                <AppText
+                  color={selectedChip === chip ? COLORS.white : COLORS._6F767E}
+                  size={getScaleSize(12)}
+                  font={
                     selectedChip === chip
-                      ? styles.chipTextActive
-                      : styles.chipText
+                      ? FONTS.Inter.SemiBold
+                      : FONTS.Inter.Regular
                   }
                 >
                   {chip}
-                </Text>
+                </AppText>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -339,18 +341,19 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   chipsRow: {
-    gap: getScaleSize(8),
+    // gap: getScaleSize(8),
     alignItems: 'center',
     marginTop: getScaleSize(12),
     paddingHorizontal: getScaleSize(20),
   },
   chip: {
-    paddingHorizontal: getScaleSize(22),
-    borderRadius: getScaleSize(25),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(18),
+    marginRight: getScaleSize(5),
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    height: getScaleSize(45),
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: COLORS._E5E7EB,
   },
   chipActive: {
     backgroundColor: '#526674',

@@ -29,7 +29,7 @@ export const getServiceIcon = (id: string) => {
     case '69ef359fd1c1c4252d4b8d4f':
       return IMAGES.injectionIcon;
     case '69ef3557d1c1c4252d4b8d2c':
-      return IMAGES.testTubeIcon
+      return IMAGES.testTubeIcon;
     case '69ef3589d1c1c4252d4b8d45':
       return IMAGES.nurseIcon;
     case '69eb112a056b86c571c1a44f':
@@ -192,7 +192,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                         size={getScaleSize(12)}
                         font={FONTS.Inter.Regular}
                         color={COLORS._6F767E}
-                        numberOfLines={3}
+                        // numberOfLines={3}
                       >
                         {service.description}
                       </AppText>
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    height: 164,
+    // height: 164,
     backgroundColor: COLORS.white,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: COLORS._EFEFEF,
     paddingTop: getScaleSize(18),
     paddingHorizontal: getScaleSize(16),
-    paddingBottom: getScaleSize(7),
+    paddingBottom: getScaleSize(18),
     shadowColor: COLORS.black,
     shadowOpacity: 0.02,
     shadowRadius: 4,

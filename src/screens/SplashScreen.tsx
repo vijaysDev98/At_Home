@@ -65,12 +65,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
     const timer = setTimeout(async () => {
       const token = await Storage.get(Storage.USER_TOKEN);
       const role = await Storage.get(Storage.USER_ROLE);
-      console.log("Access token", token);
-      
+      console.log('Access token', token);
 
       if (token) {
         await dispatch(fetchProfile());
-        if (role === 'provider') {
+        if (role === 'serviceProvider') {
           NavigationService.replace(SCREENS.PROVIDER_BOTTOM_TABS as any);
         } else {
           NavigationService.replace(SCREENS.DOCTOR_BOTTOM_TABS as any);
@@ -78,7 +77,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
       } else {
         NavigationService.replace(SCREENS.WELCOME as any);
       }
-    }, 2500);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [dispatch, fade, NavigationService, pulse]);

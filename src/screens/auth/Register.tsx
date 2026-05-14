@@ -177,6 +177,7 @@ const Register: React.FC = () => {
     userData.practiceType || '',
   );
   const [address, setAddress] = useState(userData.businessAddress || '');
+  const [facilityName, setFacilityName] = useState(userData.facilityName || '');
   const [agreed, setAgreed] = useState(isEdit); // Auto-agreed if editing
 
   const [userAvatar, setUserAvatar] = useState<string | null>(
@@ -300,6 +301,7 @@ const Register: React.FC = () => {
         phoneNumber: phone.trim(),
         specialty: specialty,
         businessAddress: address.trim(),
+        facilityName: facilityName.trim(),
         practiceType: placeOfPractice.trim(),
         profileImg: profileImageUrl,
       };
@@ -321,6 +323,7 @@ const Register: React.FC = () => {
       rppsNumber: rpps.trim(),
       finessNumber: finess.trim(),
       specialty: specialty,
+      facilityName: facilityName.trim(),
       businessAddress: address.trim(),
       practiceType: placeOfPractice.trim(),
     };
@@ -328,7 +331,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView style={styles.container}>
+    <AppSafeAreaView edges style={styles.container}>
       <AppLoader visible={isLoading} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -384,7 +387,7 @@ const Register: React.FC = () => {
               isMandatory
               placeholder={STRING.enterFName}
               value={fName}
-              leftIcon={IMAGES.ic_profile}
+              leftIcon={IMAGES.person}
               style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
               onChangeText={t => {
                 setFName(t);
@@ -396,7 +399,7 @@ const Register: React.FC = () => {
             <Input
               label={STRING.lName}
               isMandatory
-              leftIcon={IMAGES.ic_profile}
+              leftIcon={IMAGES.person}
               style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
               placeholder={STRING.enterLName}
               value={lName}
@@ -534,6 +537,19 @@ const Register: React.FC = () => {
               leftIcon={IMAGES.hospital}
               error={errors.placeOfPractice}
               zIndex={900}
+            />
+
+            <Input
+              label={STRING.facilityName}
+              placeholder={STRING.enterFacilityName}
+              leftIcon={IMAGES.hospital}
+              value={facilityName}
+              onChangeText={t => {
+                setFacilityName(t);
+                setErrors(e => ({ ...e, facilityName: '' }));
+              }}
+              error={errors.facilityName}
+              style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
             />
 
             <Input

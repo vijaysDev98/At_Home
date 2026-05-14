@@ -1,20 +1,27 @@
 import React from 'react';
-import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  createBottomTabNavigator,
+  BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, FONTS } from '../utils';
 import { PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
-import ProviderProfile from '../screens/provider/profile/profile';
+import ProviderProfile from '../screens/provider/profile/providerProfile';
 import { IMAGES } from '../assets/images';
 import { AppText } from '../components';
 import { getScaleSize } from '../utils/scaleSize';
+import AvailableRequest from '../screens/provider/request/AvailableRequest';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
-  Forms: undefined;
+  Requests: undefined;
   Alerts: undefined;
   Profile: undefined;
 };
@@ -24,13 +31,13 @@ const Tab = createBottomTabNavigator<ProviderBottomTabParamList>();
 const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
   switch (name) {
     case PROVIDER_TAB_SCREENS.HOME:
-     return IMAGES.tab_home;
-    case PROVIDER_TAB_SCREENS.FORMS:
-       return IMAGES.tab_request;
+      return IMAGES.tab_home;
+    case PROVIDER_TAB_SCREENS.REQUESTS:
+      return IMAGES.tab_request;
     case PROVIDER_TAB_SCREENS.ALERTS:
       return IMAGES.notification_icon;
     case PROVIDER_TAB_SCREENS.PROFILE:
-       return IMAGES.tab_profile;
+      return IMAGES.tab_profile;
     default:
       return IMAGES.tab_home;
   }
@@ -43,9 +50,18 @@ const ProviderBottomTabs: React.FC = () => {
       tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen name={PROVIDER_TAB_SCREENS.HOME} component={ProviderHome} />
-      <Tab.Screen name={PROVIDER_TAB_SCREENS.FORMS} component={FormsScreen} />
-      <Tab.Screen name={PROVIDER_TAB_SCREENS.ALERTS} component={ProviderNotification} />
-      <Tab.Screen name={PROVIDER_TAB_SCREENS.PROFILE} component={ProviderProfile} />
+      <Tab.Screen
+        name={PROVIDER_TAB_SCREENS.REQUESTS}
+        component={AvailableRequest}
+      />
+      <Tab.Screen
+        name={PROVIDER_TAB_SCREENS.ALERTS}
+        component={ProviderNotification}
+      />
+      <Tab.Screen
+        name={PROVIDER_TAB_SCREENS.PROFILE}
+        component={ProviderProfile}
+      />
     </Tab.Navigator>
   );
 };

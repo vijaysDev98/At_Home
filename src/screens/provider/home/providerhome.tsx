@@ -14,41 +14,60 @@ import { AppText } from '../../../components';
 import LinearGradient from 'react-native-linear-gradient';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import { STRING } from '../../../constant';
 
 const ProviderHome: React.FC = () => {
+  const { profileData } = useSelector((state: RootState) => state.profile);
+
+  console.log('profileData', profileData);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.profileRow}>
-            <View style={styles.avatarWrap}>
-              <Image
-                source={{
-                  uri: 'https://www.figma.com/api/mcp/asset/28aa6b07-8ea7-4df4-b030-811de0bb6c4e',
-                }}
-                style={styles.avatar}
-              />
-            </View>
+          <View style={styles.headerLeft}>
+            <Image
+              source={
+                profileData?.profileImg
+                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                  : IMAGES.ic_profile
+              }
+              style={styles.avatar}
+            />
             <View>
               <AppText
                 size={getScaleSize(12)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
+                font={FONTS.Inter.Regular}
+                color={COLORS._1A1D1F}
               >
-                Welcome back,
+                {STRING.welcomeBack}
               </AppText>
               <AppText
                 size={getScaleSize(18)}
                 font={FONTS.Inter.Bold}
-                color="#111827"
+                color={COLORS.black}
               >
-                Sarah Jenkins
+                {profileData?.providerName}
               </AppText>
             </View>
           </View>
+          <TouchableOpacity
+            onPress={() =>
+              NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
+            }
+            activeOpacity={0.7}
+            style={styles.notificationBtn}
+          >
+            <Image
+              source={IMAGES.notification_icon}
+              style={styles.notificationIcon}
+            />
+          </TouchableOpacity>
         </View>
-
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -336,32 +355,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(16),
-    backgroundColor: COLORS.white,
-    height: getScaleSize(68),
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 0,
-  },
-  profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: getScaleSize(24),
+    paddingVertical: getScaleSize(16),
+    backgroundColor: COLORS.white,
   },
-  avatarWrap: {
-    width: getScaleSize(32),
-    height: getScaleSize(32),
-    borderRadius: getScaleSize(16),
-    overflow: 'hidden',
-    backgroundColor: '#E4E9EE',
-    marginRight: getScaleSize(12),
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(24),
+    // resizeMode: 'contain'
+  },
+  notificationBtn: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(22),
+    backgroundColor: COLORS._F8F9FA,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
   },
   scrollContent: {
     paddingHorizontal: getScaleSize(20),

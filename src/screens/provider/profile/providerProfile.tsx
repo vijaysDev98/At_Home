@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -11,8 +11,38 @@ import { COLORS, FONTS } from '../../../utils';
 import { AppText } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { STRING } from '../../../constant';
+import { userLogout } from '../../../actions/auth/authAction';
 
 const ProviderProfile: React.FC = () => {
+  const dispatch = useDispatch();
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profileData?.profileImg) {
+      setUserAvatar(profileData.profileImg);
+    }
+  }, [profileData?.profileImg]);
+
+  const providerName = profileData?.providerName;
+  const providerEmail = profileData?.email;
+  const providerPhone = profileData?.phoneNumber;
+  const providerAssignedServices = profileData?.assignedServices || [];
+
+  const handleLogout = () => {
+    dispatch(userLogout());
+  };
+
+  console.log('profile data ', profileData);
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
@@ -25,7 +55,12 @@ const ProviderProfile: React.FC = () => {
           >
             Profile
           </AppText>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => {
+              NavigationService.navigate(SCREENS.EDIT_PROVIDER_PROFILE);
+            }}
+            activeOpacity={0.7}
+          >
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Medium}
@@ -43,9 +78,15 @@ const ProviderProfile: React.FC = () => {
           {/* Profile Card */}
           <View style={styles.profileCard}>
             <Image
-              source={{
-                uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-              }}
+              source={
+                userAvatar
+                  ? userAvatar.startsWith('file://') ||
+                    userAvatar.startsWith('content://') ||
+                    userAvatar.startsWith('data:')
+                    ? { uri: userAvatar }
+                    : { uri: IMAGE_BASE_URL + userAvatar }
+                  : IMAGES.person
+              }
               style={styles.avatar}
             />
             <AppText
@@ -53,16 +94,16 @@ const ProviderProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Sarah Jenkins
+              {providerName}
             </AppText>
-            <AppText
+            {/* <AppText
               size={getScaleSize(13)}
               font={FONTS.Inter.Medium}
               color={COLORS._6F767E}
             >
               Registered Nurse (RN)
-            </AppText>
-            <View style={styles.statusBadge}>
+            </AppText> */}
+            {/* <View style={styles.statusBadge}>
               <View style={styles.statusDot} />
               <AppText
                 size={getScaleSize(12)}
@@ -71,7 +112,7 @@ const ProviderProfile: React.FC = () => {
               >
                 Active
               </AppText>
-            </View>
+            </View> */}
           </View>
 
           {/* Contact Information */}
@@ -101,7 +142,7 @@ const ProviderProfile: React.FC = () => {
                 font={FONTS.Inter.Medium}
                 color={COLORS._1A1D1F}
               >
-                sarah.jenkins@athome.com
+                {providerEmail}
               </AppText>
             </View>
             <View style={styles.fieldGroup}>
@@ -113,72 +154,76 @@ const ProviderProfile: React.FC = () => {
                 font={FONTS.Inter.Medium}
                 color={COLORS._1A1D1F}
               >
-                +1 (555) 123-4567
+                {providerPhone}
               </AppText>
             </View>
           </View>
 
           {/* Eligible Services */}
-          <View style={styles.sectionCard}>
-            <View style={styles.servicesHeaderRow}>
-              <View style={styles.servicesHeaderLeft}>
-                {/* <View style={styles.sectionIconWrap}> */}
-                <Image source={IMAGES.ic_medKit} style={styles.sectionIcon} />
-                {/* </View> */}
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
-                >
-                  Eligible Services
-                </AppText>
-              </View>
-              <View style={styles.activeBadge}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6B7280}
-                >
-                  3 Active
-                </AppText>
-              </View>
-            </View>
-            {/* <View style={styles.divider} /> */}
-            {[
-              {
-                title: 'Wound Care Management',
-                desc: 'Post-operative wound care, dressing changes, and infection monitoring.',
-              },
-              {
-                title: 'IV Therapy',
-                desc: 'Administration of intravenous medications and fluids.',
-              },
-              {
-                title: 'Vitals Monitoring',
-                desc: 'Routine check of blood pressure, heart rate, and oxygen levels.',
-              },
-            ].map((item, idx, arr) => (
-              <View key={item.title}>
-                <View style={styles.serviceItem}>
+          {providerAssignedServices.length > 0 && (
+            <View style={styles.sectionCard}>
+              <View style={styles.servicesHeaderRow}>
+                <View style={styles.servicesHeaderLeft}>
+                  {/* <View style={styles.sectionIconWrap}> */}
+                  <Image source={IMAGES.ic_medKit} style={styles.sectionIcon} />
+                  {/* </View> */}
                   <AppText
-                    size={getScaleSize(14)}
+                    size={getScaleSize(15)}
                     font={FONTS.Inter.Bold}
                     color={COLORS._1A1D1F}
                   >
-                    {item.title}
+                    Eligible Services
                   </AppText>
+                </View>
+                <View style={styles.activeBadge}>
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Medium}
-                    color={COLORS._6F767E}
-                    style={{ marginTop: getScaleSize(4) }}
+                    color={COLORS._6B7280}
                   >
-                    {item.desc}
+                    {providerAssignedServices?.length} Active
                   </AppText>
                 </View>
               </View>
-            ))}
-          </View>
+              {/* <View style={styles.divider} /> */}
+              {providerAssignedServices.map((item, idx, arr) => (
+                <View key={item.title}>
+                  <View style={styles.serviceItem}>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {item.serviceName}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: getScaleSize(4) }}
+                    >
+                      {item.description}
+                    </AppText>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            activeOpacity={0.85}
+            onPress={handleLogout}
+          >
+            <Image source={IMAGES.arrow_back} style={styles.logoutIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.error}
+            >
+              {STRING.logOut}
+            </AppText>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -195,6 +240,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.backgroundAlt,
+  },
+  logoutBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  logoutIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.error,
+  },
+  logoutText: {
+    fontSize: getScaleSize(14),
+    fontWeight: '700',
+    color: COLORS.error,
   },
   header: {
     flexDirection: 'row',

@@ -1,132 +1,238 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import DatePicker from 'react-native-date-picker';
-import moment from 'moment';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
+import { InAppBrowser } from 'react-native-inappbrowser-reborn';
 
 import AppText from './AppText';
-import Input from './Input';
-import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
+import { getScaleSize } from '../utils/scaleSize';
+import { API } from '../api';
+import { FORM_STATUS } from '../constant';
 
 export interface FormSignatureProps {
-    title?: string;
-    showDate?: boolean;
-    signatureDate?: string;
-    onDateChange?: (date: string) => void;
-    signature?: string;
-    onSignatureChange?: (signature: string) => void;
-    readOnly?: boolean;
+  title?: string;
+  // requestId: string;
+  // doctorName?: string;
+  // signedAt?: string;
+  // signatureImage?: string;
+  readOnly?: boolean;
+  requestData: any;
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
-    title = 'Signature',
-    showDate = false,
-    signatureDate = '',
-    onDateChange,
-    signature = '',
-    onSignatureChange,
-    readOnly = false,
+  title = 'Doctor Signature',
+  // requestId,
+  // doctorName,
+  // signedAt = '',
+  // signatureImage,
+  readOnly = false,
+  requestData,
 }) => {
-    const [open, setOpen] = useState(false);
-    const [date, setDate] = useState(new Date());
+  if (requestData.formStatus !== FORM_STATUS.AWAITING_SIGNATURE) {
+    return;
+  }
 
-    return (
-        <View style={styles.card}>
-            <View style={styles.headerRow}>
-                <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-                    {title}
-                </AppText>
-            </View>
-            <View style={styles.signatureInputContainer}>
-                <Input
-                    isLocked={readOnly}
-                    style={{ paddingHorizontal: 0 }}
-                    label="Sign here"
-                    value={signature}
-                    onChangeText={onSignatureChange}
-                />
-            </View>
-            {showDate && (
-                <View style={styles.dateRow}>
-                    <Input
-                        isLocked={readOnly}
-                        onPress={() => {
-                            if (readOnly) return;
-                            setOpen(true);
-                        }}
-                        editable={false}
-                        label="Signature Date"
-                        placeholder="DD/MM/YYYY"
-                        value={signatureDate}
-                        style={styles.dateInput}
-                        pointerEvents="none"
-                    />
-                </View>
-            )}
-            <DatePicker
-                modal
-                mode="date"
-                open={open}
-                date={date}
-                onConfirm={d => {
-                    setOpen(false);
-                    setDate(d);
-                    const formattedDate = moment(d).format('DD/MM/YYYY');
-                    onDateChange?.(formattedDate);
-                }}
-                onCancel={() => setOpen(false)}
+  const [loading, setLoading] = useState(false);
+
+  const isSigned = !!requestData?.digitalSignature?.signatureData;
+
+  const openSigningUrl = async (url: string) => {
+    try {
+      if (await InAppBrowser.isAvailable()) {
+        await InAppBrowser.open(url, {
+          // iOS
+          dismissButtonStyle: 'cancel',
+          preferredBarTintColor: COLORS.primary,
+          preferredControlTintColor: COLORS.white,
+          readerMode: false,
+          animated: true,
+          modalPresentationStyle: 'fullScreen',
+          modalTransitionStyle: 'coverVertical',
+          modalEnabled: true,
+
+          // Android
+          showTitle: true,
+          toolbarColor: COLORS.primary,
+          secondaryToolbarColor: COLORS.black,
+          navigationBarColor: COLORS.black,
+          navigationBarDividerColor: COLORS.white,
+          enableUrlBarHiding: true,
+          enableDefaultShare: false,
+          forceCloseOnRedirection: false,
+        });
+      } else {
+        Linking.openURL(url);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to open signing page');
+    }
+  };
+
+  const handleSignature = async () => {
+    try {
+      setLoading(true);
+
+      const response: any = await API.Instance.post(
+        `/digital-signature/${requestData?._id}/sign`,
+      );
+
+      console.log('signature response', response?.data);
+
+      if (response?.data?.status === 200) {
+        const signingUrl = response?.data?.data?.signingUrl;
+
+        if (signingUrl) {
+          await openSigningUrl(signingUrl);
+        }
+      } else {
+        Alert.alert(
+          'Error',
+          response?.data?.message || 'Failed to initiate signature process',
+        );
+      }
+    } catch (error: any) {
+      console.log('signature api error', error);
+
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message ||
+          'Something went wrong while initiating signature',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <AppText
+        size={getScaleSize(12)}
+        font={FONTS.Inter.SemiBold}
+        style={styles.title}
+      >
+        {title}
+      </AppText>
+
+      <View style={styles.card}>
+        <View style={styles.signatureContainer}>
+          {isSigned ? (
+            <Image
+              source={{ uri: requestData?.digitalSignature?.signatureData }}
+              resizeMode="contain"
+              style={styles.signatureImage}
             />
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              disabled={readOnly || loading}
+              onPress={handleSignature}
+              style={styles.signButton}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <AppText
+                  size={getScaleSize(14)}
+                  color={COLORS.primary}
+                  font={FONTS.Inter.SemiBold}
+                >
+                  Sign Now
+                </AppText>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
-    );
+
+        <View style={styles.divider} />
+
+        <View style={styles.footerRow}>
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._6B7280}
+            font={FONTS.Inter.Medium}
+            numberOfLines={1}
+            style={styles.doctorName}
+          >
+            {requestData?.doctorId?.fName}
+          </AppText>
+
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._6B7280}
+            font={FONTS.Inter.Medium}
+          >
+            {requestData?.digitalSignature?.signedAt || 'Pending'}
+          </AppText>
+        </View>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    card: {
-        backgroundColor: COLORS.white,
-        padding: getScaleSize(17),
-        borderRadius: getScaleSize(16),
-        elevation: 4,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    signatureLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: COLORS._1A1D1F,
-        marginLeft: getScaleSize(16),
-    },
-    dateRow: {
-        marginTop: getScaleSize(12),
-        marginBottom: getScaleSize(12),
-    },
-    dateInput: {
-        marginBottom: 0,
-        paddingHorizontal: 0,
-    },
-    signatureInputContainer: {
-        marginTop: getScaleSize(16),
-        paddingTop: getScaleSize(12),
-        borderTopWidth: 1,
-        borderTopColor: COLORS._E5E7EB,
-    },
-    signatureInput: {
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS._1A1D1F,
-        fontSize: getScaleSize(14),
-        color: COLORS._1A1D1F,
-        paddingHorizontal: 0,
-        paddingVertical: getScaleSize(8),
-        // paddingHorizontal: getScaleSize(4),
-        // minHeight: getScaleSize(40),
-    },
+  container: {
+    marginTop: getScaleSize(12),
+  },
+
+  title: {
+    marginBottom: getScaleSize(14),
+    color: COLORS.black,
+  },
+
+  card: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: getScaleSize(22),
+    borderWidth: 1,
+    borderColor: '#E7E7E7',
+    paddingVertical: getScaleSize(24),
+    paddingHorizontal: getScaleSize(18),
+  },
+
+  signatureContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: getScaleSize(110),
+  },
+
+  signatureImage: {
+    width: getScaleSize(140),
+    height: getScaleSize(80),
+  },
+
+  signButton: {
+    // backgroundColor: COLORS.primary,
+    paddingHorizontal: getScaleSize(24),
+    paddingVertical: getScaleSize(12),
+    borderRadius: getScaleSize(12),
+    minWidth: getScaleSize(140),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#E4E4E7',
+    marginTop: getScaleSize(18),
+    marginBottom: getScaleSize(16),
+  },
+
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  doctorName: {
+    flex: 1,
+    marginRight: getScaleSize(10),
+  },
 });
 
 export default FormSignature;

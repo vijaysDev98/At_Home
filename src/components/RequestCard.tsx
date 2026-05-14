@@ -90,6 +90,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             size={getScaleSize(11)}
             font={FONTS.Inter.SemiBold}
             color={COLORS._6F767E}
+            align={'left'}
           >
             {'Request ID'}
           </AppText>
@@ -97,8 +98,9 @@ const RequestCard: React.FC<RequestCardProps> = ({
             size={getScaleSize(13)}
             font={FONTS.Inter.Medium}
             color={COLORS._1A1D1F}
+            align={'left'}
           >
-            #{requestId.slice(-4).toUpperCase()}
+            #{requestId?.slice(-4).toUpperCase()}
           </AppText>
         </View>
         <View>
@@ -106,6 +108,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
             size={getScaleSize(11)}
             font={FONTS.Inter.SemiBold}
             color={COLORS._6F767E}
+            align={'right'}
           >
             {'Form Status'}
           </AppText>

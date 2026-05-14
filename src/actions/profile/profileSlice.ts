@@ -5,6 +5,7 @@ interface ProfileData {
   fName: string;
   lName: string;
   email: string;
+  providerName: string;
   username?: string;
   profileImg?: string;
   rppsNumber: string;
@@ -23,6 +24,7 @@ interface ProfileData {
   isVerified: boolean;
   isFirstLogin: boolean;
   isBlocked: boolean;
+  facilityName?: string;
   updatedBy?: {
     id: string;
   };

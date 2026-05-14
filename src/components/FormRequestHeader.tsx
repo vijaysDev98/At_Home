@@ -46,7 +46,8 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             font={FONTS.Inter.Regular}
           >
             {serviceName} • ID #
-            {requestData?.id?.slice(-4).toUpperCase() || 'N/A'}
+            {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() ||
+              ''}
           </AppText>
           <View style={styles.statusRow}>
             <View style={styles.statusBadge}>

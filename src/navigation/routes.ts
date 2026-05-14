@@ -23,6 +23,7 @@ export const SCREENS = {
   DOCTOR_REQUEST: 'DoctorRequest',
   FORMS_SCREEN: 'Forms_Screen',
   FORM_REVIEW_SCREEN: 'FormReviewScreen',
+  EDIT_PROVIDER_PROFILE: 'EditProviderProfile',
 } as const;
 
 // Doctor Bottom Tab Screen Names
@@ -37,7 +38,7 @@ export const DOCTOR_TAB_SCREENS = {
 // Provider Bottom Tab Screen Names
 export const PROVIDER_TAB_SCREENS = {
   HOME: 'Home',
-  FORMS: 'Forms',
+  REQUESTS: 'Requests',
   ALERTS: 'Alerts',
   PROFILE: 'Profile',
 } as const;

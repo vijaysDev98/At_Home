@@ -74,19 +74,19 @@ const FormsScreen: React.FC = () => {
   const requestId = request?.id;
   const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
-  console.log('profileData', profileData);
-
   // Extract service and patient from request object
   const service: ServiceInfo = request?.service || {};
   const patientData = request?.patient || {};
 
-  const serviceId = service?._id;
   const serviceName = service?.serviceName;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
+
+  const serviceId = service?._id || requestData?.serviceId._id;
+  console.log('serviceId', serviceId);
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
 
@@ -184,7 +184,7 @@ const FormsScreen: React.FC = () => {
       const response = await API.Instance.get(`/service-requests/${requestId}`);
       if (response?.data?.status) {
         const data = response.data.data;
-        console.log('requestDataresponse', response);
+        console.log('requestDataresponse', data);
 
         setRequestData(data);
         console.log('Service request details:', response);

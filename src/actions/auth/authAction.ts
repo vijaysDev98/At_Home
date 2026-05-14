@@ -49,7 +49,7 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
 
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(API.API_ROUTES.login, data);
-    console.log('logindata', data, response);
+    console.log('logindata', response);
 
     if (response?.status) {
       const responseData = response?.data;
@@ -113,7 +113,7 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
     if (response?.status && response?.code === 201) {
       SHOW_TOAST(
         response?.data?.message ||
-        'Registration successful. Please wait for admin approval.',
+          'Registration successful. Please wait for admin approval.',
         'success',
       );
       NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
@@ -136,23 +136,22 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       API.API_ROUTES.verifyLoginOtp,
       data,
     );
-    console.log('after login', JSON.stringify(response));
+
+    console.log('verifyOtp', response);
 
     if (response?.status && response?.code === 200) {
       const responseData = response?.data;
       const innerData = responseData?.data;
 
-      const user = innerData;
-
       await persistAuthInStorage(innerData);
-      dispatch(setUserData(getUserDataForRedux(user)));
+      dispatch(setUserData(getUserDataForRedux(innerData)));
       dispatch(fetchProfile());
       SHOW_TOAST('Login successful!', 'success');
       dispatch(setLoading(false));
 
       // Role-based navigation
-      const roles = user?.roles || [];
-      if (roles.includes('provider') || roles.includes('nurse')) {
+      const roles = innerData?.roles || [];
+      if (roles.includes('serviceProvider')) {
         NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
       } else {
         NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
@@ -184,13 +183,8 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
     const response: any = await API.Instance.get(API.API_ROUTES.logout, {
       params: data,
     });
-    console.log('logout response', JSON.stringify(response));
-
     if (response?.status) {
       SHOW_TOAST(response?.message || 'Logged out successfully', 'success');
-      await Storage.clear();
-      dispatch(resetAuth());
-      NavigationService.reset(SCREENS.WELCOME);
     } else {
       // Show error toast if API logout fails, but proceed with local logout
       SHOW_TOAST(response?.message, 'error');
@@ -198,7 +192,11 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
   } catch (e: any) {
     SHOW_TOAST(undefined, 'error');
   } finally {
+    await Storage.clear();
+    dispatch({ type: 'USER_LOGOUT' });
+    dispatch(resetAuth());
     dispatch(setLoading(false));
+    NavigationService.reset(SCREENS.WELCOME);
   }
 };
 
@@ -270,30 +268,30 @@ export const resetPassword =
     newPassword: string;
     confirmPassword: string;
   }) =>
-    async (dispatch: AppDispatch) => {
-      try {
-        dispatch(setLoading(true));
+  async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
 
-        const response: any = await API.Instance.post(
-          API.API_ROUTES.resetPassword,
-          data,
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.resetPassword,
+        data,
+      );
+      console.log('reset password response', JSON.stringify(response));
+
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(
+          response?.message || 'Password changed successfully',
+          'success',
         );
-        console.log('reset password response', JSON.stringify(response));
-
-        if (response?.status && response?.code === 200) {
-          SHOW_TOAST(
-            response?.message || 'Password changed successfully',
-            'success',
-          );
-          dispatch(setLoading(false));
-          NavigationService.reset(SCREENS.LOGIN);
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(response?.message, 'error');
-        }
-      } catch (e) {
-        console.log('Reset Password Error', e);
-        SHOW_TOAST(undefined, 'error');
         dispatch(setLoading(false));
+        NavigationService.reset(SCREENS.LOGIN);
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message, 'error');
       }
-    };
+    } catch (e) {
+      console.log('Reset Password Error', e);
+      SHOW_TOAST(undefined, 'error');
+      dispatch(setLoading(false));
+    }
+  };

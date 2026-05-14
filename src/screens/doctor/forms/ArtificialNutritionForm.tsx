@@ -842,13 +842,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             </View>
           </View>
 
-          <FormSignature
-            readOnly={readOnly}
-            signature={state.physician_signature}
-            onSignatureChange={value =>
-              setFormState({ physician_signature: value })
-            }
-          />
+          <FormSignature readOnly={readOnly} requestData={initialData} />
         </ScrollView>
 
         <DatePicker
