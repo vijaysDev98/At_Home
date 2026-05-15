@@ -722,7 +722,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             label={STRING.patientacknowledgesinstructions}
           />
 
-          <FormSignature readOnly={readOnly} />
+          {/* <FormSignature readOnly={readOnly} /> */}
         </ScrollView>
 
         <DatePicker

@@ -953,7 +953,7 @@ const HydrationInfusionForm = forwardRef<
             </TouchableOpacity>
           )}
 
-          <FormSignature readOnly={readOnly} />
+          {/* <FormSignature readOnly={readOnly} /> */}
         </ScrollView>
 
         <DatePicker

@@ -176,6 +176,11 @@ export const STRING = {
   edit: 'Edit',
   medicalDescription: 'Medical Description',
   linkedRequests: 'Linked Requests',
+  gender: 'Gender',
+  selectGender: 'Select gender',
+  socialInsuranceNumber: 'Social insurance number(SIN)',
+  enterSocialInsuranceNumber: 'Enter social insurance number',
+  genderRequired: 'Gender is required',
 
   // ─── Patient Request ──────────────────────────────────────────
   createRequest: 'Create Request',

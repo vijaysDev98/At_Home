@@ -12,7 +12,6 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
@@ -40,6 +39,7 @@ import { useSimpleImagePicker } from '../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../api/apiRoutes';
 import { SHOW_TOAST } from '../../constant';
+import { CustomDropdown } from '../../components/CustomDropDown';
 
 // --- Sub-components ---
 
@@ -82,75 +82,6 @@ const practiceOptions = [
   { label: 'Hospital', value: 'hospital' },
   { label: 'Office', value: 'office' },
 ];
-
-interface CustomDropdownProps {
-  label: string;
-  data: any[];
-  value: any;
-  onChange: (value: any) => void;
-  placeholder: string;
-  leftIcon: any;
-  error?: string;
-  zIndex?: number;
-}
-
-const CustomDropdown: React.FC<CustomDropdownProps> = ({
-  label,
-  data,
-  value,
-  onChange,
-  placeholder,
-  leftIcon,
-  error,
-  zIndex = 1000,
-}) => {
-  const [isFocus, setIsFocus] = useState(false);
-
-  return (
-    <View style={[styles.fieldWrapper, { zIndex }]}>
-      <Text style={styles.label}>
-        {label} <Text style={styles.required}>*</Text>
-      </Text>
-      <View style={styles.dropdownWrapper}>
-        <Image
-          source={leftIcon}
-          style={[
-            styles.dropdownLeftIcon,
-            { tintColor: isFocus ? COLORS.primary : COLORS.slate400 },
-          ]}
-        />
-        <Dropdown
-          style={[styles.dropdown, isFocus && { borderColor: COLORS.primary }]}
-          placeholderStyle={styles.dropdownPlaceholder}
-          selectedTextStyle={styles.dropdownText}
-          iconStyle={styles.dropdownArrow}
-          data={data}
-          maxHeight={300}
-          labelField="label"
-          valueField="value"
-          placeholder={!isFocus ? placeholder : '...'}
-          value={value}
-          onFocus={() => setIsFocus(true)}
-          onBlur={() => setIsFocus(false)}
-          onChange={item => {
-            onChange(item?.value);
-            setIsFocus(false);
-          }}
-          renderRightIcon={() => (
-            <Image
-              source={IMAGES.arrow_bottom}
-              style={[
-                styles.dropdownArrow,
-                isFocus && { transform: [{ rotate: '180deg' }] },
-              ]}
-            />
-          )}
-        />
-      </View>
-      {!!error && <Text style={styles.dropdownError}>{error}</Text>}
-    </View>
-  );
-};
 
 // --- Main Screen ---
 
@@ -776,52 +707,6 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(4),
     marginBottom: getScaleSize(12),
   },
-  fieldWrapper: {
-    paddingHorizontal: getScaleSize(24),
-    marginBottom: getScaleSize(20),
-  },
-  dropdownWrapper: {
-    position: 'relative',
-  },
-  dropdown: {
-    height: getScaleSize(56),
-    borderColor: COLORS._E5E7EB,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: getScaleSize(16),
-    backgroundColor: COLORS.white,
-    paddingLeft: getScaleSize(48),
-  },
-  dropdownPlaceholder: {
-    fontSize: getScaleSize(15),
-    fontFamily: FONTS.Inter.Regular,
-    color: COLORS.slate400,
-  },
-  dropdownText: {
-    fontSize: getScaleSize(15),
-    fontFamily: FONTS.Inter.Medium,
-    color: COLORS.slate900,
-  },
-  dropdownSearchInput: {
-    height: getScaleSize(40),
-    fontSize: getScaleSize(14),
-    borderRadius: 8,
-    borderColor: COLORS._E5E7EB,
-  },
-  dropdownArrow: {
-    width: getScaleSize(20),
-    height: getScaleSize(20),
-    tintColor: COLORS.slate400,
-  },
-  dropdownLeftIcon: {
-    position: 'absolute',
-    left: getScaleSize(16),
-    top: getScaleSize(18),
-    width: getScaleSize(20),
-    height: getScaleSize(20),
-    resizeMode: 'contain',
-    zIndex: 1,
-  },
   avatarSection: {
     alignItems: 'center',
     marginBottom: getScaleSize(32),
@@ -869,13 +754,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Inter.Medium,
     color: COLORS.slate400,
     marginTop: getScaleSize(12),
-  },
-  dropdownError: {
-    fontSize: getScaleSize(12),
-    fontFamily: FONTS.Inter.Regular,
-    color: COLORS.error,
-    marginTop: getScaleSize(4),
-    paddingHorizontal: 0,
   },
 });
 

@@ -48,6 +48,9 @@ const EditProviderProfile: React.FC = () => {
   const [providerName, setProviderName] = useState(
     profileData?.providerName || '',
   );
+  const [phoneNumber, setPhoneNumber] = useState(
+    profileData?.phoneNumber || '',
+  );
 
   const [errors, setErrors] = useState<{
     [key: string]: string;
@@ -121,6 +124,7 @@ const EditProviderProfile: React.FC = () => {
     const payload = {
       providerName: providerName.trim(),
       profileImg: profileImageUrl,
+      phoneNumber: phoneNumber.trim(),
     };
 
     const isSuccess = await dispatch(updateProfile(payload, true));
@@ -196,6 +200,26 @@ const EditProviderProfile: React.FC = () => {
               setErrors(prev => ({
                 ...prev,
                 providerName: '',
+              }));
+            }}
+          />
+
+          <Input
+            label="Phone number"
+            isMandatory
+            placeholder="Enter phone number"
+            value={phoneNumber}
+            leftIcon={IMAGES.phone}
+            error={errors.phoneNumber}
+            style={{
+              marginBottom: getScaleSize(errors.phoneNumber ? 4 : 20),
+            }}
+            onChangeText={(text: string) => {
+              setPhoneNumber(text);
+
+              setErrors(prev => ({
+                ...prev,
+                phoneNumber: '',
               }));
             }}
           />

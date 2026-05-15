@@ -34,6 +34,8 @@ const PatientDetail: React.FC = () => {
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
+  const homeAddress =
+    patient?.streetAddress + ', ' + patient?.city + ', ' + patient?.zip;
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
@@ -181,27 +183,90 @@ const PatientDetail: React.FC = () => {
                   </AppText>
                 </View>
               </View>
-              <View style={styles.infoRow}>
-                <Image source={IMAGES.location_pin} style={styles.infoIcon} />
-                <View>
-                  <AppText
-                    size={getScaleSize(12)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                  >
-                    {STRING.homeAddress}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(14)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}
-                  >
-                    {patient?.streetAddress ? `${patient.streetAddress}, ` : ''}
-                    {patient?.city ? `${patient.city}, ` : ''}
-                    {patient?.zip || ''}
-                  </AppText>
+              {homeAddress && (
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.location_pin} style={styles.infoIcon} />
+                  <View>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {STRING.homeAddress}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {homeAddress}
+                    </AppText>
+                  </View>
                 </View>
-              </View>
+              )}
+              {patient?.gender && (
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
+                  <View>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {STRING.gender}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {patient?.gender}
+                    </AppText>
+                  </View>
+                </View>
+              )}
+              {patient?.socialInsuranceNumber && (
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
+                  <View>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {STRING.socialInsuranceNumber}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {patient?.socialInsuranceNumber}
+                    </AppText>
+                  </View>
+                </View>
+              )}
+              {patient?.weight && (
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
+                  <View>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {STRING.weight}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {patient?.weight}
+                    </AppText>
+                  </View>
+                </View>
+              )}
             </View>
           </View>
 

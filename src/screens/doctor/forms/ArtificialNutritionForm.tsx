@@ -68,6 +68,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
+    console.log('profileData', profileData);
+
     const scrollRef = useRef<ScrollView>(null);
     const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
@@ -101,8 +103,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       prescriber_phone: profileData?.phoneNumber || '',
       rpps_id: profileData?.rppsNumber || '',
 
-      hospital_name: '',
-      hospital_address: '',
+      hospital_name: profileData?.facilityName || '',
+      hospital_address: profileData?.businessAddress || '',
       finess_number: profileData?.finessNumber || '',
 
       nutrition_duration_weeks: '',
@@ -148,6 +150,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     // Load initial data if editing an existing draft
     useEffect(() => {
       if (initialData?.formData) {
+        console.log('initialData?.formData', initialData.formData);
         setState(initialData.formData);
       }
     }, [initialData]);
@@ -842,7 +845,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             </View>
           </View>
 
-          <FormSignature readOnly={readOnly} requestData={initialData} />
+          {/* <FormSignature readOnly={readOnly} requestData={initialData} /> */}
         </ScrollView>
 
         <DatePicker

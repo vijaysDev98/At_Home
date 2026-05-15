@@ -1,210 +1,140 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  RefreshControl,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { AppText } from '../../../components';
+import { AppText, AppLoader } from '../../../components';
 import { useNavigation } from '@react-navigation/native';
+import RequestCard from '../../../components/RequestCard';
+import {
+  serviceRequestListApi,
+  ServiceRequest,
+  PaginationInfo,
+} from '../../../services/serviceRequestListApi';
+import { getButtonConfig } from '../../../constant';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
-const MOCK_REQUESTS = [
-  {
-    initials: 'MJ',
-    name: 'Michael Johnson',
-    service: 'Blood Draw',
-    status: 'Submitted',
-    requestId: 'SR-2023-10456',
-    formStatus: 'Signed',
-    badgeBg: '#E8F1FF',
-    badgeColor: '#2F80ED',
-  },
-  {
-    initials: 'SR',
-    name: 'Sarah Richards',
-    service: 'Wound Care',
-    status: 'InProgress',
-    requestId: 'SR-2023-10457',
-    formStatus: 'Signed',
-    badgeBg: '#FFF7E8',
-    badgeColor: '#F2994A',
-  },
-  {
-    initials: 'DT',
-    name: 'David Thompson',
-    service: 'Physical Therapy',
-    status: 'Returned',
-    requestId: 'SR-2023-10458',
-    formStatus: 'Pending',
-    badgeBg: '#FEE2E2',
-    badgeColor: '#EF4444',
-  },
-  {
-    initials: 'AB',
-    name: 'Alice Brown',
-    service: 'Post-Op Care',
-    status: 'Completed',
-    requestId: 'SR-2023-10459',
-    formStatus: 'Signed',
-    badgeBg: '#E1F9F1',
-    badgeColor: '#27AE60',
-  },
-];
-
-const RequestCard = ({
-  initials,
-  name,
-  service,
-  status,
-  requestId,
-  formStatus,
-  badgeBg,
-  badgeColor,
-}: {
-  initials: string;
-  name: string;
-  service: string;
-  status: string;
-  requestId: string;
-  formStatus: string;
-  badgeBg: string;
-  badgeColor: string;
-}) => {
-  const navigation = useNavigation<any>();
-  const showButton = status === 'Submitted' || status === 'InProgress';
-  const buttonText =
-    status === 'Submitted' ? 'Start a Service' : 'Open Service';
-
-  const handlePress = () => {
-    navigation.navigate('ProviderForm', {
-      mode:
-        status === 'InProgress' || status === 'Submitted' ? 'update' : 'view',
-      requestStatus: status,
-      formStatus: formStatus,
-    });
-  };
-
-  const handleServicePress = () => {
-    navigation.navigate('ServiceScreen' as never, {
-      requestStatus: status,
-      formStatus,
-      patientName: name,
-      service,
-      requestId,
-    } as never);
-  };
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={handlePress}
-      style={styles.queueCard}
-    >
-      <View style={styles.queueTopRow}>
-        <View style={styles.queueUserInfo}>
-          <View style={styles.initialsBox}>
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._6F767E}
-            >
-              {initials}
-            </AppText>
-          </View>
-          <View style={{ marginLeft: getScaleSize(12) }}>
-            <AppText
-              size={getScaleSize(15)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              {name}
-            </AppText>
-            <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Medium}
-              color={COLORS._6F767E}
-            >
-              {service}
-            </AppText>
-          </View>
-        </View>
-        <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.Bold}
-            color={badgeColor}
-          >
-            {status}
-          </AppText>
-        </View>
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={[styles.detailsRow, !showButton && { marginBottom: 0 }]}>
-        <View>
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.Medium}
-            color={COLORS._6F767E}
-            style={{ marginBottom: getScaleSize(4) }}
-          >
-            Request ID
-          </AppText>
-          <AppText
-            size={getScaleSize(14)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {requestId}
-          </AppText>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.Medium}
-            color={COLORS._6F767E}
-            style={{ marginBottom: getScaleSize(4) }}
-          >
-            Form Status
-          </AppText>
-          <AppText
-            size={getScaleSize(14)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {formStatus}
-          </AppText>
-        </View>
-      </View>
-
-      {showButton && (
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.startServiceBtn}
-          onPress={handleServicePress}
-        >
-          <AppText
-            size={getScaleSize(14)}
-            font={FONTS.Inter.Bold}
-            color={COLORS.white}
-          >
-            {buttonText}
-          </AppText>
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
-  );
-};
-
 const AvailableRequest: React.FC = () => {
   const [activeTab, setActiveTab] = useState('All');
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const PAGE_SIZE = 10;
 
-  const filteredRequests = MOCK_REQUESTS.filter(item => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'In Progress') return item.status === 'InProgress';
-    return item.status === activeTab;
-  });
+  // Fetch service requests
+  const fetchAvailableRequests = useCallback(
+    async (page: number = 1, isRefresh: boolean = false) => {
+      if (!isRefresh) setIsLoading(true);
+      try {
+        const response =
+          await serviceRequestListApi.listAvailableRequestsForProvider({
+            page,
+            size: PAGE_SIZE,
+          });
+        if (response) {
+          if (page === 1) {
+            setRequests(response.data.requests);
+          } else {
+            setRequests(prev => [...prev, ...response.data.requests]);
+          }
+
+          setPagination(response.data.pagination);
+          setCurrentPage(page);
+        }
+      } catch (error) {
+      } finally {
+        if (!isRefresh) setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  // Load initial data
+  useEffect(() => {
+    fetchAvailableRequests(1);
+  }, [fetchAvailableRequests]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAvailableRequests(1, true);
+    setRefreshing(false);
+  }, [fetchAvailableRequests]);
+
+  const handleLoadMore = useCallback(() => {
+    if (pagination && pagination.hasNextPage) {
+      fetchAvailableRequests(currentPage + 1);
+    }
+  }, [pagination, currentPage, fetchAvailableRequests]);
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter(item => {
+      if (activeTab === 'All') return true;
+      const formStatus = item.formStatus || item.status;
+      if (activeTab === 'In Progress') {
+        return (
+          formStatus === REQUEST_STATUS.IN_PROGRESS ||
+          formStatus === 'InProgress'
+        );
+      }
+      // 'Submitted', 'Returned', 'Completed' generally map directly
+      return formStatus?.toLowerCase() === activeTab.toLowerCase();
+    });
+  }, [requests, activeTab]);
+
+  const renderItem = ({ item }: { item: ServiceRequest }) => {
+    const initials = (item.patient.fName + ' ' + item.patient.lName)
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+
+    // Get button configuration based on form status (default to status if formStatus not available)
+    const formStatus = item.formStatus || item.status;
+    console.log('item', item);
+
+    const buttonConfig = getButtonConfig(formStatus);
+
+    return (
+      <View style={{ marginBottom: getScaleSize(16) }}>
+        <RequestCard
+          name={item.patient.fName + ' ' + item.patient.lName}
+          initials={initials}
+          requestId={item.id}
+          requestType={item.service.serviceName}
+          formStatus={formStatus}
+          status={item.status}
+          buttonText={
+            buttonConfig.show ? buttonConfig.label || undefined : undefined
+          }
+          onButtonPress={() =>
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })
+          }
+        />
+      </View>
+    );
+  };
+
+  const renderFooter = () => {
+    if (!isLoading || requests.length === 0) return null;
+    return (
+      <View style={{ paddingVertical: getScaleSize(16), alignItems: 'center' }}>
+        <AppLoader visible={true} />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -248,25 +178,48 @@ const AvailableRequest: React.FC = () => {
           </ScrollView>
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          {filteredRequests.map((item, index) => (
-            <RequestCard key={index} {...item} />
-          ))}
-          {filteredRequests.length === 0 && (
-            <View style={{ alignItems: 'center', marginTop: getScaleSize(40) }}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-              >
-                No requests found in this category.
-              </AppText>
-            </View>
+        <View style={{ flex: 1 }}>
+          {isLoading && requests.length === 0 ? (
+            <AppLoader visible={true} />
+          ) : (
+            <FlatList
+              data={filteredRequests}
+              renderItem={renderItem}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={[COLORS._526674]}
+                  tintColor={COLORS._526674}
+                />
+              }
+              keyExtractor={item => item.id}
+              showsVerticalScrollIndicator={false}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
+              ListEmptyComponent={
+                !isLoading ? (
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      marginTop: getScaleSize(40),
+                    }}
+                  >
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                    >
+                      No requests found in this category.
+                    </AppText>
+                  </View>
+                ) : null
+              }
+              contentContainerStyle={styles.scroll}
+            />
           )}
-        </ScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );

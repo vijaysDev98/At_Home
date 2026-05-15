@@ -107,7 +107,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           page,
           size: PAGE_SIZE,
         });
-
         if (response) {
           // For page 1, replace the entire list
           // For subsequent pages, append to the existing list
@@ -147,6 +146,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   useEffect(() => {
     setFilter(formStatus);
   }, [formStatus]);
+  console.log('requests', requests);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {

@@ -27,18 +27,12 @@ import { STRING } from '../../../constant/strings';
 import { SCREENS } from '../../../navigation/routes';
 import NavigationService from '../../../navigation/NavigationService';
 import { RootState } from '../../../redux/store';
-
-// Define types for better type safety
-type PatientStatus = 'All' | 'Recently Added' | 'Recently Updated';
-
-const chips: PatientStatus[] = ['All', 'Recently Added', 'Recently Updated'];
+import { PATIENT_FILTERS } from '../../../constant/constantData';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const PatientsScreen: React.FC = () => {
-  const isFocused = useIsFocused();
   const dispatch = useDispatch<any>();
-  const navigation = useNavigation<Nav>();
   const { patients, pagination } = useSelector(
     (state: RootState) => state.patient,
   );
@@ -209,7 +203,7 @@ const PatientsScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.chipsRow}
           >
-            {chips.map((chip, idx) => (
+            {PATIENT_FILTERS.map((chip, idx) => (
               <TouchableOpacity
                 key={chip}
                 activeOpacity={0.8}

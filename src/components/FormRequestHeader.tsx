@@ -83,14 +83,14 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
                   COLORS[
                     fromReview
                       ? FORM_STATUS.AWAITING_SIGNATURE
-                      : requestData?.status
+                      : requestData?.formStatus
                   ]
                 }
                 font={FONTS.Inter.SemiBold}
               >
                 {fromReview
                   ? DISPLAY_FORM_STATUS[FORM_STATUS.AWAITING_SIGNATURE]
-                  : DISPLAY_FORM_STATUS[requestData?.status] || 'Draft'}
+                  : DISPLAY_FORM_STATUS[requestData?.formStatus] || 'Draft'}
               </AppText>
             </View>
           </View>

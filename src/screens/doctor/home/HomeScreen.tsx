@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Image,
   ScrollView,
-  StatusBar,
   StyleSheet,
   TouchableOpacity,
   View,
   RefreshControl,
-  Pressable,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { AppButton, AppSafeAreaView, AppText } from '../../../components';
+import { useFocusEffect } from '@react-navigation/native';
+import { AppSafeAreaView, AppText } from '../../../components';
 import RequestCard from '../../../components/RequestCard';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -23,9 +20,9 @@ import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { Assets } from '@react-navigation/elements';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
+import { dashboardApi } from '../../../services/dashboard';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -88,7 +85,7 @@ const HomeScreen: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const response = await serviceRequestApi.getDashboardOverview(5);
+      const response = await dashboardApi.getDashboardOverview(5);
       console.log('dashdata', response);
 
       if (response.success) {

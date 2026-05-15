@@ -83,4 +83,7 @@ export const IMAGES = {
   ic_edit: require('./ic_edit.png'),
   ic_camera: require('./ic_camera.png'),
   ic_gallery: require('./ic_gallery.png'),
+  ic_weight: require('./ic_weight.png'),
+  ic_gender: require('./ic_gender.png'),
+  ic_insurance: require('./ic_insurance.png'),
 };

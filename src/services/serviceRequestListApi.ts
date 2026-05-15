@@ -266,6 +266,41 @@ export const serviceRequestListApi = {
       return null;
     }
   },
+
+  /**
+   * Fetch list of available service requests with pagination
+   */
+  listAvailableRequestsForProvider: async (
+    params: ListServiceRequestsParams = { page: 1, size: 10 },
+  ): Promise<ListServiceRequestsResponse | null> => {
+    try {
+      const response: any = await API.Instance.get(
+        API_ROUTES.listAvailableRequests,
+        {
+          params: {
+            page: params.page || 1,
+            size: params.size || 10,
+          },
+        },
+      );
+
+      if (response.status) {
+        return response.data as ListServiceRequestsResponse;
+      } else {
+        console.error(
+          'Failed to fetch available service requests:',
+          response.message,
+        );
+        return null;
+      }
+    } catch (error: any) {
+      console.error(
+        'Error fetching available service requests:',
+        error.message,
+      );
+      return null;
+    }
+  },
 };
 
 export default serviceRequestListApi;

@@ -1,112 +1,202 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Image,
   Alert,
-  ActivityIndicator,
   Linking,
 } from 'react-native';
 import { InAppBrowser } from 'react-native-inappbrowser-reborn';
+import { useDispatch } from 'react-redux';
 
 import AppText from './AppText';
 import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
-import { API } from '../api';
-import { FORM_STATUS } from '../constant';
+import { setLoading } from '../actions/common/commonSlice';
+import signatureApi from '../services/signature';
+import { SHOW_TOAST } from '../constant';
 
 export interface FormSignatureProps {
   title?: string;
-  // requestId: string;
-  // doctorName?: string;
-  // signedAt?: string;
-  // signatureImage?: string;
   readOnly?: boolean;
   requestData: any;
+  onSignatureCompleted?: () => void;
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
   title = 'Doctor Signature',
-  // requestId,
-  // doctorName,
-  // signedAt = '',
-  // signatureImage,
   readOnly = false,
   requestData,
+  onSignatureCompleted,
 }) => {
-  if (requestData.formStatus !== FORM_STATUS.AWAITING_SIGNATURE) {
-    return;
-  }
+  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(false);
+  if (!readOnly || readOnly === null) {
+    return null;
+  }
 
   const isSigned = !!requestData?.digitalSignature?.signatureData;
 
-  const openSigningUrl = async (url: string) => {
+  const checkSignatureStatus = async () => {
     try {
-      if (await InAppBrowser.isAvailable()) {
-        await InAppBrowser.open(url, {
-          // iOS
-          dismissButtonStyle: 'cancel',
-          preferredBarTintColor: COLORS.primary,
-          preferredControlTintColor: COLORS.white,
-          readerMode: false,
-          animated: true,
-          modalPresentationStyle: 'fullScreen',
-          modalTransitionStyle: 'coverVertical',
-          modalEnabled: true,
+      const response = await signatureApi.getSignatureStatus(requestData?.id);
 
-          // Android
-          showTitle: true,
-          toolbarColor: COLORS.primary,
-          secondaryToolbarColor: COLORS.black,
-          navigationBarColor: COLORS.black,
-          navigationBarDividerColor: COLORS.white,
-          enableUrlBarHiding: true,
-          enableDefaultShare: false,
-          forceCloseOnRedirection: false,
-        });
-      } else {
-        Linking.openURL(url);
+      console.log('signature status response', response);
+
+      if (response?.success) {
+        const signatureStatus =
+          response?.data?.signatureMetadata?.signatureStatus;
+
+        const envelopeStatus = response?.data?.envelopeStatus;
+
+        const signedPdfUrl = response?.data?.signedPdfUrl;
+
+        const isCompleted =
+          signatureStatus === 'completed' ||
+          envelopeStatus === 'completed' ||
+          !!signedPdfUrl;
+
+        return isCompleted;
       }
+
+      return false;
+    } catch (error) {
+      console.log('check signature status error', error);
+      return false;
+    }
+  };
+
+  const openSigningUrl = async (url: string) => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    try {
+      const isAvailable = await InAppBrowser.isAvailable();
+
+      if (!isAvailable) {
+        Linking.openURL(url);
+        return;
+      }
+
+      // open browser
+      InAppBrowser.open(url, {
+        dismissButtonStyle: 'cancel',
+        preferredBarTintColor: COLORS.primary,
+        preferredControlTintColor: COLORS.white,
+        readerMode: false,
+        animated: true,
+        modalPresentationStyle: 'fullScreen',
+        modalTransitionStyle: 'coverVertical',
+        modalEnabled: true,
+
+        // Android
+        showTitle: true,
+        toolbarColor: COLORS.primary,
+        secondaryToolbarColor: COLORS.black,
+        navigationBarColor: COLORS.black,
+        navigationBarDividerColor: COLORS.white,
+        enableUrlBarHiding: true,
+        enableDefaultShare: false,
+        forceCloseOnRedirection: false,
+      }).catch(error => {
+        console.log('browser open error => ', error);
+
+        if (interval) {
+          clearInterval(interval);
+        }
+
+        Alert.alert('Error', 'Unable to open signing browser');
+      });
+
+      // polling immediately starts
+      interval = setInterval(async () => {
+        try {
+          console.log('checking signature status...');
+
+          const response = await signatureApi.getSignatureStatus(
+            requestData?.id,
+          );
+
+          // stop polling if api itself failed
+          if (!response?.success) {
+            InAppBrowser.close();
+            if (interval) {
+              clearInterval(interval);
+            }
+
+            SHOW_TOAST(
+              response?.message || 'Failed to fetch signature status',
+              'error',
+            );
+
+            return;
+          }
+
+          const signatureStatus =
+            response?.data?.signatureMetadata?.signatureStatus;
+
+          const envelopeStatus = response?.data?.envelopeStatus;
+
+          const signedPdfUrl = response?.data?.signedPdfUrl;
+
+          const isCompleted =
+            signatureStatus === 'completed' ||
+            envelopeStatus === 'completed' ||
+            !!signedPdfUrl;
+
+          if (isCompleted) {
+            if (interval) {
+              clearInterval(interval);
+            }
+
+            // close browser
+            InAppBrowser.close();
+            SHOW_TOAST('Document signed successfully', 'success');
+
+            onSignatureCompleted?.();
+          }
+        } catch (error: any) {
+          // stop polling on error
+          if (interval) {
+            clearInterval(interval);
+          }
+
+          // close browser also
+          InAppBrowser.close();
+
+          SHOW_TOAST(error?.message || 'Something went wrong', 'error');
+        }
+      }, 3000);
     } catch (error: any) {
+      console.log('open signing url error => ', error);
+
+      if (interval) {
+        clearInterval(interval);
+      }
+
       Alert.alert('Error', error?.message || 'Unable to open signing page');
     }
   };
 
   const handleSignature = async () => {
     try {
-      setLoading(true);
+      dispatch(setLoading(true));
 
-      const response: any = await API.Instance.post(
-        `/digital-signature/${requestData?._id}/sign`,
-      );
-
-      console.log('signature response', response?.data);
-
-      if (response?.data?.status === 200) {
-        const signingUrl = response?.data?.data?.signingUrl;
-
+      const response = await signatureApi.initiateSignature(requestData?.id);
+      if (response?.success) {
+        const signingUrl = response?.data?.signingUrl;
         if (signingUrl) {
           await openSigningUrl(signingUrl);
+        } else {
+          SHOW_TOAST('Signing URL not found', 'error');
         }
       } else {
-        Alert.alert(
-          'Error',
-          response?.data?.message || 'Failed to initiate signature process',
-        );
+        SHOW_TOAST(response?.message, 'error');
       }
     } catch (error: any) {
-      console.log('signature api error', error);
-
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message ||
-          'Something went wrong while initiating signature',
-      );
+      SHOW_TOAST(error?.message, 'error');
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -124,28 +214,25 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         <View style={styles.signatureContainer}>
           {isSigned ? (
             <Image
-              source={{ uri: requestData?.digitalSignature?.signatureData }}
+              source={{
+                uri: requestData?.digitalSignature?.signatureData,
+              }}
               resizeMode="contain"
               style={styles.signatureImage}
             />
           ) : (
             <TouchableOpacity
               activeOpacity={0.8}
-              disabled={readOnly || loading}
               onPress={handleSignature}
               style={styles.signButton}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <AppText
-                  size={getScaleSize(14)}
-                  color={COLORS.primary}
-                  font={FONTS.Inter.SemiBold}
-                >
-                  Sign Now
-                </AppText>
-              )}
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS.primary}
+                font={FONTS.Inter.SemiBold}
+              >
+                Sign Now
+              </AppText>
             </TouchableOpacity>
           )}
         </View>
@@ -177,9 +264,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: getScaleSize(12),
-  },
+  container: {},
 
   title: {
     marginBottom: getScaleSize(14),
@@ -207,7 +292,6 @@ const styles = StyleSheet.create({
   },
 
   signButton: {
-    // backgroundColor: COLORS.primary,
     paddingHorizontal: getScaleSize(24),
     paddingVertical: getScaleSize(12),
     borderRadius: getScaleSize(12),

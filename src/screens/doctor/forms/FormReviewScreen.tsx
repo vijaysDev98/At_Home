@@ -25,6 +25,7 @@ import {
   RequestSummaryCard,
   AppLoader,
   Header,
+  FormSignature,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -146,117 +147,118 @@ const FormReviewScreen: React.FC = () => {
               requestData={requestData}
             />
 
-            <View>
-              <View
-                style={{
-                  // paddingHorizontal: getScaleSize(16),
-                  backgroundColor: COLORS._F9FAFB,
-                }}
-              >
-                {/* Dynamic Form Content */}
-                {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
-                  <CNOForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
-                  <AntibiotherapyInfusionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef3557d1c1c4252d4b8d2c' ? (
-                  <ArtificialNutritionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId === '69eb112a056b86c571c1a44f' ? (
-                  <FreePrescriptionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (
-                  <HydrationInfusionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef353fd1c1c4252d4b8d22' ? (
-                  <HydrationInfusionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                    title={'IV Therapy Prescription Form'}
-                  />
-                ) : serviceId == '69ef354cd1c1c4252d4b8d27' ? (
-                  <MedicalOxygen
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef356cd1c1c4252d4b8d36' ? (
-                  <PcaForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef357cd1c1c4252d4b8d40' ? (
-                  <HydrationInfusionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                    title="Parenteral Nutrition (Central Line) Prescription Form"
-                  />
-                ) : serviceId == '69ef3563d1c1c4252d4b8d31' ? (
-                  <PersonalHygieneCare
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef3534d1c1c4252d4b8d1d' ? (
-                  <WoundCareForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                  />
-                ) : serviceId == '69ef3575d1c1c4252d4b8d3b' ? (
-                  <HydrationInfusionForm
-                    readOnly={isReadOnly}
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                    title={'Pregnancy-Related Care Prescription Form'}
-                  />
-                ) : (
-                  <></>
-                )}
-              </View>
+            <View
+              style={{
+                // paddingHorizontal: getScaleSize(16),
+                backgroundColor: COLORS._F9FAFB,
+              }}
+            >
+              {/* Dynamic Form Content */}
+              {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
+                <CNOForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
+                <AntibiotherapyInfusionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef3557d1c1c4252d4b8d2c' ? (
+                <ArtificialNutritionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId === '69eb112a056b86c571c1a44f' ? (
+                <FreePrescriptionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (
+                <HydrationInfusionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef353fd1c1c4252d4b8d22' ? (
+                <HydrationInfusionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                  title={'IV Therapy Prescription Form'}
+                />
+              ) : serviceId == '69ef354cd1c1c4252d4b8d27' ? (
+                <MedicalOxygen
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef356cd1c1c4252d4b8d36' ? (
+                <PcaForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef357cd1c1c4252d4b8d40' ? (
+                <HydrationInfusionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                  title="Parenteral Nutrition (Central Line) Prescription Form"
+                />
+              ) : serviceId == '69ef3563d1c1c4252d4b8d31' ? (
+                <PersonalHygieneCare
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef3534d1c1c4252d4b8d1d' ? (
+                <WoundCareForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                />
+              ) : serviceId == '69ef3575d1c1c4252d4b8d3b' ? (
+                <HydrationInfusionForm
+                  readOnly={isReadOnly}
+                  ref={formRef}
+                  serviceId={serviceId || ''}
+                  initialData={requestData}
+                  patient={patientData}
+                  title={'Pregnancy-Related Care Prescription Form'}
+                />
+              ) : (
+                <></>
+              )}
+            </View>
+            <View style={{ paddingHorizontal: getScaleSize(16) }}>
+              <FormSignature readOnly={isReadOnly} requestData={requestData} />
             </View>
           </ScrollView>
         </View>

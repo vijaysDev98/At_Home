@@ -26,43 +26,16 @@ import { STRING } from '../../../constant';
 import { fetchPatients } from '../../../actions/patient/patientAction';
 import { setSelectedPatient } from '../../../actions/patient/patientSlice';
 import { useIsFocused } from '@react-navigation/native';
+import {
+  PATIENT_FILTERS,
+  PatientFilterType,
+} from '../../../constant/constantData';
 
 export type CreateRequestProps = NativeStackScreenProps<
   RootStackParamList,
   'CreateRequest'
 >;
 
-// Filter Types
-type FilterType = 'all' | 'recent' | 'active';
-
-interface FilterChipProps {
-  key: string;
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-}
-
-// FilterChip Component
-const FilterChip: React.FC<FilterChipProps> = React.memo(
-  ({ key, label, isActive, onPress }) => (
-    <TouchableOpacity
-      key={key}
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={[styles.chip, isActive && styles.chipActive]}
-    >
-      <AppText
-        color={isActive ? COLORS.white : COLORS._6F767E}
-        size={getScaleSize(12)}
-        font={isActive ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
-      >
-        {label}
-      </AppText>
-    </TouchableOpacity>
-  ),
-);
-
-// PatientItem Component
 interface PatientItemProps {
   patient: any;
   isSelected: boolean;
@@ -102,6 +75,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
             </View>
           )}
         </View>
+
         <View style={styles.patientInfo}>
           <AppText
             size={getScaleSize(16)}
@@ -110,6 +84,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
           >
             {`${patient.fName} ${patient.lName}`}
           </AppText>
+
           <AppText
             size={getScaleSize(12)}
             font={FONTS.Inter.Regular}
@@ -120,6 +95,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
             {STRING.yo}
           </AppText>
         </View>
+
         <View
           style={[styles.radioOuter, isSelected && styles.radioOuterActive]}
         >
@@ -133,95 +109,84 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const isFocused = useIsFocused();
   const dispatch = useDispatch<any>();
-  const { patients, pagination } = useSelector(
-    (state: RootState) => state.patient,
-  );
+
+  const { patients } = useSelector((state: RootState) => state.patient);
+
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
 
   const [selectedId, setSelectedId] = useState<string>('');
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [selectedChip, setSelectedChip] = useState<PatientFilterType>(
+    STRING.all,
+  );
   const [search, setSearch] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const getFilterValue = (chip: PatientFilterType): string | undefined => {
+    switch (chip) {
+      case STRING.all:
+        return undefined;
+
+      case STRING.recentlyAdded:
+        return 'recently_added';
+
+      case STRING.recentlyUpdated:
+        return 'recently_updated';
+
+      default:
+        return undefined;
+    }
+  };
 
   const fetchPatientsData = async (
     p: number = 1,
     s: string = '',
     refresh: boolean = false,
+    f?: string,
   ) => {
-    await dispatch(fetchPatients(p, s));
+    await dispatch(fetchPatients(p, s, f));
     setIsRefreshing(false);
   };
 
   useEffect(() => {
-    // Only fetch if the list is empty (first time)
     if (patients.length === 0) {
-      fetchPatientsData(1, search);
+      const filter = getFilterValue(selectedChip);
+      fetchPatientsData(1, search, false, filter);
     }
   }, []);
 
-  // Debounced search logic from PatientsScreen
+  // Handle chip filter changes
+  useEffect(() => {
+    const filter = getFilterValue(selectedChip);
+    fetchPatientsData(1, search, false, filter);
+  }, [selectedChip]);
+
+  // Debounced search
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      const filter = getFilterValue(selectedChip);
+
       if (search !== '') {
-        fetchPatientsData(1, search);
-      } else if (patients.length > 0) {
-        // If search is cleared, fetch all only if we don't have data
-        fetchPatientsData(1, '');
+        fetchPatientsData(1, search, false, filter);
+      } else {
+        fetchPatientsData(1, '', false, filter);
       }
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, selectedChip]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
-    fetchPatientsData(1, search, true);
+
+    const filter = getFilterValue(selectedChip);
+
+    fetchPatientsData(1, search, true, filter);
   };
-
-  // Memoized sorting logic from PatientsScreen
-  const filteredAndSortedPatients = useMemo(() => {
-    let result = [...patients];
-
-    // Search filter (local filter for snappier feel while searching)
-    if (search.trim()) {
-      const query = search.toLowerCase();
-      result = result.filter(
-        p =>
-          `${p.fName} ${p.lName}`?.toLowerCase().includes(query) ||
-          p.id?.toLowerCase().includes(query),
-      );
-    }
-
-    // Chip filter logic
-    if (filter === 'recent') {
-      result.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    } else if (filter === 'active') {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      result = result.filter(p => new Date(p.updatedAt) > sevenDaysAgo);
-    }
-
-    return result;
-  }, [patients, search, filter]);
 
   const canContinue = useMemo(() => !!selectedId, [selectedId]);
 
-  // Filter options
-  const filterOptions = useMemo(
-    () => [
-      { key: 'all' as FilterType, label: STRING.allPatients },
-      { key: 'recent' as FilterType, label: STRING.recent },
-      { key: 'active' as FilterType, label: STRING.activeOnly },
-    ],
-    [],
-  );
-
-  // Event handlers
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
@@ -230,16 +195,14 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     setSelectedId(id);
   }, []);
 
-  const handleFilterChange = useCallback((newFilter: FilterType) => {
-    setFilter(newFilter);
-  }, []);
-
   const handleContinue = useCallback(() => {
     const patient = patients.find(
       p => p.id === selectedId || p._id === selectedId,
     );
+
     if (patient) {
       dispatch(setSelectedPatient(patient));
+
       NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2, {
         patientId: selectedId,
       });
@@ -263,6 +226,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               <Image source={IMAGES.crossIcon} style={styles.crossIcon} />
             </TouchableOpacity>
           </View>
+
           <View style={styles.headerCenter}>
             <AppText
               size={getScaleSize(12)}
@@ -271,6 +235,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
             >
               {STRING.createRequest}
             </AppText>
+
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
@@ -279,6 +244,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               {STRING.step1Of3}
             </AppText>
           </View>
+
           <View style={styles.headerLeft} />
         </View>
 
@@ -316,19 +282,42 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 onChangeText={setSearch}
               />
 
-              <View style={styles.filters}>
-                {filterOptions.map(option => (
-                  <FilterChip
-                    key={option.key}
-                    label={option.label}
-                    isActive={filter === option.key}
-                    onPress={() => handleFilterChange(option.key)}
-                  />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filters}
+              >
+                {PATIENT_FILTERS.map(chip => (
+                  <TouchableOpacity
+                    key={chip}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.chip,
+                      selectedChip === chip
+                        ? styles.chipActive
+                        : styles.chipInactive,
+                    ]}
+                    onPress={() => setSelectedChip(chip)}
+                  >
+                    <AppText
+                      color={
+                        selectedChip === chip ? COLORS.white : COLORS._6F767E
+                      }
+                      size={getScaleSize(12)}
+                      font={
+                        selectedChip === chip
+                          ? FONTS.Inter.SemiBold
+                          : FONTS.Inter.Regular
+                      }
+                    >
+                      {chip}
+                    </AppText>
+                  </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
 
               <View style={styles.list}>
-                {filteredAndSortedPatients.map(patient => (
+                {patients.map(patient => (
                   <PatientItem
                     key={patient.id}
                     patient={patient}
@@ -336,7 +325,8 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                     onSelect={handlePatientSelect}
                   />
                 ))}
-                {filteredAndSortedPatients.length === 0 && (
+
+                {patients.length === 0 && (
                   <View style={styles.emptyContainer}>
                     <AppText color={COLORS._6F767E}>
                       {STRING.noPatientsFound}
@@ -359,6 +349,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 source={IMAGES.new_request}
                 style={styles.newRequestIcon}
               />
+
               <AppText
                 size={getScaleSize(15)}
                 color={COLORS._526674}
@@ -367,6 +358,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 {STRING.createNewPatient}
               </AppText>
             </TouchableOpacity>
+
             <TouchableOpacity
               activeOpacity={0.9}
               style={[
@@ -396,10 +388,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
+
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
   },
+
   statusBar: {
     height: 44,
     flexDirection: 'row',
@@ -407,19 +401,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
+
   time: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS._1A1D1F,
   },
+
   statusIcons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
+
   statusIcon: {
     fontSize: 14,
   },
+
   header: {
     height: 60,
     flexDirection: 'row',
@@ -434,10 +432,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+
   headerLeft: {
     flex: 0.5,
     alignItems: 'flex-start',
   },
+
   circleBtn: {
     width: 40,
     height: 40,
@@ -445,60 +445,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   headerIcon: {
     fontSize: 18,
     color: COLORS._1A1D1F,
   },
+
   headerCenter: {
     alignItems: 'center',
     gap: 2,
     flex: 1,
   },
+
   content: {
     flex: 1,
     position: 'relative',
   },
+
   scroll: {
     flex: 1,
   },
+
   scrollContent: {
     paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(160),
     paddingTop: getScaleSize(20),
   },
+
   searchInput: {
     paddingHorizontal: 0,
   },
+
   filters: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-    marginBottom: 4,
+    alignItems: 'center',
+    marginTop: getScaleSize(12),
+    marginBottom: getScaleSize(4),
   },
+
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(18),
+    marginRight: getScaleSize(5),
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
   },
+
   chipActive: {
-    backgroundColor: COLORS._526674,
-    borderColor: COLORS._526674,
+    backgroundColor: '#526674',
+    borderColor: '#526674',
   },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS._6F767E,
+
+  chipInactive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#EFEFEF',
   },
-  chipTextActive: {
-    color: COLORS.white,
-  },
+
   list: {
     gap: 10,
     marginTop: 8,
   },
+
   patientCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -513,10 +521,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
+
   patientCardActive: {
     borderColor: COLORS._526674,
     backgroundColor: COLORS._F8F9FA,
   },
+
   avatarWrap: {
     width: 48,
     height: 48,
@@ -526,10 +536,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   avatar: {
     width: '100%',
     height: '100%',
   },
+
   initialsWrap: {
     width: 48,
     height: 48,
@@ -538,35 +550,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS._EFF6FF,
   },
+
   initials: {
     fontSize: 16,
     fontWeight: '800',
     color: COLORS._2563EB,
   },
+
   patientInfo: {
     flex: 1,
     gap: 4,
   },
+
   patientName: {
     fontSize: 16,
     fontWeight: '800',
     color: COLORS._1A1D1F,
   },
+
   patientMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
+
   patientMeta: {
     fontSize: 13,
     color: COLORS._6F767E,
   },
+
   dot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     backgroundColor: COLORS._E5E7EB,
   },
+
   radioOuter: {
     width: 22,
     height: 22,
@@ -577,18 +596,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.white,
   },
+
   radioOuterActive: {
     borderColor: COLORS._526674,
   },
+
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: COLORS._526674,
   },
+
   spacer: {
     height: 120,
   },
+
   bottomSheet: {
     position: 'absolute',
     left: 0,
@@ -596,7 +619,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: getScaleSize(24), // Added padding for tab bar spacing
+    paddingBottom: getScaleSize(24),
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS._EFEFEF,
@@ -606,6 +629,7 @@ const styles = StyleSheet.create({
     gap: 10,
     zIndex: 10,
   },
+
   createPatientBtn: {
     height: 52,
     borderRadius: 14,
@@ -618,11 +642,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+
   createPatientText: {
     fontSize: 15,
     fontWeight: '800',
     color: COLORS._526674,
   },
+
   continueBtn: {
     height: 56,
     borderRadius: 14,
@@ -630,29 +656,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   continueDisabled: {
     opacity: 0.6,
   },
+
   continueText: {
     fontSize: 16,
     fontWeight: '800',
     color: COLORS.white,
   },
-  // Inline styles moved to StyleSheet
+
   crossIcon: {
     width: getScaleSize(15),
     height: getScaleSize(15),
   },
+
   newRequestIcon: {
     height: getScaleSize(15),
     width: getScaleSize(12),
     tintColor: COLORS.primary,
   },
+
   emptyContainer: {
     paddingVertical: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   loaderContainer: {
     flex: 1,
     alignItems: 'center',

@@ -32,6 +32,8 @@ import { RootState } from '../../../redux/store';
 import { useRoute } from '@react-navigation/native';
 import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import { CustomDropdown } from '../../../components/CustomDropDown';
+import { GENDER } from '../../../constant/constantData';
 
 const AppDatePicker = ({
   open,
@@ -73,7 +75,10 @@ const AddPatient: React.FC = () => {
   const [city, setCity] = useState('');
   const [zip, setZip] = useState('');
   const [notes, setNotes] = useState('');
+  const [gender, setGender] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [socialInsuranceNumber, setSocialInsuranceNumber] = useState('');
+  const [weight, setWeight] = useState('');
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
@@ -99,6 +104,8 @@ const AddPatient: React.FC = () => {
       setCity(patientToEdit.city || '');
       setZip(patientToEdit.zip || '');
       setNotes(patientToEdit.medicalDescription || '');
+      setGender(patientToEdit.gender || '');
+      setSocialInsuranceNumber(patientToEdit.socialInsuranceNumber || '');
     }
   }, [patientToEdit]);
 
@@ -116,12 +123,16 @@ const AddPatient: React.FC = () => {
       newErrors.phone = STRING.phoneRequired;
     }
 
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = STRING.invalidEmailAddress;
     }
 
     if (dob.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
       newErrors.dob = STRING.invalidDateFormat;
+    }
+
+    if (!gender) {
+      newErrors.gender = STRING.genderRequired;
     }
 
     setErrors(newErrors);
@@ -140,6 +151,11 @@ const AddPatient: React.FC = () => {
         city: city.trim(),
         zip: zip.trim(),
         medicalDescription: notes.trim(),
+        gender: gender,
+        ...(socialInsuranceNumber.trim() && {
+          socialInsuranceNumber: socialInsuranceNumber.trim(),
+        }),
+        ...(weight.trim() && { weight: weight.trim() }),
       };
       if (isEdit) {
         dispatch(updatePatient(patientToEdit.id, payload));
@@ -282,6 +298,83 @@ const AddPatient: React.FC = () => {
                     }
                   />
                 </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: getScaleSize(12),
+                    flex: 1,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <CustomDropdown
+                      labelStyle={{
+                        fontFamily: FONTS.Inter.SemiBold,
+                        color: COLORS.black,
+                        fontSize: getScaleSize(13),
+                      }}
+                      isMandatory={true}
+                      style={{
+                        paddingHorizontal: 0,
+                        marginBottom: 0,
+                      }}
+                      labelContainerStyle={{
+                        backgroundColor: COLORS._F9FAFB,
+                        borderWidth: 0,
+                      }}
+                      label={STRING.gender}
+                      data={GENDER}
+                      value={gender}
+                      onChange={val => {
+                        setGender(val);
+                        setErrors(e => ({ ...e, gender: '' }));
+                      }}
+                      placeholder={STRING.selectGender}
+                      leftIcon={IMAGES.ic_gender}
+                      error={errors.gender}
+                      zIndex={1000}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Input
+                      value={weight}
+                      onChangeText={text => setWeight(text)}
+                      keyboardType="numeric"
+                      placeholder="e.g. 70"
+                      placeholderTextColor={COLORS._7A7A7A}
+                      label="Weight (kg)"
+                      labelColor={COLORS.black}
+                      labelFont={FONTS.Inter.SemiBold}
+                      labelSize={getScaleSize(13)}
+                      inputWrapperStyle={styles.inputWrapperStyle}
+                      style={styles.inputContainer}
+                    />
+                  </View>
+                </View>
+                <Input
+                  value={socialInsuranceNumber}
+                  onChangeText={t => {
+                    setSocialInsuranceNumber(t);
+                    setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));
+                  }}
+                  placeholder={STRING.enterSocialInsuranceNumber}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  label={STRING.socialInsuranceNumber}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  leftIcon={IMAGES.ic_insurance}
+                  labelSize={getScaleSize(13)}
+                  // error={errors.socialInsuranceNumber}
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.socialInsuranceNumber && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  style={styles.inputContainer}
+                />
               </View>
             </View>
 
@@ -471,13 +564,13 @@ const AddPatient: React.FC = () => {
                       color: COLORS._6F767E,
                       marginTop: getScaleSize(3),
                     }}
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.notes && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
+                    // inputWrapperStyle={[
+                    //   styles.inputWrapperStyle,
+                    //   errors.notes && {
+                    //     borderWidth: 1,
+                    //     borderColor: COLORS.error,
+                    //   },
+                    // ]}
                     style={styles.inputContainer}
                     inputStyle={styles.textArea}
                   />

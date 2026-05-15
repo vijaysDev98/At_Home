@@ -59,6 +59,7 @@ export const updateProfile =
             fName: firstName,
             lName: lastName,
             profileImg,
+            phoneNumber,
           }
         : {
             fName,

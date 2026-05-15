@@ -936,22 +936,7 @@ const AntibiotherapyInfusionForm = forwardRef<
         )}
 
         {/* SIGNATURE */}
-        <FormSignature
-          requestId={initialData?._id}
-          readOnly={readOnly}
-          doctorName={`${initialData?.doctorId?.fName || ''} ${
-            initialData?.doctorId?.lName || ''
-          }`}
-          signedAt={
-            initialData?.digitalSignature?.signedAt
-              ? moment(initialData?.digitalSignature?.signedAt).format(
-                  'MMM DD, YYYY • hh:mm A',
-                )
-              : ''
-          }
-          signatureImage={initialData?.digitalSignature?.signatureData}
-          signatureStatus={initialData?.signatureMetadata?.signatureStatus}
-        />
+
         {/* SUBMIT BUTTON */}
         {/* <AppButton
           title="Submit Form"
