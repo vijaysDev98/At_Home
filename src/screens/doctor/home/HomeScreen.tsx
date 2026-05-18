@@ -23,6 +23,7 @@ import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
+import { useLocalization } from '../../../localization/useLocalization';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -162,6 +163,8 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const t = useLocalization();
+
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
@@ -182,7 +185,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Regular}
                 color={COLORS._1A1D1F}
               >
-                {getGreeting()}
+                {t.welcome}
               </AppText>
               <AppText
                 size={getScaleSize(18)}

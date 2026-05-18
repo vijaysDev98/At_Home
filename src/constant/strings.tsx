@@ -1,4 +1,5 @@
 export const STRING = {
+  welcome: 'welcome',
   // ─── Auth: Welcome ───────────────────────────────────────────
   welcomeTitle: 'Welcome to\nAt-Home',
   welcomeSubtitle: 'Patients to Doctors',

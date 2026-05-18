@@ -12,20 +12,24 @@ import RootNavigation from './src/navigation';
 import { Provider } from 'react-redux';
 import store from './src/redux/store';
 import Toast from 'react-native-toast-message';
-
+import { I18nextProvider } from 'react-i18next';
+import { i18nLocale } from './src/localization/translatation';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
   return (
-    <SafeAreaProvider>
-      <StatusBar
-        backgroundColor="#fff"
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <Provider store={store}>
-        <RootNavigation />
-        <Toast />
-      </Provider>
-    </SafeAreaProvider>
+    <I18nextProvider i18n={i18nLocale}>
+      <SafeAreaProvider>
+        <StatusBar
+          backgroundColor="#fff"
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        />
+        <Provider store={store}>
+          <RootNavigation />
+          <Toast />
+        </Provider>
+      </SafeAreaProvider>
+    </I18nextProvider>
   );
 }
 
