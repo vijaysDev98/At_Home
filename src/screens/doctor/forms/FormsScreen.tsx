@@ -71,6 +71,8 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 const FormsScreen: React.FC = () => {
   const route = useRoute();
   const request: ServiceRequest = (route.params as any)?.request;
+  console.log('request', request);
+
   const requestId = request?.id;
   const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
@@ -86,7 +88,6 @@ const FormsScreen: React.FC = () => {
   );
 
   const serviceId = service?._id || requestData?.serviceId._id;
-  console.log('serviceId', serviceId);
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
 
@@ -105,8 +106,7 @@ const FormsScreen: React.FC = () => {
 
   const handleRightButtonPress = async () => {
     if (
-      (requestData?.status === REQUEST_STATUS.SUBMITTED ||
-        request?.status === REQUEST_STATUS.SUBMITTED) &&
+      requestData?.status === REQUEST_STATUS.SUBMITTED &&
       requestData?.formStatus === FORM_STATUS.SUBMITTED
     ) {
       dispatch(setLoading(true));
@@ -126,7 +126,7 @@ const FormsScreen: React.FC = () => {
           requestId || '',
         );
         if (reviewResponse.success) {
-          NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+          NavigationService.replace(SCREENS.FORM_REVIEW_SCREEN, {
             request: { ...request, ...reviewResponse.data },
           });
         } else {
@@ -356,8 +356,7 @@ const FormsScreen: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              {requestData?.status === REQUEST_STATUS.SUBMITTED ||
-              request?.status === REQUEST_STATUS.SUBMITTED
+              {requestData?.status === REQUEST_STATUS.SUBMITTED
                 ? 'Update & sign'
                 : 'Submit Request'}
             </AppText>

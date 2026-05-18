@@ -12,7 +12,7 @@ import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { AppText, AppLoader } from '../../../components';
 import { useNavigation } from '@react-navigation/native';
-import RequestCard from '../../../components/RequestCard';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -22,6 +22,7 @@ import { getButtonConfig } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import RequestCardProvider from '../../../components/RequestCardProvider';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
@@ -95,23 +96,15 @@ const AvailableRequest: React.FC = () => {
   }, [requests, activeTab]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    const initials = (item.patient.fName + ' ' + item.patient.lName)
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item.formStatus || item.status;
-    console.log('item', item);
 
     const buttonConfig = getButtonConfig(formStatus);
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>
-        <RequestCard
-          name={item.patient.fName + ' ' + item.patient.lName}
-          initials={initials}
+        <RequestCardProvider
+          name={item.patient.fullName}
           requestId={item.id}
           requestType={item.service.serviceName}
           formStatus={formStatus}

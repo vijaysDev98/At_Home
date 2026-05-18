@@ -83,8 +83,8 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    weight: '',
-    nir: '',
+    weight: String(selectedPatient?.weight) || '',
+    nir: selectedPatient?.socialInsuranceNumber || '',
     ald_condition: false,
 
     // Prescriber Identification (Auto-filled from doctor profile)

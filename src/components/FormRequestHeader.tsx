@@ -63,10 +63,8 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
                 color={COLORS[requestData?.status]}
                 font={FONTS.Inter.SemiBold}
               >
-                {requestData?.status
-                  ? requestData.status.charAt(0).toUpperCase() +
-                    requestData.status.slice(1)
-                  : 'Draft'}
+                {DISPLAY_FORM_STATUS[requestData?.status] ||
+                  DISPLAY_FORM_STATUS[FORM_STATUS.DRAFT]}
               </AppText>
             </View>
             <View style={styles.statusBadge}>

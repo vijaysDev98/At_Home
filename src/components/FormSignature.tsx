@@ -16,6 +16,8 @@ import { getScaleSize } from '../utils/scaleSize';
 import { setLoading } from '../actions/common/commonSlice';
 import signatureApi from '../services/signature';
 import { SHOW_TOAST } from '../constant';
+import { API_BASE_URL } from '../api/apiRoutes';
+import NavigationService from '../navigation/NavigationService';
 
 export interface FormSignatureProps {
   title?: string;
@@ -30,64 +32,48 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   requestData,
   onSignatureCompleted,
 }) => {
+  const requestId = requestData?._id || requestData?.id;
   const dispatch = useDispatch();
 
   if (!readOnly || readOnly === null) {
     return null;
   }
 
-  const isSigned = !!requestData?.digitalSignature?.signatureData;
+  let isSigned = !!requestData?.digitalSignature?.signatureData;
 
-  const checkSignatureStatus = async () => {
+  const openSigningUrl = async (url: string, requestId: string) => {
     try {
-      const response = await signatureApi.getSignatureStatus(requestData?.id);
+      /**
+       * IMPORTANT:
+       * This must be a deep link registered in Android/iOS
+       */
+      const redirectUrl = 'athome://docusign/callback';
 
-      console.log('signature status response', response);
+      const isBrowserAvailable = await InAppBrowser.isAvailable();
 
-      if (response?.success) {
-        const signatureStatus =
-          response?.data?.signatureMetadata?.signatureStatus;
-
-        const envelopeStatus = response?.data?.envelopeStatus;
-
-        const signedPdfUrl = response?.data?.signedPdfUrl;
-
-        const isCompleted =
-          signatureStatus === 'completed' ||
-          envelopeStatus === 'completed' ||
-          !!signedPdfUrl;
-
-        return isCompleted;
-      }
-
-      return false;
-    } catch (error) {
-      console.log('check signature status error', error);
-      return false;
-    }
-  };
-
-  const openSigningUrl = async (url: string) => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-
-    try {
-      const isAvailable = await InAppBrowser.isAvailable();
-
-      if (!isAvailable) {
-        Linking.openURL(url);
+      /**
+       * Fallback if browser not available
+       */
+      if (!isBrowserAvailable) {
+        await Linking.openURL(url);
         return;
       }
 
-      // open browser
-      InAppBrowser.open(url, {
-        dismissButtonStyle: 'cancel',
+      /**
+       * Open DocuSign signing flow
+       */
+      const authResult = await InAppBrowser.openAuth(url, redirectUrl, {
+        dismissButtonStyle: 'close',
         preferredBarTintColor: COLORS.primary,
         preferredControlTintColor: COLORS.white,
         readerMode: false,
         animated: true,
         modalPresentationStyle: 'fullScreen',
         modalTransitionStyle: 'coverVertical',
-        modalEnabled: true,
+
+        // iOS
+        enableBarCollapsing: false,
+        ephemeralWebSession: false,
 
         // Android
         showTitle: true,
@@ -97,84 +83,74 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         navigationBarDividerColor: COLORS.white,
         enableUrlBarHiding: true,
         enableDefaultShare: false,
-        forceCloseOnRedirection: false,
-      }).catch(error => {
-        console.log('browser open error => ', error);
 
-        if (interval) {
-          clearInterval(interval);
-        }
-
-        Alert.alert('Error', 'Unable to open signing browser');
+        // IMPORTANT
+        forceCloseOnRedirection: true,
       });
+      /**
+       * User closed browser manually
+       */
+      // if (authResult?.type === 'cancel') {
+      //   return;
+      // }
 
-      // polling immediately starts
-      interval = setInterval(async () => {
-        try {
-          console.log('checking signature status...');
+      /**
+       * Redirect happened successfully
+       *
+       * Backend should redirect to:
+       * athome://docusign/callback
+       */
+      // if (
+      //   authResult?.type === 'success' &&
+      //   authResult?.url?.startsWith('athome://docusign/callback')
+      // ) {
+      dispatch(setLoading(true));
 
-          const response = await signatureApi.getSignatureStatus(
-            requestData?.id,
-          );
-
-          // stop polling if api itself failed
-          if (!response?.success) {
-            InAppBrowser.close();
-            if (interval) {
-              clearInterval(interval);
-            }
-
-            SHOW_TOAST(
-              response?.message || 'Failed to fetch signature status',
-              'error',
-            );
-
-            return;
-          }
-
-          const signatureStatus =
-            response?.data?.signatureMetadata?.signatureStatus;
-
-          const envelopeStatus = response?.data?.envelopeStatus;
-
-          const signedPdfUrl = response?.data?.signedPdfUrl;
-
-          const isCompleted =
-            signatureStatus === 'completed' ||
-            envelopeStatus === 'completed' ||
-            !!signedPdfUrl;
-
-          if (isCompleted) {
-            if (interval) {
-              clearInterval(interval);
-            }
-
-            // close browser
-            InAppBrowser.close();
-            SHOW_TOAST('Document signed successfully', 'success');
-
-            onSignatureCompleted?.();
-          }
-        } catch (error: any) {
-          // stop polling on error
-          if (interval) {
-            clearInterval(interval);
-          }
-
-          // close browser also
-          InAppBrowser.close();
-
-          SHOW_TOAST(error?.message || 'Something went wrong', 'error');
-        }
-      }, 3000);
-    } catch (error: any) {
-      console.log('open signing url error => ', error);
-
-      if (interval) {
-        clearInterval(interval);
+      /**
+       * Fetch latest signature status
+       */
+      const response = await signatureApi.getSignatureStatus(requestId);
+      if (!response?.success) {
+        SHOW_TOAST(
+          response?.message || 'Failed to fetch signature status',
+          'error',
+        );
+        return;
       }
 
-      Alert.alert('Error', error?.message || 'Unable to open signing page');
+      // const signatureStatus =
+      //   response?.data?.signatureMetadata?.signatureStatus;
+
+      const envelopeStatus = response?.data?.envelopeStatus;
+
+      // const signedPdfUrl = response?.data?.signedPdfUrl;
+
+      const isCompleted =
+        //   signatureStatus === 'completed' ||
+        envelopeStatus === 'completed';
+      // ||
+      //   !!signedPdfUrl;
+
+      if (isCompleted) {
+        isSigned = true;
+        SHOW_TOAST('Document signed successfully', 'success');
+        setTimeout(() => {
+          NavigationService.goBack();
+        }, 2000);
+
+        onSignatureCompleted?.();
+      } else {
+        SHOW_TOAST('Signature is not completed yet', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Unable to open signing page',
+        'error',
+      );
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -182,19 +158,29 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     try {
       dispatch(setLoading(true));
 
-      const response = await signatureApi.initiateSignature(requestData?.id);
+      const response = await signatureApi.initiateSignature(requestId);
+
       if (response?.success) {
         const signingUrl = response?.data?.signingUrl;
+
         if (signingUrl) {
-          await openSigningUrl(signingUrl);
+          await openSigningUrl(signingUrl, requestId);
         } else {
           SHOW_TOAST('Signing URL not found', 'error');
         }
       } else {
-        SHOW_TOAST(response?.message, 'error');
+        SHOW_TOAST(
+          response?.message || 'Failed to initiate signature',
+          'error',
+        );
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message, 'error');
+      SHOW_TOAST(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Something went wrong',
+        'error',
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -247,7 +233,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
             numberOfLines={1}
             style={styles.doctorName}
           >
-            {requestData?.doctorId?.fName}
+            {requestData?.doctorId?.fullName}
           </AppText>
 
           <AppText

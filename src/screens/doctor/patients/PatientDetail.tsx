@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   Image,
+  FlatList,
 } from 'react-native';
 import {
   AppButton,
@@ -19,12 +20,13 @@ import { useRoute, useIsFocused } from '@react-navigation/native';
 import { AppLoader } from '../../../components';
 import moment from 'moment';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
+import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
-import { STRING } from '../../../constant';
+import { getButtonConfig, STRING } from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -34,6 +36,8 @@ const PatientDetail: React.FC = () => {
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
+  console.log('patient', patient);
+
   const homeAddress =
     patient?.streetAddress + ', ' + patient?.city + ', ' + patient?.zip;
   const { isLoading: globalLoading } = useSelector(
@@ -67,7 +71,7 @@ const PatientDetail: React.FC = () => {
     return name.slice(0, 2).toUpperCase();
   };
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView edges>
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
@@ -321,13 +325,50 @@ const PatientDetail: React.FC = () => {
             >
               {STRING.linkedRequests}
             </AppText>
-            <TouchableOpacity style={styles.plusBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.navigate(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
+              }}
+              style={styles.plusBtn}
+              activeOpacity={0.8}
+            >
               <Image
                 source={IMAGES.new_request}
                 style={styles.newRequestIcon}
               />
             </TouchableOpacity>
           </View>
+
+          <FlatList
+            data={patient?.linkedRequests}
+            renderItem={({ item }) => {
+              const formStatus = item?.formStatus;
+              const buttonConfig = getButtonConfig(formStatus);
+
+              return (
+                <View style={{ marginBottom: getScaleSize(12) }}>
+                  <RequestCardDoctor
+                    name={patient?.fullName}
+                    requestId={item?.id}
+                    requestType={item?.service?.serviceName}
+                    status={item?.status}
+                    formStatus={item?.formStatus}
+                    buttonText={
+                      buttonConfig.show
+                        ? buttonConfig.label || undefined
+                        : undefined
+                    }
+                    onButtonPress={() =>
+                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                        request: item,
+                      })
+                    }
+                  />
+                </View>
+              );
+            }}
+            keyExtractor={item => item.id}
+          />
         </ScrollView>
       </View>
       <AppLoader visible={globalLoading} />

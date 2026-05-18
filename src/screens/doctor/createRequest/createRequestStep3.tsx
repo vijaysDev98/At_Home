@@ -46,6 +46,7 @@ import PersonalHygieneCare from '../forms/PersonalHygieneCare';
 import PregnancyCareForm from '../forms/PregnancyCareForm';
 import WoundCareForm from '../forms/WoundCareForm';
 import { getServiceIcon } from './createRequestStep2';
+import ServiceFormRenderer from '../forms/ServiceFormRenderer';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -172,7 +173,13 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 }}
               >
                 {/* Dynamic Form Content */}
-                {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
+                <ServiceFormRenderer
+                  serviceId={serviceId || ''}
+                  formRef={formRef}
+                  initialData={initialData}
+                  patient={patient}
+                />
+                {/* {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
                   <CNOForm
                     ref={formRef}
                     serviceId={serviceId || ''}
@@ -267,84 +274,8 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                     title={'Pregnancy-Related Care Prescription Form'}
                   />
                 ) : (
-                  <View
-                    style={{
-                      backgroundColor: COLORS._F8F9FA,
-                      borderRadius: getScaleSize(16),
-                      borderWidth: 1,
-                      borderColor: COLORS._EFEFEF,
-                      padding: getScaleSize(16),
-                      gap: getScaleSize(16),
-                    }}
-                  >
-                    {/* Diagnosis Header */}
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                      }}
-                    >
-                      <Image
-                        source={IMAGES.stethoscopeIcon}
-                        style={{ width: 20, height: 20 }}
-                      />
-                      <AppText
-                        size={getScaleSize(16)}
-                        font={FONTS.Inter.Bold}
-                        color={COLORS._1A1D1F}
-                      >
-                        Diagnosis
-                      </AppText>
-                    </View>
-
-                    {/* Primary Diagnosis */}
-                    <Input
-                      label="Primary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Enter ICD-10 or description"
-                      value={state?.primaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, primaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    {/* Secondary Diagnosis */}
-                    <Input
-                      label="Secondary Diagnosis"
-                      labelColor={COLORS._1A1D1F}
-                      labelFont={FONTS.Inter.SemiBold}
-                      placeholder="Optional secondary diagnosis"
-                      value={state?.secondaryDiagnosis}
-                      onChangeText={text =>
-                        setState({ ...state, secondaryDiagnosis: text })
-                      }
-                      style={styles.inputField}
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS._1A1D1F}
-                    >
-                      Current Condition
-                    </AppText>
-                    <TextInput
-                      placeholder="Describe patient's current state..."
-                      value={state?.currentCondition}
-                      onChangeText={text =>
-                        setState({ ...state, currentCondition: text })
-                      }
-                      style={styles.textArea}
-                      multiline
-                      placeholderTextColor={COLORS._1A1D1F}
-                    />
-                  </View>
-                )}
+                  <></>
+                )} */}
               </View>
             </View>
           </ScrollView>

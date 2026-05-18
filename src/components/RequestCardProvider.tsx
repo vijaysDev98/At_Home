@@ -11,10 +11,45 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
 import { DISPLAY_FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
+import NavigationService from '../navigation/NavigationService';
+import { SCREENS } from '../navigation/routes';
+import ProfileAvatar from './ProfileAvatar';
+
+const CARD_BTN_CONFIG = (RequestStatus: string, requestId: string) => {
+  let txt: string = '';
+  let action: () => void = () => {};
+
+  switch (RequestStatus) {
+    case REQUEST_STATUS.SIGNED:
+      txt = 'Claim Service';
+      action = () => {
+        NavigationService.navigate(SCREENS.PROVIDER_FORM, { requestId });
+      };
+      break;
+    case REQUEST_STATUS.SUBMITTED:
+      txt = 'View Forms';
+      action = () => {
+        NavigationService.navigate(SCREENS.PROVIDER_FORM, { requestId });
+      };
+      break;
+    case REQUEST_STATUS.IN_PROGRESS:
+      txt = 'View Forms';
+      action = () => {
+        NavigationService.navigate(SCREENS.PROVIDER_FORM, {});
+      };
+      break;
+    case REQUEST_STATUS.RETURNED:
+      txt = 'View Forms';
+      break;
+    case REQUEST_STATUS.COMPLETED:
+      txt = 'View Forms';
+      break;
+  }
+  return { txt, action };
+};
 
 interface RequestCardProps {
   name?: string;
-  initials?: string;
   requestType?: string;
   status?: string;
   requestId?: string;
@@ -23,9 +58,8 @@ interface RequestCardProps {
   onButtonPress?: () => void;
 }
 
-const RequestCard: React.FC<RequestCardProps> = ({
+const RequestCardProvider: React.FC<RequestCardProps> = ({
   name,
-  initials,
   requestType,
   status,
   requestId,
@@ -33,22 +67,22 @@ const RequestCard: React.FC<RequestCardProps> = ({
   buttonText,
   onButtonPress = () => {},
 }) => {
+  let initials = '';
+  if (name) {
+    initials = name
+      .split('')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  }
   return (
     <View style={styles.requestCardContainer}>
       <View style={styles.requestHeaderRow}>
-        <View style={styles.avatarContainer}>
-          {/* <Image
-               source={IMAGES.patient}
-               style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
-               /> */}
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._2563EB}
-          >
-            {initials}
-          </AppText>
-        </View>
+        <ProfileAvatar
+          name={initials}
+          size="small"
+          backgroundColor={COLORS._E5E7EB}
+        />
 
         <View style={styles.patientInfoContainer}>
           <AppText
@@ -122,10 +156,12 @@ const RequestCard: React.FC<RequestCardProps> = ({
           </AppText>
         </View>
       </View>
-      {buttonText && (
+      {CARD_BTN_CONFIG(formStatus, requestId).txt && (
         <AppButton
-          title={buttonText}
-          onPress={onButtonPress}
+          title={CARD_BTN_CONFIG(formStatus, requestId).txt}
+          onPress={() => {
+            onButtonPress();
+          }}
           style={styles.updateButtonStyle}
         />
       )}
@@ -133,7 +169,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
   );
 };
 
-export default RequestCard;
+export default RequestCardProvider;
 
 const styles = StyleSheet.create({
   requestCardContainer: {

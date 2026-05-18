@@ -21,7 +21,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
-import RequestCard from '../../../components/RequestCard';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -111,6 +111,11 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           // For page 1, replace the entire list
           // For subsequent pages, append to the existing list
           if (page === 1) {
+            console.log(
+              'response.data.requests => ',
+              response.data.requests[0],
+            );
+
             setRequests(response.data.requests);
           } else {
             setRequests(prev => [...prev, ...response.data.requests]);
@@ -146,7 +151,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   useEffect(() => {
     setFilter(formStatus);
   }, [formStatus]);
-  console.log('requests', requests);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
@@ -178,20 +182,14 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   }, [pagination, currentPage, fetchServiceRequests]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    const initials = (item.patient.fName + ' ' + item.patient.lName)
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-
     // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item.formStatus || item.status;
+    const formStatus = item?.formStatus;
     const buttonConfig = getButtonConfig(formStatus);
+    console.log('formStatus => ', formStatus, 'buttonConfig => ', buttonConfig);
 
     return (
-      <RequestCard
-        name={item.patient.fName + ' ' + item.patient.lName}
-        initials={initials}
+      <RequestCardDoctor
+        name={item?.patient?.fullName || ''}
         requestId={item.id}
         requestType={item.service.serviceName}
         formStatus={formStatus}
@@ -199,9 +197,15 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         buttonText={
           buttonConfig.show ? buttonConfig.label || undefined : undefined
         }
-        onButtonPress={() =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })
-        }
+        onButtonPress={() => {
+          if (buttonConfig.action === 'edit') {
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item });
+          } else if (buttonConfig.action === 'sign') {
+            NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+              request: item,
+            });
+          }
+        }}
       />
     );
   };

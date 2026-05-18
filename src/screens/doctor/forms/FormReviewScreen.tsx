@@ -62,14 +62,13 @@ import { getServiceIcon } from '../createRequest/createRequestStep2';
 
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
-  console.log('route.params', route.params);
-
   const request: ServiceRequest = (route.params as any)?.request;
+
   const requestId = request?.id;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | any>(
-    request || null,
+    null,
   );
 
   // Use global loader state from Redux
@@ -258,7 +257,11 @@ const FormReviewScreen: React.FC = () => {
               )}
             </View>
             <View style={{ paddingHorizontal: getScaleSize(16) }}>
-              <FormSignature readOnly={isReadOnly} requestData={requestData} />
+              <FormSignature
+                readOnly={isReadOnly}
+                requestData={requestData}
+                onSignatureCompleted={fetchServiceRequestDetails}
+              />
             </View>
           </ScrollView>
         </View>
@@ -279,7 +282,7 @@ const FormReviewScreen: React.FC = () => {
               Edit Form
             </AppText>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             activeOpacity={0.9}
             style={styles.submitBtn}
             onPress={handleRightButtonPress}
@@ -291,7 +294,7 @@ const FormReviewScreen: React.FC = () => {
             >
               {'Submit Form'}
             </AppText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         {/* )} */}
       </View>

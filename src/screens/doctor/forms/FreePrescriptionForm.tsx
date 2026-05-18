@@ -83,8 +83,8 @@ const FreePrescriptionForm = forwardRef<
     patient_last_name: selectedPatient?.lName || '',
     patient_first_name: selectedPatient?.fName || '',
     dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
-    weight: '',
-    nir: '',
+    weight: String(selectedPatient?.weight) || '',
+    nir: selectedPatient?.socialInsuranceNumber || '',
     ald_condition: false,
 
     // Prescriber Identification

@@ -82,6 +82,8 @@ const AddPatient: React.FC = () => {
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
+  console.log('patientToEdit', weight);
+
   const isEdit = !!patientToEdit;
 
   const discardSheetRef = useRef<ActionSheetRef>(null);
@@ -105,6 +107,7 @@ const AddPatient: React.FC = () => {
       setZip(patientToEdit.zip || '');
       setNotes(patientToEdit.medicalDescription || '');
       setGender(patientToEdit.gender || '');
+      setWeight(patientToEdit?.weight?.toString() || '');
       setSocialInsuranceNumber(patientToEdit.socialInsuranceNumber || '');
     }
   }, [patientToEdit]);

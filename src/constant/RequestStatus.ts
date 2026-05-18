@@ -35,12 +35,18 @@ export const DISPLAY_FORM_STATUS = {
 };
 
 export const getButtonConfig = (formStatus: string) => {
-  switch (formStatus?.toLowerCase()) {
+  switch (formStatus) {
     case FORM_STATUS.DRAFT:
       return {
         show: true,
         label: 'Continue Form',
         action: 'edit',
+      };
+    case FORM_STATUS.AWAITING_SIGNATURE:
+      return {
+        show: true,
+        label: 'Update & Sign',
+        action: 'sign',
       };
     case FORM_STATUS.SUBMITTED:
       return {

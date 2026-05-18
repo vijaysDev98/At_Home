@@ -214,7 +214,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   }, []);
 
   return (
-    <AppSafeAreaView edges={false} style={styles.safe}>
+    <AppSafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>

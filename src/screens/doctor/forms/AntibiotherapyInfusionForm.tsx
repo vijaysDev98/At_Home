@@ -75,7 +75,7 @@ const AntibiotherapyInfusionForm = forwardRef<
   AntibiotherapyInfusionFormRef,
   AntibiotherapyInfusionFormProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
-  console.log('initialData', JSON.stringify(initialData));
+  console.log('initialData patient', patient);
 
   const dispatch = useDispatch();
   const reduxPatient = useSelector(
@@ -83,6 +83,7 @@ const AntibiotherapyInfusionForm = forwardRef<
   );
   const requestId = initialData?._id;
   const selectedPatient = initialData ? patient : reduxPatient;
+  console.log('selectedPatient', selectedPatient);
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
@@ -110,8 +111,8 @@ const AntibiotherapyInfusionForm = forwardRef<
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    weight: '',
-    nir: '',
+    weight: selectedPatient?.weight?.toString() || '',
+    nir: selectedPatient?.socialInsuranceNumber || '',
     ald_condition: false,
 
     // Prescriber Identification (Auto-filled from doctor profile)

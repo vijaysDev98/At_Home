@@ -94,8 +94,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       dob: selectedPatient?.dateOfBirth
         ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
         : '',
-      weight: '',
-      nir: '',
+      weight: String(selectedPatient?.weight) || '',
+      nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
       prescriber_last_name: profileData?.lName || '',

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppSafeAreaView, AppText } from '../../../components';
-import RequestCard from '../../../components/RequestCard';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -442,18 +442,8 @@ const HomeScreen: React.FC = () => {
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const initials =
-                  item.patient?.fullName
-                    ?.split(' ')
-                    .map((n: string) => n[0])
-                    .join('')
-                    .toUpperCase() || '';
-
                 const formStatus = item.formStatus || item.status;
                 const buttonConfig = getButtonConfig(formStatus);
-
-                console.log('recentQueue', item);
-
                 return (
                   <View
                     key={item.id || index}
@@ -462,9 +452,8 @@ const HomeScreen: React.FC = () => {
                       marginBottom: getScaleSize(12),
                     }}
                   >
-                    <RequestCard
+                    <RequestCardDoctor
                       name={item.patient?.fullName || ''}
-                      initials={initials}
                       requestId={item.id}
                       requestType={item.service?.serviceName || ''}
                       formStatus={formStatus}

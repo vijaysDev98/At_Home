@@ -12,6 +12,7 @@ export interface PatientInfo {
   _id: string;
   fName: string;
   lName: string;
+  fullName: string;
   dateOfBirth: string;
   phoneNumber: string;
   email: string;

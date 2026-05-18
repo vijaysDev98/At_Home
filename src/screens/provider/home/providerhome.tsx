@@ -19,9 +19,11 @@ import { SCREENS } from '../../../navigation/routes';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { FORM_STATUS, STRING } from '../../../constant';
+import { FORM_STATUS, getButtonConfig, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import RequestCardProvider from '../../../components/RequestCardProvider';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -46,13 +48,13 @@ interface DashboardRecentQueue {
 
 interface DashboardRequestsOverview {
   inProgressCount: number;
-  submittedCount: number;
+  submittedAvailableCount: number;
   returnedCount: number;
-  completedCount?: number;
+  completedTodayCount?: number;
 }
 
 interface DashboardData {
-  requestsOverview: DashboardRequestsOverview;
+  overview: DashboardRequestsOverview;
   recentQueue: DashboardRecentQueue[];
 }
 
@@ -98,7 +100,7 @@ const ProviderHome: React.FC = () => {
 
   const getBadgeStyle = (status: string) => {
     switch (status) {
-      case 'Submitted':
+      case FORM_STATUS.SUBMITTED:
         return { bg: '#E8F1FF', color: '#2F80ED' };
       case 'InProgress':
       case 'In Progress':
@@ -205,7 +207,7 @@ const ProviderHome: React.FC = () => {
                 color="#111827"
                 style={{ marginTop: getScaleSize(4) }}
               >
-                {dashboardData?.requestsOverview?.submittedCount || '0'}
+                {dashboardData?.overview?.submittedAvailableCount || '0'}
               </AppText>
             </View>
 
@@ -232,7 +234,7 @@ const ProviderHome: React.FC = () => {
                 color="#111827"
                 style={{ marginTop: getScaleSize(4) }}
               >
-                {dashboardData?.requestsOverview?.inProgressCount || '0'}
+                {dashboardData?.overview?.inProgressCount || '0'}
               </AppText>
             </View>
           </View>
@@ -260,8 +262,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color="#111827"
                 >
-                  {dashboardData?.requestsOverview?.completedCount || '0'}{' '}
-                  Services
+                  {dashboardData?.overview?.completedTodayCount || '0'} Services
                 </AppText>
               </View>
             </View>
@@ -290,144 +291,33 @@ const ProviderHome: React.FC = () => {
 
           {recentQueue.length > 0 ? (
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
-              const initials =
-                item.patient?.fullName
-                  ?.split(' ')
-                  .map((n: string) => n[0])
-                  .join('')
-                  .toUpperCase() || '';
-
-              const badgeStyle = getBadgeStyle(item.status);
               const formStatus = item.formStatus || item.status;
-
-              const handlePress = () => {
-                NavigationService.navigate(SCREENS.PROVIDER_FORM, {
-                  mode:
-                    item.status === FORM_STATUS.IN_PROGRESS ||
-                    item.status === FORM_STATUS.SUBMITTED
-                      ? 'update'
-                      : 'view',
-                  requestStatus: item.status,
-                  formStatus: formStatus,
-                } as never);
-              };
-
-              const handleServicePress = () => {
-                NavigationService.navigate(SCREENS.SERVICE_SCREEN, {
-                  requestStatus: item.status,
-                  formStatus: formStatus,
-                  patientName: item.patient?.fullName || '',
-                  service: item.service?.serviceName || '',
-                  requestId: item.id,
-                } as never);
-              };
-
-              const buttonText =
-                item.status === 'InProgress'
-                  ? 'Open Service'
-                  : 'Start a Service';
-
+              const buttonConfig = getButtonConfig(formStatus);
               return (
-                <TouchableOpacity
+                <View
                   key={item.id || index}
-                  activeOpacity={0.9}
-                  onPress={handlePress}
-                  style={styles.queueCard}
+                  style={{
+                    marginBottom: getScaleSize(12),
+                  }}
                 >
-                  <View style={styles.queueTopRow}>
-                    <View style={styles.queueUserInfo}>
-                      <View style={styles.initialsBox}>
-                        <AppText
-                          size={getScaleSize(14)}
-                          font={FONTS.Inter.Bold}
-                          color={COLORS._6F767E}
-                        >
-                          {initials}
-                        </AppText>
-                      </View>
-                      <View style={{ marginLeft: getScaleSize(12) }}>
-                        <AppText
-                          size={getScaleSize(15)}
-                          font={FONTS.Inter.Bold}
-                          color="#111827"
-                        >
-                          {item.patient?.fullName}
-                        </AppText>
-                        <AppText
-                          size={getScaleSize(12)}
-                          font={FONTS.Inter.Medium}
-                          color={COLORS._6F767E}
-                        >
-                          {item.service?.serviceName}
-                        </AppText>
-                      </View>
-                    </View>
-                    <View
-                      style={[styles.badge, { backgroundColor: badgeStyle.bg }]}
-                    >
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Bold}
-                        color={badgeStyle.color}
-                      >
-                        {item.status}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.detailsRow}>
-                    <View>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Medium}
-                        color={COLORS._6F767E}
-                        style={{ marginBottom: getScaleSize(4) }}
-                      >
-                        Request ID
-                      </AppText>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={FONTS.Inter.Bold}
-                        color="#1A1A1A"
-                      >
-                        {item.requestId}
-                      </AppText>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Medium}
-                        color={COLORS._6F767E}
-                        style={{ marginBottom: getScaleSize(4) }}
-                      >
-                        Form Status
-                      </AppText>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={FONTS.Inter.Bold}
-                        color="#1A1D1F"
-                      >
-                        {formStatus}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.startServiceBtn}
-                    onPress={handleServicePress}
-                  >
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS.white}
-                    >
-                      {buttonText}
-                    </AppText>
-                  </TouchableOpacity>
-                </TouchableOpacity>
+                  <RequestCardProvider
+                    name={item?.patient?.fullName || ''}
+                    requestId={item?.id}
+                    requestType={item?.service?.serviceName || ''}
+                    formStatus={item?.formStatus}
+                    status={item?.status}
+                    buttonText={
+                      buttonConfig.show
+                        ? buttonConfig.label || undefined
+                        : undefined
+                    }
+                    onButtonPress={() =>
+                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                        request: item,
+                      })
+                    }
+                  />
+                </View>
               );
             })
           ) : (

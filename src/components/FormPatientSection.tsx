@@ -48,6 +48,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </AppText>
     </View>
   );
+  console.log('statestate', state);
 
   return (
     <View style={styles.card}>

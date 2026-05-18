@@ -93,8 +93,8 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       dob: selectedPatient?.dateOfBirth
         ? moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY')
         : '',
-      weight: '',
-      nir: '',
+      weight: String(selectedPatient?.weight) || '',
+      nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
       // Prescriber Identification

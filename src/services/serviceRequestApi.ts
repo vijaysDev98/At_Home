@@ -33,6 +33,7 @@ export const serviceRequestApi = {
         API_ROUTES.createServiceRequest,
         payload,
       );
+      console.log('payload', payload);
 
       if (response.status) {
         return {

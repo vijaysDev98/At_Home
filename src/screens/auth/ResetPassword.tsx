@@ -108,11 +108,12 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             <Input
               label={STRING.newPassword}
               placeholder={STRING.enterNewPassword}
-              secureTextEntry={!showPass}
+              // secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
               leftIcon={IMAGES.lock}
               isPasswordVisible={showPass}
+              secureTextEntry={true}
               handlePasswordVisibility={() => setShowPass(p => !p)}
               containerBackgroundColor={COLORS._F8F9FA}
               style={styles.inputField}
@@ -167,7 +168,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             <Input
               label={STRING.confirmPassword}
               placeholder={STRING.enterConfirmPassword}
-              secureTextEntry={!showConfirm}
+              secureTextEntry={true}
               value={confirm}
               onChangeText={setConfirm}
               leftIcon={IMAGES.lock} // Fallback for help_icon
