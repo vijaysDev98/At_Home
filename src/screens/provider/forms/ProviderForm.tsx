@@ -109,30 +109,6 @@ const ProviderForm: React.FC = () => {
 
   const serviceId = requestData?.serviceId || request?.id || '';
 
-  const getStatusColor = (status: string) => {
-    if (!status) {
-      return COLORS._6F767E;
-    }
-
-    switch (status?.toLowerCase()) {
-      case REQUEST_STATUS.RETURNED:
-        return COLORS.returned;
-
-      case REQUEST_STATUS.SUBMITTED:
-      case REQUEST_STATUS.SIGNED:
-        return COLORS.submitted;
-
-      case REQUEST_STATUS.IN_PROGRESS:
-        return COLORS.inProgress;
-
-      case REQUEST_STATUS.COMPLETED:
-        return COLORS.completed;
-
-      default:
-        return COLORS._6F767E;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <AppLoader visible={isLoading} />
@@ -143,7 +119,6 @@ const ProviderForm: React.FC = () => {
           title={isUpdateMode ? 'Update Form' : 'View Form'}
           requestStatus={requestStatus}
           formStatus={formStatus}
-          getStatusColor={getStatusColor}
         />
 
         <ScrollView

@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(100),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
   },
   headerTextContainer: {

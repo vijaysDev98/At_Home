@@ -1,83 +1,53 @@
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useRoute } from '@react-navigation/native';
-import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import {
-  AppSafeAreaView,
-  AppText,
-  Input,
-  RequestSummaryCard,
-  AppLoader,
-  WarningSheet,
-  Header,
-} from '../../../components';
-import { IMAGES } from '../../../assets/images';
+import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
-import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
-import { STRING } from '../../../constant';
 import { API } from '../../../api';
 import {
-  FORM_STATUS,
-  REQUEST_STATUS,
   getFormScreenButtons,
   FormScreenButtonConfig,
   FormScreenHandlerKey,
 } from '../../../constant/RequestStatus';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import {
-  ServiceDetailInfo,
   ServiceInfo,
   ServiceRequest,
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
 
-import FormRequestHeader from '../../../components/FormRequestHeader';
-import { getServiceIcon } from '../createRequest/createRequestStep2';
+// Import all form components
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import ServiceFormRenderer from '../../doctor/forms/ServiceFormRenderer';
+import HeaderProvider from '../../../components/HeaderProvider';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import ServiceFormRenderer from './ServiceFormRenderer';
 
-export type CreateRequestStep3Props = NativeStackScreenProps<
+export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
-  'CreateRequestStep3'
+  'ProviderFormScreen'
 >;
 
-const FormsScreen: React.FC = () => {
+const ProviderFormScreen: React.FC = () => {
   const route = useRoute();
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
 
   const requestId = request?.id;
+  console.log('requestId', requestId);
 
   const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
 
   // Extract service and patient from request object
   const patientData = request?.patient || {};
-  const serviceName = service?.serviceName;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
@@ -96,99 +66,59 @@ const FormsScreen: React.FC = () => {
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
-  // config in RequestStatus.ts picks which one gets called.
+  // ─── Named action handlers ─────────────────────────────────────────────────
+  // Provider-only handlers
   const handlerMap: Record<FormScreenHandlerKey, () => Promise<void>> = {
-    // Doctor: save current form state without submitting
-    saveAsDraft: async () => {
-      if (formRef.current?.saveAsDraft) {
-        await formRef.current.saveAsDraft();
-      }
-    },
-
-    // Doctor: first-time submit (draft → submitted)
-    submitRequest: async () => {
+    // Provider: submit pre-claim form for doctor review
+    submitForReview: async () => {
       if (formRef.current?.validateAndSubmit) {
         await formRef.current.validateAndSubmit();
       }
     },
 
-    // Doctor: update already-submitted form and navigate to review / sign
-    updateAndSign: async () => {
-      dispatch(setLoading(true));
-      try {
-        if (formRef.current?.updateAndSign) {
-          const result = await formRef.current.updateAndSign();
-          if (!result.success) return;
-        }
-        const reviewResponse = await serviceRequestApi.getReviewData(
-          requestId || '',
-        );
-        if (reviewResponse.success) {
-          NavigationService.replace(SCREENS.FORM_REVIEW_SCREEN, {
-            request: { ...request, ...reviewResponse.data },
-          });
-        } else {
-          SHOW_TOAST(
-            reviewResponse.error || 'Failed to get review data',
-            'error',
-          );
-        }
-      } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Error preparing review', 'error');
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-
-    // Doctor: re-edit a returned form and re-sign (same flow as updateAndSign for now)
-    updateAndResign: async () => {
-      dispatch(setLoading(true));
-      try {
-        if (formRef.current?.updateAndSign) {
-          const result = await formRef.current.updateAndSign();
-          if (!result.success) return;
-        }
-        const reviewResponse = await serviceRequestApi.getReviewData(
-          requestId || '',
-        );
-        if (reviewResponse.success) {
-          NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
-            request: { ...request, ...reviewResponse.data },
-          });
-        } else {
-          SHOW_TOAST(
-            reviewResponse.error || 'Failed to get review data',
-            'error',
-          );
-        }
-      } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Error re-signing', 'error');
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-
-    updateFormData: async () => {
+    // Provider: persist pre-claim without submitting
+    saveProgress: async () => {
       if (formRef.current?.saveProgress) {
-        await formRef.current.saveProgress();
+        const result = await formRef.current.saveProgress();
+        if (!result.success) return;
+        if (result.success) {
+          NavigationService.goBack();
+          return;
+        }
       }
     },
 
-    // Unused provider handlers (kept for type safety)
-    submitForReview: async () => {},
-    saveProgress: async () => {},
-    claimService: async () => {},
-  };
-
-  const acquireFormLock = async () => {
-    try {
-      const response = await serviceRequestApi.acquireFormLock(requestId || '');
-      if (response.success) {
-        console.log('Form lock acquired successfully');
+    // Provider: claim a signed service
+    claimService: async () => {
+      if (!requestId) {
+        SHOW_TOAST('Missing Request ID', 'error');
+        return;
       }
-    } catch (error) {
-      console.log('Error acquiring form lock:', error);
-    }
+      dispatch(setLoading(true));
+      try {
+        const response = await serviceRequestApi.claimRequest(requestId);
+        if (response.success) {
+          SHOW_TOAST(
+            response.message || 'Request claimed successfully',
+            'success',
+          );
+          NavigationService.goBack();
+        } else {
+          SHOW_TOAST(response.error || 'Failed to claim request', 'error');
+        }
+      } catch (error: any) {
+        SHOW_TOAST(error?.message || 'Failed to claim request', 'error');
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+
+    // Unused doctor handlers (kept for type safety)
+    updateFormData: async () => {},
+    saveAsDraft: async () => {},
+    submitRequest: async () => {},
+    updateAndSign: async () => {},
+    updateAndResign: async () => {},
   };
 
   // Fetch service request details when in view mode
@@ -213,19 +143,13 @@ const FormsScreen: React.FC = () => {
   const fetchServiceRequestDetails = async () => {
     dispatch(setLoading(true));
     try {
-      const response = await API.Instance.get(`/service-requests/${requestId}`);
-
+      // Provider always uses /pre-claim endpoint
+      const response = await API.Instance.get(
+        `/service-requests/${requestId}/pre-claim`,
+      );
       if (response?.data?.status) {
         const data = response.data.data;
         setRequestData(data);
-        // Acquire lock if both statuses are 'submitted'
-        if (
-          !data?.isLocked &&
-          data.status === REQUEST_STATUS.SUBMITTED &&
-          data.formStatus === FORM_STATUS.SUBMITTED
-        ) {
-          acquireFormLock();
-        }
       } else {
         SHOW_TOAST('Failed to fetch service request details', 'error');
       }
@@ -239,7 +163,7 @@ const FormsScreen: React.FC = () => {
 
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons('doctor', status, formStatus, action),
+    () => getFormScreenButtons('serviceProvider', status, formStatus, action),
     [status, formStatus, action],
   );
 
@@ -287,7 +211,18 @@ const FormsScreen: React.FC = () => {
     <AppSafeAreaView edges={true}>
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <Header title="Medical Form" isBack={true} style={styles.header} />
+        <HeaderProvider
+          title="Medical Form"
+          isBack
+          formStatus={requestData?.formStatus}
+          status={requestData?.status}
+          style={
+            {
+              ...styles.header,
+              marginBottom: getScaleSize(12),
+            } as any
+          }
+        />
         {!requestData ? null : (
           <>
             <View style={styles.content}>
@@ -296,17 +231,9 @@ const FormsScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Patient Info Header */}
-                <FormRequestHeader
-                  patientData={requestData?.patientId as any}
-                  serviceName={serviceName}
-                  requestData={requestData}
-                />
-
                 <View>
                   <View
                     style={{
-                      // paddingHorizontal: getScaleSize(16),
                       backgroundColor: COLORS._F9FAFB,
                     }}
                   >
@@ -327,7 +254,6 @@ const FormsScreen: React.FC = () => {
         )}
       </View>
       <AppLoader visible={isLoading} />
-      {/* <WarningSheet isLock={true} ref={warningSheetRef} /> */}
     </AppSafeAreaView>
   );
 };
@@ -384,9 +310,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     backgroundColor: COLORS._F9FAFB,
-    // paddingHorizontal: 20,
     paddingBottom: 160,
-    // paddingTop: 12,
     gap: 18,
   },
   sectionTitleRow: {
@@ -533,4 +457,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FormsScreen;
+export default ProviderFormScreen;

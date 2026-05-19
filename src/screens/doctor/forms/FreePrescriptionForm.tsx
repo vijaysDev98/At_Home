@@ -6,38 +6,44 @@ import React, {
   useImperativeHandle,
 } from 'react';
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { setLoading } from '../../../actions/common/commonSlice';
+import moment from 'moment';
+import { AppText, Input } from '../../../components';
+import { COLORS, FONTS } from '../../../utils';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { IMAGES } from '../../../assets/images';
+import { STRING } from '../../../constant';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant/showToast';
+import {
+  handleFormSubmit,
+  handleSaveAsDraft,
+  handleUpdateAndSign,
+  handleSaveProgress,
+} from './formActionHandlers';
+
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
-import moment from 'moment';
-import { useDispatch, useSelector } from 'react-redux';
-
+import CheckBox from '@react-native-community/checkbox';
 import {
-  AppText,
-  Input,
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
 } from '../../../components';
-import { IMAGES } from '../../../assets/images';
-import { getScaleSize } from '../../../utils/scaleSize';
-import { COLORS, FONTS } from '../../../utils';
-import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
-import { RootState } from '../../../redux/store';
-import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
-import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import {
   PatientInfo,
   ServiceRequestDetail,
@@ -53,6 +59,8 @@ export interface FreePrescriptionFormProps {
 export interface FreePrescriptionFormRef {
   validateAndSubmit: () => Promise<void>;
   saveAsDraft: () => Promise<void>;
+  updateAndSign: () => Promise<{ success: boolean; error?: string }>;
+  saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
 }
 
@@ -94,8 +102,8 @@ const FreePrescriptionForm = forwardRef<
     rpps_id: profileData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: '',
-    hospital_address: '',
+    hospital_name: profileData?.facilityName || '',
+    hospital_address: profileData?.businessAddress || '',
     finess_number: profileData?.finessNumber || '',
 
     // Additional Notes
@@ -174,15 +182,15 @@ const FreePrescriptionForm = forwardRef<
     const newErrors: { [key: string]: string } = {};
 
     // Prescription Details - Required fields
-    if (!state.prescription_date) {
+    if (!state?.prescription_date) {
       newErrors.prescription_date = STRING.prescriptionDateRequired;
     }
 
     // Patient Information - Required fields
-    if (!state.patient_last_name.trim()) {
+    if (!state?.patient_last_name || !state.patient_last_name.trim()) {
       newErrors.patientLastName = STRING.lNameRequired;
     }
-    if (!state.patient_first_name.trim()) {
+    if (!state?.patient_first_name || !state.patient_first_name.trim()) {
       newErrors.patientFirstName = STRING.fNameRequired;
     }
 
@@ -191,216 +199,71 @@ const FreePrescriptionForm = forwardRef<
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmitRequest = async () => {
-    // Always validate first
-    const ok = validateForm();
-    if (!ok) {
-      // Show first error in toast
-      const firstErrorKey = lastFirstErrorKey.current || '';
-      const firstErrorMessage =
-        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-      SHOW_TOAST(firstErrorMessage, 'error');
-
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-      return;
-    }
-
-    // Show loader
-    dispatch(setLoading(true));
-
-    // Check if it's an existing draft
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
-
-    try {
-      if (isExistingDraft && requestId) {
-        const submitResponse = await serviceRequestApi.submitForReview(
-          requestId,
-        );
-        if (submitResponse.success) {
-          SHOW_SUCCESS_TOAST(submitResponse.message);
-          dispatch(setLoading(false));
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(submitResponse.error, 'error');
-        }
-      } else {
-        // Create new service request
-        const payload = {
-          serviceId: serviceId || '',
-          patientId: selectedPatient?.id || selectedPatient?._id || '',
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-            'YYYY-MM-DD',
-          ),
-          requestedTime: moment().format('HH:mm'),
-          initialNotes: '',
-          formData: state,
-        };
-
-        const response = await serviceRequestApi.createServiceRequest(payload);
-
-        dispatch(setLoading(false));
-
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response?.message);
-
-          // Submit for review to lock the request
-          const newRequestId = response.data?.data?.id;
-          if (newRequestId) {
-            const submitResponse = await serviceRequestApi.submitForReview(
-              newRequestId,
-            );
-            if (submitResponse.success) {
-              SHOW_SUCCESS_TOAST(submitResponse.message);
-              dispatch(setLoading(false));
-              setTimeout(() => {
-                NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: SCREENS.DOCTOR_REQUEST,
-                });
-              }, 500);
-            } else {
-              dispatch(setLoading(false));
-              SHOW_TOAST(submitResponse.error, 'error');
-            }
-          } else {
-            dispatch(setLoading(false));
-          }
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(response.error, 'error');
-        }
-      }
-    } catch (error: any) {
-      dispatch(setLoading(false));
-      SHOW_TOAST(error.message, 'error');
-    }
+  // Handle form submission (using centralized handler)
+  const validateAndSubmit = async () => {
+    await handleFormSubmit({
+      dispatch,
+      state,
+      initialData,
+      serviceId,
+      selectedPatient,
+      validateForm,
+      scrollRef: scrollViewRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
-  // Handle save as draft
-  const handleSaveAsDraft = async () => {
-    // Always validate first
-    const ok = validateForm();
-    if (!ok) {
-      // Show first error in toast
-      const firstErrorKey = lastFirstErrorKey.current || '';
-      const firstErrorMessage =
-        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-      SHOW_TOAST(firstErrorMessage, 'error');
-
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-      return;
-    }
-
-    // Show loader
-    dispatch(setLoading(true));
-
-    // Check if it's an existing draft
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
-
-    try {
-      if (isExistingDraft && requestId) {
-        // Update existing draft
-        const response = await serviceRequestApi.updateDraft(requestId, {
-          formData: state,
-        });
-        dispatch(setLoading(false));
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response.message);
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          SHOW_TOAST(response.error, 'error');
-        }
-      } else {
-        // Create new service request as draft
-        const payload = {
-          serviceId: serviceId || '',
-          patientId: selectedPatient?.id || selectedPatient?._id || '',
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-            'YYYY-MM-DD',
-          ),
-          requestedTime: moment().format('HH:mm'),
-          initialNotes: '',
-          formData: state,
-        };
-
-        const response = await serviceRequestApi.createServiceRequest(payload);
-        dispatch(setLoading(false));
-
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response?.message);
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          SHOW_TOAST(response.error, 'error');
-        }
-      }
-    } catch (error: any) {
-      dispatch(setLoading(false));
-      SHOW_TOAST(error.message, 'error');
-    }
+  // Handle save as draft (using centralized handler)
+  const saveAsDraft = async () => {
+    await handleSaveAsDraft({
+      dispatch,
+      state,
+      initialData,
+      serviceId,
+      selectedPatient,
+      validateForm,
+      scrollRef: scrollViewRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
-  // Handle update & sign (for already-submitted requests)
-  const handleUpdateAndSign = async (): Promise<{
+  // Handle update & sign (using centralized handler)
+  const updateAndSign = async (): Promise<{
     success: boolean;
     error?: string;
   }> => {
-    const ok = validateForm();
-    if (!ok) {
-      const firstErrorKey = lastFirstErrorKey.current || '';
-      const firstErrorMessage = errors[firstErrorKey];
-      SHOW_TOAST(firstErrorMessage, 'error');
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-      return { success: false, error: firstErrorMessage };
-    }
+    return await handleUpdateAndSign({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef: scrollViewRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
 
-    const requestId = initialData?._id || initialData?.id;
-    if (!requestId) {
-      return { success: false, error: 'No request ID' };
-    }
-
-    try {
-      const response = await serviceRequestApi.updateFormData(requestId, {
-        formData: state,
-      });
-      if (response.success) {
-        return { success: true };
-      } else {
-        SHOW_TOAST(response.error, 'error');
-        return { success: false, error: response.error };
-      }
-    } catch (error: any) {
-      const msg = error.message;
-      SHOW_TOAST(msg, 'error');
-      return { success: false, error: msg };
-    }
+  // Handle save progress (using centralized handler)
+  const saveProgress = async () => {
+    return await handleSaveProgress({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef: scrollViewRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
-    validateAndSubmit: handleSubmitRequest,
-    saveAsDraft: handleSaveAsDraft,
-    updateAndSign: handleUpdateAndSign,
+    validateAndSubmit,
+    saveAsDraft,
+    saveProgress,
+    updateAndSign,
     getFormData: () => state,
   }));
 
@@ -492,8 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    // padding: 16,
-    paddingBottom: getScaleSize(10),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
     paddingHorizontal: getScaleSize(16),
   },

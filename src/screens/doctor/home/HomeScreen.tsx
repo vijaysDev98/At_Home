@@ -463,11 +463,27 @@ const HomeScreen: React.FC = () => {
                           ? buttonConfig.label || undefined
                           : undefined
                       }
-                      onButtonPress={() =>
-                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                          request: item,
-                        })
-                      }
+                      onButtonPress={() => {
+                        if (buttonConfig.action === 'edit') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        } else if (buttonConfig.action === 'sign') {
+                          NavigationService.navigate(
+                            SCREENS.FORM_REVIEW_SCREEN,
+                            {
+                              request: item,
+                              action: buttonConfig.action,
+                            },
+                          );
+                        } else if (buttonConfig.action === 'view') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        }
+                      }}
                     />
                   </View>
                 );

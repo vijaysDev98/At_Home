@@ -121,7 +121,7 @@ const Input: React.FC<InputProps> = ({
 
       <Pressable
         onPress={onPress}
-        disabled={!onPress}
+        disabled={isLocked || !onPress}
         style={[
           styles.inputWrapper,
           { backgroundColor: resolvedBg, borderColor: resolvedBorder },

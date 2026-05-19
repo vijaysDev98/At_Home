@@ -137,8 +137,6 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       data,
     );
 
-    console.log('verifyOtp', response);
-
     if (response?.status && response?.code === 200) {
       const responseData = response?.data;
       const innerData = responseData?.data;
@@ -291,6 +289,50 @@ export const resetPassword =
       }
     } catch (e) {
       console.log('Reset Password Error', e);
+      SHOW_TOAST(undefined, 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const resendLoginOtp =
+  (email: string) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.resendLoginOtp,
+        { email },
+      );
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
+        dispatch(setLoading(false));
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message, 'error');
+      }
+    } catch (e) {
+      console.log('Resend OTP Error', e);
+      SHOW_TOAST(undefined, 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const resendForgotPasswordOtp =
+  (email: string) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.forgotPassword,
+        { email },
+      );
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
+        dispatch(setLoading(false));
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message, 'error');
+      }
+    } catch (e) {
+      console.log('Resend OTP Error', e);
       SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }

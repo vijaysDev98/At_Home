@@ -18,7 +18,12 @@ import { getScaleSize } from '../../utils/scaleSize';
 import { STRING } from '../../constant/strings';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { verifyOtp, verifyForgotPasswordOtp } from '../../actions/auth/authAction';
+import {
+  verifyOtp,
+  verifyForgotPasswordOtp,
+  resendForgotPasswordOtp,
+  resendLoginOtp,
+} from '../../actions/auth/authAction';
 
 export type OtpVerificationProps = NativeStackScreenProps<
   RootStackParamList,
@@ -136,9 +141,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
             ))}
           </View>
           {showError ? (
-            <Text style={styles.errorText}>
-              {STRING.invalidCode}
-            </Text>
+            <Text style={styles.errorText}>{STRING.invalidCode}</Text>
           ) : null}
         </View>
 
@@ -163,18 +166,34 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
           <TouchableOpacity
             activeOpacity={timer === 0 ? 0.7 : 1}
             disabled={timer !== 0}
+            onPress={() => {
+              if (timer !== 0) {
+                return;
+              }
+
+              if (isForgotPassword) {
+                dispatch(resendForgotPasswordOtp(email));
+              } else {
+                dispatch(resendLoginOtp(email));
+              }
+
+              // reset timer
+              setTimer(179);
+              setCode(Array(6).fill(''));
+              inputsRef.current[0]?.focus();
+            }}
           >
-            {timer == 0 && (
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._64748B}
-                align="center"
-                style={[styles.resend, timer !== 0 && styles.resendDisabled]}
-              >
-                {STRING.resendCode}
-              </AppText>
-            )}
+            {/* {timer == 0 && ( */}
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._64748B}
+              align="center"
+              style={[styles.resend, timer !== 0 && styles.resendDisabled]}
+            >
+              {STRING.resendCode}
+            </AppText>
+            {/* )} */}
           </TouchableOpacity>
         </View>
 
@@ -186,7 +205,9 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
             title={STRING.verify}
             onPress={() => {
               if (isForgotPassword) {
-                dispatch(verifyForgotPasswordOtp({ email, otp: code.join('') }));
+                dispatch(
+                  verifyForgotPasswordOtp({ email, otp: code.join('') }),
+                );
               } else {
                 dispatch(verifyOtp({ email, otp: code.join('') }));
               }

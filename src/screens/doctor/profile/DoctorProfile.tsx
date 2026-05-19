@@ -68,6 +68,8 @@ const DoctorProfile: React.FC = () => {
         practiceType: profileData?.practiceType,
         businessAddress: profileData?.businessAddress,
         profileImg: profileData?.profileImg,
+        roles: profileData?.roles,
+        facilityName: profileData?.facilityName,
       },
     });
   };

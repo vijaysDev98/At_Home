@@ -21,7 +21,10 @@ import {
 import { getButtonConfig } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import {
+  getButtonConfigProvider,
+  REQUEST_STATUS,
+} from '../../../constant/RequestStatus';
 import RequestCardProvider from '../../../components/RequestCardProvider';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
@@ -86,8 +89,8 @@ const AvailableRequest: React.FC = () => {
       const formStatus = item.formStatus || item.status;
       if (activeTab === 'In Progress') {
         return (
-          formStatus === REQUEST_STATUS.IN_PROGRESS ||
-          formStatus === 'InProgress'
+          (formStatus as string) === REQUEST_STATUS.IN_PROGRESS ||
+          formStatus === ('InProgress' as any)
         );
       }
       // 'Submitted', 'Returned', 'Completed' generally map directly
@@ -97,9 +100,9 @@ const AvailableRequest: React.FC = () => {
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item.formStatus || item.status;
+    const formStatus = item.formStatus;
 
-    const buttonConfig = getButtonConfig(formStatus);
+    const buttonConfig = getButtonConfigProvider(formStatus || '');
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>
@@ -113,7 +116,9 @@ const AvailableRequest: React.FC = () => {
             buttonConfig.show ? buttonConfig.label || undefined : undefined
           }
           onButtonPress={() =>
-            NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })
+            NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+              request: item,
+            })
           }
         />
       </View>

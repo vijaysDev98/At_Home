@@ -29,7 +29,8 @@ export interface PatientInfo {
 }
 
 export interface ServiceInfo {
-  _id: string;
+  id?: string;
+  _id?: string;
   serviceName: string;
   description: string;
   icon: string | null;
@@ -166,6 +167,7 @@ export interface StatusTimestamps {
 }
 
 export interface ServiceRequestDetail {
+  id?: string;
   _id: string;
   requestId: string;
   patientId: PatientDetailInfo;

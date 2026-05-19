@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { API } from '../api';
 import { API_ROUTES } from '../api/apiRoutes';
 
@@ -294,6 +295,48 @@ export const serviceRequestApi = {
     }
   },
 
+  updateProgress: async (
+    requestId: string,
+    payload: { formData: any },
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      console.log('to update', requestId, JSON.stringify(payload));
+
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}/provider-form`,
+        payload,
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Form data updated successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to update form data',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to update form data';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
   /**
    * Get form data for review
    */
@@ -322,6 +365,46 @@ export const serviceRequestApi = {
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to retrieve form data';
 
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Claim a signed service request
+   */
+  claimRequest: async (requestId: string): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/claim`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request claimed successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to claim request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to claim request';
       return {
         success: false,
         message: errorMessage,

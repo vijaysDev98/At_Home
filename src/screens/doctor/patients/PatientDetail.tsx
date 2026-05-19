@@ -120,7 +120,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._1A1D1F}
                   font={FONTS.Inter.Bold}
                 >
-                  {patient?.fName + ' ' + patient?.lName || '---'}
+                  {patient?.fullName || '---'}
                 </AppText>
                 <AppText
                   size={getScaleSize(13)}
@@ -327,7 +327,7 @@ const PatientDetail: React.FC = () => {
             </AppText>
             <TouchableOpacity
               onPress={() => {
-                NavigationService.navigate(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
+                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
               }}
               style={styles.plusBtn}
               activeOpacity={0.8}
@@ -344,6 +344,7 @@ const PatientDetail: React.FC = () => {
             renderItem={({ item }) => {
               const formStatus = item?.formStatus;
               const buttonConfig = getButtonConfig(formStatus);
+              console.log('buttonConfig', patient);
 
               return (
                 <View style={{ marginBottom: getScaleSize(12) }}>
@@ -358,11 +359,24 @@ const PatientDetail: React.FC = () => {
                         ? buttonConfig.label || undefined
                         : undefined
                     }
-                    onButtonPress={() =>
-                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                        request: item,
-                      })
-                    }
+                    onButtonPress={() => {
+                      if (buttonConfig.action === 'edit') {
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      } else if (buttonConfig.action === 'sign') {
+                        NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      } else if (buttonConfig.action === 'view') {
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      }
+                    }}
                   />
                 </View>
               );

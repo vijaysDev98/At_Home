@@ -99,7 +99,6 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState(userData.email || '');
   const [phone, setPhone] = useState(userData.phone || '');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
   const [finess, setFiness] = useState(userData.finessNumber || '');

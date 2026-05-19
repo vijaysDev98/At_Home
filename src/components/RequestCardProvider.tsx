@@ -10,43 +10,14 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
-import { DISPLAY_FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
+import {
+  DISPLAY_FORM_STATUS,
+  FORM_STATUS,
+  REQUEST_STATUS,
+} from '../constant/RequestStatus';
 import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import ProfileAvatar from './ProfileAvatar';
-
-const CARD_BTN_CONFIG = (RequestStatus: string, requestId: string) => {
-  let txt: string = '';
-  let action: () => void = () => {};
-
-  switch (RequestStatus) {
-    case REQUEST_STATUS.SIGNED:
-      txt = 'Claim Service';
-      action = () => {
-        NavigationService.navigate(SCREENS.PROVIDER_FORM, { requestId });
-      };
-      break;
-    case REQUEST_STATUS.SUBMITTED:
-      txt = 'View Forms';
-      action = () => {
-        NavigationService.navigate(SCREENS.PROVIDER_FORM, { requestId });
-      };
-      break;
-    case REQUEST_STATUS.IN_PROGRESS:
-      txt = 'View Forms';
-      action = () => {
-        NavigationService.navigate(SCREENS.PROVIDER_FORM, {});
-      };
-      break;
-    case REQUEST_STATUS.RETURNED:
-      txt = 'View Forms';
-      break;
-    case REQUEST_STATUS.COMPLETED:
-      txt = 'View Forms';
-      break;
-  }
-  return { txt, action };
-};
 
 interface RequestCardProps {
   name?: string;
@@ -156,15 +127,31 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           </AppText>
         </View>
       </View>
-      {CARD_BTN_CONFIG(formStatus, requestId).txt && (
+      <View style={{ flexDirection: 'row', gap: getScaleSize(12) }}>
+        {formStatus == FORM_STATUS.SIGNED &&
+          status == REQUEST_STATUS.SUBMITTED && (
+            <AppButton
+              title={'Submit for review'}
+              onPress={() => {
+                onButtonPress();
+              }}
+              // textColor={COLORS.black}
+              style={[
+                styles.updateButtonStyle,
+                {
+                  flex: 1,
+                },
+              ]}
+            />
+          )}
         <AppButton
-          title={CARD_BTN_CONFIG(formStatus, requestId).txt}
+          title={buttonText}
           onPress={() => {
             onButtonPress();
           }}
-          style={styles.updateButtonStyle}
+          style={[styles.updateButtonStyle, { flex: 1 }]}
         />
-      )}
+      </View>
     </View>
   );
 };
@@ -223,5 +210,7 @@ const styles = StyleSheet.create({
   // Update button style
   updateButtonStyle: {
     marginTop: getScaleSize(12),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(8),
   },
 });

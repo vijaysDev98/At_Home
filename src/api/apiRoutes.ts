@@ -26,6 +26,7 @@ const API_ROUTES = {
   updateServiceRequest: 'service-requests',
   listServiceRequests: 'service-requests',
   listAvailableRequests: 'service-requests/available',
+  resendLoginOtp: 'auth/resendLoginOtp',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

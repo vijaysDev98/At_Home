@@ -154,6 +154,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
       {showNALD && (
         <AppCheckBox
+          disabled={readOnly}
           value={
             state.careNotRelatedToALD === true ||
             state.careNotRelatedToALD === 'NALD'

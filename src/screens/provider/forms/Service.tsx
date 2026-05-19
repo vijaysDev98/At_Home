@@ -26,7 +26,10 @@ import {
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import {
+  getStatusBadgeColor,
+  REQUEST_STATUS,
+} from '../../../constant/RequestStatus';
 
 interface RouteParams {
   requestStatus?: string;
@@ -44,22 +47,6 @@ const SERVICE_TYPES = [
   'Post-Op Care',
   'Vitals Check',
 ];
-
-const getStatusColor = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case REQUEST_STATUS.RETURNED:
-      return COLORS.error;
-    case REQUEST_STATUS.SUBMITTED:
-    case REQUEST_STATUS.SIGNED:
-      return '#2F80ED';
-    case REQUEST_STATUS.IN_PROGRESS:
-    case 'inprogress':
-    case 'in progress':
-      return '#F2994A';
-    default:
-      return COLORS._6F767E;
-  }
-};
 
 const ServiceScreen: React.FC = () => {
   const route = useRoute();
@@ -128,7 +115,7 @@ const ServiceScreen: React.FC = () => {
                 <AppText
                   size={getScaleSize(11)}
                   font={FONTS.Inter.Bold}
-                  color={getStatusColor(requestStatus)}
+                  color={getStatusBadgeColor(requestStatus)}
                 >
                   {requestStatus}
                 </AppText>
@@ -139,7 +126,7 @@ const ServiceScreen: React.FC = () => {
                 <AppText
                   size={getScaleSize(11)}
                   font={FONTS.Inter.Bold}
-                  color={getStatusColor(formStatus)}
+                  color={getStatusBadgeColor(formStatus)}
                 >
                   {formStatus}
                 </AppText>
@@ -315,7 +302,6 @@ const ServiceScreen: React.FC = () => {
               duration: '45 mins', // Static for demo as in screenshot
               doctorName: 'Sarah Jenkins', // Static for demo
               completedDate: moment().format('MMM D, YYYY, h:mm A'),
-
             });
           }}
         />

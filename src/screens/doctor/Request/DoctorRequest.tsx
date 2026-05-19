@@ -74,7 +74,7 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
 
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const route = useRoute();
-  const formStatus = route.params?.formStatus || 'all';
+  const formStatus = (route.params as any)?.formStatus || 'all';
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchText, setSearchText] = useState('');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
@@ -111,11 +111,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           // For page 1, replace the entire list
           // For subsequent pages, append to the existing list
           if (page === 1) {
-            console.log(
-              'response.data.requests => ',
-              response.data.requests[0],
-            );
-
             setRequests(response.data.requests);
           } else {
             setRequests(prev => [...prev, ...response.data.requests]);
@@ -184,9 +179,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item?.formStatus;
-    const buttonConfig = getButtonConfig(formStatus);
-    console.log('formStatus => ', formStatus, 'buttonConfig => ', buttonConfig);
-
+    const buttonConfig = getButtonConfig(formStatus || '');
     return (
       <RequestCardDoctor
         name={item?.patient?.fullName || ''}
@@ -199,10 +192,19 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         }
         onButtonPress={() => {
           if (buttonConfig.action === 'edit') {
-            NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item });
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+              request: item,
+              action: buttonConfig.action,
+            });
           } else if (buttonConfig.action === 'sign') {
             NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
               request: item,
+              action: buttonConfig.action,
+            });
+          } else if (buttonConfig.action === 'view') {
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+              request: item,
+              action: buttonConfig.action,
             });
           }
         }}

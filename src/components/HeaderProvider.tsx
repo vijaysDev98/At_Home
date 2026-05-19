@@ -13,6 +13,11 @@ import NavigationService from '../navigation/NavigationService';
 import { COLORS, FONTS } from '../utils';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
+import {
+  DISPLAY_FORM_STATUS,
+  getStatusBadgeColor,
+  REQUEST_STATUS,
+} from '../constant/RequestStatus';
 
 const HeaderProvider = ({
   isBack = false,
@@ -25,7 +30,7 @@ const HeaderProvider = ({
   titleContainerStyle,
   requestStatus,
   formStatus,
-  getStatusColor,
+  status,
 }: {
   isBack?: boolean;
   title?: string;
@@ -36,8 +41,8 @@ const HeaderProvider = ({
   titleStyle?: TextStyle;
   titleContainerStyle?: ViewStyle;
   requestStatus?: string;
+  status?: string;
   formStatus?: string;
-  getStatusColor?: (status: string) => string;
 }) => {
   return (
     <View style={[styles.header, style]}>
@@ -86,11 +91,7 @@ const HeaderProvider = ({
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Bold}
-                      color={
-                        getStatusColor
-                          ? getStatusColor(requestStatus)
-                          : COLORS.primary
-                      }
+                      color={getStatusBadgeColor(requestStatus)}
                     >
                       {requestStatus}
                     </AppText>
@@ -99,20 +100,31 @@ const HeaderProvider = ({
                   {formStatus ? <View style={styles.statusDivider} /> : null}
                 </>
               ) : null}
-
+              {status ? (
+                <AppText
+                  style={{ marginRight: getScaleSize(10) }}
+                  size={getScaleSize(12)}
+                  color={COLORS._6F767E}
+                >
+                  Request Status:{' '}
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Bold}
+                    color={getStatusBadgeColor(status)}
+                  >
+                    {DISPLAY_FORM_STATUS[status]}
+                  </AppText>
+                </AppText>
+              ) : null}
               {formStatus ? (
                 <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
                   Form Status:{' '}
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Bold}
-                    color={
-                      getStatusColor
-                        ? getStatusColor(formStatus)
-                        : COLORS.primary
-                    }
+                    color={getStatusBadgeColor(formStatus)}
                   >
-                    {formStatus}
+                    {DISPLAY_FORM_STATUS[formStatus]}
                   </AppText>
                 </AppText>
               ) : null}

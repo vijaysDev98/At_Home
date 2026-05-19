@@ -501,6 +501,7 @@ export const STRING = {
   //wound care
   woundDressingPrescriptionSupportForm:
     'Wound Dressing Prescription Support Form',
+  dateRequired: 'Date is required',
   physicianInformation: 'Physician Information',
   condition: 'Condition',
   careRelatedToLongTermConditionAld:

@@ -24,6 +24,7 @@ import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import RequestCardProvider from '../../../components/RequestCardProvider';
+import { getButtonConfigProvider } from '../../../constant/RequestStatus';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -242,7 +243,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-            // onPress={() => NavigationService.navigate('Forms' as never)}
+          // onPress={() => NavigationService.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -278,7 +279,7 @@ const ProviderHome: React.FC = () => {
             >
               Recent Queue
             </AppText>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity onPress={() => { }}>
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Medium}
@@ -291,8 +292,8 @@ const ProviderHome: React.FC = () => {
 
           {recentQueue.length > 0 ? (
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
-              const formStatus = item.formStatus || item.status;
-              const buttonConfig = getButtonConfig(formStatus);
+              const formStatus = item.formStatus;
+              const buttonConfig = getButtonConfigProvider(formStatus);
               return (
                 <View
                   key={item.id || index}
@@ -312,7 +313,7 @@ const ProviderHome: React.FC = () => {
                         : undefined
                     }
                     onButtonPress={() =>
-                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                      NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
                         request: item,
                       })
                     }

@@ -44,6 +44,12 @@ import {
 } from '../../../services/serviceRequestListApi';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import {
+  handleFormSubmit,
+  handleSaveAsDraft,
+  handleUpdateAndSign,
+  handleSaveProgress,
+} from './formActionHandlers';
 
 export interface ArtificialNutritionFormProps {
   serviceId: string;
@@ -151,7 +157,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     useEffect(() => {
       if (initialData?.formData) {
         console.log('initialData?.formData', initialData.formData);
-        setState(initialData.formData);
+        setState(initialData.formData as any);
       }
     }, [initialData]);
 
@@ -256,19 +262,19 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       const newErrors: { [key: string]: string } = {};
 
       // Required (schema): prescription_date, patient_last_name, patient_first_name
-      if (!state.prescription_date) {
+      if (!state?.prescription_date) {
         newErrors.prescription_date = STRING.prescriptionDateRequired;
       }
-      if (!state.patient_last_name.trim()) {
+      if (!state?.patient_last_name || !state.patient_last_name.trim()) {
         newErrors.patientLastName = STRING.lNameRequired;
       }
-      if (!state.patient_first_name.trim()) {
+      if (!state?.patient_first_name || !state.patient_first_name.trim()) {
         newErrors.patientFirstName = STRING.fNameRequired;
       }
 
       // Nutrients validation - at least 1 nutrient must be filled
-      const filledNutrientIndices = state.nutrients
-        .map((n, i) => (n.nutrient_name.trim() ? i : -1))
+      const filledNutrientIndices = (state?.nutrients || [])
+        .map((n, i) => (n?.nutrient_name?.trim() ? i : -1))
         .filter(i => i !== -1);
 
       if (filledNutrientIndices.length === 0) {
@@ -276,8 +282,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       }
 
       // Validate numeric fields for filled nutrients
-      state.nutrients.forEach((nutrient, index) => {
-        if (nutrient.nutrient_name.trim()) {
+      (state?.nutrients || []).forEach((nutrient, index) => {
+        if (nutrient?.nutrient_name?.trim()) {
           // Only validate numeric fields if nutrient name is filled
           const numericFields: Array<{
             key: keyof typeof nutrient;
@@ -325,186 +331,74 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       }
     };
 
-    // Handle form submission
-    const handleSubmitRequest = async () => {
-      const ok = validateForm();
-      if (!ok) {
-        const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage =
-          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-        SHOW_TOAST(firstErrorMessage, 'error');
-        scrollToFirstError(firstErrorKey);
-        return;
-      }
-
-      dispatch(setLoading(true));
-      const isExistingDraft = initialData && initialData._id;
-      const requestId = isExistingDraft ? initialData._id : null;
-
-      try {
-        if (isExistingDraft && requestId) {
-          const submitResponse = await serviceRequestApi.submitForReview(
-            requestId,
-          );
-          if (submitResponse.success) {
-            SHOW_SUCCESS_TOAST(submitResponse.message);
-            dispatch(setLoading(false));
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            dispatch(setLoading(false));
-            SHOW_TOAST(submitResponse.error, 'error');
-          }
-        } else {
-          const payload = {
-            serviceId: serviceId || '',
-            patientId: selectedPatient?.id || selectedPatient?._id || '',
-            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-              'YYYY-MM-DD',
-            ),
-            requestedTime: moment().format('HH:mm'),
-            initialNotes: '',
-            formData: state,
-          };
-          const response = await serviceRequestApi.createServiceRequest(
-            payload,
-          );
-          dispatch(setLoading(false));
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response?.message);
-            const newRequestId = response.data?.data?.id;
-            if (newRequestId) {
-              const submitResponse = await serviceRequestApi.submitForReview(
-                newRequestId,
-              );
-              if (submitResponse.success) {
-                SHOW_SUCCESS_TOAST(submitResponse.message);
-                dispatch(setLoading(false));
-                setTimeout(() => {
-                  NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                    screen: SCREENS.DOCTOR_REQUEST,
-                  });
-                }, 500);
-              } else {
-                dispatch(setLoading(false));
-                SHOW_TOAST(submitResponse.error, 'error');
-              }
-            } else {
-              dispatch(setLoading(false));
-            }
-          } else {
-            dispatch(setLoading(false));
-            SHOW_TOAST(response.error, 'error');
-          }
-        }
-      } catch (error: any) {
-        dispatch(setLoading(false));
-        SHOW_TOAST(error.message, 'error');
-      }
+    // Handle form submission (using centralized handler)
+    const validateAndSubmit = async () => {
+      await handleFormSubmit({
+        dispatch,
+        state,
+        initialData,
+        serviceId,
+        selectedPatient,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
-    // Handle save as draft
-    const handleSaveAsDraft = async () => {
-      const ok = validateForm();
-      if (!ok) {
-        const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage =
-          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-        SHOW_TOAST(firstErrorMessage, 'error');
-        scrollToFirstError(firstErrorKey);
-        return;
-      }
-
-      dispatch(setLoading(true));
-      const isExistingDraft = initialData && initialData._id;
-      const requestId = isExistingDraft ? initialData._id : null;
-
-      try {
-        if (isExistingDraft && requestId) {
-          const response = await serviceRequestApi.updateDraft(requestId, {
-            formData: state,
-          });
-          dispatch(setLoading(false));
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response.message);
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            SHOW_TOAST(response.error, 'error');
-          }
-        } else {
-          const payload = {
-            serviceId: serviceId || '',
-            patientId: selectedPatient?.id || selectedPatient?._id || '',
-            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-              'YYYY-MM-DD',
-            ),
-            requestedTime: moment().format('HH:mm'),
-            initialNotes: '',
-            formData: state,
-          };
-          const response = await serviceRequestApi.createServiceRequest(
-            payload,
-          );
-          dispatch(setLoading(false));
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response?.message);
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            SHOW_TOAST(response.error, 'error');
-          }
-        }
-      } catch (error: any) {
-        dispatch(setLoading(false));
-        SHOW_TOAST(error.message, 'error');
-      }
+    // Handle save as draft (using centralized handler)
+    const saveAsDraft = async () => {
+      await handleSaveAsDraft({
+        dispatch,
+        state,
+        initialData,
+        serviceId,
+        selectedPatient,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
-    // Handle update & sign (for already-submitted requests)
-    const handleUpdateAndSign = async (): Promise<{
+    // Handle update & sign (using centralized handler)
+    const updateAndSign = async (): Promise<{
       success: boolean;
       error?: string;
     }> => {
-      const requestId = initialData?._id || initialData?.id;
-      if (!requestId) {
-        return { success: false, error: 'No request ID' };
-      }
-      try {
-        const response = await serviceRequestApi.updateFormData(requestId, {
-          formData: state,
-        });
-        if (response.success) {
-          return { success: true };
-        } else {
-          SHOW_TOAST(response.error, 'error');
-          return { success: false, error: response.error };
-        }
-      } catch (error: any) {
-        const msg = error.message;
-        SHOW_TOAST(msg, 'error');
-        return { success: false, error: msg };
-      }
+      return await handleUpdateAndSign({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
+    // Handle save progress (using centralized handler)
+    const saveProgress = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleSaveProgress({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
-      validateAndSubmit: async () => {
-        await handleSubmitRequest();
-      },
-      saveAsDraft: async () => {
-        await handleSaveAsDraft();
-      },
-      updateAndSign: handleUpdateAndSign,
+      validateAndSubmit,
+      saveAsDraft,
+      saveProgress,
+      updateAndSign,
       getFormData: () => state,
     }));
 
@@ -884,7 +778,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(190),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
     marginHorizontal: getScaleSize(16),
   },

@@ -22,6 +22,7 @@ export const SCREENS = {
   SERVICE_SCREEN: 'ServiceScreen',
   DOCTOR_REQUEST: 'DoctorRequest',
   FORMS_SCREEN: 'Forms_Screen',
+  PROVIDER_FORMS_SCREEN: 'ProviderFormScreen',
   FORM_REVIEW_SCREEN: 'FormReviewScreen',
   EDIT_PROVIDER_PROFILE: 'EditProviderProfile',
 } as const;

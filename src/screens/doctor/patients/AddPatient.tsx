@@ -82,7 +82,7 @@ const AddPatient: React.FC = () => {
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
-  console.log('patientToEdit', weight);
+  console.log('patientToEdit', patientToEdit);
 
   const isEdit = !!patientToEdit;
 
@@ -161,7 +161,7 @@ const AddPatient: React.FC = () => {
         ...(weight.trim() && { weight: weight.trim() }),
       };
       if (isEdit) {
-        dispatch(updatePatient(patientToEdit.id, payload));
+        dispatch(updatePatient(patientToEdit._id || patientToEdit.id, payload));
       } else {
         dispatch(addPatient(payload));
       }
