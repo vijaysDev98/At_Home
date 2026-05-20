@@ -49,6 +49,7 @@ import {
   handleSaveAsDraft,
   handleUpdateAndSign,
   handleSaveProgress,
+  handleSubmitForReview,
 } from './formActionHandlers';
 
 export interface HydrationInfusionFormProps {
@@ -450,11 +451,28 @@ const HydrationInfusionForm = forwardRef<
       });
     };
 
+  // Handle submit for review (using centralized handler)
+    const submitForReview = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleSubmitForReview({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
       saveAsDraft,
       updateAndSign,
       saveProgress,
+      submitForReview,
       getFormData: () => state,
     }));
 

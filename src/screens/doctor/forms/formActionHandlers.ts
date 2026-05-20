@@ -186,9 +186,10 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
-        requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-          'YYYY-MM-DD',
-        ),
+        requestedDate: moment(
+          state?.prescription_date || state?.date,
+          'DD/MM/YYYY',
+        ).format('YYYY-MM-DD'),
         requestedTime: moment().format('HH:mm'),
         initialNotes: '',
         formData: state,
@@ -251,10 +252,12 @@ export const handleUpdateAndSign = async (
   }
 
   try {
+    dispatch(setLoading(true));
     const response = await serviceRequestApi.updateFormData(requestId, {
       formData: state,
     });
     if (response.success) {
+      await serviceRequestApi.releaseFormLock(requestId);
       return { success: true };
     } else {
       SHOW_TOAST(response.error, 'error');
@@ -301,11 +304,10 @@ export const handleSaveProgress = async (
     dispatch(setLoading(false));
     return { success: false, error: 'No request ID' };
   }
-  console.log('state', state);
-
   try {
+    dispatch(setLoading(true));
     const roles = store.getState().profile.profileData?.roles || [];
-    const isProvider = roles.includes('provider') || roles.includes('nurse');
+    const isProvider = roles.includes('serviceProvider');
     let response;
 
     if (isProvider) {
@@ -320,11 +322,82 @@ export const handleSaveProgress = async (
     }
     dispatch(setLoading(false));
     if (response.success) {
+      await serviceRequestApi.releaseFormLock(requestId);
       SHOW_SUCCESS_TOAST(response.message || 'Progress saved successfully');
       NavigationService.goBack();
       return { success: true };
     } else {
       SHOW_TOAST(response.error || 'Failed to save progress', 'error');
+      return { success: false, error: response.error };
+    }
+  } catch (error: any) {
+    dispatch(setLoading(false));
+    const msg = error.message;
+    SHOW_TOAST(msg, 'error');
+    return { success: false, error: msg };
+  }
+};
+
+/**
+ * Centralized action handler for provider to submit form for doctor review
+ * Used by: submitForReview
+ */
+export const handleSubmitForReview = async (
+  params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
+): Promise<{ success: boolean; error?: string }> => {
+  const {
+    dispatch,
+    state,
+    initialData,
+    validateForm,
+    scrollRef,
+    errors = {},
+  } = params;
+
+  const ok = validateForm();
+  if (!ok) {
+    const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
+    const firstErrorMessage = errors[firstErrorKey];
+    SHOW_TOAST(firstErrorMessage, 'error');
+    if (scrollRef?.current) {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      }, 50);
+    }
+    return { success: false, error: firstErrorMessage };
+  }
+
+  const requestId = initialData?._id || initialData?.id;
+  if (!requestId) {
+    return { success: false, error: 'No request ID' };
+  }
+
+  dispatch(setLoading(true));
+
+  try {
+    // 1. First save progress
+    const saveResponse = await serviceRequestApi.updateProgress(requestId, {
+      formData: state,
+    });
+
+    if (!saveResponse.success) {
+      dispatch(setLoading(false));
+      SHOW_TOAST(saveResponse.error || 'Failed to save progress', 'error');
+      return { success: false, error: saveResponse.error };
+    }
+
+    // 2. Submit for review
+    const response = await serviceRequestApi.providerSubmitForReview(requestId);
+    dispatch(setLoading(false));
+
+    if (response.success) {
+      // Release form lock on successful submit-for-review
+      await serviceRequestApi.releaseFormLock(requestId);
+      SHOW_SUCCESS_TOAST(response.message || 'Form submitted for review');
+      NavigationService.goBack();
+      return { success: true };
+    } else {
+      SHOW_TOAST(response.error || 'Failed to submit for review', 'error');
       return { success: false, error: response.error };
     }
   } catch (error: any) {

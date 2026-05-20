@@ -47,6 +47,7 @@ import {
   handleSaveAsDraft,
   handleUpdateAndSign,
   handleSaveProgress,
+  handleSubmitForReview,
 } from './formActionHandlers';
 
 export interface AntibiotherapyInfusionFormProps {
@@ -232,12 +233,29 @@ const AntibiotherapyInfusionForm = forwardRef<
     });
   };
 
+  // Handle submit for review (using centralized handler)
+  const submitForReview = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleSubmitForReview({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
     saveAsDraft,
     updateAndSign,
     saveProgress,
+    submitForReview,
     getFormData: () => {
       return state;
     },

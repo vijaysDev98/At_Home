@@ -27,6 +27,8 @@ interface RequestCardProps {
   formStatus?: string;
   buttonText?: string;
   onButtonPress?: () => void;
+  onLeftButtonPress?: () => void;
+  onPress?: () => void;
 }
 
 const RequestCardProvider: React.FC<RequestCardProps> = ({
@@ -37,6 +39,8 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
   formStatus,
   buttonText,
   onButtonPress = () => {},
+  onLeftButtonPress = () => {},
+  onPress,
 }) => {
   let initials = '';
   if (name) {
@@ -47,7 +51,12 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
       .toUpperCase();
   }
   return (
-    <View style={styles.requestCardContainer}>
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+      style={styles.requestCardContainer}
+    >
       <View style={styles.requestHeaderRow}>
         <ProfileAvatar
           name={initials}
@@ -129,17 +138,20 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
       </View>
       <View style={{ flexDirection: 'row', gap: getScaleSize(12) }}>
         {formStatus == FORM_STATUS.SIGNED &&
-          status == REQUEST_STATUS.SUBMITTED && (
+          status == REQUEST_STATUS.IN_PROGRESS && (
             <AppButton
-              title={'Submit for review'}
+              title={'Return Request'}
               onPress={() => {
-                onButtonPress();
+                onLeftButtonPress();
               }}
-              // textColor={COLORS.black}
+              textColor={COLORS.primary}
               style={[
                 styles.updateButtonStyle,
                 {
                   flex: 1,
+                  backgroundColor: COLORS.white,
+                  borderWidth: 1,
+                  borderColor: COLORS._EFEFEF,
                 },
               ]}
             />
@@ -152,7 +164,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           style={[styles.updateButtonStyle, { flex: 1 }]}
         />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

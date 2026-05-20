@@ -32,6 +32,7 @@ import {
   handleSaveAsDraft,
   handleUpdateAndSign,
   handleSaveProgress,
+  handleSubmitForReview,
 } from './formActionHandlers';
 
 import { ActionSheetRef } from 'react-native-actions-sheet';
@@ -258,11 +259,25 @@ const FreePrescriptionForm = forwardRef<
     });
   };
 
+  // Handle submit for review (using centralized handler)
+  const submitForReview = async () => {
+    return await handleSubmitForReview({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef: scrollViewRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
     saveAsDraft,
     saveProgress,
+    submitForReview,
     updateAndSign,
     getFormData: () => state,
   }));
@@ -329,7 +344,7 @@ const FreePrescriptionForm = forwardRef<
             <Input
               isLocked={readOnly}
               multiline
-              placeholder=""
+              placeholder="Enter Additional Notes"
               value={state.free_text}
               onChangeText={text => setFormState({ free_text: text })}
               maxLength={1000}

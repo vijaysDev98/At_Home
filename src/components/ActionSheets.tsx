@@ -12,16 +12,16 @@ import { IMAGES } from '../assets/images';
 import { COLORS, FONTS } from '../utils';
 import React from 'react';
 import NavigationService from '../navigation/NavigationService';
+import { SHOW_TOAST } from '../constant';
 
 /**
  * Constants
  */
 const REVIEW_REASONS = [
-  'Patient not home',
-  'Incomplete Info',
-  'Supplies missing',
-  'Change of status',
-  'Other',
+  { key: 'missinginfo', value: 'Missing Information' },
+  { key: 'incorrectpatientdetails', value: 'Incorrect Patient Details' },
+  { key: 'incompleteform', value: 'Incomplete Form' },
+  { key: 'other', value: 'Other' },
 ];
 const DETAILS_MAX = 500;
 
@@ -137,9 +137,17 @@ export const ReviewRequestSheet = React.forwardRef<
 
   const handleSend = () => {
     if (selectedReason && reviewDetails) {
-      onSend(selectedReason, reviewDetails);
-      sheetRef.current?.hide();
+      onSend(selectedReason || '', reviewDetails);
+      // handleCancel();
+      // sheetRef.current?.hide();
+    } else {
+      SHOW_TOAST('Please select a reason and enter details');
     }
+  };
+
+  const handleCancel = () => {
+    setSelectedReason(null);
+    setReviewDetails('');
   };
 
   return (
@@ -151,6 +159,7 @@ export const ReviewRequestSheet = React.forwardRef<
         { backgroundColor: COLORS.white },
       ]}
       indicatorStyle={styles.indicator}
+      onClose={handleCancel}
     >
       <View style={styles.sheetContent}>
         <View style={{ borderBottomWidth: 1, borderColor: COLORS._F3F4F6 }}>
@@ -190,11 +199,11 @@ export const ReviewRequestSheet = React.forwardRef<
           </View>
           <View style={styles.chips}>
             {REVIEW_REASONS.map(reason => {
-              const active = selectedReason === reason;
+              const active = selectedReason === reason.key;
               return (
                 <TouchableOpacity
-                  key={reason}
-                  onPress={() => setSelectedReason(reason)}
+                  key={reason.key}
+                  onPress={() => setSelectedReason(reason.key)}
                   activeOpacity={0.7}
                   style={[styles.chip, active && styles.chipActive]}
                 >
@@ -203,7 +212,7 @@ export const ReviewRequestSheet = React.forwardRef<
                     font={FONTS.Inter.Medium}
                     color={active ? COLORS._526674 : COLORS._1A1A1A}
                   >
-                    {reason}
+                    {reason.value}
                   </AppText>
                 </TouchableOpacity>
               );
@@ -256,7 +265,10 @@ export const ReviewRequestSheet = React.forwardRef<
         <View style={styles.actions}>
           <TouchableOpacity
             style={styles.cancelBtn}
-            onPress={() => sheetRef.current?.hide()}
+            onPress={() => {
+              sheetRef.current?.hide();
+              handleCancel();
+            }}
             activeOpacity={0.7}
           >
             <AppText

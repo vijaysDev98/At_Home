@@ -40,14 +40,9 @@ import { uploadImageToS3 } from '../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../api/apiRoutes';
 import { SHOW_TOAST } from '../../constant';
 import { CustomDropdown } from '../../components/CustomDropDown';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // --- Sub-components ---
-
-interface CheckboxProps {
-  label: React.ReactNode;
-  checked: boolean;
-  onToggle: () => void;
-}
 
 interface CheckboxProps {
   label: React.ReactNode;
@@ -98,6 +93,9 @@ const Register: React.FC = () => {
   const [lName, setLName] = useState(userData.lName || '');
   const [email, setEmail] = useState(userData.email || '');
   const [phone, setPhone] = useState(userData.phone || '');
+  const [countryCode, setCountryCode] = useState(userData.countryCode || '+1');
+  const [country, setCountry] = useState(userData.country || '');
+  const [countryFlag, setCountryFlag] = useState(userData.countryFlag || '🇺🇸');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
@@ -249,7 +247,7 @@ const Register: React.FC = () => {
       password: password.trim(),
       phoneNumber: phone.trim(),
       role: 'doctor',
-      country: 'France',
+      country: country,
       rppsNumber: rpps.trim(),
       finessNumber: finess.trim(),
       specialty: specialty,
@@ -263,312 +261,326 @@ const Register: React.FC = () => {
   return (
     <AppSafeAreaView edges style={styles.container}>
       <AppLoader visible={isLoading} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
-        <ScrollView
+        {/* <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        >
-          {/* Frame Container (Matching Screenshot Border) */}
-          <View>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>
-                {isEdit ? STRING.updateYourProfile : STRING.createYourAccount}
-              </Text>
-              <Text style={styles.subtitle}>
-                {isEdit
-                  ? STRING.updateYourProfessionalDetails
-                  : STRING.createAccountSubtitle}
-              </Text>
-            </View>
-            {/* Profile Image Section (Only in Edit mode) */}
-            {isEdit && (
-              <View style={styles.avatarSection}>
-                <View style={styles.avatarWrapper}>
-                  <Image
-                    source={
-                      userAvatar
-                        ? userAvatar.startsWith('file://') ||
-                          userAvatar.startsWith('content://') ||
-                          userAvatar.startsWith('data:')
-                          ? { uri: userAvatar }
-                          : { uri: IMAGE_BASE_URL + userAvatar }
-                        : IMAGES.person
-                    }
-                    style={styles.avatar}
-                  />
-                  <TouchableOpacity
-                    style={styles.cameraBtn}
-                    activeOpacity={0.8}
-                    onPress={() => imagePickerSheetRef.current?.show()}
-                  >
-                    <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {/* Form Fields */}
-            <Input
-              label={STRING.fName}
-              isMandatory
-              placeholder={STRING.enterFName}
-              value={fName}
-              leftIcon={IMAGES.person}
-              style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
-              onChangeText={t => {
-                setFName(t);
-                setErrors(e => ({ ...e, fName: '' }));
-              }}
-              error={errors.fName}
-            />
-
-            <Input
-              label={STRING.lName}
-              isMandatory
-              leftIcon={IMAGES.person}
-              style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
-              placeholder={STRING.enterLName}
-              value={lName}
-              onChangeText={t => {
-                setLName(t);
-                setErrors(e => ({ ...e, lName: '' }));
-              }}
-              error={errors.lName}
-            />
-
-            {!isEdit && (
-              <>
-                <Input
-                  label={STRING.emailAddress}
-                  isMandatory
-                  placeholder={STRING.enterEmailAddress}
-                  leftIcon={IMAGES.mail}
-                  value={email}
-                  onChangeText={t => {
-                    setEmail(t);
-                    setErrors(e => ({ ...e, email: '' }));
-                  }}
-                  keyboardType="email-address"
-                  error={errors.email}
-                  helper={
-                    errors.email
-                      ? undefined
-                      : STRING.weWillSendVerificationToThisEmail
-                  }
-                  style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
-                  helperStyle={{ marginTop: getScaleSize(8) }}
-                />
-
-                <Input
-                  label={STRING.password}
-                  isMandatory
-                  placeholder={STRING.createPassword}
-                  leftIcon={IMAGES.lock}
-                  value={password}
-                  onChangeText={t => {
-                    setPassword(t);
-                    setErrors(e => ({ ...e, password: '' }));
-                  }}
-                  secureTextEntry={true}
-                  isPasswordVisible={showPassword}
-                  handlePasswordVisibility={() =>
-                    setShowPassword(!showPassword)
-                  }
-                  error={errors.password}
-                  style={{
-                    marginBottom: getScaleSize(errors.password ? 4 : 20),
-                  }}
-                />
-
-                <Input
-                  label={STRING.rppsNumber}
-                  isMandatory
-                  placeholder={`${STRING.enterRppsNumber} (${STRING.elevenDigit})`}
-                  leftIcon={IMAGES.card}
-                  value={rpps}
-                  onChangeText={t => {
-                    setRpps(t);
-                    setErrors(e => ({ ...e, rpps: '' }));
-                  }}
-                  keyboardType="numeric"
-                  error={errors.rpps}
-                  helper={errors.rpps ? undefined : STRING.rppsNumber}
-                  style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
-                  helperStyle={{ marginTop: getScaleSize(8) }}
-                />
-
-                <Input
-                  label={STRING.phoneNumber}
-                  isMandatory
-                  placeholder={`${STRING.enterPhoneNumber}`}
-                  leftIcon={IMAGES.phone}
-                  value={phone}
-                  onChangeText={t => {
-                    setPhone(t);
-                    setErrors(e => ({ ...e, phone: '' }));
-                  }}
-                  keyboardType="numeric"
-                  error={errors.phone}
-                  style={{ marginBottom: getScaleSize(errors.phone ? 4 : 20) }}
-                />
-
-                <Input
-                  label={STRING.finessNumber}
-                  isMandatory
-                  placeholder={`${STRING.enterFinessNumber} (${STRING.nineDigit})`}
-                  leftIcon={IMAGES.hospital}
-                  value={finess}
-                  onChangeText={t => {
-                    setFiness(t);
-                    setErrors(e => ({ ...e, finess: '' }));
-                  }}
-                  keyboardType="numeric"
-                  error={errors.finess}
-                  helper={
-                    errors.finess
-                      ? undefined
-                      : STRING.facilityIdentificationNumber
-                  }
-                  style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
-                  helperStyle={{ marginTop: getScaleSize(8) }}
-                />
-              </>
-            )}
-
-            {/* Specialty Dropdown */}
-            <CustomDropdown
-              label={STRING.specialty}
-              data={doctorSpecialities}
-              value={specialty}
-              onChange={val => {
-                setSpecialty(val);
-                setErrors(e => ({ ...e, specialty: '' }));
-              }}
-              placeholder={STRING.selectYourSpecialty}
-              leftIcon={IMAGES.stethoscope}
-              error={errors.specialty}
-              zIndex={1000}
-            />
-
-            {/* Place of Practice Dropdown */}
-            <CustomDropdown
-              label={STRING.placeOfPractice}
-              data={practiceOptions}
-              value={placeOfPractice}
-              onChange={val => {
-                setPlaceOfPractice(val);
-                setErrors(e => ({ ...e, placeOfPractice: '' }));
-              }}
-              placeholder={STRING.placeOfPractice}
-              leftIcon={IMAGES.hospital}
-              error={errors.placeOfPractice}
-              zIndex={900}
-            />
-
-            <Input
-              label={STRING.facilityName}
-              placeholder={STRING.enterFacilityName}
-              leftIcon={IMAGES.hospital}
-              value={facilityName}
-              onChangeText={t => {
-                setFacilityName(t);
-                setErrors(e => ({ ...e, facilityName: '' }));
-              }}
-              error={errors.facilityName}
-              style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
-            />
-
-            <Input
-              label={STRING.businessAddress}
-              isMandatory
-              placeholder={STRING.streetAddressCityPostalCode}
-              leftIcon={IMAGES.location_pin}
-              value={address}
-              onChangeText={t => {
-                setAddress(t);
-                setErrors(e => ({ ...e, address: '' }));
-              }}
-              error={errors.address}
-              style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
-            />
-
-            {/* Terms Agreement */}
-            {!isEdit && (
-              <>
-                <Checkbox
-                  checked={agreed}
-                  onToggle={() => setAgreed(!agreed)}
-                  label={
-                    <Text>
-                      {STRING.iAgreeToThe}{' '}
-                      <Text style={styles.link}>{STRING.privacyPolicy}</Text>{' '}
-                      {STRING.and}{' '}
-                      <Text style={styles.link}>{STRING.termsOfService}</Text>
-                    </Text>
-                  }
-                />
-                {!!errors.agreed && (
-                  <Text
-                    style={[
-                      styles.errorText,
-                      {
-                        paddingHorizontal: getScaleSize(24),
-                        marginBottom: getScaleSize(8),
-                      },
-                    ]}
-                  >
-                    {errors.agreed}
-                  </Text>
-                )}
-              </>
-            )}
+        > */}
+        {/* Frame Container (Matching Screenshot Border) */}
+        <View>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>
+              {isEdit ? STRING.updateYourProfile : STRING.createYourAccount}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isEdit
+                ? STRING.updateYourProfessionalDetails
+                : STRING.createAccountSubtitle}
+            </Text>
           </View>
-        </ScrollView>
-
-        {/* Sticky Footer Section */}
-        <View style={styles.footer}>
-          {isEdit ? (
-            <View style={styles.editActions}>
-              <TouchableOpacity
-                style={styles.cancelAction}
-                activeOpacity={0.7}
-                onPress={() => navigation.goBack()}
-              >
-                <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
-              </TouchableOpacity>
-              <PrimaryButton
-                title={STRING.saveChanges}
-                onPress={() => handleSubmit()}
-                disabled={!isFormValid()}
-                style={styles.saveAction}
-              />
+          {/* Profile Image Section (Only in Edit mode) */}
+          {isEdit && (
+            <View style={styles.avatarSection}>
+              <View style={styles.avatarWrapper}>
+                <Image
+                  source={
+                    userAvatar
+                      ? userAvatar.startsWith('file://') ||
+                        userAvatar.startsWith('content://') ||
+                        userAvatar.startsWith('data:')
+                        ? { uri: userAvatar }
+                        : { uri: IMAGE_BASE_URL + userAvatar }
+                      : IMAGES.person
+                  }
+                  style={[
+                    styles.avatar,
+                    ...(!userAvatar ? [{ resizeMode: 'center' }] : []),
+                  ]}
+                />
+                <TouchableOpacity
+                  style={styles.cameraBtn}
+                  activeOpacity={0.8}
+                  onPress={() => imagePickerSheetRef.current?.show()}
+                >
+                  <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
+                </TouchableOpacity>
+              </View>
             </View>
-          ) : (
+          )}
+
+          {/* Form Fields */}
+          <Input
+            label={STRING.fName}
+            isMandatory
+            placeholder={STRING.enterFName}
+            value={fName}
+            leftIcon={IMAGES.person}
+            style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
+            onChangeText={t => {
+              setFName(t);
+              setErrors(e => ({ ...e, fName: '' }));
+            }}
+            error={errors.fName}
+          />
+
+          <Input
+            label={STRING.lName}
+            isMandatory
+            leftIcon={IMAGES.person}
+            style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
+            placeholder={STRING.enterLName}
+            value={lName}
+            onChangeText={t => {
+              setLName(t);
+              setErrors(e => ({ ...e, lName: '' }));
+            }}
+            error={errors.lName}
+          />
+
+          {!isEdit && (
             <>
-              <PrimaryButton
-                title={STRING.submitRegistration}
-                icon={IMAGES.arrowRight}
-                onPress={() => handleSubmit()}
-                disabled={!isFormValid()}
+              <Input
+                label={STRING.emailAddress}
+                isMandatory
+                placeholder={STRING.enterEmailAddress}
+                leftIcon={IMAGES.mail}
+                value={email}
+                onChangeText={t => {
+                  setEmail(t);
+                  setErrors(e => ({ ...e, email: '' }));
+                }}
+                keyboardType="email-address"
+                error={errors.email}
+                helper={
+                  errors.email
+                    ? undefined
+                    : STRING.weWillSendVerificationToThisEmail
+                }
+                style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
+                helperStyle={{ marginTop: getScaleSize(8) }}
               />
 
-              <TouchableOpacity
-                style={styles.signInContainer}
-                onPress={() => NavigationService.navigate('Login')}
-              >
-                <Text style={styles.signInText}>
-                  {STRING.alreadyHaveAnAccount}{' '}
-                  <Text style={styles.signInLink}>{STRING.signIn}</Text>
+              <Input
+                label={STRING.password}
+                isMandatory
+                placeholder={STRING.createPassword}
+                leftIcon={IMAGES.lock}
+                value={password}
+                onChangeText={t => {
+                  setPassword(t);
+                  setErrors(e => ({ ...e, password: '' }));
+                }}
+                secureTextEntry={true}
+                isPasswordVisible={showPassword}
+                handlePasswordVisibility={() => setShowPassword(!showPassword)}
+                error={errors.password}
+                style={{
+                  marginBottom: getScaleSize(errors.password ? 4 : 20),
+                }}
+              />
+
+              <Input
+                label={STRING.rppsNumber}
+                isMandatory
+                placeholder={`${STRING.enterRppsNumber} (${STRING.elevenDigit})`}
+                leftIcon={IMAGES.card}
+                value={rpps}
+                onChangeText={t => {
+                  setRpps(t);
+                  setErrors(e => ({ ...e, rpps: '' }));
+                }}
+                keyboardType="numeric"
+                error={errors.rpps}
+                helper={errors.rpps ? undefined : STRING.rppsNumber}
+                style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
+                helperStyle={{ marginTop: getScaleSize(8) }}
+              />
+
+              <Input
+                label={STRING.phoneNumber}
+                isMandatory
+                placeholder={`${STRING.enterPhoneNumber}`}
+                isCountryCode={true}
+                countryCode={countryCode}
+                countryFlag={countryFlag}
+                onCountryCodeSelect={(code, flag, name) => {
+                  setCountry(name.en.toLowerCase());
+                  setCountryCode(code);
+                  setCountryFlag(flag);
+                }}
+                value={phone}
+                onChangeText={t => {
+                  setPhone(t);
+                  setErrors(e => ({ ...e, phone: '' }));
+                }}
+                keyboardType="numeric"
+                error={errors.phone}
+                style={{ marginBottom: getScaleSize(errors.phone ? 4 : 20) }}
+              />
+
+              <Input
+                label={STRING.finessNumber}
+                isMandatory
+                placeholder={`${STRING.enterFinessNumber} (${STRING.nineDigit})`}
+                leftIcon={IMAGES.hospital}
+                value={finess}
+                onChangeText={t => {
+                  setFiness(t);
+                  setErrors(e => ({ ...e, finess: '' }));
+                }}
+                keyboardType="numeric"
+                error={errors.finess}
+                helper={
+                  errors.finess
+                    ? undefined
+                    : STRING.facilityIdentificationNumber
+                }
+                style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
+                helperStyle={{ marginTop: getScaleSize(8) }}
+              />
+            </>
+          )}
+
+          {/* Specialty Dropdown */}
+          <CustomDropdown
+            label={STRING.specialty}
+            isMandatory
+            data={doctorSpecialities}
+            value={specialty}
+            onChange={val => {
+              setSpecialty(val);
+              setErrors(e => ({ ...e, specialty: '' }));
+            }}
+            placeholder={STRING.selectYourSpecialty}
+            leftIcon={IMAGES.stethoscope}
+            error={errors.specialty}
+            zIndex={1000}
+          />
+
+          {/* Place of Practice Dropdown */}
+          <CustomDropdown
+            label={STRING.placeOfPractice}
+            isMandatory
+            data={practiceOptions}
+            value={placeOfPractice}
+            onChange={val => {
+              setPlaceOfPractice(val);
+              setErrors(e => ({ ...e, placeOfPractice: '' }));
+            }}
+            placeholder={STRING.placeOfPractice}
+            leftIcon={IMAGES.hospital}
+            error={errors.placeOfPractice}
+            zIndex={900}
+          />
+
+          <Input
+            label={STRING.facilityName}
+            placeholder={STRING.enterFacilityName}
+            leftIcon={IMAGES.hospital}
+            isMandatory
+            value={facilityName}
+            onChangeText={t => {
+              setFacilityName(t);
+              setErrors(e => ({ ...e, facilityName: '' }));
+            }}
+            error={errors.facilityName}
+            style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
+          />
+
+          <Input
+            label={STRING.businessAddress}
+            isMandatory
+            placeholder={STRING.streetAddressCityPostalCode}
+            leftIcon={IMAGES.location_pin}
+            value={address}
+            onChangeText={t => {
+              setAddress(t);
+              setErrors(e => ({ ...e, address: '' }));
+            }}
+            error={errors.address}
+            style={{ marginBottom: getScaleSize(errors.address ? 4 : 20) }}
+          />
+
+          {/* Terms Agreement */}
+          {!isEdit && (
+            <>
+              <Checkbox
+                checked={agreed}
+                onToggle={() => setAgreed(!agreed)}
+                label={
+                  <Text>
+                    {STRING.iAgreeToThe}{' '}
+                    <Text style={styles.link}>{STRING.privacyPolicy}</Text>{' '}
+                    {STRING.and}{' '}
+                    <Text style={styles.link}>{STRING.termsOfService}</Text>
+                  </Text>
+                }
+              />
+              {!!errors.agreed && (
+                <Text
+                  style={[
+                    styles.errorText,
+                    {
+                      paddingHorizontal: getScaleSize(24),
+                      marginBottom: getScaleSize(8),
+                    },
+                  ]}
+                >
+                  {errors.agreed}
                 </Text>
-              </TouchableOpacity>
+              )}
             </>
           )}
         </View>
-      </KeyboardAvoidingView>
+        {/* </ScrollView> */}
+      </KeyboardAwareScrollView>
+      {/* Sticky Footer Section */}
+      <View style={styles.footer}>
+        {isEdit ? (
+          <View style={styles.editActions}>
+            <TouchableOpacity
+              style={styles.cancelAction}
+              activeOpacity={0.7}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
+            </TouchableOpacity>
+            <PrimaryButton
+              title={STRING.saveChanges}
+              onPress={() => handleSubmit()}
+              disabled={!isFormValid()}
+              style={styles.saveAction}
+            />
+          </View>
+        ) : (
+          <>
+            <PrimaryButton
+              title={STRING.submitRegistration}
+              icon={IMAGES.arrowRight}
+              onPress={() => handleSubmit()}
+              disabled={!isFormValid()}
+            />
+
+            <TouchableOpacity
+              style={styles.signInContainer}
+              onPress={() => NavigationService.navigate('Login')}
+            >
+              <Text style={styles.signInText}>
+                {STRING.alreadyHaveAnAccount}{' '}
+                <Text style={styles.signInLink}>{STRING.signIn}</Text>
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
       <AppBottomSheet ref={imagePickerSheetRef}>
         <ImagePickerContent
           onCameraPress={onCameraPress}
@@ -586,7 +598,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F9FAFB,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(100),
+    // paddingBottom: getScaleSize(100),
   },
   topBar: {
     flexDirection: 'row',

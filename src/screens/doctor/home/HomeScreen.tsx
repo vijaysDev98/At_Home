@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { AppSafeAreaView, AppText } from '../../../components';
+import { AppSafeAreaView, AppText, ProfileAvatar } from '../../../components';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -168,14 +168,18 @@ const HomeScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image
-              source={
-                profileData?.profileImg
-                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
-                  : IMAGES.ic_profile
-              }
-              style={styles.avatar}
-            />
+            {profileData?.profileImg ? (
+              <Image
+                source={
+                  profileData?.profileImg
+                    ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                    : IMAGES.ic_profile
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <ProfileAvatar size="medium" name={profileData?.fullName} />
+            )}
             <View>
               <AppText
                 size={getScaleSize(12)}
@@ -442,8 +446,8 @@ const HomeScreen: React.FC = () => {
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const formStatus = item.formStatus || item.status;
-                const buttonConfig = getButtonConfig(formStatus);
+                const formStatus = item.formStatus;
+                const buttonConfig = getButtonConfig(formStatus, item.status);
                 return (
                   <View
                     key={item.id || index}
@@ -463,6 +467,12 @@ const HomeScreen: React.FC = () => {
                           ? buttonConfig.label || undefined
                           : undefined
                       }
+                      onPress={() => {
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: 'view',
+                        });
+                      }}
                       onButtonPress={() => {
                         if (buttonConfig.action === 'edit') {
                           NavigationService.navigate(SCREENS.FORMS_SCREEN, {

@@ -60,7 +60,7 @@ export const STRING = {
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
   and: 'and',
-  alreadyHaveAnAccount: "Don't have an account?",
+  alreadyHaveAnAccount: 'Already have an account?',
   registrationSuccessful: 'Registration Successful',
   yourAccountHasBeenCreatedAndIsCurrently:
     'Your account has been created and is currently',
@@ -83,7 +83,7 @@ export const STRING = {
   invalidEmail: 'Please enter a valid email',
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
-  forgotQuestion: 'Forgot?',
+  forgotPasswordQuestion: 'Forgot Password?',
 
   // ─── Auth: Forgot Password ───────────────────────────────────
   sendOTP: 'Send OTP / Reset Link',
@@ -181,6 +181,7 @@ export const STRING = {
   socialInsuranceNumber: 'Social insurance number(SIN)',
   enterSocialInsuranceNumber: 'Enter social insurance number',
   genderRequired: 'Gender is required',
+  dateOfBirthRequired: 'Date of birth is required',
 
   // ─── Patient Request ──────────────────────────────────────────
   createRequest: 'Create Request',

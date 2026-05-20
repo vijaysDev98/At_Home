@@ -36,33 +36,35 @@ export const DISPLAY_FORM_STATUS = {
   [FORM_STATUS.COMPLETED]: 'Completed',
 };
 
-export const getButtonConfig = (formStatus: string) => {
-  switch (formStatus) {
-    case FORM_STATUS.DRAFT:
+export const getButtonConfig = (formStatus: string, status: string) => {
+  switch (status) {
+    case REQUEST_STATUS.DRAFT:
       return {
         show: true,
         label: 'Continue Form',
         action: 'edit',
       };
-    case FORM_STATUS.AWAITING_SIGNATURE:
-      return {
-        show: true,
-        label: 'Continue Sign',
-        action: 'sign',
-      };
-    case FORM_STATUS.SUBMITTED:
-      return {
-        show: true,
-        label: 'Update & Sign',
-        action: 'edit',
-      };
-    case FORM_STATUS.SIGNED:
-      return {
-        show: true,
-        label: 'View',
-        action: 'view',
-      };
-    case FORM_STATUS.RETURNED:
+    case REQUEST_STATUS.SUBMITTED:
+      if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
+        return {
+          show: true,
+          label: 'Continue Sign',
+          action: 'sign',
+        };
+      } else if (formStatus == FORM_STATUS.SIGNED) {
+        return {
+          show: false,
+          label: null,
+          action: null,
+        };
+      } else {
+        return {
+          show: true,
+          label: 'Update & Sign',
+          action: 'edit',
+        };
+      }
+    case REQUEST_STATUS.RETURNED:
       return {
         show: true,
         label: 'Update & Re-sign',
@@ -211,16 +213,16 @@ export const getFormScreenButtons = (
       };
     }
 
-    // Submitted request, returned form → Save Progress + Update & Re-sign
+    // Returned request, returned form → Save Progress + Update & Re-sign
     if (
-      status === REQUEST_STATUS.SUBMITTED &&
+      status === REQUEST_STATUS.RETURNED &&
       formStatus === FORM_STATUS.RETURNED
     ) {
       return {
         left: {
           label: 'Save Progress',
           variant: 'outline',
-          handler: 'saveAsDraft',
+          handler: 'saveProgress',
         },
         right: {
           label: 'Update & Re-sign',
@@ -278,9 +280,11 @@ export const getFormScreenButtons = (
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const getStatusBadgeColor = (status: string) => {
-  switch (status?.toLowerCase()) {
+  switch (status) {
     case REQUEST_STATUS.DRAFT:
       return COLORS.draft;
+    case REQUEST_STATUS.IN_PROGRESS:
+      return COLORS.inProgress;
     case REQUEST_STATUS.SUBMITTED:
       return COLORS.submitted;
     case REQUEST_STATUS.AWAITING_SIGNATURE:

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Image,
   ScrollView,
@@ -12,19 +12,22 @@ import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { AppText } from '../../../components';
+import { AppText, ReviewRequestSheet, AppLoader } from '../../../components';
+import { SHOW_TOAST } from '../../../constant/showToast';
+import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
 import LinearGradient from 'react-native-linear-gradient';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
-import { useSelector } from 'react-redux';
+import { PROVIDER_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { FORM_STATUS, getButtonConfig, STRING } from '../../../constant';
+import { FORM_STATUS, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import RequestCardProvider from '../../../components/RequestCardProvider';
 import { getButtonConfigProvider } from '../../../constant/RequestStatus';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -60,13 +63,18 @@ interface DashboardData {
 }
 
 const ProviderHome: React.FC = () => {
+  const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
+  const isLoading = useSelector((state: RootState) => state.common.isLoading);
+  const reviewSheetRef = useRef<ActionSheetRef>(null);
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedRequest, setSelectedRequest] =
+    useState<DashboardRecentQueue | null>(null);
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -99,26 +107,43 @@ const ProviderHome: React.FC = () => {
 
   const recentQueue = dashboardData?.recentQueue || [];
 
-  const getBadgeStyle = (status: string) => {
-    switch (status) {
-      case FORM_STATUS.SUBMITTED:
-        return { bg: '#E8F1FF', color: '#2F80ED' };
-      case 'InProgress':
-      case 'In Progress':
-        return { bg: '#FFF7E8', color: '#F2994A' };
-      case 'Completed':
-        return { bg: '#E8F5E9', color: '#4CAF50' };
-      case 'Returned':
-        return { bg: '#FFEBEE', color: '#F44336' };
-      default:
-        return { bg: '#F4F6F8', color: '#6F767E' };
+  const onReturnRequest = async (reason: string, details: string) => {
+    console.log('onReturnRequest', selectedRequest, reason, details);
+    if (!selectedRequest?.id) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setGlobalLoading(true));
+    try {
+      let obj = {
+        reasonType: reason,
+        comments: details,
+      };
+
+      const response = await serviceRequestApi.returnRequest(
+        selectedRequest.id,
+        obj,
+      );
+      if (response.success) {
+        SHOW_TOAST(
+          response.message || 'Request returned successfully',
+          'success',
+        );
+        reviewSheetRef?.current?.hide();
+        await fetchDashboardData();
+      } else {
+        SHOW_TOAST(response.error || 'Failed to return request', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to return request', 'error');
+    } finally {
+      dispatch(setGlobalLoading(false));
     }
   };
 
-  console.log('profileData', profileData);
-
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -243,7 +268,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-          // onPress={() => NavigationService.navigate('Forms' as never)}
+            // onPress={() => NavigationService.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -279,7 +304,11 @@ const ProviderHome: React.FC = () => {
             >
               Recent Queue
             </AppText>
-            <TouchableOpacity onPress={() => { }}>
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.navigate(PROVIDER_TAB_SCREENS.REQUESTS);
+              }}
+            >
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Medium}
@@ -293,7 +322,10 @@ const ProviderHome: React.FC = () => {
           {recentQueue.length > 0 ? (
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
               const formStatus = item.formStatus;
-              const buttonConfig = getButtonConfigProvider(formStatus);
+              const buttonConfig = getButtonConfigProvider(
+                formStatus,
+                item?.status,
+              );
               return (
                 <View
                   key={item.id || index}
@@ -312,11 +344,28 @@ const ProviderHome: React.FC = () => {
                         ? buttonConfig.label || undefined
                         : undefined
                     }
-                    onButtonPress={() =>
-                      NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
-                        request: item,
-                      })
+                    onPress={() =>
+                      NavigationService.navigate(
+                        SCREENS.PROVIDER_FORMS_SCREEN,
+                        {
+                          request: item,
+                          action: 'view',
+                        },
+                      )
                     }
+                    onButtonPress={() =>
+                      NavigationService.navigate(
+                        SCREENS.PROVIDER_FORMS_SCREEN,
+                        {
+                          request: item,
+                          action: buttonConfig.action,
+                        },
+                      )
+                    }
+                    onLeftButtonPress={() => {
+                      setSelectedRequest(item);
+                      reviewSheetRef.current?.show();
+                    }}
                   />
                 </View>
               );
@@ -338,6 +387,12 @@ const ProviderHome: React.FC = () => {
             </View>
           )}
         </ScrollView>
+        <ReviewRequestSheet
+          ref={reviewSheetRef}
+          onSend={async (reason, details) => {
+            onReturnRequest(reason, details);
+          }}
+        />
       </View>
     </SafeAreaView>
   );

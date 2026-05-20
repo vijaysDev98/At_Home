@@ -18,6 +18,7 @@ import {
   getStatusBadgeColor,
   REQUEST_STATUS,
 } from '../constant/RequestStatus';
+import AppButton from './AppButton';
 
 const HeaderProvider = ({
   isBack = false,
@@ -31,6 +32,8 @@ const HeaderProvider = ({
   requestStatus,
   formStatus,
   status,
+  isViewForm,
+  onViewFormPress,
 }: {
   isBack?: boolean;
   title?: string;
@@ -43,6 +46,8 @@ const HeaderProvider = ({
   requestStatus?: string;
   status?: string;
   formStatus?: string;
+  isViewForm?: boolean;
+  onViewFormPress?: () => void;
 }) => {
   return (
     <View style={[styles.header, style]}>
@@ -60,17 +65,27 @@ const HeaderProvider = ({
           </TouchableOpacity>
         )}
 
-        <View style={titleContainerStyle}>
-          {title ? (
-            <AppText
-              size={getScaleSize(20)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-              style={titleStyle}
-            >
-              {title}
-            </AppText>
-          ) : null}
+        <View style={[styles.titleContainer, titleContainerStyle]}>
+          <View style={styles.titleRow}>
+            {title ? (
+              <AppText
+                size={getScaleSize(20)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={[styles.title, titleStyle]}
+              >
+                {title}
+              </AppText>
+            ) : null}
+            {isViewForm && (
+              <AppButton
+                style={styles.viewFormBtn}
+                textSize={getScaleSize(10)}
+                onPress={onViewFormPress || (() => {})}
+                title="View Form"
+              />
+            )}
+          </View>
 
           {subTitle ? (
             <AppText
@@ -184,5 +199,26 @@ const styles = StyleSheet.create({
     height: getScaleSize(12),
     backgroundColor: COLORS._D1D5DB,
     marginHorizontal: getScaleSize(8),
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  title: {
+    flexShrink: 1,
+    marginRight: getScaleSize(8),
+  },
+  viewFormBtn: {
+    height: getScaleSize(28),
+    borderRadius: getScaleSize(6),
+    paddingHorizontal: getScaleSize(10),
+    minWidth: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

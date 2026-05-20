@@ -28,7 +28,7 @@ import {
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig } from '../../../constant';
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { useRoute } from '@react-navigation/native';
 
 export type DoctorRequestProps = NativeStackScreenProps<
@@ -151,8 +151,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     return requests.filter(request => {
       // Search filter
       const searchStr = searchText.toLowerCase();
-      const patientName =
-        `${request.patient.fName} ${request.patient.lName}`.toLowerCase();
+      const patientName = `${request.patient.fullName}`.toLowerCase();
       const serviceName = request.service.serviceName.toLowerCase();
       const matchesSearch =
         !searchText ||
@@ -162,8 +161,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
       // Status filter
       let matchesStatus = true;
       if (filter !== 'all') {
-        const formStatus = request.formStatus || request.status;
-        matchesStatus = formStatus === filter;
+        const status = request.status;
+        matchesStatus = status === filter;
+      }
+      if (filter == FORM_STATUS.SIGNED) {
+        const status = request.formStatus;
+        matchesStatus = status === filter;
       }
 
       return matchesSearch && matchesStatus;
@@ -179,7 +182,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item?.formStatus;
-    const buttonConfig = getButtonConfig(formStatus || '');
+    const buttonConfig = getButtonConfig(formStatus || '', item?.status);
     return (
       <RequestCardDoctor
         name={item?.patient?.fullName || ''}
@@ -190,6 +193,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         buttonText={
           buttonConfig.show ? buttonConfig.label || undefined : undefined
         }
+        onPress={() => {
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: item,
+            action: 'view',
+          });
+        }}
         onButtonPress={() => {
           if (buttonConfig.action === 'edit') {
             NavigationService.navigate(SCREENS.FORMS_SCREEN, {

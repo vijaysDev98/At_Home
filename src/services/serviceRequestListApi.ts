@@ -238,6 +238,7 @@ export interface ListServiceRequestsResponse {
 export interface ListServiceRequestsParams {
   page?: number;
   size?: number;
+  status?: string;
 }
 
 export const serviceRequestListApi = {
@@ -299,6 +300,42 @@ export const serviceRequestListApi = {
     } catch (error: any) {
       console.error(
         'Error fetching available service requests:',
+        error.message,
+      );
+      return null;
+    }
+  },
+
+  /**
+   * Fetch list of service requests assigned to the current provider with pagination
+   */
+  listAssignedRequestsForProvider: async (
+    params: ListServiceRequestsParams = { page: 1, size: 10 },
+  ): Promise<ListServiceRequestsResponse | null> => {
+    try {
+      const response: any = await API.Instance.get(
+        '/service-requests/provider',
+        {
+          params: {
+            page: params.page || 1,
+            size: params.size || 10,
+            status: params.status,
+          },
+        },
+      );
+
+      if (response.status) {
+        return response.data as ListServiceRequestsResponse;
+      } else {
+        console.error(
+          'Failed to fetch provider assigned service requests:',
+          response.message,
+        );
+        return null;
+      }
+    } catch (error: any) {
+      console.error(
+        'Error fetching provider assigned service requests:',
         error.message,
       );
       return null;

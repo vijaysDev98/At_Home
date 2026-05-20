@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   TextInputKeyPressEvent,
+  Keyboard,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -59,6 +60,17 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
 
     if (sanitized && idx < inputsRef.current.length - 1) {
       inputsRef.current[idx + 1]?.focus();
+    }
+
+    const isFull = next.every(c => c !== '');
+    if (isFull) {
+      Keyboard.dismiss();
+      const otpCode = next.join('');
+      if (isForgotPassword) {
+        dispatch(verifyForgotPasswordOtp({ email, otp: otpCode }));
+      } else {
+        dispatch(verifyOtp({ email, otp: otpCode }));
+      }
     }
   };
 

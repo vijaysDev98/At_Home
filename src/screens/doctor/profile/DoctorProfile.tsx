@@ -18,6 +18,7 @@ import {
   Header,
   Input,
   AppLoader,
+  ProfileAvatar,
 } from '../../../components';
 import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ImagePickerContent } from '../../../components/ImagePickerContent';
@@ -34,12 +35,14 @@ import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { SCREENS } from '../../../navigation/routes';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const DoctorProfile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const { isLoading } = useSelector((state: RootState) => state.common);
+  console.log('profileData', profileData);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -76,6 +79,7 @@ const DoctorProfile: React.FC = () => {
 
   const fName = profileData?.fName || '';
   const lName = profileData?.lName || '';
+  const fullName = (profileData as any)?.fullName || `${fName} ${lName}`.trim();
   const userEmail = profileData?.email;
   const userPhone = profileData?.phoneNumber;
   const userSpecialty = profileData?.specialty;
@@ -106,7 +110,7 @@ const DoctorProfile: React.FC = () => {
         >
           {/* Avatar section */}
           <View style={styles.avatarSection}>
-            <View>
+            {userAvatar ? (
               <View style={styles.avatarWrap}>
                 <Image
                   source={
@@ -121,14 +125,11 @@ const DoctorProfile: React.FC = () => {
                   style={styles.avatar}
                 />
               </View>
-              {/* <TouchableOpacity
-                  style={styles.cameraBtn}
-                  activeOpacity={0.85}
-                  onPress={handleEditProfile}
-                >
-                  <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
-                </TouchableOpacity> */}
-            </View>
+            ) : (
+              <View style={{ marginBottom: getScaleSize(10) }}>
+                <ProfileAvatar size="large" name={fullName} />
+              </View>
+            )}
             <View style={styles.avatarInfo}>
               <View>
                 <AppText
@@ -136,9 +137,7 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  {fName.startsWith('Dr.')
-                    ? fName + ' ' + lName
-                    : `Dr. ${fName} ${lName}`}
+                  {`Dr. ${fullName}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}
@@ -146,7 +145,7 @@ const DoctorProfile: React.FC = () => {
                   style={{ marginVertical: getScaleSize(5) }}
                   color={COLORS._6B7280}
                 >
-                  {userSpecialty}
+                  {capitalizeFirstLetter(userSpecialty || '')}
                 </AppText>
               </View>
               <TouchableOpacity
@@ -179,7 +178,7 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.fName}
                 style={styles.inputContainer}
-                value={fName}
+                value={capitalizeFirstLetter(fName)}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.person}
@@ -189,7 +188,7 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.lName}
                 style={styles.inputContainer}
-                value={lName}
+                value={capitalizeFirstLetter(lName)}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.person}
@@ -240,7 +239,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.businessAddress}
-                value={userAddress}
+                value={capitalizeFirstLetter(userAddress || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.location_pin}
@@ -252,6 +251,8 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.phoneNumber}
                 value={userPhone}
+                isCountryCode
+                countryName={profileData?.country}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.phone}
@@ -261,7 +262,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.specialty}
-                value={userSpecialty}
+                value={capitalizeFirstLetter(userSpecialty || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.stethoscope}
@@ -271,7 +272,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.placeOfPractice}
-                value={userPracticeType}
+                value={capitalizeFirstLetter(userPracticeType || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.hospital}
@@ -281,7 +282,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.facilityName}
-                value={userFacilityName}
+                value={capitalizeFirstLetter(userFacilityName || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.hospital}
@@ -290,13 +291,13 @@ const DoctorProfile: React.FC = () => {
             </View>
           </View>
 
-          <View style={styles.card}>
+          {/* <View style={styles.card}>
             <RowItem label={STRING.appVersion} value={STRING.appVersionValue} />
             <Divider />
             <RowItem label={STRING.termsOfService} chevron />
             <Divider />
             <RowItem label={STRING.privacyPolicy} chevron />
-          </View>
+          </View> */}
 
           <TouchableOpacity
             style={styles.logoutBtn}

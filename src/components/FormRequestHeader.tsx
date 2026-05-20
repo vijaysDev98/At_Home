@@ -21,8 +21,6 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
   requestData,
   fromReview = false,
 }) => {
-  console.log('requestData', requestData);
-
   return (
     <View style={styles.container}>
       <View style={styles.row}>

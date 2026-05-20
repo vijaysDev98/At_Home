@@ -109,6 +109,7 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
       data,
     );
     dispatch(setLoading(false));
+    console.log('response', response);
 
     if (response?.status && response?.code === 201) {
       SHOW_TOAST(

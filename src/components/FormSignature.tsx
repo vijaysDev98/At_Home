@@ -15,6 +15,7 @@ import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
 import { setLoading } from '../actions/common/commonSlice';
 import signatureApi from '../services/signature';
+import { serviceRequestApi } from '../services/serviceRequestApi';
 import { SHOW_TOAST } from '../constant';
 import { API_BASE_URL } from '../api/apiRoutes';
 import NavigationService from '../navigation/NavigationService';
@@ -133,6 +134,9 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
       if (isCompleted) {
         isSigned = true;
+        // Release the form lock on successful signature
+        await serviceRequestApi.releaseFormLock(requestId);
+
         SHOW_TOAST('Document signed successfully', 'success');
         setTimeout(() => {
           NavigationService.goBack();

@@ -5,7 +5,14 @@ import { setLoading } from '../../../actions/common/commonSlice';
 import { useRoute } from '@react-navigation/native';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  AppLoader,
+  AppButton,
+  CompleteServiceSheet,
+  WarningSheet,
+} from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
@@ -15,6 +22,8 @@ import {
   getFormScreenButtons,
   FormScreenButtonConfig,
   FormScreenHandlerKey,
+  REQUEST_STATUS,
+  FORM_STATUS,
 } from '../../../constant/RequestStatus';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import {
@@ -28,6 +37,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import ServiceFormRenderer from '../../doctor/forms/ServiceFormRenderer';
 import HeaderProvider from '../../../components/HeaderProvider';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { SCREENS } from '../../../navigation/routes';
 
 export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -41,7 +51,6 @@ const ProviderFormScreen: React.FC = () => {
   const action = (route.params as any)?.action;
 
   const requestId = request?.id;
-  console.log('requestId', requestId);
 
   const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
@@ -55,14 +64,15 @@ const ProviderFormScreen: React.FC = () => {
   );
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
+  let isInProgress: boolean = request?.status == REQUEST_STATUS.IN_PROGRESS;
 
   const serviceId = service?.id || service?._id || requestData?.serviceId._id;
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const completeSheetRef = useRef<ActionSheetRef>(null);
 
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
-
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
@@ -71,8 +81,8 @@ const ProviderFormScreen: React.FC = () => {
   const handlerMap: Record<FormScreenHandlerKey, () => Promise<void>> = {
     // Provider: submit pre-claim form for doctor review
     submitForReview: async () => {
-      if (formRef.current?.validateAndSubmit) {
-        await formRef.current.validateAndSubmit();
+      if (formRef.current?.submitForReview) {
+        await formRef.current.submitForReview();
       }
     },
 
@@ -82,7 +92,7 @@ const ProviderFormScreen: React.FC = () => {
         const result = await formRef.current.saveProgress();
         if (!result.success) return;
         if (result.success) {
-          NavigationService.goBack();
+          // NavigationService.goBack();
           return;
         }
       }
@@ -124,9 +134,20 @@ const ProviderFormScreen: React.FC = () => {
   // Fetch service request details when in view mode
   useEffect(() => {
     if (requestId) {
-      fetchServiceRequestDetails();
+      fetchServiceRequestDetails(isInProgress);
     }
   }, [requestId]);
+
+  const acquireFormLock = async () => {
+    try {
+      const response = await serviceRequestApi.acquireFormLock(requestId || '');
+      if (response.success) {
+        console.log('Form lock acquired successfully');
+      }
+    } catch (error) {
+      console.log('Error acquiring form lock:', error);
+    }
+  };
 
   useEffect(() => {
     if (requestData && requestData?.isLocked) {
@@ -140,22 +161,59 @@ const ProviderFormScreen: React.FC = () => {
     }
   }, [requestData]);
 
-  const fetchServiceRequestDetails = async () => {
+  const fetchServiceRequestDetails = async (isInProgress: boolean) => {
     dispatch(setLoading(true));
     try {
-      // Provider always uses /pre-claim endpoint
       const response = await API.Instance.get(
-        `/service-requests/${requestId}/pre-claim`,
+        isInProgress
+          ? `/service-requests/${requestId}`
+          : `/service-requests/${requestId}/pre-claim`,
       );
+
       if (response?.data?.status) {
         const data = response.data.data;
+        console.log('respnseee', data);
+
         setRequestData(data);
+        // Acquire lock if request and form are both submitted and unlocked
+        if (
+          !data?.isLocked &&
+          data.status === REQUEST_STATUS.SUBMITTED &&
+          data.formStatus === FORM_STATUS.SUBMITTED
+        ) {
+          acquireFormLock();
+        }
       } else {
         SHOW_TOAST('Failed to fetch service request details', 'error');
       }
     } catch (error: any) {
       console.log('Error fetching service request:', error);
       SHOW_TOAST(error?.message || 'Failed to fetch service request', 'error');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleCompleteRequest = async () => {
+    if (!requestId) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      const response = await serviceRequestApi.completeRequest(requestId);
+      if (response.success) {
+        SHOW_TOAST(
+          response.message || 'Service completed successfully',
+          'success',
+        );
+        completeSheetRef?.current?.hide();
+        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {});
+      } else {
+        SHOW_TOAST(response.error || 'Failed to complete service', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to complete service', 'error');
     } finally {
       dispatch(setLoading(false));
     }
@@ -209,11 +267,17 @@ const ProviderFormScreen: React.FC = () => {
 
   return (
     <AppSafeAreaView edges={true}>
-      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <HeaderProvider
-          title="Medical Form"
+          title={
+            action === 'view'
+              ? 'View Form'
+              : isInProgress
+              ? 'Service'
+              : 'Update Form'
+          }
           isBack
+          isViewForm={requestData?.status == REQUEST_STATUS.IN_PROGRESS}
           formStatus={requestData?.formStatus}
           status={requestData?.status}
           style={
@@ -248,8 +312,23 @@ const ProviderFormScreen: React.FC = () => {
                 </View>
               </ScrollView>
             </View>
-
+            <CompleteServiceSheet
+              ref={completeSheetRef}
+              onComplete={async () => {
+                handleCompleteRequest();
+              }}
+            />
+            {/* <WarningSheet isLock={true} ref={warningSheetRef} /> */}
             {renderBottomBar()}
+            {isInProgress && (
+              <AppButton
+                title={'Mark as Completed'}
+                onPress={() => {
+                  completeSheetRef?.current?.show();
+                }}
+                style={styles.completeBtn}
+              />
+            )}
           </>
         )}
       </View>
@@ -266,6 +345,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS._F9FAFB,
+  },
+  completeBtn: {
+    marginBottom: getScaleSize(16),
+    marginHorizontal: getScaleSize(16),
+    backgroundColor: COLORS.completed,
+    elevation: 5,
+    shadowColor: COLORS.completed,
   },
   header: {
     height: 60,

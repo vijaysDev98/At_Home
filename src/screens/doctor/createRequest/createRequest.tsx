@@ -150,39 +150,43 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if (patients.length === 0) {
-      const filter = getFilterValue(selectedChip);
-      fetchPatientsData(1, search, false, filter);
-    }
+    const filter = getFilterValue(selectedChip);
+    fetchPatientsData(1, '', false, filter);
   }, []);
 
   // Handle chip filter changes
   useEffect(() => {
     const filter = getFilterValue(selectedChip);
-    fetchPatientsData(1, search, false, filter);
+    fetchPatientsData(1, '', false, filter);
   }, [selectedChip]);
 
-  // Debounced search
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      const filter = getFilterValue(selectedChip);
+  // Fast local search filtering by Name, Full Name, and ID
+  const filteredPatients = useMemo(() => {
+    if (!search.trim()) {
+      return patients;
+    }
+    const query = search.toLowerCase().trim();
+    return patients.filter(patient => {
+      const firstName = (patient.fName || '').toLowerCase();
+      const lastName = (patient.lName || '').toLowerCase();
+      const fullName = `${firstName} ${lastName}`;
+      const patientId = (patient.id || '').toLowerCase();
 
-      if (search !== '') {
-        fetchPatientsData(1, search, false, filter);
-      } else {
-        fetchPatientsData(1, '', false, filter);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [search, selectedChip]);
+      return (
+        firstName.includes(query) ||
+        lastName.includes(query) ||
+        fullName.includes(query) ||
+        patientId.includes(query)
+      );
+    });
+  }, [patients, search]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
 
     const filter = getFilterValue(selectedChip);
 
-    fetchPatientsData(1, search, true, filter);
+    fetchPatientsData(1, '', true, filter);
   };
 
   const canContinue = useMemo(() => !!selectedId, [selectedId]);
@@ -317,7 +321,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               </ScrollView>
 
               <View style={styles.list}>
-                {patients.map(patient => (
+                {filteredPatients.map(patient => (
                   <PatientItem
                     key={patient.id}
                     patient={patient}
@@ -326,7 +330,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                   />
                 ))}
 
-                {patients.length === 0 && (
+                {filteredPatients.length === 0 && (
                   <View style={styles.emptyContainer}>
                     <AppText color={COLORS._6F767E}>
                       {STRING.noPatientsFound}

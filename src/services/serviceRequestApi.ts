@@ -145,6 +145,42 @@ export const serviceRequestApi = {
   },
 
   /**
+   * Release lock for a form
+   */
+  releaseFormLock: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/form-lock/release`,
+        {},
+      );
+      console.log('unlock response', response);
+
+      if (response.status || response.code === 200) {
+        return {
+          success: true,
+          message: response.data?.message || 'Form lock released successfully',
+          data: response.data?.data || response.data,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.message || 'Failed to release form lock',
+          error: response.message,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to release form lock';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
    * Update an existing draft request
    */
   updateDraft: async (
@@ -405,6 +441,147 @@ export const serviceRequestApi = {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to claim request';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Return a service request back to doctor
+   */
+  returnRequest: async (
+    requestId: string,
+    obj: { reasonType: string; comments: string },
+  ): Promise<ServiceRequestResponse> => {
+    console.log('obj', obj);
+
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/return`,
+        obj,
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request returned successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to return request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to return request';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Complete a service request
+   * Endpoint: POST /service-requests/{requestId}/complete
+   */
+  completeRequest: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/complete`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+      console.log('response from completed', response);
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request completed successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to complete request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to complete request';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Submit provider form for doctor review
+   * Endpoint: POST /service-requests/{requestId}/provider-form/submit-for-review
+   */
+  providerSubmitForReview: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/provider-form/submit-for-review`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Submitted for review successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to submit for review',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to submit for review';
       return {
         success: false,
         message: errorMessage,

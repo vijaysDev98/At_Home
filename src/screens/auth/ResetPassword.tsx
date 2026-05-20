@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { resetPassword } from '../../actions/auth/authAction';
 import { AppLoader } from '../../components';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export type ResetPasswordProps = NativeStackScreenProps<
   RootStackParamList,
@@ -73,13 +74,19 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   return (
     <AppSafeAreaView edges style={styles.safe}>
       <AppLoader visible={isLoading} />
-      <ScrollView
+      <Header isBack style={{ paddingHorizontal: getScaleSize(16) }} />
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
+        {/* <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      > */}
         <View style={styles.container}>
-          <Header isBack />
-
           <View style={styles.logoWrap}>
             <Image source={IMAGES.logo} style={styles.logo} />
           </View>
@@ -193,7 +200,8 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             />
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      {/* </ScrollView> */}
     </AppSafeAreaView>
   );
 };
@@ -210,11 +218,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
     paddingHorizontal: getScaleSize(24),
-    paddingTop: getScaleSize(20),
+    // paddingTop: getScaleSize(20),
   },
   logoWrap: {
     alignItems: 'center',
-    marginTop: getScaleSize(32),
+    // marginTop: getScaleSize(32),
     marginBottom: getScaleSize(32),
   },
   logo: {

@@ -34,6 +34,7 @@ import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { CustomDropdown } from '../../../components/CustomDropDown';
 import { GENDER } from '../../../constant/constantData';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const AppDatePicker = ({
   open,
@@ -130,8 +131,8 @@ const AddPatient: React.FC = () => {
       newErrors.email = STRING.invalidEmailAddress;
     }
 
-    if (dob.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
-      newErrors.dob = STRING.invalidDateFormat;
+    if (!dob.trim()) {
+      newErrors.dob = STRING.dateOfBirthRequired;
     }
 
     if (!gender) {
@@ -204,11 +205,21 @@ const AddPatient: React.FC = () => {
           })}
         />
         <View style={styles.container}>
-          <ScrollView
+          <KeyboardAwareScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid
+            extraScrollHeight={getScaleSize(40)}
+            enableAutomaticScroll
+            extraHeight={getScaleSize(120)}
           >
+            {/* <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          > */}
             {/* Personal Information */}
             <View style={styles.section}>
               <AppText
@@ -276,6 +287,7 @@ const AddPatient: React.FC = () => {
                 <View style={styles.fieldGroup}>
                   <Input
                     value={dob}
+                    isMandatory
                     onPress={() => setDatePickerOpen(true)}
                     placeholder={STRING.selectDateOfBirth}
                     placeholderTextColor={COLORS._7A7A7A}
@@ -395,6 +407,7 @@ const AddPatient: React.FC = () => {
                 <View style={styles.fieldGroup}>
                   <Input
                     value={phone}
+                    // isCountryCode
                     onChangeText={t => {
                       setPhone(t);
                       setErrors(prev => ({ ...prev, phone: '' }));
@@ -428,6 +441,7 @@ const AddPatient: React.FC = () => {
                       setEmail(t);
                       setErrors(prev => ({ ...prev, email: '' }));
                     }}
+                    isMandatory
                     keyboardType="email-address"
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
@@ -532,7 +546,7 @@ const AddPatient: React.FC = () => {
             </View>
 
             {/* Medical Information */}
-            <View style={styles.section}>
+            <View style={[styles.section, { paddingBottom: getScaleSize(20) }]}>
               <AppText
                 size={getScaleSize(14)}
                 font={FONTS.Inter.Bold}
@@ -580,45 +594,44 @@ const AddPatient: React.FC = () => {
                 </View>
               </View>
             </View>
-          </ScrollView>
-
-          {/* Sticky CTA */}
-          {isEdit ? (
-            <View style={styles.footerActions}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                activeOpacity={0.7}
-                onPress={handleCancel}
-              >
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
+            {isEdit ? (
+              <View style={styles.footerActions}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  activeOpacity={0.7}
+                  onPress={handleCancel}
                 >
-                  Cancel
-                </AppText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.saveBtn}
-                activeOpacity={0.8}
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    Cancel
+                  </AppText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.saveBtn}
+                  activeOpacity={0.8}
+                  onPress={handleSave}
+                >
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                  >
+                    Save
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <PrimaryButton
+                title={STRING.savePatient}
                 onPress={handleSave}
-              >
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.white}
-                >
-                  Save
-                </AppText>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <PrimaryButton
-              title={STRING.savePatient}
-              onPress={handleSave}
-              style={{ marginHorizontal: getScaleSize(20) }}
-            />
-          )}
+                style={{ marginHorizontal: getScaleSize(20) }}
+              />
+            )}
+          </KeyboardAwareScrollView>
+          {/* Sticky CTA */}
         </View>
       </AppSafeAreaView>
 
@@ -694,9 +707,11 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
+    marginBottom: getScaleSize(10),
   },
   scrollContent: {
-    paddingBottom: getScaleSize(280),
+    flexGrow: 1,
+    paddingBottom: getScaleSize(20),
     // paddingTop: getScaleSize(16),
   },
   section: {

@@ -22,6 +22,7 @@ interface RequestCardProps {
   formStatus?: string;
   buttonText?: string;
   onButtonPress?: () => void;
+  onPress?: () => void;
 }
 
 const RequestCardDoctor: React.FC<RequestCardProps> = ({
@@ -32,6 +33,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   formStatus,
   buttonText,
   onButtonPress = () => {},
+  onPress,
 }) => {
   let initials = '';
   if (name) {
@@ -42,7 +44,12 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
       .toUpperCase();
   }
   return (
-    <View style={styles.requestCardContainer}>
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+      style={styles.requestCardContainer}
+    >
       <View style={styles.requestHeaderRow}>
         <ProfileAvatar
           name={initials}
@@ -129,7 +136,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
           style={styles.updateButtonStyle}
         />
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

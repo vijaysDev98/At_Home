@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   FlatList,
   ScrollView,
@@ -10,15 +16,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { AppText, AppLoader } from '../../../components';
-import { useNavigation } from '@react-navigation/native';
-import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import { AppText, AppLoader, ReviewRequestSheet } from '../../../components';
 import {
   serviceRequestListApi,
   ServiceRequest,
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
-import { getButtonConfig } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import {
@@ -26,10 +29,25 @@ import {
   REQUEST_STATUS,
 } from '../../../constant/RequestStatus';
 import RequestCardProvider from '../../../components/RequestCardProvider';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { SHOW_TOAST } from '../../../constant/showToast';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
 const AvailableRequest: React.FC = () => {
+  const dispatch = useDispatch();
+  const isGlobalLoading = useSelector(
+    (state: RootState) => state.common.isLoading,
+  );
+  const reviewSheetRef = useRef<ActionSheetRef>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
+    null,
+  );
+
   const [activeTab, setActiveTab] = useState('All');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -40,53 +58,146 @@ const AvailableRequest: React.FC = () => {
 
   // Fetch service requests
   const fetchAvailableRequests = useCallback(
-    async (page: number = 1, isRefresh: boolean = false) => {
+    async (
+      page: number = 1,
+      isRefresh: boolean = false,
+      statusParam?: string,
+    ) => {
       if (!isRefresh) setIsLoading(true);
       try {
-        const response =
-          await serviceRequestListApi.listAvailableRequestsForProvider({
-            page,
-            size: PAGE_SIZE,
-          });
-        if (response) {
-          if (page === 1) {
-            setRequests(response.data.requests);
-          } else {
-            setRequests(prev => [...prev, ...response.data.requests]);
-          }
+        let availableRequests: ServiceRequest[] = [];
+        let assignedRequests: ServiceRequest[] = [];
+        let hasNextPage = false;
+        let availableTotal = 0;
+        let assignedTotal = 0;
+        let availableTotalPages = 0;
+        let assignedTotalPages = 0;
 
-          setPagination(response.data.pagination);
-          setCurrentPage(page);
+        // Map tab to backend status
+        let mappedStatus: string | undefined = undefined;
+        const currentTab = statusParam !== undefined ? statusParam : activeTab;
+        if (currentTab === 'Submitted') mappedStatus = 'submitted';
+        else if (currentTab === 'In Progress') mappedStatus = 'inProgress';
+        else if (currentTab === 'Returned') mappedStatus = 'returned';
+        else if (currentTab === 'Completed') mappedStatus = 'completed';
+
+        // Check if we should call listAvailableRequestsForProvider
+        const shouldCallAvailable = false;
+        const shouldCallAssigned = page === 1;
+
+        const promises: Promise<any>[] = [];
+
+        // if (shouldCallAvailable) {
+        //   promises.push(
+        //     serviceRequestListApi.listAvailableRequestsForProvider({
+        //       page,
+        //       size: PAGE_SIZE,
+        //     }),
+        //   );
+        // } else {
+        //   promises.push(Promise.resolve(null));
+        // }
+        promises.push(Promise.resolve(null));
+
+        if (shouldCallAssigned) {
+          promises.push(
+            serviceRequestListApi.listAssignedRequestsForProvider({
+              page,
+              size: PAGE_SIZE,
+              status: mappedStatus,
+            }),
+          );
+        } else {
+          promises.push(Promise.resolve(null));
         }
+
+        const [availableResponse, assignedResponse] = await Promise.all(
+          promises,
+        );
+
+        if (availableResponse?.data) {
+          availableRequests = availableResponse.data.requests || [];
+          hasNextPage =
+            hasNextPage ||
+            availableResponse.data.pagination?.hasNextPage ||
+            false;
+          availableTotal = availableResponse.data.pagination?.total || 0;
+          availableTotalPages =
+            availableResponse.data.pagination?.totalPages || 0;
+        }
+
+        if (assignedResponse) {
+          const data = assignedResponse.data;
+          assignedRequests = Array.isArray(data) ? data : data?.requests || [];
+          if (!Array.isArray(data) && data?.pagination) {
+            hasNextPage = hasNextPage || data.pagination.hasNextPage || false;
+            assignedTotal = data.pagination.total || 0;
+            assignedTotalPages = data.pagination.totalPages || 0;
+          }
+        }
+        console.log('assignedRequests', assignedRequests);
+
+        const combined = [...assignedRequests, ...availableRequests];
+        // Deduplicate requests by id
+        const uniqueCombined = combined.filter(
+          (item, idx, self) => self.findIndex(t => t.id === item.id) === idx,
+        );
+
+        if (page === 1) {
+          setRequests(uniqueCombined);
+        } else {
+          setRequests(prev => {
+            const combinedPrev = [...prev, ...uniqueCombined];
+            return combinedPrev.filter(
+              (item, idx, self) =>
+                self.findIndex(t => t.id === item.id) === idx,
+            );
+          });
+        }
+
+        setPagination({
+          hasNextPage,
+          page,
+          size: PAGE_SIZE,
+          total: availableTotal + assignedTotal,
+          totalPages: Math.max(availableTotalPages, assignedTotalPages),
+          totalRange: '',
+          hasPrevPage: page > 1,
+        });
+
+        setCurrentPage(page);
       } catch (error) {
+        console.error('Error fetching combined requests:', error);
       } finally {
         if (!isRefresh) setIsLoading(false);
       }
     },
-    [],
+    [activeTab],
   );
 
-  // Load initial data
+  // Load initial data and refresh when activeTab changes
   useEffect(() => {
-    fetchAvailableRequests(1);
-  }, [fetchAvailableRequests]);
+    fetchAvailableRequests(1, false, activeTab);
+  }, [activeTab, fetchAvailableRequests]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchAvailableRequests(1, true);
+    await fetchAvailableRequests(1, true, activeTab);
     setRefreshing(false);
-  }, [fetchAvailableRequests]);
+  }, [fetchAvailableRequests, activeTab]);
 
   const handleLoadMore = useCallback(() => {
     if (pagination && pagination.hasNextPage) {
-      fetchAvailableRequests(currentPage + 1);
+      fetchAvailableRequests(currentPage + 1, false, activeTab);
     }
-  }, [pagination, currentPage, fetchAvailableRequests]);
+  }, [pagination, currentPage, fetchAvailableRequests, activeTab]);
 
   const filteredRequests = useMemo(() => {
+    console.log('requests', requests);
+
     return requests.filter(item => {
       if (activeTab === 'All') return true;
-      const formStatus = item.formStatus || item.status;
+      const formStatus = item.status;
       if (activeTab === 'In Progress') {
         return (
           (formStatus as string) === REQUEST_STATUS.IN_PROGRESS ||
@@ -100,9 +211,10 @@ const AvailableRequest: React.FC = () => {
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item.formStatus;
+    const formStatus = item?.formStatus || '';
 
-    const buttonConfig = getButtonConfigProvider(formStatus || '');
+    const buttonConfig = getButtonConfigProvider(formStatus, item?.status);
+    console.log('item', item);
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>
@@ -115,11 +227,22 @@ const AvailableRequest: React.FC = () => {
           buttonText={
             buttonConfig.show ? buttonConfig.label || undefined : undefined
           }
+          onPress={() =>
+            NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+              request: item,
+              action: 'view',
+            })
+          }
           onButtonPress={() =>
             NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
               request: item,
+              action: buttonConfig.action,
             })
           }
+          onLeftButtonPress={() => {
+            setSelectedRequest(item);
+            reviewSheetRef.current?.show();
+          }}
         />
       </View>
     );
@@ -134,8 +257,42 @@ const AvailableRequest: React.FC = () => {
     );
   };
 
+  const onReturnRequest = async (reason: string, details: string) => {
+    if (!selectedRequest?.id) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      let obj = {
+        reasonType: reason,
+        comments: details,
+      };
+
+      const response = await serviceRequestApi.returnRequest(
+        selectedRequest.id,
+        obj,
+      );
+      if (response.success) {
+        SHOW_TOAST(
+          response.message || 'Request returned successfully',
+          'success',
+        );
+        reviewSheetRef?.current?.hide();
+        await fetchAvailableRequests(1, true);
+      } else {
+        SHOW_TOAST(response.error || 'Failed to return request', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to return request', 'error');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <AppLoader visible={isGlobalLoading} />
       <View style={styles.container}>
         <View style={styles.header}>
           <AppText
@@ -218,6 +375,12 @@ const AvailableRequest: React.FC = () => {
             />
           )}
         </View>
+        <ReviewRequestSheet
+          ref={reviewSheetRef}
+          onSend={async (reason, details) => {
+            onReturnRequest(reason, details);
+          }}
+        />
       </View>
     </SafeAreaView>
   );

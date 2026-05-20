@@ -94,12 +94,6 @@ const FormReviewScreen: React.FC = () => {
     NavigationService.goBack();
   };
 
-  const handleRightButtonPress = async () => {
-    if (formRef.current?.validateAndSubmit) {
-      await formRef.current.validateAndSubmit();
-    }
-  };
-
   const service = requestData?.service || request?.service || {};
   const serviceId = service?._id || service?.id;
   const serviceName = service?.serviceName;

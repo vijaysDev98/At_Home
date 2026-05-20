@@ -24,6 +24,7 @@ import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { AppDispatch, RootState } from '../../redux/store';
 import { userLogin } from '../../actions/auth/authAction';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -82,10 +83,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <AppSafeAreaView style={styles.container}>
+    <AppSafeAreaView edges>
       <AppLoader visible={isLoading} />
-      <ScrollView
+      {/* <ScrollView
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      > */}
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* HEADER */}
@@ -144,27 +151,31 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             }}
             placeholder={STRING.enterPassword}
             label={STRING.password}
-            labelRight={
-              <TouchableOpacity
-                onPress={() => navigation.navigate(SCREENS.FORGOT_PASSWORD)}
-                activeOpacity={0.7}
-              >
-                <AppText
-                  size={getScaleSize(13)}
-                  color={COLORS.primary}
-                  font={FONTS.Inter.SemiBold}
-                >
-                  {STRING.forgotQuestion}
-                </AppText>
-              </TouchableOpacity>
-            }
             containerBackgroundColor={COLORS._F8F9FA}
             error={error?.password || ''}
             secureTextEntry={true}
             isPasswordVisible={isPasswordVisible}
             handlePasswordVisibility={() => setIsPasswordVisible(prev => !prev)}
-            style={styles.field}
+            style={[styles.field, { marginBottom: getScaleSize(10) }]}
           />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate(SCREENS.FORGOT_PASSWORD)}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+            }}
+          >
+            <AppText
+              size={getScaleSize(13)}
+              color={COLORS.primary}
+              font={FONTS.Inter.SemiBold}
+            >
+              {STRING.forgotPasswordQuestion}
+            </AppText>
+          </TouchableOpacity>
 
           {/* LOGIN BUTTON */}
           <PrimaryButton
@@ -225,7 +236,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             {STRING.logInMessage}
           </AppText>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      {/* </ScrollView> */}
     </AppSafeAreaView>
   );
 };

@@ -12,10 +12,28 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
+import { CountryPicker } from 'react-native-country-codes-picker';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+
+const COUNTRY_MAP: { [key: string]: { code: string; flag: string } } = {
+  france: { code: '+33', flag: '🇫🇷' },
+  fr: { code: '+33', flag: '🇫🇷' },
+  us: { code: '+1', flag: '🇺🇸' },
+  usa: { code: '+1', flag: '🇺🇸' },
+  'united states': { code: '+1', flag: '🇺🇸' },
+  gb: { code: '+44', flag: '🇬🇧' },
+  uk: { code: '+44', flag: '🇬🇧' },
+  'united kingdom': { code: '+44', flag: '🇬🇧' },
+  ca: { code: '+1', flag: '🇨🇦' },
+  canada: { code: '+1', flag: '🇨🇦' },
+  de: { code: '+49', flag: '🇩🇪' },
+  germany: { code: '+49', flag: '🇩🇪' },
+  in: { code: '+91', flag: '🇮🇳' },
+  india: { code: '+91', flag: '🇮🇳' },
+};
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -26,7 +44,7 @@ export interface InputProps extends TextInputProps {
   labelSize?: number;
   labelColor?: string;
   labelFont?: string;
-  leftIcon?: string;
+  leftIcon?: any;
   handlePasswordVisibility?: () => void;
   isPasswordVisible?: boolean;
   isMandatory?: boolean;
@@ -43,6 +61,15 @@ export interface InputProps extends TextInputProps {
   renderPicker?: () => React.ReactNode;
   inputWrapperStyle?: StyleProp<ViewStyle>;
   placeholderTextColor?: string;
+  isCountryCode?: boolean;
+  countryCode?: string;
+  countryFlag?: string;
+  countryName?: string;
+  onCountryCodeSelect?: (
+    dialCode: string,
+    flag: string,
+    countryName: any,
+  ) => void;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -72,8 +99,29 @@ const Input: React.FC<InputProps> = ({
   renderPicker,
   inputWrapperStyle,
   placeholderTextColor,
+  isCountryCode,
+  countryCode,
+  countryFlag,
+  countryName,
+  onCountryCodeSelect,
   ...rest
 }) => {
+  const [showPicker, setShowPicker] = useState(false);
+
+  let resolvedFlag = countryFlag;
+  let resolvedCode = countryCode;
+
+  if (isCountryCode && countryName) {
+    const matched = COUNTRY_MAP[countryName.toLowerCase().trim()];
+    if (matched) {
+      resolvedFlag = resolvedFlag || matched.flag;
+      resolvedCode = resolvedCode || matched.code;
+    }
+  }
+
+  resolvedFlag = resolvedFlag || '🇺🇸';
+  resolvedCode = resolvedCode || '+1';
+
   const { multiline } = rest;
   // When locked: gray bg, no border colour, force non-editable
   const lockedBg = '#F3F4F6';
@@ -131,7 +179,36 @@ const Input: React.FC<InputProps> = ({
           inputWrapperStyle,
         ]}
       >
-        {leftIcon && <Image source={leftIcon} style={styles.icon} />}
+        {isCountryCode ? (
+          <>
+            <TouchableOpacity
+              disabled={rest.editable === false}
+              onPress={() => setShowPicker(true)}
+              style={styles.countryCodeSelector}
+              activeOpacity={0.8}
+            >
+              <AppText size={getScaleSize(16)} style={styles.flagText}>
+                {resolvedFlag}
+              </AppText>
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS._1E293B}
+                font={FONTS.Inter.Medium}
+              >
+                {resolvedCode}
+              </AppText>
+              {rest.editable !== false && (
+                <Image
+                  source={IMAGES.arrow_bottom}
+                  style={styles.dropdownArrow}
+                />
+              )}
+            </TouchableOpacity>
+            <View style={styles.verticalDivider} />
+          </>
+        ) : leftIcon ? (
+          <Image source={leftIcon} style={styles.icon} />
+        ) : null}
         {leftComponent && leftComponent}
 
         <TextInput
@@ -183,6 +260,24 @@ const Input: React.FC<InputProps> = ({
           {helper}
         </AppText>
       ) : null}
+
+      {isCountryCode && (
+        <CountryPicker
+          show={showPicker}
+          pickerButtonOnPress={item => {
+            onCountryCodeSelect?.(item.dial_code, item.flag, item.name);
+            setShowPicker(false);
+          }}
+          style={{
+            modal: {
+              flex: 0.5,
+            },
+          }}
+          onRequestClose={() => setShowPicker(false)}
+          onBackdropPress={() => setShowPicker(false)}
+          lang={'en'}
+        />
+      )}
     </View>
   );
 };
@@ -255,6 +350,27 @@ const styles = StyleSheet.create({
   },
   helperText: {
     // marginTop: 6,
+  },
+  countryCodeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    paddingRight: getScaleSize(4),
+  },
+  flagText: {
+    marginRight: getScaleSize(2),
+  },
+  dropdownArrow: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    resizeMode: 'contain',
+    tintColor: COLORS._64748B,
+  },
+  verticalDivider: {
+    width: 1,
+    height: getScaleSize(24),
+    backgroundColor: COLORS._E5E7EB,
+    marginRight: getScaleSize(4),
   },
 });
 

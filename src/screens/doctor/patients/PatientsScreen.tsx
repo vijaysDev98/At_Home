@@ -236,7 +236,10 @@ const PatientsScreen: React.FC = () => {
         <FlatList
           data={patients}
           style={styles.flatListContainer}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            patients.length === 0 && { flexGrow: 1 },
+          ]}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
           keyExtractor={item => item.id}
@@ -244,6 +247,18 @@ const PatientsScreen: React.FC = () => {
           refreshing={isRefreshing}
           onEndReached={onLoadMore}
           onEndReachedThreshold={0.5}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._6F767E}
+                align="center"
+              >
+                {STRING.noPatientsFound}
+              </AppText>
+            </View>
+          )}
           ListFooterComponent={() =>
             isFetchingNextPage ? (
               <View style={{ paddingVertical: 20 }}>
@@ -277,11 +292,11 @@ const PatientsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS._E5E7EB,
+    backgroundColor: COLORS._F8F9FA,
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS._E5E7EB,
+    backgroundColor: COLORS._F8F9FA,
   },
   header: {
     // paddingHorizontal: getScaleSize(20),
@@ -467,7 +482,13 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(20),
-    backgroundColor: COLORS._E5E7EB,
+    backgroundColor: COLORS._F8F9FA,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(60),
   },
 });
 

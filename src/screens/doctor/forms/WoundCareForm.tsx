@@ -46,6 +46,7 @@ import {
   handleSaveAsDraft,
   handleUpdateAndSign,
   handleSaveProgress,
+  handleSubmitForReview,
 } from './formActionHandlers';
 
 export interface WoundCareFormProps {
@@ -307,11 +308,28 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       });
     };
 
+    // Handle submit for review (using centralized handler)
+    const submitForReview = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleSubmitForReview({
+        dispatch,
+        state,
+        initialData,
+        validateForm: () => validateForm().ok,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
       saveAsDraft,
       updateAndSign,
       saveProgress,
+      submitForReview,
       getFormData: () => {
         return state;
       },

@@ -174,9 +174,14 @@ const FormsScreen: React.FC = () => {
       }
     },
 
+    saveProgress: async () => {
+      if (formRef.current?.saveProgress) {
+        await formRef.current.saveProgress();
+      }
+    },
+
     // Unused provider handlers (kept for type safety)
     submitForReview: async () => {},
-    saveProgress: async () => {},
     claimService: async () => {},
   };
 
@@ -199,7 +204,7 @@ const FormsScreen: React.FC = () => {
   }, [requestId]);
 
   useEffect(() => {
-    if (requestData && requestData?.isLocked) {
+    if (requestData && requestData?.isLocked && action !== 'view') {
       if (requestData?.formLock?.lockedBy !== profileData?.id) {
         // Only show warning for preview/testing
         const timer = setTimeout(() => {
@@ -217,9 +222,12 @@ const FormsScreen: React.FC = () => {
 
       if (response?.data?.status) {
         const data = response.data.data;
+        console.log('fetch data', data);
+
         setRequestData(data);
         // Acquire lock if both statuses are 'submitted'
         if (
+          action !== 'view' &&
           !data?.isLocked &&
           data.status === REQUEST_STATUS.SUBMITTED &&
           data.formStatus === FORM_STATUS.SUBMITTED
@@ -246,6 +254,7 @@ const FormsScreen: React.FC = () => {
   const renderBottomBar = () => {
     const { left, right } = buttonConfig;
     if (!left && !right) return null;
+    console.log('buttonConfig', left);
 
     return (
       <View style={styles.bottomBar}>
@@ -327,7 +336,7 @@ const FormsScreen: React.FC = () => {
         )}
       </View>
       <AppLoader visible={isLoading} />
-      {/* <WarningSheet isLock={true} ref={warningSheetRef} /> */}
+      <WarningSheet isLock={true} ref={warningSheetRef} />
     </AppSafeAreaView>
   );
 };

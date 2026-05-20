@@ -38,8 +38,9 @@ const PatientDetail: React.FC = () => {
   );
   console.log('patient', patient);
 
-  const homeAddress =
-    patient?.streetAddress + ', ' + patient?.city + ', ' + patient?.zip;
+  const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
+    .filter(item => item && item !== 'null')
+    .join(', ');
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
@@ -203,7 +204,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Medium}
                       color={COLORS._1A1D1F}
                     >
-                      {homeAddress}
+                      {homeAddress || '---'}
                     </AppText>
                   </View>
                 </View>
@@ -340,11 +341,22 @@ const PatientDetail: React.FC = () => {
           </View>
 
           <FlatList
-            data={patient?.linkedRequests}
+            data={[] as any[]}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                  align="center"
+                >
+                  No linked requests found
+                </AppText>
+              </View>
+            )}
             renderItem={({ item }) => {
               const formStatus = item?.formStatus;
-              const buttonConfig = getButtonConfig(formStatus);
-              console.log('buttonConfig', patient);
+              const buttonConfig = getButtonConfig(formStatus, item?.status);
 
               return (
                 <View style={{ marginBottom: getScaleSize(12) }}>
@@ -359,6 +371,12 @@ const PatientDetail: React.FC = () => {
                         ? buttonConfig.label || undefined
                         : undefined
                     }
+                    onPress={() => {
+                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                        request: item,
+                        action: 'view',
+                      });
+                    }}
                     onButtonPress={() => {
                       if (buttonConfig.action === 'edit') {
                         NavigationService.navigate(SCREENS.FORMS_SCREEN, {
@@ -507,6 +525,11 @@ const styles = StyleSheet.create({
     width: getScaleSize(12),
     height: getScaleSize(21),
     tintColor: COLORS.primary,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(32),
   },
 });
 
