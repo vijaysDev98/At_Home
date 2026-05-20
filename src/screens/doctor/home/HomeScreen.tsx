@@ -86,7 +86,7 @@ const HomeScreen: React.FC = () => {
     setLoading(true);
     try {
       const response = await dashboardApi.getDashboardOverview(5);
-      console.log('dashdata', response);
+
 
       if (response.success) {
         setDashboardData(response.data);

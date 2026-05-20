@@ -156,13 +156,15 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
               ]}
             />
           )}
-        <AppButton
-          title={buttonText}
-          onPress={() => {
-            onButtonPress();
-          }}
-          style={[styles.updateButtonStyle, { flex: 1 }]}
-        />
+        {buttonText && (
+          <AppButton
+            title={buttonText}
+            onPress={() => {
+              onButtonPress();
+            }}
+            style={[styles.updateButtonStyle, { flex: 1 }]}
+          />
+        )}
       </View>
     </TouchableOpacity>
   );

@@ -19,6 +19,9 @@ import { serviceRequestApi } from '../services/serviceRequestApi';
 import { SHOW_TOAST } from '../constant';
 import { API_BASE_URL } from '../api/apiRoutes';
 import NavigationService from '../navigation/NavigationService';
+import { IMAGES } from '../assets/images';
+import moment from 'moment';
+import { capitalizeFirstLetter } from '../constant/smallFunctions';
 
 export interface FormSignatureProps {
   title?: string;
@@ -33,6 +36,8 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   requestData,
   onSignatureCompleted,
 }) => {
+  console.log('requestData', requestData);
+
   const requestId = requestData?._id || requestData?.id;
   const dispatch = useDispatch();
 
@@ -203,13 +208,21 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       <View style={styles.card}>
         <View style={styles.signatureContainer}>
           {isSigned ? (
-            <Image
-              source={{
-                uri: requestData?.digitalSignature?.signatureData,
-              }}
-              resizeMode="contain"
-              style={styles.signatureImage}
-            />
+            <>
+              <Image
+                source={IMAGES.serviceCompletedCheck}
+                resizeMode="contain"
+                style={styles.signatureImage}
+              />
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS.completed}
+                style={{ marginTop: getScaleSize(10) }}
+                font={FONTS.Inter.SemiBold}
+              >
+                Signed
+              </AppText>
+            </>
           ) : (
             <TouchableOpacity
               activeOpacity={0.8}
@@ -237,7 +250,14 @@ const FormSignature: React.FC<FormSignatureProps> = ({
             numberOfLines={1}
             style={styles.doctorName}
           >
-            {requestData?.doctorId?.fullName}
+            {capitalizeFirstLetter(
+              requestData?.doctorId?.fullName ||
+                capitalizeFirstLetter(
+                  requestData?.doctorId?.fName +
+                    ' ' +
+                    requestData?.doctorId?.lName,
+                ),
+            )}
           </AppText>
 
           <AppText
@@ -245,7 +265,9 @@ const FormSignature: React.FC<FormSignatureProps> = ({
             color={COLORS._6B7280}
             font={FONTS.Inter.Medium}
           >
-            {requestData?.digitalSignature?.signedAt || 'Pending'}
+            {moment(requestData?.digitalSignature?.signedAt).format(
+              'DD MMM YYYY, h:mm A',
+            ) || 'Pending'}
           </AppText>
         </View>
       </View>
@@ -277,8 +299,8 @@ const styles = StyleSheet.create({
   },
 
   signatureImage: {
-    width: getScaleSize(140),
-    height: getScaleSize(80),
+    width: getScaleSize(50),
+    height: getScaleSize(50),
   },
 
   signButton: {

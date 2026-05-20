@@ -135,7 +135,6 @@ const AvailableRequest: React.FC = () => {
             assignedTotalPages = data.pagination.totalPages || 0;
           }
         }
-        console.log('assignedRequests', assignedRequests);
 
         const combined = [...assignedRequests, ...availableRequests];
         // Deduplicate requests by id
@@ -214,7 +213,6 @@ const AvailableRequest: React.FC = () => {
     const formStatus = item?.formStatus || '';
 
     const buttonConfig = getButtonConfigProvider(formStatus, item?.status);
-    console.log('item', item);
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>

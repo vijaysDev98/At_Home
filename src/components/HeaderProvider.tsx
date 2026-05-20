@@ -16,7 +16,6 @@ import { getScaleSize } from '../utils/scaleSize';
 import {
   DISPLAY_FORM_STATUS,
   getStatusBadgeColor,
-  REQUEST_STATUS,
 } from '../constant/RequestStatus';
 import AppButton from './AppButton';
 
@@ -77,6 +76,7 @@ const HeaderProvider = ({
                 {title}
               </AppText>
             ) : null}
+
             {isViewForm && (
               <AppButton
                 style={styles.viewFormBtn}
@@ -97,52 +97,47 @@ const HeaderProvider = ({
             </AppText>
           ) : null}
 
-          {(requestStatus || formStatus) && (
+          {(requestStatus || formStatus || status) && (
             <View style={styles.statusRow}>
-              {requestStatus ? (
-                <>
-                  <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                    Request Status:{' '}
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Bold}
-                      color={getStatusBadgeColor(requestStatus)}
-                    >
-                      {requestStatus}
-                    </AppText>
+              {(requestStatus || status) && (
+                <View style={styles.statusBadge}>
+                  <AppText
+                    size={getScaleSize(12)}
+                    color={COLORS._526674}
+                    font={FONTS.Inter.Regular}
+                  >
+                    Request Status:
                   </AppText>
 
-                  {formStatus ? <View style={styles.statusDivider} /> : null}
-                </>
-              ) : null}
-              {status ? (
-                <AppText
-                  style={{ marginRight: getScaleSize(10) }}
-                  size={getScaleSize(12)}
-                  color={COLORS._6F767E}
-                >
-                  Request Status:{' '}
                   <AppText
                     size={getScaleSize(12)}
-                    font={FONTS.Inter.Bold}
-                    color={getStatusBadgeColor(status)}
+                    color={getStatusBadgeColor(requestStatus || status || '')}
+                    font={FONTS.Inter.SemiBold}
                   >
-                    {DISPLAY_FORM_STATUS[status]}
+                    {requestStatus || DISPLAY_FORM_STATUS[status || ''] || ''}
                   </AppText>
-                </AppText>
-              ) : null}
-              {formStatus ? (
-                <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                  Form Status:{' '}
+                </View>
+              )}
+
+              {formStatus && (
+                <View style={styles.statusBadge}>
                   <AppText
                     size={getScaleSize(12)}
-                    font={FONTS.Inter.Bold}
+                    color={COLORS._526674}
+                    font={FONTS.Inter.Regular}
+                  >
+                    Form Status:
+                  </AppText>
+
+                  <AppText
+                    size={getScaleSize(12)}
                     color={getStatusBadgeColor(formStatus)}
+                    font={FONTS.Inter.SemiBold}
                   >
                     {DISPLAY_FORM_STATUS[formStatus]}
                   </AppText>
-                </AppText>
-              ) : null}
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -189,30 +184,32 @@ const styles = StyleSheet.create({
 
   statusRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: getScaleSize(12),
     marginTop: getScaleSize(4),
     flexWrap: 'wrap',
   },
 
-  statusDivider: {
-    width: 1,
-    height: getScaleSize(12),
-    backgroundColor: COLORS._D1D5DB,
-    marginHorizontal: getScaleSize(8),
+  statusBadge: {
+    flexDirection: 'row',
+    gap: getScaleSize(4),
+    alignItems: 'flex-start',
   },
   titleContainer: {
     flex: 1,
   },
+
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
   },
+
   title: {
     flexShrink: 1,
     marginRight: getScaleSize(8),
   },
+
   viewFormBtn: {
     height: getScaleSize(28),
     borderRadius: getScaleSize(6),

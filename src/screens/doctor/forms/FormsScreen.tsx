@@ -28,6 +28,7 @@ import {
   AppLoader,
   WarningSheet,
   Header,
+  FormSignature,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -37,7 +38,7 @@ import { SCREENS } from '../../../navigation/routes';
 import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
-import { API } from '../../../api';
+
 import {
   FORM_STATUS,
   REQUEST_STATUS,
@@ -216,32 +217,20 @@ const FormsScreen: React.FC = () => {
   }, [requestData]);
 
   const fetchServiceRequestDetails = async () => {
-    dispatch(setLoading(true));
-    try {
-      const response = await API.Instance.get(`/service-requests/${requestId}`);
-
-      if (response?.data?.status) {
-        const data = response.data.data;
-        console.log('fetch data', data);
-
-        setRequestData(data);
-        // Acquire lock if both statuses are 'submitted'
-        if (
-          action !== 'view' &&
-          !data?.isLocked &&
-          data.status === REQUEST_STATUS.SUBMITTED &&
-          data.formStatus === FORM_STATUS.SUBMITTED
-        ) {
-          acquireFormLock();
-        }
-      } else {
-        SHOW_TOAST('Failed to fetch service request details', 'error');
+    const data = await serviceRequestApi.getServiceRequestDetails(
+      requestId || '',
+    );
+    if (data) {
+      setRequestData(data);
+      // Acquire lock if both statuses are 'submitted'
+      if (
+        action !== 'view' &&
+        !data?.isLocked &&
+        data.status === REQUEST_STATUS.SUBMITTED &&
+        data.formStatus === FORM_STATUS.SUBMITTED
+      ) {
+        acquireFormLock();
       }
-    } catch (error: any) {
-      console.log('Error fetching service request:', error);
-      SHOW_TOAST(error?.message || 'Failed to fetch service request', 'error');
-    } finally {
-      dispatch(setLoading(false));
     }
   };
 
@@ -254,7 +243,6 @@ const FormsScreen: React.FC = () => {
   const renderBottomBar = () => {
     const { left, right } = buttonConfig;
     if (!left && !right) return null;
-    console.log('buttonConfig', left);
 
     return (
       <View style={styles.bottomBar}>
@@ -328,6 +316,15 @@ const FormsScreen: React.FC = () => {
                     />
                   </View>
                 </View>
+                {formStatus == FORM_STATUS.SIGNED && (
+                  <View style={styles.signatureContainer}>
+                    <FormSignature
+                      readOnly={true}
+                      requestData={requestData}
+                      // onSignatureCompleted={fetchServiceRequestDetails}
+                    />
+                  </View>
+                )}
               </ScrollView>
             </View>
 
@@ -349,6 +346,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS._F9FAFB,
+  },
+  signatureContainer: {
+    paddingHorizontal: getScaleSize(16),
   },
   header: {
     height: 60,

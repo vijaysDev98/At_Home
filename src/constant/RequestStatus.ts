@@ -86,45 +86,26 @@ export const getButtonConfig = (formStatus: string, status: string) => {
 };
 
 export const getButtonConfigProvider = (formStatus: string, status: string) => {
-  switch (formStatus) {
-    case FORM_STATUS.AWAITING_SIGNATURE:
-      return {
-        show: true,
-        label: 'View Form',
-        action: 'view',
-      };
-    case FORM_STATUS.SUBMITTED:
+  switch (status) {
+    case REQUEST_STATUS.SUBMITTED:
       return {
         show: true,
         label: 'Open Form',
         action: 'edit',
       };
-    case FORM_STATUS.SIGNED:
-      if (status === REQUEST_STATUS.SUBMITTED) {
-        return {
-          show: true,
-          label: 'Claim Service',
-          action: 'view',
-        };
-      }
+    case REQUEST_STATUS.RETURNED:
       return {
-        show: true,
-        label: 'View Form',
-        action: 'view',
+        show: false,
+        label: null,
+        action: null,
       };
-    case FORM_STATUS.RETURNED:
-      return {
-        show: true,
-        label: 'View Form',
-        action: 'view',
-      };
-    case FORM_STATUS.IN_PROGRESS:
+    case REQUEST_STATUS.IN_PROGRESS:
       return {
         show: true,
         label: 'View Service',
         action: 'view',
       };
-    case FORM_STATUS.COMPLETED:
+    case REQUEST_STATUS.COMPLETED:
       return {
         show: false,
         label: null,

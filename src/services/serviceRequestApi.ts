@@ -1,6 +1,9 @@
 import { Alert } from 'react-native';
 import { API } from '../api';
 import { API_ROUTES } from '../api/apiRoutes';
+import store from '../redux/store';
+import { setLoading } from '../actions/common/commonSlice';
+import { SHOW_TOAST } from '../constant/showToast';
 
 export interface CreateServiceRequestPayload {
   serviceId: string;
@@ -23,6 +26,60 @@ export interface ServiceRequestResponse {
 }
 
 export const serviceRequestApi = {
+  /**
+   * Get service request details by ID
+   * Handles loader and error toasts internally. Returns data or null.
+   */
+  getServiceRequestDetails: async (
+    requestId: string,
+  ): Promise<any> => {
+    store.dispatch(setLoading(true));
+    try {
+      const response: any = await API.Instance.get(
+        `/service-requests/${requestId}`,
+      );
+
+      if (response?.data?.status) {
+        return response.data.data;
+      } else {
+        SHOW_TOAST('Failed to fetch service request details', 'error');
+        return null;
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to fetch service request details', 'error');
+      return null;
+    } finally {
+      store.dispatch(setLoading(false));
+    }
+  },
+
+  /**
+   * Get pre-claim service request details for provider
+   * Handles loader and error toasts internally. Returns data or null.
+   */
+  getPreClaimDetails: async (
+    requestId: string,
+  ): Promise<any> => {
+    store.dispatch(setLoading(true));
+    try {
+      const response: any = await API.Instance.get(
+        `/service-requests/${requestId}/pre-claim`,
+      );
+
+      if (response?.data?.status) {
+        return response.data.data;
+      } else {
+        SHOW_TOAST('Failed to fetch pre-claim details', 'error');
+        return null;
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to fetch pre-claim details', 'error');
+      return null;
+    } finally {
+      store.dispatch(setLoading(false));
+    }
+  },
+
   /**
    * Create a new service request
    */

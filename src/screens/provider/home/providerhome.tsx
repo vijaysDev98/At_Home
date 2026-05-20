@@ -87,7 +87,6 @@ const ProviderHome: React.FC = () => {
     setLoading(true);
     try {
       const response = await dashboardApi.getProviderDashboardOverview(5);
-      console.log('provider dashdata', response);
 
       if (response.success) {
         setDashboardData(response.data);
@@ -108,7 +107,6 @@ const ProviderHome: React.FC = () => {
   const recentQueue = dashboardData?.recentQueue || [];
 
   const onReturnRequest = async (reason: string, details: string) => {
-    console.log('onReturnRequest', selectedRequest, reason, details);
     if (!selectedRequest?.id) {
       SHOW_TOAST('Missing Request ID', 'error');
       return;

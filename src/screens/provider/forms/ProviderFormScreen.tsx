@@ -17,7 +17,6 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { RootStackParamList } from '../../../navigation';
-import { API } from '../../../api';
 import {
   getFormScreenButtons,
   FormScreenButtonConfig,
@@ -162,35 +161,20 @@ const ProviderFormScreen: React.FC = () => {
   }, [requestData]);
 
   const fetchServiceRequestDetails = async (isInProgress: boolean) => {
-    dispatch(setLoading(true));
-    try {
-      const response = await API.Instance.get(
-        isInProgress
-          ? `/service-requests/${requestId}`
-          : `/service-requests/${requestId}/pre-claim`,
-      );
+    const data = isInProgress
+      ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
+      : await serviceRequestApi.getPreClaimDetails(requestId || '');
 
-      if (response?.data?.status) {
-        const data = response.data.data;
-        console.log('respnseee', data);
-
-        setRequestData(data);
-        // Acquire lock if request and form are both submitted and unlocked
-        if (
-          !data?.isLocked &&
-          data.status === REQUEST_STATUS.SUBMITTED &&
-          data.formStatus === FORM_STATUS.SUBMITTED
-        ) {
-          acquireFormLock();
-        }
-      } else {
-        SHOW_TOAST('Failed to fetch service request details', 'error');
+    if (data) {
+      setRequestData(data);
+      // Acquire lock if request and form are both submitted and unlocked
+      if (
+        !data?.isLocked &&
+        data.status === REQUEST_STATUS.SUBMITTED &&
+        data.formStatus === FORM_STATUS.SUBMITTED
+      ) {
+        acquireFormLock();
       }
-    } catch (error: any) {
-      console.log('Error fetching service request:', error);
-      SHOW_TOAST(error?.message || 'Failed to fetch service request', 'error');
-    } finally {
-      dispatch(setLoading(false));
     }
   };
 
@@ -354,7 +338,7 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.completed,
   },
   header: {
-    height: 60,
+    // height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

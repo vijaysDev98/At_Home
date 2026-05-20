@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     gap: getScaleSize(4),
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   statusLabel: {
     fontSize: getScaleSize(12),
