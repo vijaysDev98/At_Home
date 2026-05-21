@@ -194,6 +194,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           buttonConfig.show ? buttonConfig.label || undefined : undefined
         }
         onPress={() => {
+          if (item.status == REQUEST_STATUS.COMPLETED) {
+            NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+              request: item,
+            });
+            return;
+          }
           NavigationService.navigate(SCREENS.FORMS_SCREEN, {
             request: item,
             action: 'view',

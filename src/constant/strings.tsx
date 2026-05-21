@@ -49,6 +49,7 @@ export const STRING = {
   finessNumberMustBe9Digits: 'FINESS number must be exactly 9 digits',
   pleaseSelectYourSpecialty: 'Please select your specialty',
   placeOfPracticeRequired: 'Place of practice is required',
+  facilityNameRequired: 'Facility name is required',
   addressRequired: 'Address is required',
   youMustAcceptTheTermsToContinue: 'You must accept the terms to continue',
   failedToUploadProfileImage: 'Failed to upload profile image',

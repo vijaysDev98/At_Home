@@ -138,7 +138,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
       </View>
       <View style={{ flexDirection: 'row', gap: getScaleSize(12) }}>
         {formStatus == FORM_STATUS.SIGNED &&
-          status == REQUEST_STATUS.IN_PROGRESS && (
+          status == REQUEST_STATUS.SUBMITTED && (
             <AppButton
               title={'Return Request'}
               onPress={() => {

@@ -35,6 +35,7 @@ import { SHOW_TOAST } from '../../../constant/showToast';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
@@ -225,16 +226,25 @@ const AvailableRequest: React.FC = () => {
           buttonText={
             buttonConfig.show ? buttonConfig.label || undefined : undefined
           }
-          onPress={() =>
+          onPress={() => {
+            if (item.status == REQUEST_STATUS.COMPLETED) {
+              NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                request: item,
+              });
+              return;
+            }
             NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
               request: item,
               action: 'view',
-            })
-          }
+            });
+          }}
           onButtonPress={() =>
             NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
               request: item,
               action: buttonConfig.action,
+              ...(buttonConfig.isComplete && {
+                isComplete: buttonConfig.isComplete,
+              }),
             })
           }
           onLeftButtonPress={() => {
@@ -376,7 +386,14 @@ const AvailableRequest: React.FC = () => {
         <ReviewRequestSheet
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
-            onReturnRequest(reason, details);
+            await handleClaimService({
+              requestId: selectedRequest?.id,
+              dispatch,
+              onSuccess: async () => {
+                await onReturnRequest(reason, details);
+              },
+            });
+            // onReturnRequest(reason, details);
           }}
         />
       </View>

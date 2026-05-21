@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,67 +8,96 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
+import moment from 'moment';
+
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import AppText from '../../../components/AppText';
 import NavigationService from '../../../navigation/NavigationService';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { API_BASE_URL } from '../../../api/apiRoutes';
+import HeaderProvider, {
+  openPdfInBrowser,
+} from '../../../components/HeaderProvider';
+import { AppLoader, ProfileAvatar } from '../../../components';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
+  const requestId = route?.params?.request?.id;
 
-  // Extracting data from route params or using dummy data for demo
-  const {
-    patientName = 'Alice Smith',
-    requestId = 'SR-2023-10456',
-    serviceType = 'Post-Op Wound Care',
-    duration = '45 mins',
-    doctorName = 'Sarah Jenkins',
-    completedDate = 'Oct 24, 2023 at 11:45 AM',
-  } = route.params || {};
+  const [loading, setLoading] = useState(true);
+  const [requestData, setRequestData] = useState<any>(null);
+
+  useEffect(() => {
+    fetchRequestDetails();
+  }, []);
+
+  const fetchRequestDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await serviceRequestApi.getServiceRequestDetails(
+        requestId || '',
+      );
+
+      if (response) {
+        setRequestData(response);
+      }
+    } catch (error) {
+      console.log('error', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const patientName = requestData?.patientId
+    ? `${requestData?.patientId?.fName || ''} ${
+        requestData?.patientId?.lName || ''
+      }`
+    : '-';
+
+  const providerName = requestData?.assignedProviderId
+    ? `${requestData?.assignedProviderId?.fName || ''} ${
+        requestData?.assignedProviderId?.lName || ''
+      }`
+    : '-';
+
+  const doctorName = requestData?.doctorId
+    ? `${requestData?.doctorId?.fName || ''} ${
+        requestData?.doctorId?.lName || ''
+      }`
+    : '-';
+
+  const completedDate = requestData?.updatedAt
+    ? moment(requestData?.updatedAt).format('MMM DD, YYYY [at] hh:mm A')
+    : '-';
+
+  const serviceType = requestData?.serviceId?.serviceName || '-';
+
+  const dob = requestData?.patientId?.dateOfBirth
+    ? moment(requestData?.patientId?.dateOfBirth).format('DD/MM/YYYY')
+    : '-';
+
+  const weight = requestData?.patientId?.weight || '-';
+
+  const formData = requestData?.formData || {};
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => NavigationService.goBack()}
-          style={styles.backBtn}
-        >
-          <Image source={IMAGES.arrow_back} style={styles.backIcon} />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <AppText
-            font={FONTS.Inter.Bold}
-            size={getScaleSize(20)}
-            color={COLORS._526674}
-            style={styles.headerTitle}
-          >
-            Service Completed
-          </AppText>
-          <View style={styles.headerStatusRow}>
-            <AppText size={getScaleSize(12)} color={COLORS._6B7280}>
-              Request Status:{' '}
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._10B981}
-              >
-                Completed
-              </AppText>
-            </AppText>
-            <AppText size={getScaleSize(12)} color={COLORS._6B7280}>
-              Form Status:{' '}
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Bold}
-                color="#629DFF"
-              >
-                Signed
-              </AppText>
-            </AppText>
-          </View>
-        </View>
-      </View>
+      <HeaderProvider
+        title="Service Completed"
+        isBack
+        style={styles.header}
+        status={requestData?.status}
+        formStatus={requestData?.formStatus}
+        // onViewFormPress={() => {
+        //   if (requestData?.signedPdfUrl) {
+        //     openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
+        //   }
+        // }}
+        // isViewForm={true}
+      />
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
@@ -77,6 +106,7 @@ const ServiceCompletedScreen: React.FC = () => {
         {/* Success Card */}
         <View style={styles.successCard}>
           <View style={styles.successTopBar} />
+
           <View style={styles.successContent}>
             <View style={styles.checkContainer}>
               <Image
@@ -108,6 +138,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 source={IMAGES.serviceCompletedClock}
                 style={styles.pillIcon}
               />
+
               <AppText size={getScaleSize(12)} color={COLORS._64748B}>
                 Completed on {completedDate}
               </AppText>
@@ -118,6 +149,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 source={IMAGES.serviceCompletedDoctor}
                 style={styles.doctorIcon}
               />
+
               <AppText
                 size={getScaleSize(12)}
                 color={COLORS.submitted}
@@ -136,6 +168,7 @@ const ServiceCompletedScreen: React.FC = () => {
               source={IMAGES.serviceSummaryIcon}
               style={styles.summaryIcon}
             />
+
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(14)}
@@ -151,6 +184,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
                   Patient Name
                 </AppText>
+
                 <AppText
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
@@ -159,16 +193,18 @@ const ServiceCompletedScreen: React.FC = () => {
                   {patientName}
                 </AppText>
               </View>
+
               <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
                   Request ID
                 </AppText>
+
                 <AppText
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
                   color={COLORS._1A1D1F}
                 >
-                  {requestId}
+                  {requestData?.requestId || '-'}
                 </AppText>
               </View>
             </View>
@@ -178,6 +214,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
                   Service Type
                 </AppText>
+
                 <AppText
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
@@ -186,16 +223,18 @@ const ServiceCompletedScreen: React.FC = () => {
                   {serviceType}
                 </AppText>
               </View>
+
               <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-                  Duration
+                  Priority
                 </AppText>
+
                 <AppText
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
                   color={COLORS._1A1D1F}
                 >
-                  {duration}
+                  {requestData?.priorityLevel || '-'}
                 </AppText>
               </View>
             </View>
@@ -208,115 +247,95 @@ const ServiceCompletedScreen: React.FC = () => {
               >
                 Provider
               </AppText>
+
               <View style={styles.providerRow}>
-                <Image
-                  source={IMAGES.serviceCompletedAvatar}
-                  style={styles.providerAvatar}
-                />
+                <ProfileAvatar size="small" name={providerName} />
+
                 <AppText
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
                   color={COLORS._1A1D1F}
                 >
-                  {doctorName}
+                  {providerName}
                 </AppText>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Recorded Vitals Card */}
+        {/* Patient Details */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Image
               source={IMAGES.serviceVitalsIcon}
               style={styles.vitalsTitleIcon}
             />
+
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(14)}
               color={COLORS._1A1D1F}
             >
-              Recorded Vitals
+              Patient Details
             </AppText>
           </View>
 
           <View style={styles.vitalsGrid}>
             <View style={styles.vitalsRow}>
-              <VitalsItem label="Blood Pressure" value="120/80" unit="mmHg" />
-              <VitalsItem label="Temperature" value="98.6" unit="°F" />
+              <VitalsItem
+                label="Gender"
+                value={requestData?.patientId?.gender || '-'}
+              />
+              <VitalsItem label="Weight" value={`${weight} kg`} />
             </View>
+
             <View style={styles.vitalsRow}>
-              <VitalsItem label="Heart Rate" value="72" unit="bpm" />
-              <VitalsItem label="Oxygen Level" value="98" unit="%" />
+              <VitalsItem label="DOB" value={dob} />
+              <VitalsItem
+                label="Phone"
+                value={requestData?.patientId?.phoneNumber || '-'}
+              />
             </View>
           </View>
         </View>
 
-        {/* Clinical Notes Card */}
-        <View style={styles.summaryCard}>
+        {/* Form Data */}
+        {/* <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <Image
               source={IMAGES.serviceNotesIcon}
               style={styles.summaryIcon}
             />
-            <AppText
-              font={FONTS.Inter.SemiBold}
-              size={getScaleSize(14)}
-              color={COLORS._1A1D1F}
-            >
-              Clinical Notes
-            </AppText>
-          </View>
-          <View style={styles.notesBox}>
-            <AppText
-              size={getScaleSize(14)}
-              color={COLORS._6F767E}
-              style={{ lineHeight: 22 }}
-            >
-              Patient showed stable vitals. No new complaints. Continued current
-              medication plan. Advised to stay hydrated and maintain light
-              physical activity. Next follow-up recommended in 4 weeks.
-            </AppText>
-          </View>
-        </View>
 
-        {/* Attachments Card */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryHeader}>
-            <Image
-              source={IMAGES.serviceAttachmentsIcon}
-              style={styles.summaryIcon}
-            />
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(14)}
               color={COLORS._1A1D1F}
             >
-              Attachments
+              Form Details
             </AppText>
           </View>
-          <View style={styles.attachmentsList}>
-            <AttachmentItem
-              name="wound_healing_day5.jpg"
-              meta="Added today, 10:15 AM • 2.4 MB"
-              iconBg="#EFF6FF"
-            />
-            <AttachmentItem
-              name="consent_form_signed.pdf"
-              meta="Added today, 09:30 AM • 1.1 MB"
-              iconBg="#FEF2F2"
-            />
+
+          <View style={styles.notesBox}>
+          
           </View>
-        </View>
+        </View> */}
 
         {/* Bottom Actions */}
         <View style={styles.bottomActions}>
-          <TouchableOpacity style={styles.actionBtnSecondary}>
+          <TouchableOpacity
+            style={styles.actionBtnSecondary}
+            onPress={() => {
+              if (requestData?.signedPdfUrl) {
+                openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
+              }
+            }}
+          >
             <Image
               source={IMAGES.serviceViewActionIcon}
               style={styles.actionIcon}
             />
+
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(12)}
@@ -325,11 +344,20 @@ const ServiceCompletedScreen: React.FC = () => {
               View Form
             </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtnSecondary}>
+
+          <TouchableOpacity
+            style={styles.actionBtnSecondary}
+            onPress={() => {
+              if (requestData?.signedPdfUrl) {
+                openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
+              }
+            }}
+          >
             <Image
               source={IMAGES.serviceDownloadActionIcon}
               style={styles.actionIcon}
             />
+
             <AppText
               font={FONTS.Inter.SemiBold}
               size={getScaleSize(12)}
@@ -340,78 +368,33 @@ const ServiceCompletedScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <AppLoader visible={loading} />
     </SafeAreaView>
   );
 };
 
-// Sub-components for cleaner structure
-const VitalsItem = ({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-}) => (
+const VitalsItem = ({ label, value }: { label: string; value: string }) => (
   <View style={styles.vitalsItem}>
     <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
       {label}
     </AppText>
+
     <View style={styles.vitalsValueRow}>
       <AppText
         font={FONTS.Inter.Bold}
-        size={getScaleSize(16)}
+        size={getScaleSize(15)}
         color={COLORS._1A1D1F}
       >
         {value}
       </AppText>
-      <AppText size={getScaleSize(10)} color={COLORS._6B7280}>
-        {unit}
-      </AppText>
     </View>
-  </View>
-);
-
-const AttachmentItem = ({
-  name,
-  meta,
-  iconBg,
-}: {
-  name: string;
-  meta: string;
-  iconBg: string;
-}) => (
-  <View style={styles.attachmentRow}>
-    <View style={[styles.attachmentIconWrap, { backgroundColor: iconBg }]}>
-      <Image
-        source={
-          name.includes('.pdf')
-            ? IMAGES.serviceAttachmentPdfIcon
-            : IMAGES.serviceAttachmentJpgIcon
-        }
-        style={styles.attachmentIcon}
-      />
-    </View>
-    <View style={styles.attachmentInfo}>
-      <AppText
-        font={FONTS.Inter.Medium}
-        size={getScaleSize(14)}
-        color={COLORS._1A1D1F}
-      >
-        {name}
-      </AppText>
-      <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-        {meta}
-      </AppText>
-    </View>
-    <TouchableOpacity>
-      <Image source={IMAGES.serviceEyeIcon} style={styles.viewIcon} />
-    </TouchableOpacity>
   </View>
 );
 
 export default ServiceCompletedScreen;
+
+// KEEP YOUR EXISTING STYLES
 
 const styles = StyleSheet.create({
   safe: {
@@ -441,6 +424,14 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(16),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  formRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: getScaleSize(12),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
   },
   backIcon: {
     width: getScaleSize(14),

@@ -322,7 +322,7 @@ export const handleSaveProgress = async (
     }
     dispatch(setLoading(false));
     if (response.success) {
-      await serviceRequestApi.releaseFormLock(requestId);
+      // await serviceRequestApi.releaseFormLock(requestId);
       SHOW_SUCCESS_TOAST(response.message || 'Progress saved successfully');
       NavigationService.goBack();
       return { success: true };
@@ -405,5 +405,43 @@ export const handleSubmitForReview = async (
     const msg = error.message;
     SHOW_TOAST(msg, 'error');
     return { success: false, error: msg };
+  }
+};
+
+export const handleClaimService = async ({
+  requestId,
+  dispatch,
+  onSuccess,
+}: {
+  requestId: string;
+  dispatch: any;
+  onSuccess?: () => Promise<void> | void;
+}) => {
+  if (!requestId) {
+    SHOW_TOAST('Missing Request ID', 'error');
+    return;
+  }
+
+  dispatch(setLoading(true));
+
+  try {
+    const response = await serviceRequestApi.claimRequest(requestId);
+
+    if (response.success) {
+      SHOW_TOAST(response.message || 'Request claimed successfully', 'success');
+
+      // call callback here
+      if (onSuccess) {
+        await onSuccess();
+      }
+
+      NavigationService.goBack();
+    } else {
+      SHOW_TOAST(response.error || 'Failed to claim request', 'error');
+    }
+  } catch (error: any) {
+    SHOW_TOAST(error?.message || 'Failed to claim request', 'error');
+  } finally {
+    dispatch(setLoading(false));
   }
 };

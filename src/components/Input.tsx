@@ -12,28 +12,11 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { CountryPicker } from 'react-native-country-codes-picker';
+import { CountryPicker, countryCodes } from 'react-native-country-codes-picker';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
-
-const COUNTRY_MAP: { [key: string]: { code: string; flag: string } } = {
-  france: { code: '+33', flag: '🇫🇷' },
-  fr: { code: '+33', flag: '🇫🇷' },
-  us: { code: '+1', flag: '🇺🇸' },
-  usa: { code: '+1', flag: '🇺🇸' },
-  'united states': { code: '+1', flag: '🇺🇸' },
-  gb: { code: '+44', flag: '🇬🇧' },
-  uk: { code: '+44', flag: '🇬🇧' },
-  'united kingdom': { code: '+44', flag: '🇬🇧' },
-  ca: { code: '+1', flag: '🇨🇦' },
-  canada: { code: '+1', flag: '🇨🇦' },
-  de: { code: '+49', flag: '🇩🇪' },
-  germany: { code: '+49', flag: '🇩🇪' },
-  in: { code: '+91', flag: '🇮🇳' },
-  india: { code: '+91', flag: '🇮🇳' },
-};
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -63,13 +46,7 @@ export interface InputProps extends TextInputProps {
   placeholderTextColor?: string;
   isCountryCode?: boolean;
   countryCode?: string;
-  countryFlag?: string;
-  countryName?: string;
-  onCountryCodeSelect?: (
-    dialCode: string,
-    flag: string,
-    countryName: any,
-  ) => void;
+  onCountryCodeSelect?: (code: string) => void;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -101,27 +78,10 @@ const Input: React.FC<InputProps> = ({
   placeholderTextColor,
   isCountryCode,
   countryCode,
-  countryFlag,
-  countryName,
   onCountryCodeSelect,
   ...rest
 }) => {
   const [showPicker, setShowPicker] = useState(false);
-
-  let resolvedFlag = countryFlag;
-  let resolvedCode = countryCode;
-
-  if (isCountryCode && countryName) {
-    const matched = COUNTRY_MAP[countryName.toLowerCase().trim()];
-    if (matched) {
-      resolvedFlag = resolvedFlag || matched.flag;
-      resolvedCode = resolvedCode || matched.code;
-    }
-  }
-
-  resolvedFlag = resolvedFlag || '🇺🇸';
-  resolvedCode = resolvedCode || '+1';
-
   const { multiline } = rest;
   // When locked: gray bg, no border colour, force non-editable
   const lockedBg = '#F3F4F6';
@@ -137,6 +97,22 @@ const Input: React.FC<InputProps> = ({
         style={[styles.lockIcon, multiline && styles.lockIconTop]}
       />
     ) : null);
+
+  const selectedCountry = React.useMemo(() => {
+    if (!countryCode) {
+      return countryCodes.find(item => item.code === 'US');
+    }
+
+    return (
+      countryCodes.find(
+        item => item.code?.toLowerCase() === countryCode.toLowerCase(),
+      ) || countryCodes.find(item => item.code === 'US')
+    );
+  }, [countryCode]);
+
+  const resolvedFlag = selectedCountry?.flag || '🇺🇸';
+  const resolvedCode = selectedCountry?.dial_code || '+1';
+
   return (
     <View style={[styles.root, style]}>
       {(labelRight || label) && (
@@ -265,7 +241,7 @@ const Input: React.FC<InputProps> = ({
         <CountryPicker
           show={showPicker}
           pickerButtonOnPress={item => {
-            onCountryCodeSelect?.(item.dial_code, item.flag, item.name);
+            onCountryCodeSelect?.(item.code);
             setShowPicker(false);
           }}
           style={{

@@ -77,6 +77,7 @@ const AddPatient: React.FC = () => {
   const [zip, setZip] = useState('');
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('');
+  const [country, setCountry] = useState('FR');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [socialInsuranceNumber, setSocialInsuranceNumber] = useState('');
   const [weight, setWeight] = useState('');
@@ -107,6 +108,7 @@ const AddPatient: React.FC = () => {
       setCity(patientToEdit.city || '');
       setZip(patientToEdit.zip || '');
       setNotes(patientToEdit.medicalDescription || '');
+      setCountry(patientToEdit.country || 'FR');
       setGender(patientToEdit.gender || '');
       setWeight(patientToEdit?.weight?.toString() || '');
       setSocialInsuranceNumber(patientToEdit.socialInsuranceNumber || '');
@@ -156,6 +158,7 @@ const AddPatient: React.FC = () => {
         zip: zip.trim(),
         medicalDescription: notes.trim(),
         gender: gender,
+        country: country,
         ...(socialInsuranceNumber.trim() && {
           socialInsuranceNumber: socialInsuranceNumber.trim(),
         }),
@@ -189,10 +192,7 @@ const AddPatient: React.FC = () => {
           style={styles.headerStyle}
           {...(!isEdit && {
             leftContent: () => (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => NavigationService.goBack()}
-              >
+              <TouchableOpacity activeOpacity={0.8} onPress={handleCancel}>
                 <AppText
                   size={getScaleSize(15)}
                   font={FONTS.Inter.Medium}
@@ -407,7 +407,11 @@ const AddPatient: React.FC = () => {
                 <View style={styles.fieldGroup}>
                   <Input
                     value={phone}
-                    // isCountryCode
+                    isCountryCode
+                    countryCode={country}
+                    onCountryCodeSelect={code => {
+                      setCountry(code);
+                    }}
                     onChangeText={t => {
                       setPhone(t);
                       setErrors(prev => ({ ...prev, phone: '' }));

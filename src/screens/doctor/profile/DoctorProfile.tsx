@@ -79,7 +79,7 @@ const DoctorProfile: React.FC = () => {
 
   const fName = profileData?.fName || '';
   const lName = profileData?.lName || '';
-  const fullName = (profileData as any)?.fullName || `${fName} ${lName}`.trim();
+  const fullName = `${fName} ${lName}`.trim();
   const userEmail = profileData?.email;
   const userPhone = profileData?.phoneNumber;
   const userSpecialty = profileData?.specialty;
@@ -137,7 +137,7 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  {`Dr. ${fullName}`}
+                  {`Dr. ${capitalizeFirstLetter(fullName)}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}

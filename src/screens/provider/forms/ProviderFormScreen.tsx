@@ -3,7 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { useRoute } from '@react-navigation/native';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AppSafeAreaView,
@@ -34,9 +40,12 @@ import {
 // Import all form components
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import ServiceFormRenderer from '../../doctor/forms/ServiceFormRenderer';
-import HeaderProvider from '../../../components/HeaderProvider';
+import HeaderProvider, {
+  openPdfInBrowser,
+} from '../../../components/HeaderProvider';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { SCREENS } from '../../../navigation/routes';
+import { API_BASE_URL } from '../../../api/apiRoutes';
 
 export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -48,7 +57,8 @@ const ProviderFormScreen: React.FC = () => {
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
-
+  const isComplete = (route.params as any)?.isComplete;
+  const readOnly = action === 'view';
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -61,6 +71,8 @@ const ProviderFormScreen: React.FC = () => {
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
+  const [hasError, setHasError] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
   let isInProgress: boolean = request?.status == REQUEST_STATUS.IN_PROGRESS;
@@ -149,9 +161,19 @@ const ProviderFormScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    if (readOnly) {
+      return;
+    }
+
+    console.log(
+      requestData?.formLock?.lockedBy,
+      profileData?._id,
+      'requestData?.formLock',
+    );
+
     if (requestData && requestData?.isLocked) {
-      if (requestData?.formLock?.lockedBy !== profileData?.id) {
-        // Only show warning for preview/testing
+      let lockedBy = requestData?.formLock?.lockedBy;
+      if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
         const timer = setTimeout(() => {
           warningSheetRef.current?.show();
         }, 500);
@@ -161,20 +183,32 @@ const ProviderFormScreen: React.FC = () => {
   }, [requestData]);
 
   const fetchServiceRequestDetails = async (isInProgress: boolean) => {
-    const data = isInProgress
-      ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
-      : await serviceRequestApi.getPreClaimDetails(requestId || '');
+    try {
+      setHasError(false);
+      const data = isInProgress
+        ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
+        : await serviceRequestApi.getPreClaimDetails(requestId || '');
 
-    if (data) {
-      setRequestData(data);
-      // Acquire lock if request and form are both submitted and unlocked
-      if (
-        !data?.isLocked &&
-        data.status === REQUEST_STATUS.SUBMITTED &&
-        data.formStatus === FORM_STATUS.SUBMITTED
-      ) {
-        acquireFormLock();
+      if (data) {
+        setRequestData(data);
+
+        // Acquire lock if request and form are both submitted and unlocked
+        if (
+          !readOnly &&
+          !data?.isLocked &&
+          data.status === REQUEST_STATUS.SUBMITTED &&
+          data.formStatus === FORM_STATUS.SUBMITTED
+        ) {
+          acquireFormLock();
+          handleViewRequest();
+        }
+      } else {
+        setHasError(true);
       }
+    } catch (error) {
+      setHasError(true);
+    } finally {
+      setIsFetched(true);
     }
   };
 
@@ -198,6 +232,21 @@ const ProviderFormScreen: React.FC = () => {
       }
     } catch (error: any) {
       SHOW_TOAST(error?.message || 'Failed to complete service', 'error');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleViewRequest = async () => {
+    if (!requestId) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      await serviceRequestApi.providerViewRequest(requestId);
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to view service', 'error');
     } finally {
       dispatch(setLoading(false));
     }
@@ -254,12 +303,13 @@ const ProviderFormScreen: React.FC = () => {
       <View style={styles.container}>
         <HeaderProvider
           title={
-            action === 'view'
-              ? 'View Form'
-              : isInProgress
-              ? 'Service'
-              : 'Update Form'
+            readOnly ? 'View Form' : isInProgress ? 'Service' : 'Update Form'
           }
+          onViewFormPress={() => {
+            console.log(API_BASE_URL + requestData?.signedPdfUrl || '');
+
+            openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');
+          }}
           isBack
           isViewForm={requestData?.status == REQUEST_STATUS.IN_PROGRESS}
           formStatus={requestData?.formStatus}
@@ -271,7 +321,13 @@ const ProviderFormScreen: React.FC = () => {
             } as any
           }
         />
-        {!requestData ? null : (
+        {isFetched && hasError ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppText color={COLORS.primary}>Something went wrong</AppText>
+          </View>
+        ) : (
           <>
             <View style={styles.content}>
               <ScrollView
@@ -290,7 +346,7 @@ const ProviderFormScreen: React.FC = () => {
                       serviceId={serviceId || ''}
                       initialData={requestData}
                       patient={patientData}
-                      readOnly={action === 'view'}
+                      readOnly={readOnly}
                     />
                   </View>
                 </View>
@@ -302,9 +358,9 @@ const ProviderFormScreen: React.FC = () => {
                 handleCompleteRequest();
               }}
             />
-            {/* <WarningSheet isLock={true} ref={warningSheetRef} /> */}
-            {renderBottomBar()}
-            {isInProgress && (
+            {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
+            {readOnly ? null : renderBottomBar()}
+            {isInProgress && isComplete && (
               <AppButton
                 title={'Mark as Completed'}
                 onPress={() => {

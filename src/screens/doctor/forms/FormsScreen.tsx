@@ -70,7 +70,7 @@ const FormsScreen: React.FC = () => {
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
-
+  const readOnly = action === 'view';
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -84,6 +84,8 @@ const FormsScreen: React.FC = () => {
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
+  const [hasError, setHasError] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
 
@@ -205,9 +207,13 @@ const FormsScreen: React.FC = () => {
   }, [requestId]);
 
   useEffect(() => {
-    if (requestData && requestData?.isLocked && action !== 'view') {
-      if (requestData?.formLock?.lockedBy !== profileData?.id) {
-        // Only show warning for preview/testing
+    if (readOnly) {
+      return;
+    }
+
+    if (requestData && requestData?.isLocked) {
+      let lockedBy = requestData?.formLock?.lockedBy;
+      if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
         const timer = setTimeout(() => {
           warningSheetRef.current?.show();
         }, 500);
@@ -217,20 +223,31 @@ const FormsScreen: React.FC = () => {
   }, [requestData]);
 
   const fetchServiceRequestDetails = async () => {
-    const data = await serviceRequestApi.getServiceRequestDetails(
-      requestId || '',
-    );
-    if (data) {
-      setRequestData(data);
-      // Acquire lock if both statuses are 'submitted'
-      if (
-        action !== 'view' &&
-        !data?.isLocked &&
-        data.status === REQUEST_STATUS.SUBMITTED &&
-        data.formStatus === FORM_STATUS.SUBMITTED
-      ) {
-        acquireFormLock();
+    try {
+      setHasError(false);
+      const data = await serviceRequestApi.getServiceRequestDetails(
+        requestId || '',
+      );
+
+      if (data) {
+        setRequestData(data);
+
+        // Acquire lock if both statuses are submitted
+        if (
+          !readOnly &&
+          !data?.isLocked &&
+          data.status === REQUEST_STATUS.SUBMITTED &&
+          data.formStatus === FORM_STATUS.SUBMITTED
+        ) {
+          acquireFormLock();
+        }
+      } else {
+        setHasError(true);
       }
+    } catch (error) {
+      setHasError(true);
+    } finally {
+      setIsFetched(true);
     }
   };
 
@@ -285,7 +302,13 @@ const FormsScreen: React.FC = () => {
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <Header title="Medical Form" isBack={true} style={styles.header} />
-        {!requestData ? null : (
+        {isFetched && hasError ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppText color={COLORS.primary}>Something went wrong</AppText>
+          </View>
+        ) : (
           <>
             <View style={styles.content}>
               <ScrollView
@@ -312,7 +335,7 @@ const FormsScreen: React.FC = () => {
                       serviceId={serviceId || ''}
                       initialData={requestData}
                       patient={patientData}
-                      readOnly={action === 'view'}
+                      readOnly={readOnly}
                     />
                   </View>
                 </View>
@@ -329,11 +352,11 @@ const FormsScreen: React.FC = () => {
             </View>
 
             {renderBottomBar()}
+            {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
           </>
         )}
       </View>
       <AppLoader visible={isLoading} />
-      <WarningSheet isLock={true} ref={warningSheetRef} />
     </AppSafeAreaView>
   );
 };

@@ -30,9 +30,7 @@ export const serviceRequestApi = {
    * Get service request details by ID
    * Handles loader and error toasts internally. Returns data or null.
    */
-  getServiceRequestDetails: async (
-    requestId: string,
-  ): Promise<any> => {
+  getServiceRequestDetails: async (requestId: string): Promise<any> => {
     store.dispatch(setLoading(true));
     try {
       const response: any = await API.Instance.get(
@@ -46,7 +44,10 @@ export const serviceRequestApi = {
         return null;
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to fetch service request details', 'error');
+      SHOW_TOAST(
+        error?.message || 'Failed to fetch service request details',
+        'error',
+      );
       return null;
     } finally {
       store.dispatch(setLoading(false));
@@ -57,9 +58,7 @@ export const serviceRequestApi = {
    * Get pre-claim service request details for provider
    * Handles loader and error toasts internally. Returns data or null.
    */
-  getPreClaimDetails: async (
-    requestId: string,
-  ): Promise<any> => {
+  getPreClaimDetails: async (requestId: string): Promise<any> => {
     store.dispatch(setLoading(true));
     try {
       const response: any = await API.Instance.get(
@@ -73,7 +72,10 @@ export const serviceRequestApi = {
         return null;
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to fetch pre-claim details', 'error');
+      SHOW_TOAST(
+        error?.message || 'Failed to fetch pre-claim details',
+        'error',
+      );
       return null;
     } finally {
       store.dispatch(setLoading(false));
@@ -613,7 +615,6 @@ export const serviceRequestApi = {
         `/service-requests/${requestId}/provider-form/submit-for-review`,
         {},
       );
-
       const nestedData = response.data?.data || response.data;
       const nestedMessage = response.data?.message || response.message;
 
@@ -639,6 +640,49 @@ export const serviceRequestApi = {
         error.response?.data?.message ||
         error.message ||
         'Failed to submit for review';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  providerViewRequest: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/viewed`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request viewed successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to mark request as viewed',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to mark request as viewed';
+
       return {
         success: false,
         message: errorMessage,

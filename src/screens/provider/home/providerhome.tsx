@@ -12,7 +12,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { AppText, ReviewRequestSheet, AppLoader } from '../../../components';
+import {
+  AppText,
+  ReviewRequestSheet,
+  AppLoader,
+  ProfileAvatar,
+} from '../../../components';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
 import LinearGradient from 'react-native-linear-gradient';
@@ -26,8 +31,12 @@ import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import RequestCardProvider from '../../../components/RequestCardProvider';
-import { getButtonConfigProvider } from '../../../constant/RequestStatus';
+import {
+  getButtonConfigProvider,
+  REQUEST_STATUS,
+} from '../../../constant/RequestStatus';
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -71,7 +80,6 @@ const ProviderHome: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRequest, setSelectedRequest] =
     useState<DashboardRecentQueue | null>(null);
@@ -84,7 +92,7 @@ const ProviderHome: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    dispatch(setGlobalLoading(true));
     try {
       const response = await dashboardApi.getProviderDashboardOverview(5);
 
@@ -94,7 +102,7 @@ const ProviderHome: React.FC = () => {
     } catch (error) {
       console.log('Error fetching provider dashboard data:', error);
     } finally {
-      setLoading(false);
+      dispatch(setGlobalLoading(false));
     }
   };
 
@@ -146,14 +154,18 @@ const ProviderHome: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image
-              source={
-                profileData?.profileImg
-                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
-                  : IMAGES.ic_profile
-              }
-              style={styles.avatar}
-            />
+            {profileData?.profileImg ? (
+              <Image
+                source={
+                  profileData?.profileImg
+                    ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                    : IMAGES.ic_profile
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <ProfileAvatar size="medium" name={profileData?.fullName} />
+            )}
             <View>
               <AppText
                 size={getScaleSize(12)}
@@ -342,21 +354,30 @@ const ProviderHome: React.FC = () => {
                         ? buttonConfig.label || undefined
                         : undefined
                     }
-                    onPress={() =>
+                    onPress={() => {
+                      if (item.status == REQUEST_STATUS.COMPLETED) {
+                        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                          request: item,
+                        });
+                        return;
+                      }
                       NavigationService.navigate(
                         SCREENS.PROVIDER_FORMS_SCREEN,
                         {
                           request: item,
                           action: 'view',
                         },
-                      )
-                    }
+                      );
+                    }}
                     onButtonPress={() =>
                       NavigationService.navigate(
                         SCREENS.PROVIDER_FORMS_SCREEN,
                         {
                           request: item,
                           action: buttonConfig.action,
+                          ...(buttonConfig.isComplete && {
+                            isComplete: buttonConfig.isComplete,
+                          }),
                         },
                       )
                     }
@@ -388,7 +409,14 @@ const ProviderHome: React.FC = () => {
         <ReviewRequestSheet
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
-            onReturnRequest(reason, details);
+            await handleClaimService({
+              requestId: selectedRequest?.id,
+              dispatch,
+              onSuccess: async () => {
+                await onReturnRequest(reason, details);
+              },
+            });
+            // onReturnRequest(reason, details);
           }}
         />
       </View>

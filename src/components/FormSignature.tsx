@@ -260,15 +260,17 @@ const FormSignature: React.FC<FormSignatureProps> = ({
             )}
           </AppText>
 
-          <AppText
-            size={getScaleSize(13)}
-            color={COLORS._6B7280}
-            font={FONTS.Inter.Medium}
-          >
-            {moment(requestData?.digitalSignature?.signedAt).format(
-              'DD MMM YYYY, h:mm A',
-            ) || 'Pending'}
-          </AppText>
+          {requestData?.digitalSignature?.signedAt && (
+            <AppText
+              size={getScaleSize(13)}
+              color={COLORS._6B7280}
+              font={FONTS.Inter.Medium}
+            >
+              {moment(requestData?.digitalSignature?.signedAt).format(
+                'DD MMM YYYY, h:mm A',
+              ) || 'Pending'}
+            </AppText>
+          )}
         </View>
       </View>
     </View>

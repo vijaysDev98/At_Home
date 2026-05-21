@@ -88,11 +88,26 @@ export const getButtonConfig = (formStatus: string, status: string) => {
 export const getButtonConfigProvider = (formStatus: string, status: string) => {
   switch (status) {
     case REQUEST_STATUS.SUBMITTED:
-      return {
-        show: true,
-        label: 'Open Form',
-        action: 'edit',
-      };
+      if (formStatus == FORM_STATUS.SIGNED) {
+        return {
+          show: true,
+          label: 'Claim Service',
+          action: 'claim',
+        };
+      } else if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
+        return {
+          show: false,
+          label: null,
+          action: null,
+        };
+      } else {
+        return {
+          show: true,
+          label: 'Open Form',
+          action: 'edit',
+        };
+      }
+
     case REQUEST_STATUS.RETURNED:
       return {
         show: false,
@@ -102,6 +117,7 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
     case REQUEST_STATUS.IN_PROGRESS:
       return {
         show: true,
+        isComplete: true,
         label: 'View Service',
         action: 'view',
       };

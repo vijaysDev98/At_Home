@@ -17,12 +17,15 @@ import { STRING } from '../../../constant/strings';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { fetchProfile } from '../../../actions/profile/profileAction';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -68,12 +71,14 @@ interface DashboardData {
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
-
+  const dispatch = useDispatch();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const doctorName =
+    (profileData?.fName || '') + ' ' + (profileData?.lName || '');
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -83,10 +88,9 @@ const HomeScreen: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    dispatch(setLoading(true));
     try {
       const response = await dashboardApi.getDashboardOverview(5);
-
 
       if (response.success) {
         setDashboardData(response.data);
@@ -94,13 +98,14 @@ const HomeScreen: React.FC = () => {
     } catch (error) {
       console.log('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchDashboardData();
+    dispatch(fetchProfile());
     setRefreshing(false);
   }, []);
 
@@ -193,7 +198,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
               >
-                Dr. {profileData?.fName + ' ' + profileData?.lName}
+                Dr. {capitalizeFirstLetter(doctorName)}
               </AppText>
             </View>
           </View>
@@ -468,6 +473,15 @@ const HomeScreen: React.FC = () => {
                           : undefined
                       }
                       onPress={() => {
+                        if (item.status == REQUEST_STATUS.COMPLETED) {
+                          NavigationService.navigate(
+                            SCREENS.SERVICE_COMPLETED,
+                            {
+                              request: item,
+                            },
+                          );
+                          return;
+                        }
                         NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                           request: item,
                           action: 'view',

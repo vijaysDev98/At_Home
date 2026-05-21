@@ -39,9 +39,9 @@ const FormReviewScreen: React.FC = () => {
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
-
+  const [hasError, setHasError] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
-
   const formRef = useRef<any>(null);
 
   const patientData = useMemo(() => {
@@ -72,76 +72,93 @@ const FormReviewScreen: React.FC = () => {
   }, [requestId]);
 
   const fetchServiceRequestDetails = async () => {
-    const data = await serviceRequestApi.getServiceRequestDetails(
-      requestId || '',
-    );
+    try {
+      setHasError(false);
 
-    if (data) {
-      setRequestData(data);
+      const data = await serviceRequestApi.getServiceRequestDetails(
+        requestId || '',
+      );
+
+      if (data) {
+        setRequestData(data);
+      } else {
+        setHasError(true);
+      }
+    } catch (error) {
+      setHasError(true);
+    } finally {
+      setIsFetched(true);
     }
   };
-
   return (
     <AppSafeAreaView edges={true}>
       <AppLoader visible={isLoading} />
+      {isFetched && hasError ? (
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <AppText color={COLORS.primary}>Something went wrong</AppText>
+        </View>
+      ) : (
+        <>
+          <View style={styles.container}>
+            <Header title="Review & Sign" isBack={true} style={styles.header} />
 
-      <View style={styles.container}>
-        <Header title="Review & Sign" isBack={true} style={styles.header} />
+            <View style={styles.content}>
+              <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <FormRequestHeader
+                  fromReview={true}
+                  patientData={patientData}
+                  serviceName={serviceName}
+                  requestData={requestData}
+                />
 
-        <View style={styles.content}>
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <FormRequestHeader
-              fromReview={true}
-              patientData={patientData}
-              serviceName={serviceName}
-              requestData={requestData}
-            />
+                <View
+                  style={{
+                    backgroundColor: COLORS._F9FAFB,
+                  }}
+                >
+                  <ServiceFormRenderer
+                    formRef={formRef}
+                    serviceId={serviceId || ''}
+                    initialData={requestData}
+                    patient={patientData}
+                    readOnly={isReadOnly}
+                  />
+                </View>
 
-            <View
-              style={{
-                backgroundColor: COLORS._F9FAFB,
-              }}
-            >
-              <ServiceFormRenderer
-                formRef={formRef}
-                serviceId={serviceId || ''}
-                initialData={requestData}
-                patient={patientData}
-                readOnly={isReadOnly}
-              />
+                <View style={styles.signatureContainer}>
+                  <FormSignature
+                    readOnly={isReadOnly}
+                    requestData={requestData}
+                    onSignatureCompleted={fetchServiceRequestDetails}
+                  />
+                </View>
+              </ScrollView>
             </View>
 
-            <View style={styles.signatureContainer}>
-              <FormSignature
-                readOnly={isReadOnly}
-                requestData={requestData}
-                onSignatureCompleted={fetchServiceRequestDetails}
-              />
+            <View style={styles.bottomBar}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.saveBtn}
+                onPress={handleLeftButtonPress}
+              >
+                <AppText
+                  size={getScaleSize(16)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  Edit Form
+                </AppText>
+              </TouchableOpacity>
             </View>
-          </ScrollView>
-        </View>
-
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.saveBtn}
-            onPress={handleLeftButtonPress}
-          >
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              Edit Form
-            </AppText>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+          </View>
+        </>
+      )}
       <AppLoader visible={isLoading} />
     </AppSafeAreaView>
   );

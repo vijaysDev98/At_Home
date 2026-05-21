@@ -93,9 +93,7 @@ const Register: React.FC = () => {
   const [lName, setLName] = useState(userData.lName || '');
   const [email, setEmail] = useState(userData.email || '');
   const [phone, setPhone] = useState(userData.phone || '');
-  const [countryCode, setCountryCode] = useState(userData.countryCode || '+1');
-  const [country, setCountry] = useState(userData.country || '');
-  const [countryFlag, setCountryFlag] = useState(userData.countryFlag || '🇺🇸');
+  const [country, setCountry] = useState(userData.country || 'FR');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
@@ -174,6 +172,11 @@ const Register: React.FC = () => {
     if (!placeOfPractice.trim()) {
       newErrors.placeOfPractice = STRING.placeOfPracticeRequired;
     }
+
+    if (!facilityName.trim()) {
+      newErrors.facilityName = STRING.facilityNameRequired;
+    }
+
     if (!address.trim()) {
       newErrors.address = STRING.addressRequired;
     }
@@ -187,7 +190,14 @@ const Register: React.FC = () => {
 
   const isFormValid = () => {
     if (isEdit) {
-      return !!(fName && lName && specialty && address && placeOfPractice);
+      return !!(
+        fName &&
+        lName &&
+        specialty &&
+        address &&
+        placeOfPractice &&
+        facilityName
+      );
     }
     return !!(
       fName &&
@@ -407,13 +417,10 @@ const Register: React.FC = () => {
                 label={STRING.phoneNumber}
                 isMandatory
                 placeholder={`${STRING.enterPhoneNumber}`}
-                isCountryCode={true}
-                countryCode={countryCode}
-                countryFlag={countryFlag}
-                onCountryCodeSelect={(code, flag, name) => {
-                  setCountry(name.en.toLowerCase());
-                  setCountryCode(code);
-                  setCountryFlag(flag);
+                isCountryCode
+                countryCode={country}
+                onCountryCodeSelect={code => {
+                  setCountry(code);
                 }}
                 value={phone}
                 onChangeText={t => {

@@ -24,7 +24,7 @@ import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
-import { getButtonConfig, STRING } from '../../../constant';
+import { getButtonConfig, REQUEST_STATUS, STRING } from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 
@@ -372,6 +372,12 @@ const PatientDetail: React.FC = () => {
                         : undefined
                     }
                     onPress={() => {
+                      if (item.status == REQUEST_STATUS.COMPLETED) {
+                        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                          request: item,
+                        });
+                        return;
+                      }
                       NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                         request: item,
                         action: 'view',
