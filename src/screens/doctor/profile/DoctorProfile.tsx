@@ -300,6 +300,21 @@ const DoctorProfile: React.FC = () => {
           </View> */}
 
           <TouchableOpacity
+            style={styles.changePasswordBtn}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
+          >
+            <Image source={IMAGES.lock} style={styles.changePasswordIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._526674}
+            >
+              Change Password
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.logoutBtn}
             activeOpacity={0.85}
             onPress={handleLogout}
@@ -669,6 +684,29 @@ const styles = StyleSheet.create({
     width: getScaleSize(14),
     height: getScaleSize(14),
     tintColor: COLORS._526674,
+  },
+  changePasswordBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  changePasswordIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain'
   },
 });
 

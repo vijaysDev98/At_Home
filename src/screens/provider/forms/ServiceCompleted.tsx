@@ -30,8 +30,10 @@ const ServiceCompletedScreen: React.FC = () => {
   const [requestData, setRequestData] = useState<any>(null);
 
   useEffect(() => {
-    fetchRequestDetails();
-  }, []);
+    if (requestId) {
+      fetchRequestDetails();
+    }
+  }, [requestId]);
 
   const fetchRequestDetails = async () => {
     try {
@@ -51,21 +53,18 @@ const ServiceCompletedScreen: React.FC = () => {
   };
 
   const patientName = requestData?.patientId
-    ? `${requestData?.patientId?.fName || ''} ${
-        requestData?.patientId?.lName || ''
-      }`
+    ? `${requestData?.patientId?.fName || ''} ${requestData?.patientId?.lName || ''
+    }`
     : '-';
 
   const providerName = requestData?.assignedProviderId
-    ? `${requestData?.assignedProviderId?.fName || ''} ${
-        requestData?.assignedProviderId?.lName || ''
-      }`
+    ? `${requestData?.assignedProviderId?.fName || ''} ${requestData?.assignedProviderId?.lName || ''
+    }`
     : '-';
 
   const doctorName = requestData?.doctorId
-    ? `${requestData?.doctorId?.fName || ''} ${
-        requestData?.doctorId?.lName || ''
-      }`
+    ? `${requestData?.doctorId?.fName || ''} ${requestData?.doctorId?.lName || ''
+    }`
     : '-';
 
   const completedDate = requestData?.updatedAt
@@ -90,12 +89,12 @@ const ServiceCompletedScreen: React.FC = () => {
         style={styles.header}
         status={requestData?.status}
         formStatus={requestData?.formStatus}
-        // onViewFormPress={() => {
-        //   if (requestData?.signedPdfUrl) {
-        //     openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
-        //   }
-        // }}
-        // isViewForm={true}
+      // onViewFormPress={() => {
+      //   if (requestData?.signedPdfUrl) {
+      //     openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
+      //   }
+      // }}
+      // isViewForm={true}
       />
 
       <ScrollView
@@ -203,8 +202,10 @@ const ServiceCompletedScreen: React.FC = () => {
                   font={FONTS.Inter.Medium}
                   size={getScaleSize(14)}
                   color={COLORS._1A1D1F}
-                >
-                  {requestData?.requestId || '-'}
+                  numberOfLines={1}
+                  allowFontScaling
+                  adjustsFontSizeToFit                >
+                  {requestId || '-'}
                 </AppText>
               </View>
             </View>

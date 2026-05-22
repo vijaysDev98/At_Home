@@ -265,7 +265,7 @@ const AvailableRequest: React.FC = () => {
     );
   };
 
-  const onReturnRequest = async (reason: string, details: string) => {
+  const onReturnRequest = async (reason: string, details: string, requestId: string) => {
     if (!selectedRequest?.id) {
       SHOW_TOAST('Missing Request ID', 'error');
       return;
@@ -282,6 +282,8 @@ const AvailableRequest: React.FC = () => {
         obj,
       );
       if (response.success) {
+        await serviceRequestApi.releaseFormLock(requestId);
+
         SHOW_TOAST(
           response.message || 'Request returned successfully',
           'success',
@@ -390,7 +392,7 @@ const AvailableRequest: React.FC = () => {
               requestId: selectedRequest?.id,
               dispatch,
               onSuccess: async () => {
-                await onReturnRequest(reason, details);
+                await onReturnRequest(reason, details, selectedRequest?.id);
               },
             });
             // onReturnRequest(reason, details);

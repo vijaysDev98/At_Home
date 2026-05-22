@@ -28,6 +28,7 @@ import {
 
 import FormRequestHeader from '../../../components/FormRequestHeader';
 import ServiceFormRenderer from './ServiceFormRenderer';
+import { SCREENS } from '../../../navigation/routes';
 
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
@@ -56,7 +57,14 @@ const FormReviewScreen: React.FC = () => {
   }, [requestData, request]);
 
   const handleLeftButtonPress = async () => {
-    NavigationService.goBack();
+    if (formRef.current?.saveProgress) {
+      await formRef.current.saveProgress();
+      NavigationService.replace(SCREENS.FORMS_SCREEN, {
+        request: request,
+        action: 'edit',
+        from: 'review'
+      });
+    }
   };
 
   const service: ServiceInfo = requestData?.service || request?.service || {};

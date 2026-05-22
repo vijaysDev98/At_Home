@@ -58,7 +58,7 @@ const ProviderFormScreen: React.FC = () => {
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const isComplete = (route.params as any)?.isComplete;
-  const readOnly = action === 'view';
+  const readOnly = action === 'view' || action === 'claim';
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -119,6 +119,7 @@ const ProviderFormScreen: React.FC = () => {
       try {
         const response = await serviceRequestApi.claimRequest(requestId);
         if (response.success) {
+          handleViewRequest();
           SHOW_TOAST(
             response.message || 'Request claimed successfully',
             'success',
@@ -135,11 +136,11 @@ const ProviderFormScreen: React.FC = () => {
     },
 
     // Unused doctor handlers (kept for type safety)
-    updateFormData: async () => {},
-    saveAsDraft: async () => {},
-    submitRequest: async () => {},
-    updateAndSign: async () => {},
-    updateAndResign: async () => {},
+    updateFormData: async () => { },
+    saveAsDraft: async () => { },
+    submitRequest: async () => { },
+    updateAndSign: async () => { },
+    updateAndResign: async () => { },
   };
 
   // Fetch service request details when in view mode
@@ -164,13 +165,6 @@ const ProviderFormScreen: React.FC = () => {
     if (readOnly) {
       return;
     }
-
-    console.log(
-      requestData?.formLock?.lockedBy,
-      profileData?._id,
-      'requestData?.formLock',
-    );
-
     if (requestData && requestData?.isLocked) {
       let lockedBy = requestData?.formLock?.lockedBy;
       if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
@@ -191,7 +185,6 @@ const ProviderFormScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
-
         // Acquire lock if request and form are both submitted and unlocked
         if (
           !readOnly &&
@@ -200,7 +193,6 @@ const ProviderFormScreen: React.FC = () => {
           data.formStatus === FORM_STATUS.SUBMITTED
         ) {
           acquireFormLock();
-          handleViewRequest();
         }
       } else {
         setHasError(true);
@@ -359,7 +351,7 @@ const ProviderFormScreen: React.FC = () => {
               }}
             />
             {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
-            {readOnly ? null : renderBottomBar()}
+            {renderBottomBar()}
             {isInProgress && isComplete && (
               <AppButton
                 title={'Mark as Completed'}

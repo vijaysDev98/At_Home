@@ -169,12 +169,28 @@ export const getFormScreenButtons = (
   status: string | undefined,
   formStatus: string | undefined,
   action?: string,
+  from?: string,
 ): FormScreenButtonConfig => {
+
+
   // ── Doctor flow ──────────────────────────────────────────────────────────
   if (role === 'doctor') {
     // View-only → no buttons
     if (action === 'view') return {};
-
+    if (from == "review") {
+      return {
+        left: {
+          label: 'Save Progress',
+          variant: 'outline',
+          handler: 'updateFormData',
+        },
+        right: {
+          label: 'Update & Sign',
+          variant: 'primary',
+          handler: 'updateAndSign',
+        },
+      };
+    }
     // Draft request, draft form → Save Progress + Submit Request
     if (status === REQUEST_STATUS.DRAFT && formStatus === FORM_STATUS.DRAFT) {
       return {
@@ -213,7 +229,7 @@ export const getFormScreenButtons = (
     // Returned request, returned form → Save Progress + Update & Re-sign
     if (
       status === REQUEST_STATUS.RETURNED &&
-      formStatus === FORM_STATUS.RETURNED
+      formStatus === FORM_STATUS.SIGNED
     ) {
       return {
         left: {
@@ -234,6 +250,7 @@ export const getFormScreenButtons = (
 
   // ── Provider flow ────────────────────────────────────────────────────────
   if (role === 'serviceProvider') {
+    if (action == 'view') return {};
     // Submitted request, submitted form → Submit for Review + Save Progress
     if (
       status === REQUEST_STATUS.SUBMITTED &&

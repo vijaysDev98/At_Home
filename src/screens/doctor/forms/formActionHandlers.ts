@@ -79,9 +79,10 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
-        requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-          'YYYY-MM-DD',
-        ),
+        requestedDate: moment(
+          state?.prescription_date || state?.date,
+          'DD/MM/YYYY',
+        ).format('YYYY-MM-DD'),
         requestedTime: moment().format('HH:mm'),
         initialNotes: '',
         formData: state,

@@ -15,6 +15,7 @@ const API_ROUTES = {
   resetPassword: 'auth/resetPassword',
   getProfile: 'user/profile',
   updateProfile: 'user/profile',
+  changePassword: 'user/changePassword',
   uploadFile: 'common/file/upload',
   addPatient: 'patients',
   getPatients: 'patients',

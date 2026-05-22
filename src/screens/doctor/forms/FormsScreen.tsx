@@ -70,6 +70,7 @@ const FormsScreen: React.FC = () => {
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
+  const from = (route.params as any)?.from;
   const readOnly = action === 'view';
   const requestId = request?.id;
 
@@ -184,8 +185,8 @@ const FormsScreen: React.FC = () => {
     },
 
     // Unused provider handlers (kept for type safety)
-    submitForReview: async () => {},
-    claimService: async () => {},
+    submitForReview: async () => { },
+    claimService: async () => { },
   };
 
   const acquireFormLock = async () => {
@@ -253,8 +254,8 @@ const FormsScreen: React.FC = () => {
 
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons('doctor', status, formStatus, action),
-    [status, formStatus, action],
+    () => getFormScreenButtons('doctor', status, formStatus, action, from),
+    [status, formStatus, action, from],
   );
 
   const renderBottomBar = () => {
@@ -322,7 +323,9 @@ const FormsScreen: React.FC = () => {
                   serviceName={serviceName}
                   requestData={requestData}
                 />
-
+                <View>
+                  {/* <AppText color={COLORS.primary}>{requestData}</AppText> */}
+                </View>
                 <View>
                   <View
                     style={{
@@ -344,7 +347,7 @@ const FormsScreen: React.FC = () => {
                     <FormSignature
                       readOnly={true}
                       requestData={requestData}
-                      // onSignatureCompleted={fetchServiceRequestDetails}
+                    // onSignatureCompleted={fetchServiceRequestDetails}
                     />
                   </View>
                 )}

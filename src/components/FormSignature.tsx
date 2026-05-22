@@ -154,8 +154,8 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     } catch (error: any) {
       SHOW_TOAST(
         error?.response?.data?.message ||
-          error?.message ||
-          'Unable to open signing page',
+        error?.message ||
+        'Unable to open signing page',
         'error',
       );
     } finally {
@@ -186,8 +186,8 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     } catch (error: any) {
       SHOW_TOAST(
         error?.response?.data?.message ||
-          error?.message ||
-          'Something went wrong',
+        error?.message ||
+        'Something went wrong',
         'error',
       );
     } finally {
@@ -252,11 +252,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           >
             {capitalizeFirstLetter(
               requestData?.doctorId?.fullName ||
-                capitalizeFirstLetter(
-                  requestData?.doctorId?.fName +
-                    ' ' +
-                    requestData?.doctorId?.lName,
-                ),
+              capitalizeFirstLetter(
+                requestData?.doctorId?.fName +
+                ' ' +
+                requestData?.doctorId?.lName,
+              ),
             )}
           </AppText>
 

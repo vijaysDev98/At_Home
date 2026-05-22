@@ -341,7 +341,7 @@ const PatientDetail: React.FC = () => {
           </View>
 
           <FlatList
-            data={[] as any[]}
+            data={patient?.linkedRequests || [] as any[]}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
                 <AppText

@@ -81,6 +81,8 @@ const AddPatient: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [socialInsuranceNumber, setSocialInsuranceNumber] = useState('');
   const [weight, setWeight] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
@@ -90,30 +92,129 @@ const AddPatient: React.FC = () => {
 
   const discardSheetRef = useRef<ActionSheetRef>(null);
 
+  // Store initial values for comparison
+  const initialValues = useRef<{
+    fName: string;
+    lName: string;
+    phone: string;
+    email: string;
+    dob: string;
+    street: string;
+    city: string;
+    zip: string;
+    notes: string;
+    country: string;
+    gender: string;
+    weight: string;
+    socialInsuranceNumber: string;
+  }>({
+    fName: '',
+    lName: '',
+    phone: '',
+    email: '',
+    dob: '',
+    street: '',
+    city: '',
+    zip: '',
+    notes: '',
+    country: 'FR',
+    gender: '',
+    weight: '',
+    socialInsuranceNumber: '',
+  });
+
   useEffect(() => {
     if (patientToEdit) {
-      setFName(patientToEdit.fName || '');
-      setLName(patientToEdit.lName || '');
-      setPhone(patientToEdit.phoneNumber || '');
-      setEmail(patientToEdit.email || '');
-      setDob(
-        patientToEdit.dateOfBirth
+      const values = {
+        fName: patientToEdit.fName || '',
+        lName: patientToEdit.lName || '',
+        phone: patientToEdit.phoneNumber || '',
+        email: patientToEdit.email || '',
+        dob: patientToEdit.dateOfBirth
           ? moment(patientToEdit.dateOfBirth).format('YYYY-MM-DD')
           : '',
-      );
+        street: patientToEdit.streetAddress || '',
+        city: patientToEdit.city || '',
+        zip: patientToEdit.zip || '',
+        notes: patientToEdit.medicalDescription || '',
+        country: patientToEdit.country || 'FR',
+        gender: patientToEdit.gender || '',
+        weight: patientToEdit?.weight?.toString() || '',
+        socialInsuranceNumber: patientToEdit.socialInsuranceNumber || '',
+      };
+
+      initialValues.current = values;
+
+      setFName(values.fName);
+      setLName(values.lName);
+      setPhone(values.phone);
+      setEmail(values.email);
+      setDob(values.dob);
       if (patientToEdit.dateOfBirth) {
         setSelectedDate(new Date(patientToEdit.dateOfBirth));
       }
-      setStreet(patientToEdit.streetAddress || '');
-      setCity(patientToEdit.city || '');
-      setZip(patientToEdit.zip || '');
-      setNotes(patientToEdit.medicalDescription || '');
-      setCountry(patientToEdit.country || 'FR');
-      setGender(patientToEdit.gender || '');
-      setWeight(patientToEdit?.weight?.toString() || '');
-      setSocialInsuranceNumber(patientToEdit.socialInsuranceNumber || '');
+      setStreet(values.street);
+      setCity(values.city);
+      setZip(values.zip);
+      setNotes(values.notes);
+      setCountry(values.country);
+      setGender(values.gender);
+      setWeight(values.weight);
+      setSocialInsuranceNumber(values.socialInsuranceNumber);
+    } else {
+      // For add patient, set initial values to empty strings
+      initialValues.current = {
+        fName: '',
+        lName: '',
+        phone: '',
+        email: '',
+        dob: '',
+        street: '',
+        city: '',
+        zip: '',
+        notes: '',
+        country: 'FR',
+        gender: '',
+        weight: '',
+        socialInsuranceNumber: '',
+      };
     }
+    // Mark as initialized after setting values
+    setIsInitialized(true);
   }, [patientToEdit]);
+
+  // Check if any field has changed
+  const checkForChanges = () => {
+    // Only check for changes after initialization
+    if (!isInitialized) return;
+
+    const currentValues = {
+      fName,
+      lName,
+      phone,
+      email,
+      dob,
+      street,
+      city,
+      zip,
+      notes,
+      country,
+      gender,
+      weight,
+      socialInsuranceNumber,
+    };
+
+    const hasAnyChanges = (Object.keys(currentValues) as Array<keyof typeof currentValues>).some(key => {
+      return currentValues[key] !== initialValues.current[key];
+    });
+
+    setHasChanges(hasAnyChanges);
+  };
+
+  // Update checkForChanges call when any field changes
+  useEffect(() => {
+    checkForChanges();
+  }, [fName, lName, phone, email, dob, street, city, zip, notes, country, gender, weight, socialInsuranceNumber, isInitialized]);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -173,7 +274,11 @@ const AddPatient: React.FC = () => {
   };
 
   const handleCancel = () => {
-    discardSheetRef.current?.show();
+    if (hasChanges) {
+      discardSheetRef.current?.show();
+    } else {
+      NavigationService.goBack();
+    }
   };
 
   const confirmDiscard = () => {
@@ -486,6 +591,7 @@ const AddPatient: React.FC = () => {
                     onChangeText={setStreet}
                     placeholder={STRING.enterStreetAddress}
                     error={errors.street}
+                    isMandatory
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
                       errors.street && {
@@ -505,6 +611,7 @@ const AddPatient: React.FC = () => {
                 <View style={styles.rowGap}>
                   <View style={[styles.fieldGroup, styles.flex1]}>
                     <Input
+                      isMandatory
                       value={city}
                       onChangeText={setCity}
                       error={errors.city}
@@ -526,6 +633,7 @@ const AddPatient: React.FC = () => {
                   </View>
                   <View style={[styles.fieldGroup, styles.zipWidth]}>
                     <Input
+                      isMandatory
                       value={zip}
                       onChangeText={setZip}
                       error={errors.zip}

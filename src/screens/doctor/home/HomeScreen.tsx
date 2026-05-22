@@ -296,7 +296,7 @@ const HomeScreen: React.FC = () => {
                             {
                               screen: DOCTOR_TAB_SCREENS.DOCTOR_REQUEST,
                               params: {
-                                formStatus: FORM_STATUS.RETURNED,
+                                formStatus: FORM_STATUS.SUBMITTED,
                               },
                             },
                           );
