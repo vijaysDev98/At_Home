@@ -9,7 +9,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useIsFocused, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useRoute,
+} from '@react-navigation/native';
 import {
   Alert,
   Image,
@@ -203,8 +207,8 @@ const FormsScreen: React.FC = () => {
     },
 
     // Unused provider handlers (kept for type safety)
-    submitForReview: async () => { },
-    claimService: async () => { },
+    submitForReview: async () => {},
+    claimService: async () => {},
   };
 
   const acquireFormLock = async () => {
@@ -250,8 +254,6 @@ const FormsScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
-        console.log('dataaaaa', data);
-
         // Acquire lock if both statuses are submitted
         // if (
         //   !readOnly &&
@@ -342,12 +344,30 @@ const FormsScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {requestData?.status === REQUEST_STATUS.RETURNED && requestData?.returnReasons && requestData.returnReasons.length > 0 && (
-                  <View style={styles.returnCard}>
-                    <AppText font={FONTS.Inter.SemiBold} color={COLORS.returned}>{REVIEW_REASONS.find(reason => reason.key === requestData.returnReasons[requestData.returnReasons.length - 1].reason)?.value || ''}</AppText>
-                    <AppText font={FONTS.Inter.Regular} color={COLORS.returned}>{requestData?.returnComments}</AppText>
-                  </View>
-                )}
+                {requestData?.status === REQUEST_STATUS.RETURNED &&
+                  requestData?.returnReasons &&
+                  requestData.returnReasons.length > 0 && (
+                    <View style={styles.returnCard}>
+                      <AppText
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.returned}
+                      >
+                        {REVIEW_REASONS.find(
+                          reason =>
+                            reason.key ===
+                            requestData.returnReasons[
+                              requestData.returnReasons.length - 1
+                            ].reason,
+                        )?.value || ''}
+                      </AppText>
+                      <AppText
+                        font={FONTS.Inter.Regular}
+                        color={COLORS.returned}
+                      >
+                        {requestData?.returnComments}
+                      </AppText>
+                    </View>
+                  )}
                 {/* Patient Info Header */}
                 <FormRequestHeader
                   patientData={requestData?.patientId as any}
@@ -371,10 +391,7 @@ const FormsScreen: React.FC = () => {
                 </View>
                 {formStatus == FORM_STATUS.SIGNED && (
                   <View style={styles.signatureContainer}>
-                    <FormSignature
-                      readOnly={true}
-                      requestData={requestData}
-                    />
+                    <FormSignature readOnly={true} requestData={requestData} />
                   </View>
                 )}
               </ScrollView>

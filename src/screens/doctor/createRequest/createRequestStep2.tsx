@@ -22,7 +22,7 @@ import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { getServicesService } from '../../../services/patientService';
-import { STRING } from '../../../constant';
+import { SHOW_TOAST, STRING } from '../../../constant';
 
 export const getServiceIcon = (id: string) => {
   switch (id) {
@@ -205,12 +205,16 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
           <View style={styles.bottomButtonContainer}>
             <AppButton
               title={STRING.continue}
-              onPress={() =>
+              onPress={() => {
+                if (!selected) {
+                  SHOW_TOAST('No service is selected!');
+                  return;
+                }
                 NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {
                   selected,
                   patientId,
-                })
-              }
+                });
+              }}
             />
           </View>
         </View>

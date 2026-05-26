@@ -19,7 +19,9 @@ import {
   Input,
   AppLoader,
   ProfileAvatar,
+  LogoutConfirmationSheet,
 } from '../../../components';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ImagePickerContent } from '../../../components/ImagePickerContent';
 import { IMAGES } from '../../../assets/images';
@@ -53,7 +55,13 @@ const DoctorProfile: React.FC = () => {
     }
   }, [profileData?.profileImg]);
 
+  const logoutSheetRef = useRef<ActionSheetRef>(null);
+
   const handleLogout = () => {
+    logoutSheetRef.current?.show();
+  };
+
+  const confirmLogout = () => {
     dispatch(userLogout());
   };
 
@@ -329,6 +337,10 @@ const DoctorProfile: React.FC = () => {
             </AppText>
           </TouchableOpacity>
         </ScrollView>
+        <LogoutConfirmationSheet
+          ref={logoutSheetRef}
+          onLogout={confirmLogout}
+        />
       </View>
     </AppSafeAreaView>
   );

@@ -18,7 +18,7 @@ import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
@@ -26,6 +26,7 @@ import { dashboardApi } from '../../../services/dashboard';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
+import { getUnreadCountService } from '../../../services/notificationService';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -52,6 +53,7 @@ interface DashboardRequestsOverview {
   inProgressCount: number;
   submittedCount: number;
   returnedCount: number;
+  completedCount?: number;
 }
 
 interface DashboardActionRequired {
@@ -71,10 +73,11 @@ interface DashboardData {
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   // const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const doctorName =
@@ -88,13 +91,17 @@ const HomeScreen: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    dispatch(setLoading(true));
+    // dispatch(setLoading(true));
     try {
-      const response = await dashboardApi.getDashboardOverview(5);
+      const [response, count] = await Promise.all([
+        dashboardApi.getDashboardOverview(5),
+        getUnreadCountService(),
+      ]);
 
       if (response.success) {
         setDashboardData(response.data);
       }
+      setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching dashboard data:', error);
     } finally {
@@ -183,7 +190,12 @@ const HomeScreen: React.FC = () => {
                 style={styles.avatar}
               />
             ) : (
-              <ProfileAvatar size="medium" name={profileData?.fullName} />
+              <ProfileAvatar
+                size="medium"
+                name={`${profileData?.fName || ''} ${
+                  profileData?.lName || ''
+                }`.trim()}
+              />
             )}
             <View>
               <AppText
@@ -209,10 +221,24 @@ const HomeScreen: React.FC = () => {
             activeOpacity={0.7}
             style={styles.notificationBtn}
           >
-            <Image
-              source={IMAGES.notification_icon}
-              style={styles.notificationIcon}
-            />
+            <View style={styles.notificationIconContainer}>
+              <Image
+                source={IMAGES.notification_icon}
+                style={styles.notificationIcon}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <AppText
+                    size={getScaleSize(8)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                    style={styles.badgeText}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </AppText>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -599,6 +625,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF4D4F',
     borderWidth: 1.5,
     borderColor: COLORS.white,
+  },
+  notificationIconContainer: {
+    position: 'relative',
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: getScaleSize(8),
+    minWidth: getScaleSize(16),
+    height: getScaleSize(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(3),
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+  },
+  badgeText: {
+    textAlign: 'center',
+    lineHeight: getScaleSize(13),
   },
   scrollContent: {
     paddingBottom: getScaleSize(100),

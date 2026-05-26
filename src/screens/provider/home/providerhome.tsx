@@ -29,6 +29,7 @@ import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { FORM_STATUS, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
+import { getUnreadCountService } from '../../../services/notificationService';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import RequestCardProvider from '../../../components/RequestCardProvider';
 import {
@@ -80,6 +81,7 @@ const ProviderHome: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRequest, setSelectedRequest] =
     useState<DashboardRecentQueue | null>(null);
@@ -94,11 +96,15 @@ const ProviderHome: React.FC = () => {
   const fetchDashboardData = async () => {
     // dispatch(setGlobalLoading(true));
     try {
-      const response = await dashboardApi.getProviderDashboardOverview(5);
+      const [dashboardResponse, count] = await Promise.all([
+        dashboardApi.getProviderDashboardOverview(5),
+        getUnreadCountService(),
+      ]);
 
-      if (response.success) {
-        setDashboardData(response.data);
+      if (dashboardResponse.success) {
+        setDashboardData(dashboardResponse.data);
       }
+      setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching provider dashboard data:', error);
     } finally {
@@ -114,7 +120,11 @@ const ProviderHome: React.FC = () => {
 
   const recentQueue = dashboardData?.recentQueue || [];
 
-  const onReturnRequest = async (reason: string, details: string, requestId: string) => {
+  const onReturnRequest = async (
+    reason: string,
+    details: string,
+    requestId: string,
+  ) => {
     if (!selectedRequest?.id) {
       SHOW_TOAST('Missing Request ID', 'error');
       return;
@@ -186,15 +196,29 @@ const ProviderHome: React.FC = () => {
           </View>
           <TouchableOpacity
             onPress={() =>
-              NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
+              NavigationService.navigate(PROVIDER_TAB_SCREENS.ALERTS)
             }
             activeOpacity={0.7}
             style={styles.notificationBtn}
           >
-            <Image
-              source={IMAGES.notification_icon}
-              style={styles.notificationIcon}
-            />
+            <View style={styles.notificationIconContainer}>
+              <Image
+                source={IMAGES.notification_icon}
+                style={styles.notificationIcon}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <AppText
+                    size={getScaleSize(8)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                    style={styles.badgeText}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </AppText>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
         <ScrollView
@@ -279,7 +303,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-          // onPress={() => NavigationService.navigate('Forms' as never)}
+            // onPress={() => NavigationService.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -414,10 +438,14 @@ const ProviderHome: React.FC = () => {
               requestId: selectedRequest?.id || '',
               dispatch,
               onSuccess: async () => {
-                await onReturnRequest(reason, details, selectedRequest?.id || '');
+                await onReturnRequest(
+                  reason,
+                  details,
+                  selectedRequest?.id || '',
+                );
               },
             });
-            // onReturnRequest(reason, details);
+            // await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
         />
       </View>
@@ -604,5 +632,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 0,
+  },
+  notificationIconContainer: {
+    position: 'relative',
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: getScaleSize(8),
+    minWidth: getScaleSize(16),
+    height: getScaleSize(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(3),
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+  },
+  badgeText: {
+    textAlign: 'center',
+    lineHeight: getScaleSize(13),
   },
 });

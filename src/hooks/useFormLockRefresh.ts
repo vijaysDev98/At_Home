@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { serviceRequestApi } from '../services/serviceRequestApi';
-import { SHOW_TOAST } from '../constant';
 
 interface UseFormLockRefreshProps {
   requestId?: string;
@@ -24,97 +23,67 @@ export const useFormLockRefresh = ({
   onLockConflict,
 }: UseFormLockRefreshProps) => {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasAttemptedAcquireRef = useRef(false);
+
+  const [ownsLock, setOwnsLock] = useState(false);
+
+  /**
+   * null expiresAt is treated as expired
+   */
+  const isExpired = () => {
+    if (!expiresAt) return true;
+
+    return new Date(expiresAt).getTime() <= Date.now();
+  };
+
+  /**
+   * Acquire / detect lock ownership
+   */
   useEffect(() => {
     if (!enabled || !requestId || !currentUserId || readOnly) {
       return;
     }
 
-    const isExpired = () => {
-      if (!expiresAt) return false;
-
-      return new Date(expiresAt).getTime() <= Date.now();
-    };
-
     const acquireLock = async () => {
       try {
-        await serviceRequestApi.acquireFormLock(requestId);
-        SHOW_TOAST("acquired lock");
+        hasAttemptedAcquireRef.current = true;
+
+        const response = await serviceRequestApi.acquireFormLock(requestId);
+
+        if (response?.success) {
+          setOwnsLock(true);
+        } else {
+          hasAttemptedAcquireRef.current = false;
+        }
       } catch (error) {
+        hasAttemptedAcquireRef.current = false;
         console.log('Acquire lock error:', error);
       }
     };
 
-    const refreshLock = async () => {
-      try {
-        await serviceRequestApi.refreshFormLock(requestId);
-        SHOW_TOAST("refreshed lock");
-      } catch (error) {
-        console.log('Refresh lock error:', error);
-      }
-    };
-
-    const releaseLock = async () => {
-      try {
-        await serviceRequestApi.releaseFormLock(requestId);
-        SHOW_TOAST("released lock");
-      } catch (error) {
-        console.log('Release lock error:', error);
-      }
-    };
-
-    const handleLock = async () => {
-      /**
-       * No active lock → acquire
-       */
-      if (!isLocked) {
-        await acquireLock();
-        return;
-      }
-
-      /**
-       * Current user owns lock → refresh immediately
-       */
-      if (lockedBy === currentUserId) {
-        await refreshLock();
-        return;
-      }
-
-      /**
-       * Someone else owns it but expired → acquire
-       */
-      if (lockedBy !== currentUserId && isExpired()) {
-        await acquireLock();
-        return;
-      }
-
-      /**
-       * Locked by another active user
-       */
-      onLockConflict?.();
-    };
-
-    handleLock();
-
-    const shouldRefresh =
-      isLocked &&
-      lockedBy === currentUserId;
-
-    if (shouldRefresh) {
-      intervalRef.current = setInterval(() => {
-        refreshLock();
-      }, 30000);
+    /**
+     * Current user already owns lock
+     */
+    if (isLocked && lockedBy === currentUserId) {
+      setOwnsLock(true);
+      return;
     }
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+    /**
+     * Another user owns active lock
+     */
+    if (isLocked && lockedBy && lockedBy !== currentUserId && !isExpired()) {
+      setOwnsLock(false);
+      onLockConflict?.();
+      return;
+    }
 
-      if (lockedBy === currentUserId) {
-        releaseLock();
-      }
-    };
+    /**
+     * unlocked OR expired OR expiresAt missing
+     */
+    if ((!isLocked || isExpired()) && !hasAttemptedAcquireRef.current) {
+      acquireLock();
+    }
   }, [
     enabled,
     requestId,
@@ -125,4 +94,41 @@ export const useFormLockRefresh = ({
     readOnly,
     onLockConflict,
   ]);
+
+  /**
+   * Refresh every 30s while current user owns lock
+   */
+  useEffect(() => {
+    if (!enabled || !requestId || !ownsLock || readOnly) {
+      return;
+    }
+
+    const refreshLock = async () => {
+      try {
+        await serviceRequestApi.refreshFormLock(requestId);
+      } catch (error) {
+        console.log('Refresh lock error:', error);
+      }
+    };
+
+    intervalRef.current = setInterval(refreshLock, 30000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [enabled, requestId, ownsLock, readOnly]);
+
+  /**
+   * Release on unmount only
+   */
+  useEffect(() => {
+    return () => {
+      if (requestId && ownsLock) {
+        serviceRequestApi.releaseFormLock(requestId);
+      }
+    };
+  }, [requestId, ownsLock]);
 };

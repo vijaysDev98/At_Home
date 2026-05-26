@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '../utils';
 import { AppText, AppButton } from './index';
 import { getScaleSize } from '../utils/scaleSize';
@@ -24,6 +24,8 @@ interface NotificationItemProps {
   iconText?: string;
   unread?: boolean;
   action?: string;
+  onPress?: () => void;
+  onActionPress?: () => void;
 }
 
 export const NotificationItem = ({
@@ -34,8 +36,18 @@ export const NotificationItem = ({
   iconText,
   unread,
   action,
+  onPress,
+  onActionPress,
 }: NotificationItemProps) => (
-  <View style={styles.notificationRow}>
+  <TouchableOpacity
+    style={[
+      styles.notificationRow,
+      unread ? { backgroundColor: '#EFF6FF4D' } : { backgroundColor: COLORS.white },
+    ]}
+    activeOpacity={onPress ? 0.7 : 1}
+    onPress={onPress}
+    disabled={!onPress}
+  >
     <View style={[styles.iconWrap]}>
       {iconSource ? (
         <Image source={iconSource} style={[styles.iconImage]} />
@@ -71,7 +83,7 @@ export const NotificationItem = ({
         <View style={styles.actionWrap}>
           <AppButton
             title={action}
-            onPress={() => {}}
+            onPress={onActionPress || (() => {})}
             style={styles.actionBtn}
             textSize={getScaleSize(12)}
             textFont={FONTS.Inter.SemiBold}
@@ -79,7 +91,7 @@ export const NotificationItem = ({
         </View>
       ) : null}
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({

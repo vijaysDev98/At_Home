@@ -1,26 +1,187 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  ScrollView,
+  FlatList,
   StyleSheet,
   View,
-  Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { AppText } from '../../../components';
+import { AppText, AppLoader } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
+import { NotificationItem } from '../../../components/NotificationComponents';
 import {
-  SectionHeader,
-  NotificationItem,
-} from '../../../components/NotificationComponents';
+  getNotificationsService,
+  markNotificationAsReadService,
+  Notification,
+  PaginationInfo,
+} from '../../../services/notificationService';
 
 const ProviderNotification: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const fetchNotificationsData = async (
+    p: number = 1,
+    statusFilter?: string,
+    refresh: boolean = false,
+  ) => {
+    if (p > 1) {
+      setIsFetchingNextPage(true);
+    } else if (!refresh) {
+      setInitialLoading(true);
+    }
+
+    const params = {
+      page: p,
+      size: 10,
+      status: statusFilter,
+    };
+
+    try {
+      const response = await getNotificationsService(params);
+      if (response && response.status === 200) {
+        const fetchedNotifications = response.data?.notifications || [];
+        const pag = response.data?.pagination || null;
+
+        if (refresh || p === 1) {
+          setNotifications(fetchedNotifications);
+        } else {
+          setNotifications(prev => [...prev, ...fetchedNotifications]);
+        }
+        setPagination(pag);
+      }
+    } catch (error) {
+      console.log('Error fetching notifications:', error);
+    } finally {
+      setInitialLoading(false);
+      setIsFetchingNextPage(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setPage(1);
+      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+      fetchNotificationsData(1, statusFilter, true);
+    }, [activeTab]),
+  );
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    setPage(1);
+    const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+    fetchNotificationsData(1, statusFilter, true);
+  };
+
+  const onLoadMore = () => {
+    const hasNextPage = pagination ? page < pagination.totalPages : false;
+    if (hasNextPage && !isFetchingNextPage) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+      fetchNotificationsData(nextPage, statusFilter, false);
+    }
+  };
+
+  const handleNotificationPress = async (item: Notification) => {
+    if (item.status === 'unread') {
+      // Optimistically update the UI notification's status to 'read'
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === item.id ? { ...n, status: 'read' as const } : n,
+        ),
+      );
+
+      const success = await markNotificationAsReadService(item.id);
+      if (!success) {
+        // Rollback state if the API failed
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === item.id ? { ...n, status: 'unread' as const } : n,
+          ),
+        );
+      }
+    }
+  };
+
+  const getNotificationIcon = (type: string, title: string = '') => {
+    const normalizedType = type?.toLowerCase() || '';
+    const normalizedTitle = title?.toLowerCase() || '';
+
+    if (
+      normalizedType.includes('patient') ||
+      normalizedTitle.includes('patient') ||
+      normalizedTitle.includes('assignment')
+    ) {
+      return IMAGES.alert_newPatient;
+    }
+    if (
+      normalizedType.includes('form') ||
+      normalizedTitle.includes('form') ||
+      normalizedTitle.includes('update')
+    ) {
+      return IMAGES.alert_formUpdate;
+    }
+    if (
+      normalizedType.includes('progress') ||
+      normalizedTitle.includes('progress') ||
+      normalizedType.includes('inprogress')
+    ) {
+      return IMAGES.alert_serviceInProgress;
+    }
+    if (
+      normalizedType.includes('complete') ||
+      normalizedTitle.includes('complete')
+    ) {
+      return IMAGES.alert_serviceCompleted;
+    }
+    return IMAGES.ic_announcement;
+  };
+
+  const getNotificationAction = (type: string, actionUrl?: string) => {
+    if (!actionUrl) return undefined;
+    const normalizedType = type?.toLowerCase() || '';
+    if (
+      normalizedType.includes('submit') ||
+      normalizedType.includes('submission')
+    ) {
+      return 'View Request';
+    }
+    if (normalizedType.includes('assign')) {
+      return 'Open Form';
+    }
+    return 'View';
+  };
+
+  const renderItem = ({ item }: { item: Notification }) => {
+    const isUnread = item.status === 'unread';
+    return (
+      <NotificationItem
+        title={item.title}
+        subtitle={item.message}
+        time={moment(item.createdAt).fromNow()}
+        iconSource={getNotificationIcon(item.type, item.title)}
+        unread={isUnread}
+        action={getNotificationAction(item.type, item.actionUrl)}
+        onPress={() => handleNotificationPress(item)}
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <AppLoader visible={initialLoading && !isRefreshing} />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -64,56 +225,48 @@ const ProviderNotification: React.FC = () => {
             >
               Unread
             </AppText>
-            <View style={styles.unreadBadge} />
+            {notifications.some(n => n.status === 'unread') && (
+              <View style={styles.unreadBadge} />
+            )}
             {activeTab === 'Unread' && <View style={styles.activeBorder} />}
           </TouchableOpacity>
         </View>
 
         {/* Notifications List */}
-        <ScrollView
+        <FlatList
+          data={notifications}
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            notifications.length === 0 && { flexGrow: 1 },
+          ]}
           showsVerticalScrollIndicator={false}
-        >
-          <SectionHeader title="New Requests" />
-          <NotificationItem
-            title="New Patient Assignment"
-            subtitle="You have been assigned to John Doe for Physiotherapy."
-            time="10m ago"
-            iconSource={IMAGES.alert_newPatient}
-            unread
-            action="Open Form"
-          />
-          <NotificationItem
-            title="Form Updated by Doctor"
-            subtitle="Physiotherapy form for John Doe has been updated."
-            time="2h ago"
-            iconSource={IMAGES.alert_formUpdate}
-            action="Start Service"
-          />
-          <NotificationItem
-            title="Service In Progress"
-            subtitle="Continue your service for John Doe."
-            time="2h ago"
-            iconSource={IMAGES.alert_serviceInProgress}
-            action="Open Service"
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          onRefresh={onRefresh}
+          refreshing={isRefreshing}
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._6F767E}
+                align="center"
+              >
+                No notifications found
+              </AppText>
+            </View>
+          )}
+          ListFooterComponent={() =>
+            isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={COLORS._526674} />
+              </View>
+            ) : null
+          }
         />
-          <NotificationItem
-            title="Service Completed"
-            subtitle="You completed Physiotherapy for John Doe."
-            time="2h ago"
-            iconSource={IMAGES.alert_serviceCompleted}
-            action="View Details"
-          />
-
-          <SectionHeader title="System Updates" />
-          <NotificationItem
-            title="App Maintenance"
-            subtitle="Scheduled maintenance this Sunday from 2 AM to 4 AM EST."
-            time="Oct 22"
-            iconSource={IMAGES.ic_announcement}
-          />
-        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -171,5 +324,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 32,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(60),
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });

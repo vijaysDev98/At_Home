@@ -407,6 +407,102 @@ export const CompleteServiceSheet = React.forwardRef<
   );
 });
 
+/**
+ * Logout Confirmation Bottom Sheet
+ */
+interface LogoutConfirmationSheetProps {
+  onLogout: () => void;
+}
+
+export const LogoutConfirmationSheet = React.forwardRef<
+  ActionSheetRef,
+  LogoutConfirmationSheetProps
+>((({ onLogout }, ref) => {
+  const sheetRef = React.useRef<ActionSheetRef>(null);
+
+  React.useImperativeHandle(
+    ref,
+    () =>
+    ({
+      show: () => sheetRef.current?.show(),
+      hide: () => sheetRef.current?.hide(),
+      snapToOffset: (offset: number) =>
+        sheetRef.current?.snapToOffset(offset),
+      snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+    } as ActionSheetRef),
+  );
+
+  return (
+    <ActionSheet
+      ref={sheetRef}
+      gestureEnabled
+      containerStyle={[
+        styles.sheetContainer,
+        { backgroundColor: COLORS.white },
+      ]}
+      indicatorStyle={styles.indicator}
+    >
+      <View style={styles.sheetContent}>
+        <AppText
+          size={getScaleSize(18)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+          align={'center'}
+          style={{ marginBottom: getScaleSize(12) }}
+        >
+          Logout?
+        </AppText>
+
+        <AppText
+          size={getScaleSize(15)}
+          color={COLORS._6F767E}
+          align={'center'}
+          style={{
+            lineHeight: getScaleSize(22),
+            marginBottom: getScaleSize(16),
+            marginHorizontal: getScaleSize(20),
+          }}
+        >
+          Are you sure you want to log out of your account?
+        </AppText>
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.cancelBtn, { flex: 1 }]}
+            onPress={() => sheetRef.current?.hide()}
+            activeOpacity={0.7}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              Cancel
+            </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sendBtn, { backgroundColor: '#EF4444', flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              sheetRef.current?.hide();
+              onLogout();
+            }}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.white}
+            >
+              Log Out
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ActionSheet>
+  );
+}));
+
+
 const styles = StyleSheet.create({
   sheetContainer: {
     borderTopLeftRadius: 24,

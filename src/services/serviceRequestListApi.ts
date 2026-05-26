@@ -1,5 +1,6 @@
 import { API } from '../api';
 import { API_ROUTES } from '../api/apiRoutes';
+import { SHOW_TOAST } from '../constant';
 
 export interface DeletedInfo {
   status: boolean;
@@ -262,11 +263,11 @@ export const serviceRequestListApi = {
       if (response.status) {
         return response.data as ListServiceRequestsResponse;
       } else {
-        console.error('Failed to fetch service requests:', response.message);
+        SHOW_TOAST(response.message, 'error');
         return null;
       }
     } catch (error: any) {
-      console.error('Error fetching service requests:', error.message);
+      SHOW_TOAST(error.message, 'error');
       return null;
     }
   },

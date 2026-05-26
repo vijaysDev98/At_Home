@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -8,11 +8,12 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText, Input } from '../../../components';
+import { AppText, Input, LogoutConfirmationSheet } from '../../../components';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
@@ -21,7 +22,7 @@ import { userLogout } from '../../../actions/auth/authAction';
 import { countryCodes } from 'react-native-country-codes-picker';
 
 const ProviderProfile: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
@@ -40,7 +41,13 @@ const ProviderProfile: React.FC = () => {
   const providerPhone = profileData?.phoneNumber;
   const providerAssignedServices = profileData?.assignedServices || [];
 
+  const logoutSheetRef = useRef<ActionSheetRef>(null);
+
   const handleLogout = () => {
+    logoutSheetRef.current?.show();
+  };
+
+  const confirmLogout = () => {
     dispatch(userLogout());
   };
 
@@ -239,6 +246,10 @@ const ProviderProfile: React.FC = () => {
             </AppText>
           </TouchableOpacity>
         </ScrollView>
+        <LogoutConfirmationSheet
+          ref={logoutSheetRef}
+          onLogout={confirmLogout}
+        />
       </View>
     </SafeAreaView>
   );

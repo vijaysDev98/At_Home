@@ -59,7 +59,10 @@ const ProviderFormScreen: React.FC = () => {
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const isComplete = (route.params as any)?.isComplete;
-  const readOnly = action === 'view' || action === 'claim' || requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE;
+  const readOnly =
+    action === 'view' ||
+    action === 'claim' ||
+    requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE;
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -152,11 +155,11 @@ const ProviderFormScreen: React.FC = () => {
     },
 
     // Unused doctor handlers (kept for type safety)
-    updateFormData: async () => { },
-    saveAsDraft: async () => { },
-    submitRequest: async () => { },
-    updateAndSign: async () => { },
-    updateAndResign: async () => { },
+    updateFormData: async () => {},
+    saveAsDraft: async () => {},
+    submitRequest: async () => {},
+    updateAndSign: async () => {},
+    updateAndResign: async () => {},
   };
 
   // Fetch service request details when in view mode
@@ -237,7 +240,9 @@ const ProviderFormScreen: React.FC = () => {
           'success',
         );
         completeSheetRef?.current?.hide();
-        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { requestId: requestId });
+        NavigationService.replace(SCREENS.SERVICE_COMPLETED, {
+          requestId: requestId,
+        });
       } else {
         SHOW_TOAST(response.error || 'Failed to complete service', 'error');
       }
