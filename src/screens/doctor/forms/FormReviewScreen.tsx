@@ -55,8 +55,13 @@ const FormReviewScreen: React.FC = () => {
     requestId,
     isLocked: requestData?.isLocked,
     lockedBy: requestData?.formLock?.lockedBy || undefined,
+    expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
     readOnly: false,
+    enabled: isFetched && !!requestData && !hasError,
+    onLockConflict: () => {
+      // warningSheetRef.current?.show();
+    },
   });
 
   const patientData = useMemo(() => {

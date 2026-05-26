@@ -283,7 +283,7 @@ const FreePrescriptionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
+      scrollRef: scrollViewRef || null,
       lastFirstErrorKey,
       errors,
     });

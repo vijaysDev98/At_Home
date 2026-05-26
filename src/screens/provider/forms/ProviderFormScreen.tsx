@@ -59,7 +59,7 @@ const ProviderFormScreen: React.FC = () => {
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const isComplete = (route.params as any)?.isComplete;
-  const readOnly = action === 'view' || action === 'claim';
+  const readOnly = action === 'view' || action === 'claim' || requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE;
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -95,8 +95,13 @@ const ProviderFormScreen: React.FC = () => {
     requestId,
     isLocked: requestData?.isLocked,
     lockedBy: requestData?.formLock?.lockedBy || undefined,
+    expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
     readOnly,
+    enabled: isFetched && !!requestData && !hasError,
+    onLockConflict: () => {
+      warningSheetRef.current?.show();
+    },
   });
 
   // ─── Named action handlers ─────────────────────────────────────────────────
@@ -173,20 +178,20 @@ const ProviderFormScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (readOnly) {
-      return;
-    }
-    if (requestData && requestData?.isLocked) {
-      let lockedBy = requestData?.formLock?.lockedBy;
-      if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
-        const timer = setTimeout(() => {
-          warningSheetRef.current?.show();
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [requestData]);
+  // useEffect(() => {
+  //   if (readOnly) {
+  //     return;
+  //   }
+  //   if (requestData && requestData?.isLocked) {
+  //     let lockedBy = requestData?.formLock?.lockedBy;
+  //     if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
+  //       const timer = setTimeout(() => {
+  //         warningSheetRef.current?.show();
+  //       }, 500);
+  //       return () => clearTimeout(timer);
+  //     }
+  //   }
+  // }, [requestData]);
 
   const fetchServiceRequestDetails = async (isInProgress: boolean) => {
     try {
@@ -197,15 +202,17 @@ const ProviderFormScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
+        console.log('provider side', data);
+
         // Acquire lock if request and form are both submitted and unlocked
-        if (
-          !readOnly &&
-          !data?.isLocked &&
-          data.status === REQUEST_STATUS.SUBMITTED &&
-          data.formStatus === FORM_STATUS.SUBMITTED
-        ) {
-          acquireFormLock();
-        }
+        // if (
+        //   !readOnly &&
+        //   !data?.isLocked &&
+        //   data.status === REQUEST_STATUS.SUBMITTED &&
+        //   data.formStatus === FORM_STATUS.SUBMITTED
+        // ) {
+        //   acquireFormLock();
+        // }
       } else {
         setHasError(true);
       }
@@ -230,7 +237,7 @@ const ProviderFormScreen: React.FC = () => {
           'success',
         );
         completeSheetRef?.current?.hide();
-        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {});
+        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { requestId: requestId });
       } else {
         SHOW_TOAST(response.error || 'Failed to complete service', 'error');
       }

@@ -75,6 +75,7 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
           <AppText
             size={getScaleSize(14)}
             color={COLORS._6F767E}
+            font={FONTS.Inter.SemiBold}
             align="center"
             style={styles.warningText}
           >

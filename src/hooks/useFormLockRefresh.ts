@@ -1,58 +1,128 @@
 import { useEffect, useRef } from 'react';
 import { serviceRequestApi } from '../services/serviceRequestApi';
+import { SHOW_TOAST } from '../constant';
 
 interface UseFormLockRefreshProps {
   requestId?: string;
   isLocked?: boolean;
   lockedBy?: string;
+  expiresAt?: string;
   currentUserId?: string;
   readOnly?: boolean;
+  enabled?: boolean;
+  onLockConflict?: () => void;
 }
 
-/**
- * Custom hook to refresh form lock every 45 seconds
- * Prevents lock expiration (60s timeout) while user is actively editing
- * Only refreshes if current user is the lock owner
- */
 export const useFormLockRefresh = ({
   requestId,
   isLocked,
   lockedBy,
+  expiresAt,
   currentUserId,
   readOnly = false,
+  enabled = true,
+  onLockConflict,
 }: UseFormLockRefreshProps) => {
-
-  const lockRefreshIntervalRef = useRef<any>(null);
-
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
-    // Exit early if conditions not met
-    if (readOnly || !requestId || !isLocked) {
+    if (!enabled || !requestId || !currentUserId || readOnly) {
       return;
     }
 
-    // Only refresh if current user is the lock owner
-    if (!lockedBy || !currentUserId || lockedBy !== currentUserId) {
-      return;
-    }
+    const isExpired = () => {
+      if (!expiresAt) return false;
+
+      return new Date(expiresAt).getTime() <= Date.now();
+    };
+
+    const acquireLock = async () => {
+      try {
+        await serviceRequestApi.acquireFormLock(requestId);
+        SHOW_TOAST("acquired lock");
+      } catch (error) {
+        console.log('Acquire lock error:', error);
+      }
+    };
 
     const refreshLock = async () => {
       try {
         await serviceRequestApi.refreshFormLock(requestId);
-        console.log('Form lock refreshed');
+        SHOW_TOAST("refreshed lock");
       } catch (error) {
-        console.log('Error refreshing form lock:', error);
+        console.log('Refresh lock error:', error);
       }
     };
 
-    // Start refresh interval every 55 seconds (5s buffer before 60s auto-unlock)
-    lockRefreshIntervalRef.current = setInterval(refreshLock, 55000);
+    const releaseLock = async () => {
+      try {
+        await serviceRequestApi.releaseFormLock(requestId);
+        SHOW_TOAST("released lock");
+      } catch (error) {
+        console.log('Release lock error:', error);
+      }
+    };
 
-    // Cleanup: clear interval on unmount or when dependencies change
+    const handleLock = async () => {
+      /**
+       * No active lock → acquire
+       */
+      if (!isLocked) {
+        await acquireLock();
+        return;
+      }
+
+      /**
+       * Current user owns lock → refresh immediately
+       */
+      if (lockedBy === currentUserId) {
+        await refreshLock();
+        return;
+      }
+
+      /**
+       * Someone else owns it but expired → acquire
+       */
+      if (lockedBy !== currentUserId && isExpired()) {
+        await acquireLock();
+        return;
+      }
+
+      /**
+       * Locked by another active user
+       */
+      onLockConflict?.();
+    };
+
+    handleLock();
+
+    const shouldRefresh =
+      isLocked &&
+      lockedBy === currentUserId;
+
+    if (shouldRefresh) {
+      intervalRef.current = setInterval(() => {
+        refreshLock();
+      }, 30000);
+    }
+
     return () => {
-      if (lockRefreshIntervalRef.current) {
-        clearInterval(lockRefreshIntervalRef.current);
-        lockRefreshIntervalRef.current = null;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      if (lockedBy === currentUserId) {
+        releaseLock();
       }
     };
-  }, [requestId, isLocked, lockedBy, currentUserId, readOnly]);
+  }, [
+    enabled,
+    requestId,
+    isLocked,
+    lockedBy,
+    expiresAt,
+    currentUserId,
+    readOnly,
+    onLockConflict,
+  ]);
 };

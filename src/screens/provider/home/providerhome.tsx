@@ -92,7 +92,7 @@ const ProviderHome: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    dispatch(setGlobalLoading(true));
+    // dispatch(setGlobalLoading(true));
     try {
       const response = await dashboardApi.getProviderDashboardOverview(5);
 

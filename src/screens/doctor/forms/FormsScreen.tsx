@@ -10,7 +10,6 @@ import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused, useRoute } from '@react-navigation/native';
-import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import {
   Alert,
   Image,
@@ -61,6 +60,7 @@ import { getServiceIcon } from '../createRequest/createRequestStep2';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import ServiceFormRenderer from './ServiceFormRenderer';
+import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -109,8 +109,13 @@ const FormsScreen: React.FC = () => {
     requestId,
     isLocked: requestData?.isLocked,
     lockedBy: requestData?.formLock?.lockedBy || undefined,
+    expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
     readOnly,
+    enabled: isFetched && !!requestData && !hasError,
+    onLockConflict: () => {
+      warningSheetRef.current?.show();
+    },
   });
 
   // config in RequestStatus.ts picks which one gets called.
@@ -220,21 +225,21 @@ const FormsScreen: React.FC = () => {
     }
   }, [isFocused, requestId]);
 
-  useEffect(() => {
-    if (readOnly) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (readOnly) {
+  //     return;
+  //   }
 
-    if (requestData && requestData?.isLocked) {
-      let lockedBy = requestData?.formLock?.lockedBy;
-      if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
-        const timer = setTimeout(() => {
-          warningSheetRef.current?.show();
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [requestData]);
+  //   if (requestData && requestData?.isLocked) {
+  //     let lockedBy = requestData?.formLock?.lockedBy;
+  //     if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
+  //       const timer = setTimeout(() => {
+  //         warningSheetRef.current?.show();
+  //       }, 500);
+  //       return () => clearTimeout(timer);
+  //     }
+  //   }
+  // }, [requestData]);
 
   const fetchServiceRequestDetails = async () => {
     try {
@@ -248,14 +253,14 @@ const FormsScreen: React.FC = () => {
         console.log('dataaaaa', data);
 
         // Acquire lock if both statuses are submitted
-        if (
-          !readOnly &&
-          !data?.isLocked &&
-          data.status === REQUEST_STATUS.SUBMITTED &&
-          data.formStatus === FORM_STATUS.SUBMITTED
-        ) {
-          await acquireFormLock();
-        }
+        // if (
+        //   !readOnly &&
+        //   !data?.isLocked &&
+        //   data.status === REQUEST_STATUS.SUBMITTED &&
+        //   data.formStatus === FORM_STATUS.SUBMITTED
+        // ) {
+        //   await acquireFormLock();
+        // }
       } else {
         setHasError(true);
       }
@@ -339,7 +344,8 @@ const FormsScreen: React.FC = () => {
               >
                 {requestData?.status === REQUEST_STATUS.RETURNED && requestData?.returnReasons && requestData.returnReasons.length > 0 && (
                   <View style={styles.returnCard}>
-                    <AppText color={COLORS.returned}>{REVIEW_REASONS.find(reason => reason.key === requestData.returnReasons[requestData.returnReasons.length - 1].reason)?.value || ''}</AppText>
+                    <AppText font={FONTS.Inter.SemiBold} color={COLORS.returned}>{REVIEW_REASONS.find(reason => reason.key === requestData.returnReasons[requestData.returnReasons.length - 1].reason)?.value || ''}</AppText>
+                    <AppText font={FONTS.Inter.Regular} color={COLORS.returned}>{requestData?.returnComments}</AppText>
                   </View>
                 )}
                 {/* Patient Info Header */}

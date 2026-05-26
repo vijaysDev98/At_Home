@@ -1,5 +1,5 @@
 {
-  "name": "HelathCare",
+  "name": "HealthCare",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -31,6 +31,7 @@
     "react": "19.2.3",
     "react-native": "0.84.1",
     "react-native-actions-sheet": "^10.1.2",
+    "react-native-blob-util": "^0.24.9",
     "react-native-country-codes-picker": "^2.3.5",
     "react-native-date-picker": "^5.0.13",
     "react-native-dropdown-picker": "^5.4.6",

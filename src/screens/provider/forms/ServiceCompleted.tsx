@@ -21,10 +21,11 @@ import HeaderProvider, {
   openPdfInBrowser,
 } from '../../../components/HeaderProvider';
 import { AppLoader, ProfileAvatar } from '../../../components';
+import { downloadPdfFromUrl } from '../../../hooks/pdfDownloader';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
-  const requestId = route?.params?.request?.id;
+  const requestId = route?.params?.request?.id || route?.params?.requestId;
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
@@ -79,7 +80,6 @@ const ServiceCompletedScreen: React.FC = () => {
 
   const weight = requestData?.patientId?.weight || '-';
 
-  const formData = requestData?.formData || {};
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -205,7 +205,7 @@ const ServiceCompletedScreen: React.FC = () => {
                   numberOfLines={1}
                   allowFontScaling
                   adjustsFontSizeToFit                >
-                  {requestId?.slice(-4).toUpperCase() || '-'}
+                  #{requestId?.slice(-4).toUpperCase() || '-'}
                 </AppText>
               </View>
             </View>
@@ -348,9 +348,9 @@ const ServiceCompletedScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.actionBtnSecondary}
-            onPress={() => {
+            onPress={async () => {
               if (requestData?.signedPdfUrl) {
-                openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
+                await downloadPdfFromUrl(API_BASE_URL + requestData?.signedPdfUrl);
               }
             }}
           >
