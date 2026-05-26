@@ -316,9 +316,9 @@ const AddPatient: React.FC = () => {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             enableOnAndroid
-            extraScrollHeight={getScaleSize(40)}
+            extraScrollHeight={getScaleSize(100)}
             enableAutomaticScroll
-            extraHeight={getScaleSize(120)}
+            extraHeight={getScaleSize(200)}
           >
             {/* <ScrollView
             style={styles.scroll}
@@ -743,7 +743,6 @@ const AddPatient: React.FC = () => {
               />
             )}
           </KeyboardAwareScrollView>
-          {/* Sticky CTA */}
         </View>
       </AppSafeAreaView>
 

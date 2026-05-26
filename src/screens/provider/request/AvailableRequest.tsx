@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   FlatList,
   ScrollView,
@@ -177,8 +178,17 @@ const AvailableRequest: React.FC = () => {
 
   // Load initial data and refresh when activeTab changes
   useEffect(() => {
+    setCurrentPage(1);
+    setRequests([]);
     fetchAvailableRequests(1, false, activeTab);
   }, [activeTab, fetchAvailableRequests]);
+
+  // Fetch data every time screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchAvailableRequests(1, true, activeTab);
+    }, [fetchAvailableRequests, activeTab]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -323,7 +333,11 @@ const AvailableRequest: React.FC = () => {
             {TABS.map(tab => (
               <TouchableOpacity
                 key={tab}
-                onPress={() => setActiveTab(tab)}
+                onPress={() => {
+                  setCurrentPage(1);
+                  setRequests([]);
+                  setActiveTab(tab);
+                }}
                 style={[
                   styles.tabItem,
                   activeTab === tab && styles.tabItemActive,

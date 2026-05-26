@@ -41,6 +41,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 export interface PcaFormProps {
@@ -92,7 +93,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    weight: String(selectedPatient?.weight) || '',
+    weight: selectedPatient?.weight?.toString() || '',
     nir: selectedPatient?.socialInsuranceNumber || '',
     ald_condition: false,
 
@@ -167,7 +168,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               return ne;
             });
           }
-        } catch {}
+        } catch { }
         return next;
       });
     } else {
@@ -294,12 +295,29 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     });
   };
 
+  // Handle edit form (using centralized handler - no navigation)
+  const editForm = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleEditForm({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
     saveAsDraft,
     updateAndSign,
+    editForm,
     saveProgress,
-      submitForReview,
+    submitForReview,
     getFormData: () => {
       return state;
     },
@@ -689,6 +707,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         open={open}
         date={date}
         mode="date"
+        minimumDate={new Date()}
         onConfirm={selectedDate => {
           setOpen(false);
           if (pickerType) {

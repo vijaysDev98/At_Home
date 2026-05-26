@@ -33,6 +33,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 import { ActionSheetRef } from 'react-native-actions-sheet';
@@ -92,7 +93,7 @@ const FreePrescriptionForm = forwardRef<
     patient_last_name: selectedPatient?.lName || '',
     patient_first_name: selectedPatient?.fName || '',
     dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
-    weight: String(selectedPatient?.weight) || '',
+    weight: selectedPatient?.weight?.toString() || '',
     nir: selectedPatient?.socialInsuranceNumber || '',
     ald_condition: false,
 
@@ -148,7 +149,7 @@ const FreePrescriptionForm = forwardRef<
               return ne;
             });
           }
-        } catch {}
+        } catch { }
         return next;
       });
     } else {
@@ -272,11 +273,28 @@ const FreePrescriptionForm = forwardRef<
     });
   };
 
+  // Handle edit form (using centralized handler - no navigation)
+  const editForm = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleEditForm({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
     saveAsDraft,
     saveProgress,
+    editForm,
     submitForReview,
     updateAndSign,
     getFormData: () => state,

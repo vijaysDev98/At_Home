@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { useRoute } from '@react-navigation/native';
+import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import {
   Alert,
   ScrollView,
@@ -87,6 +88,17 @@ const ProviderFormScreen: React.FC = () => {
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
+  // Use custom hook for lock refresh
+  const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
+
+  useFormLockRefresh({
+    requestId,
+    isLocked: requestData?.isLocked,
+    lockedBy: requestData?.formLock?.lockedBy || undefined,
+    currentUserId,
+    readOnly,
+  });
+
   // ─── Named action handlers ─────────────────────────────────────────────────
   // Provider-only handlers
   const handlerMap: Record<FormScreenHandlerKey, () => Promise<void>> = {
@@ -119,7 +131,6 @@ const ProviderFormScreen: React.FC = () => {
       try {
         const response = await serviceRequestApi.claimRequest(requestId);
         if (response.success) {
-          handleViewRequest();
           SHOW_TOAST(
             response.message || 'Request claimed successfully',
             'success',
@@ -147,6 +158,7 @@ const ProviderFormScreen: React.FC = () => {
   useEffect(() => {
     if (requestId) {
       fetchServiceRequestDetails(isInProgress);
+      handleViewRequest();
     }
   }, [requestId]);
 

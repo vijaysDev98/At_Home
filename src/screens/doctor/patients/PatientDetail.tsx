@@ -41,6 +41,7 @@ const PatientDetail: React.FC = () => {
   const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
     .filter(item => item && item !== 'null')
     .join(', ');
+
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
@@ -152,7 +153,7 @@ const PatientDetail: React.FC = () => {
             <View style={styles.infoList}>
               <View style={styles.infoRow}>
                 <Image source={IMAGES.phone} style={styles.infoIcon} />
-                <View>
+                <View style={styles.infoContent}>
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
@@ -171,7 +172,7 @@ const PatientDetail: React.FC = () => {
               </View>
               <View style={styles.infoRow}>
                 <Image source={IMAGES.mail} style={styles.infoIcon} />
-                <View>
+                <View style={styles.infoContent}>
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
@@ -191,7 +192,7 @@ const PatientDetail: React.FC = () => {
               {homeAddress && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.location_pin} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -212,7 +213,7 @@ const PatientDetail: React.FC = () => {
               {patient?.gender && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -233,7 +234,7 @@ const PatientDetail: React.FC = () => {
               {patient?.socialInsuranceNumber && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -254,7 +255,7 @@ const PatientDetail: React.FC = () => {
               {patient?.weight && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -512,6 +513,10 @@ const styles = StyleSheet.create({
     height: getScaleSize(18),
     width: getScaleSize(18),
     resizeMode: 'contain',
+  },
+  infoContent: {
+    flex: 1,
+    gap: 2,
   },
   sectionHeader: {
     flexDirection: 'row',

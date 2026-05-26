@@ -9,7 +9,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useRoute } from '@react-navigation/native';
+import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import {
   Alert,
   Image,
@@ -29,6 +30,7 @@ import {
   WarningSheet,
   Header,
   FormSignature,
+  REVIEW_REASONS,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -67,6 +69,7 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 
 const FormsScreen: React.FC = () => {
   const route = useRoute();
+  const isFocused = useIsFocused();
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
@@ -99,6 +102,16 @@ const FormsScreen: React.FC = () => {
 
   // Ref to store form ref
   const formRef = useRef<any>(null);
+
+  // Use custom hook for lock refresh
+  const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
+  useFormLockRefresh({
+    requestId,
+    isLocked: requestData?.isLocked,
+    lockedBy: requestData?.formLock?.lockedBy || undefined,
+    currentUserId,
+    readOnly,
+  });
 
   // config in RequestStatus.ts picks which one gets called.
   const handlerMap: Record<FormScreenHandlerKey, () => Promise<void>> = {
@@ -202,10 +215,10 @@ const FormsScreen: React.FC = () => {
 
   // Fetch service request details when in view mode
   useEffect(() => {
-    if (requestId) {
+    if (isFocused && requestId) {
       fetchServiceRequestDetails();
     }
-  }, [requestId]);
+  }, [isFocused, requestId]);
 
   useEffect(() => {
     if (readOnly) {
@@ -232,6 +245,7 @@ const FormsScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
+        console.log('dataaaaa', data);
 
         // Acquire lock if both statuses are submitted
         if (
@@ -240,7 +254,7 @@ const FormsScreen: React.FC = () => {
           data.status === REQUEST_STATUS.SUBMITTED &&
           data.formStatus === FORM_STATUS.SUBMITTED
         ) {
-          acquireFormLock();
+          await acquireFormLock();
         }
       } else {
         setHasError(true);
@@ -309,6 +323,12 @@ const FormsScreen: React.FC = () => {
           >
             <AppText color={COLORS.primary}>Something went wrong</AppText>
           </View>
+        ) : !isFetched ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppLoader visible={true} />
+          </View>
         ) : (
           <>
             <View style={styles.content}>
@@ -317,6 +337,11 @@ const FormsScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
+                {requestData?.status === REQUEST_STATUS.RETURNED && requestData?.returnReasons && requestData.returnReasons.length > 0 && (
+                  <View style={styles.returnCard}>
+                    <AppText color={COLORS.returned}>{REVIEW_REASONS.find(reason => reason.key === requestData.returnReasons[requestData.returnReasons.length - 1].reason)?.value || ''}</AppText>
+                  </View>
+                )}
                 {/* Patient Info Header */}
                 <FormRequestHeader
                   patientData={requestData?.patientId as any}
@@ -324,12 +349,8 @@ const FormsScreen: React.FC = () => {
                   requestData={requestData}
                 />
                 <View>
-                  {/* <AppText color={COLORS.primary}>{requestData}</AppText> */}
-                </View>
-                <View>
                   <View
                     style={{
-                      // paddingHorizontal: getScaleSize(16),
                       backgroundColor: COLORS._F9FAFB,
                     }}
                   >
@@ -347,7 +368,6 @@ const FormsScreen: React.FC = () => {
                     <FormSignature
                       readOnly={true}
                       requestData={requestData}
-                    // onSignatureCompleted={fetchServiceRequestDetails}
                     />
                   </View>
                 )}
@@ -368,6 +388,16 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: COLORS.white,
+  },
+  returnCard: {
+    backgroundColor: `${COLORS.returned}10`,
+    padding: getScaleSize(16),
+    marginHorizontal: getScaleSize(12),
+    marginTop: getScaleSize(10),
+    // margin: getScaleSize(16),
+    borderRadius: getScaleSize(8),
+    borderWidth: 1,
+    borderColor: COLORS.returned,
   },
   container: {
     flex: 1,

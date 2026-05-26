@@ -24,6 +24,7 @@ import {
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
+import { SHOW_TOAST } from '../../../constant';
 
 const PregnancyCareForm: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -168,6 +169,9 @@ const PregnancyCareForm: React.FC = () => {
               activeOpacity={0.8}
               onPress={() => {
                 setPickerType('prescriptionDate');
+                if (state.prescriptionDate) {
+                  setDate(moment(state.prescriptionDate, 'DD/MM/YYYY').toDate());
+                }
                 setOpen(true);
               }}
             >
@@ -185,6 +189,7 @@ const PregnancyCareForm: React.FC = () => {
               mode="date"
               open={open}
               date={date}
+              minimumDate={new Date()}
               onConfirm={d => {
                 setOpen(false);
                 setDate(d);
@@ -195,6 +200,21 @@ const PregnancyCareForm: React.FC = () => {
                 } else if (activeProductIndex !== null) {
                   if (pickerType === 'startDate' || pickerType === 'endDate') {
                     const formattedDate = moment(d).format('DD/MM/YYYY');
+
+                    // Validate end date is greater than start date
+                    if (pickerType === 'endDate') {
+                      const product = state.products[activeProductIndex];
+                      if (product.startDate) {
+                        const startDate = moment(product.startDate, 'DD/MM/YYYY');
+                        const endDate = moment(d);
+
+                        if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
+                          SHOW_TOAST('End date must be after start date', 'error');
+                          return;
+                        }
+                      }
+                    }
+
                     updateProduct(
                       activeProductIndex,
                       pickerType,
@@ -607,6 +627,9 @@ const PregnancyCareForm: React.FC = () => {
                   onPress={() => {
                     setPickerType('startDate');
                     setActiveProductIndex(index);
+                    if (product.startDate) {
+                      setDate(moment(product.startDate, 'DD/MM/YYYY').toDate());
+                    }
                     setOpen(true);
                   }}
                 >
@@ -623,13 +646,23 @@ const PregnancyCareForm: React.FC = () => {
                   activeOpacity={0.8}
                   style={{ flex: 1 }}
                   onPress={() => {
-                    setPickerType('endDate');
-                    setActiveProductIndex(index);
-                    setOpen(true);
+                    if (product.startDate) {
+                      setPickerType('endDate');
+                      setActiveProductIndex(index);
+                      if (product.endDate) {
+                        setDate(moment(product.endDate, 'DD/MM/YYYY').toDate());
+                      } else {
+                        setDate(moment(product.startDate, 'DD/MM/YYYY').toDate());
+                      }
+                      setOpen(true);
+                    } else {
+                      SHOW_TOAST('Please select start date first', 'error');
+                    }
                   }}
                 >
                   <Input
                     editable={false}
+                    isLocked={!product.startDate}
                     label="End date"
                     placeholder="DD/MM/YYYY"
                     value={product.endDate}

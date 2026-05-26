@@ -17,7 +17,7 @@ import { SHOW_TOAST } from '../constant';
 /**
  * Constants
  */
-const REVIEW_REASONS = [
+export const REVIEW_REASONS = [
   { key: 'missinginfo', value: 'Missing Information' },
   { key: 'incorrectpatientdetails', value: 'Incorrect Patient Details' },
   { key: 'incompleteform', value: 'Incomplete Form' },
@@ -39,13 +39,13 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
     React.useImperativeHandle(
       ref,
       () =>
-        ({
-          show: () => sheetRef.current?.show(),
-          hide: () => sheetRef.current?.hide(),
-          snapToOffset: (offset: number) =>
-            sheetRef.current?.snapToOffset(offset),
-          snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
-        } as ActionSheetRef),
+      ({
+        show: () => sheetRef.current?.show(),
+        hide: () => sheetRef.current?.hide(),
+        snapToOffset: (offset: number) =>
+          sheetRef.current?.snapToOffset(offset),
+        snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+      } as ActionSheetRef),
     );
 
     return (
@@ -126,13 +126,13 @@ export const ReviewRequestSheet = React.forwardRef<
   React.useImperativeHandle(
     ref,
     () =>
-      ({
-        show: () => sheetRef.current?.show(),
-        hide: () => sheetRef.current?.hide(),
-        snapToOffset: (offset: number) =>
-          sheetRef.current?.snapToOffset(offset),
-        snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
-      } as ActionSheetRef),
+    ({
+      show: () => sheetRef.current?.show(),
+      hide: () => sheetRef.current?.hide(),
+      snapToOffset: (offset: number) =>
+        sheetRef.current?.snapToOffset(offset),
+      snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+    } as ActionSheetRef),
   );
 
   const handleSend = () => {
@@ -326,13 +326,13 @@ export const CompleteServiceSheet = React.forwardRef<
   React.useImperativeHandle(
     ref,
     () =>
-      ({
-        show: () => sheetRef.current?.show(),
-        hide: () => sheetRef.current?.hide(),
-        snapToOffset: (offset: number) =>
-          sheetRef.current?.snapToOffset(offset),
-        snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
-      } as ActionSheetRef),
+    ({
+      show: () => sheetRef.current?.show(),
+      hide: () => sheetRef.current?.hide(),
+      snapToOffset: (offset: number) =>
+        sheetRef.current?.snapToOffset(offset),
+      snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+    } as ActionSheetRef),
   );
 
   return (

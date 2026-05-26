@@ -6,6 +6,7 @@ import { SCREENS } from '../../../navigation/routes';
 import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant/showToast';
 import moment from 'moment';
 import store from '../../../redux/store';
+import { Alert } from 'react-native';
 
 export interface FormActionParams {
   dispatch: Dispatch<any>;
@@ -65,6 +66,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       if (submitResponse.success) {
         SHOW_SUCCESS_TOAST(submitResponse.message);
         dispatch(setLoading(false));
+        await serviceRequestApi.releaseFormLock(requestId);
         setTimeout(() => {
           NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
             screen: SCREENS.DOCTOR_REQUEST,
@@ -258,7 +260,6 @@ export const handleUpdateAndSign = async (
       formData: state,
     });
     if (response.success) {
-      await serviceRequestApi.releaseFormLock(requestId);
       return { success: true };
     } else {
       SHOW_TOAST(response.error, 'error');
@@ -323,12 +324,70 @@ export const handleSaveProgress = async (
     }
     dispatch(setLoading(false));
     if (response.success) {
-      // await serviceRequestApi.releaseFormLock(requestId);
       SHOW_SUCCESS_TOAST(response.message || 'Progress saved successfully');
       NavigationService.goBack();
       return { success: true };
     } else {
       SHOW_TOAST(response.error || 'Failed to save progress', 'error');
+      return { success: false, error: response.error };
+    }
+  } catch (error: any) {
+    dispatch(setLoading(false));
+    const msg = error.message;
+    SHOW_TOAST(msg, 'error');
+    return { success: false, error: msg };
+  }
+};
+
+/**
+ * Centralized action handler for editing form without navigation
+ * Used by: editForm (FormReviewScreen)
+ * Same as saveProgress but without calling goBack()
+ */
+export const handleEditForm = async (
+  params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
+): Promise<{ success: boolean; error?: string }> => {
+  const {
+    dispatch,
+    state,
+    initialData,
+    validateForm,
+    scrollRef,
+    errors = {},
+  } = params;
+
+  const ok = validateForm();
+  if (!ok) {
+    const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
+    const firstErrorMessage = errors[firstErrorKey];
+    SHOW_TOAST(firstErrorMessage, 'error');
+    if (scrollRef?.current) {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      }, 50);
+    }
+    return { success: false, error: firstErrorMessage };
+  }
+
+  const requestId = initialData?._id || initialData?.id;
+  if (!requestId) {
+    dispatch(setLoading(false));
+    return { success: false, error: 'No request ID' };
+  }
+  try {
+    dispatch(setLoading(true));
+
+    let response = await serviceRequestApi.updateFormData(requestId, {
+      formData: state,
+    });
+
+    dispatch(setLoading(false));
+    if (response.success) {
+      // SHOW_SUCCESS_TOAST(response.message || 'Form updated successfully');
+      // NOTE: No navigation here - caller handles navigation
+      return { success: true };
+    } else {
+      SHOW_TOAST(response.error, 'error');
       return { success: false, error: response.error };
     }
   } catch (error: any) {

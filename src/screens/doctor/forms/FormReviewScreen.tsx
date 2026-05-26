@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useRoute } from '@react-navigation/native';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 
 import {
   AppSafeAreaView,
@@ -29,9 +30,11 @@ import {
 import FormRequestHeader from '../../../components/FormRequestHeader';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { SCREENS } from '../../../navigation/routes';
+import { handleEditForm } from './formActionHandlers';
 
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
+  const dispatch = useDispatch();
 
   const request: ServiceRequest = (route.params as any)?.request;
 
@@ -43,7 +46,18 @@ const FormReviewScreen: React.FC = () => {
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
+  const profileData = useSelector((state: RootState) => state.profile.profileData);
   const formRef = useRef<any>(null);
+
+  // Use custom hook for lock refresh
+  const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
+  useFormLockRefresh({
+    requestId,
+    isLocked: requestData?.isLocked,
+    lockedBy: requestData?.formLock?.lockedBy || undefined,
+    currentUserId,
+    readOnly: false,
+  });
 
   const patientData = useMemo(() => {
     return request?.patient || requestData?.patient || {};
@@ -57,13 +71,16 @@ const FormReviewScreen: React.FC = () => {
   }, [requestData, request]);
 
   const handleLeftButtonPress = async () => {
-    if (formRef.current?.saveProgress) {
-      await formRef.current.saveProgress();
-      NavigationService.replace(SCREENS.FORMS_SCREEN, {
-        request: request,
-        action: 'edit',
-        from: 'review'
-      });
+    if (formRef.current?.editForm) {
+      const result = await formRef.current.editForm();
+      if (result?.success) {
+        // Navigate to FormsScreen with edit action
+        NavigationService.replace(SCREENS.FORMS_SCREEN, {
+          request: request,
+          action: 'edit',
+          from: 'review'
+        });
+      }
     }
   };
 

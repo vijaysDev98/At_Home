@@ -50,6 +50,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 export interface ArtificialNutritionFormProps {
@@ -101,7 +102,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       dob: selectedPatient?.dateOfBirth
         ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
         : '',
-      weight: String(selectedPatient?.weight) || '',
+      weight: selectedPatient?.weight?.toString() || '',
       nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
@@ -213,7 +214,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 return ne;
               });
             }
-          } catch {}
+          } catch { }
           return next;
         });
       } else {
@@ -290,9 +291,9 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             key: keyof typeof nutrient;
             label: string;
           }> = [
-            { key: 'volume_ml', label: 'Volume (ml)' },
-            { key: 'times_per_day', label: 'Times per Day' },
-          ];
+              { key: 'volume_ml', label: 'Volume (ml)' },
+              { key: 'times_per_day', label: 'Times per Day' },
+            ];
           numericFields.forEach(f => {
             const val = (nutrient as any)[f.key];
             if (
@@ -394,12 +395,28 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       });
     };
 
-  // Handle submit for review (using centralized handler)
+    // Handle submit for review (using centralized handler)
     const submitForReview = async (): Promise<{
       success: boolean;
       error?: string;
     }> => {
       return await handleSubmitForReview({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
+    // Handle edit form (using centralized handler - no navigation)
+    const editForm = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleEditForm({
         dispatch,
         state,
         initialData,
@@ -417,6 +434,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       saveProgress,
       submitForReview,
       updateAndSign,
+      editForm,
       getFormData: () => state,
     }));
 
@@ -765,6 +783,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
           open={open}
           date={date}
           mode="date"
+          minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
             setDate(selectedDate);

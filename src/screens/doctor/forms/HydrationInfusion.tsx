@@ -50,6 +50,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 export interface HydrationInfusionFormProps {
@@ -131,7 +132,7 @@ const HydrationInfusionForm = forwardRef<
       dob: selectedPatient?.dateOfBirth
         ? moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY')
         : '',
-      weight: String(selectedPatient?.weight) || '',
+      weight: selectedPatient?.weight?.toString() || '',
       nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
@@ -325,7 +326,7 @@ const HydrationInfusionForm = forwardRef<
                 return ne;
               });
             }
-          } catch {}
+          } catch { }
           return next;
         });
       } else {
@@ -451,7 +452,7 @@ const HydrationInfusionForm = forwardRef<
       });
     };
 
-  // Handle submit for review (using centralized handler)
+    // Handle submit for review (using centralized handler)
     const submitForReview = async (): Promise<{
       success: boolean;
       error?: string;
@@ -467,10 +468,27 @@ const HydrationInfusionForm = forwardRef<
       });
     };
 
+    // Handle edit form (using centralized handler - no navigation)
+    const editForm = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleEditForm({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
       saveAsDraft,
       updateAndSign,
+      editForm,
       saveProgress,
       submitForReview,
       getFormData: () => state,
@@ -773,7 +791,9 @@ const HydrationInfusionForm = forwardRef<
                       type: 'start_date',
                       index,
                     });
-
+                    if (product.start_date) {
+                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                    }
                     setOpen(true);
                   }}
                   placeholder="DD/MM/YYYY"
@@ -781,16 +801,25 @@ const HydrationInfusionForm = forwardRef<
                 />
 
                 <Input
-                  isLocked={readOnly}
+                  isLocked={readOnly || !product.start_date}
                   label={STRING.endDate}
                   value={product.end_date}
                   onPress={() => {
-                    if (readOnly) return;
+                    if (readOnly || !product.start_date) {
+                      if (!product.start_date) {
+                        SHOW_TOAST('Please select start date first', 'error');
+                      }
+                      return;
+                    }
                     setPickerType({
                       type: 'end_date',
                       index,
                     });
-
+                    if (product.end_date) {
+                      setDate(moment(product.end_date, 'DD/MM/YYYY').toDate());
+                    } else {
+                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                    }
                     setOpen(true);
                   }}
                   placeholder="DD/MM/YYYY"
@@ -852,6 +881,7 @@ const HydrationInfusionForm = forwardRef<
           open={open}
           date={date}
           mode="date"
+          minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
 
@@ -859,6 +889,20 @@ const HydrationInfusionForm = forwardRef<
               const formattedDate = moment(selectedDate).format('DD/MM/YYYY');
 
               if (pickerType.index !== undefined) {
+                // Handle product date fields
+                const product = state.infusion_products[pickerType.index];
+
+                // Validate end date is greater than start date
+                if (pickerType.type === 'end_date' && product.start_date) {
+                  const startDate = moment(product.start_date, 'DD/MM/YYYY');
+                  const endDate = moment(selectedDate);
+
+                  if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
+                    SHOW_TOAST('End date must be after start date', 'error');
+                    return;
+                  }
+                }
+
                 updateProduct(pickerType.index, pickerType.type, formattedDate);
               } else {
                 setState(prev => ({

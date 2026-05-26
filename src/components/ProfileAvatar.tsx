@@ -76,7 +76,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
         <Image
           source={{ uri: imageUrl }}
           style={styles.image}
-          // defaultSource={require('../assets/images/placeholder.png')}
+        // defaultSource={require('../assets/images/placeholder.png')}
         />
       ) : (
         <AppText

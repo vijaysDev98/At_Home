@@ -298,7 +298,7 @@ export const STRING = {
   prescriptionDateRequired: 'Prescription date is required',
   lastNameRequired: 'Last name is required',
   firstNameRequired: 'First name is required',
-  atLeastOneProductRequired: 'At least one product name is required',
+  atLeastOneProductRequired: 'At least one product is required',
   pleaseFillAllRequiredFields: 'Please fill in all required fields',
   modeOfAdministration: 'Mode of Administration',
   thePatientMustRemainAmbulatoryDuringTreatment:

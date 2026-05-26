@@ -50,6 +50,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 export interface MedicalOxygenProps {
@@ -102,7 +103,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       dob: selectedPatient?.dateOfBirth
         ? moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY')
         : '',
-      weight: String(selectedPatient?.weight) || '',
+      weight: selectedPatient?.weight?.toString() || '',
       nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
@@ -186,7 +187,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 return ne;
               });
             }
-          } catch {}
+          } catch { }
           return next;
         });
       } else {
@@ -293,7 +294,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       });
     };
 
-  // Handle submit for review (using centralized handler)
+    // Handle submit for review (using centralized handler)
     const submitForReview = async (): Promise<{
       success: boolean;
       error?: string;
@@ -309,10 +310,27 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       });
     };
 
+    // Handle edit form (using centralized handler - no navigation)
+    const editForm = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleEditForm({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
       saveAsDraft,
       updateAndSign,
+      editForm,
       saveProgress,
       submitForReview,
       getFormData: () => state,
@@ -634,6 +652,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           open={open}
           date={date}
           mode="date"
+          minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
             if (pickerType) {

@@ -240,6 +240,42 @@ export const serviceRequestApi = {
   },
 
   /**
+   * Refresh lock for a form (extends expiration)
+   */
+  refreshFormLock: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/form-lock/refresh`,
+        {},
+      );
+      console.log('refresh lock response', response);
+
+      if (response.status || response.code === 200) {
+        return {
+          success: true,
+          message: response.data?.message || 'Form lock refreshed successfully',
+          data: response.data?.data || response.data,
+        };
+      } else {
+        return {
+          success: false,
+          message: response.message || 'Failed to refresh form lock',
+          error: response.message,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to refresh form lock';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
    * Update an existing draft request
    */
   updateDraft: async (

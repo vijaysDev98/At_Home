@@ -47,27 +47,73 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
   let isSigned = !!requestData?.digitalSignature?.signatureData;
 
+  /**
+   * Poll signature status until document is signed
+   * Checks every 2 seconds with a maximum timeout
+   */
+  const pollSignatureStatus = async (
+    requestId: string,
+    maxAttempts: number = 60,
+  ): Promise<boolean> => {
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      try {
+        const response = await signatureApi.getSignatureStatus(requestId);
+
+        if (!response?.success) {
+          SHOW_TOAST(
+            response?.message || 'Failed to fetch signature status',
+            'error',
+          );
+          return false;
+        }
+
+        const data = response?.data;
+        const envelopeStatus = data?.envelopeStatus;
+        const signatureStatus = data?.signatureMetadata?.signatureStatus;
+        const signedPdfUrl = data?.signedPdfUrl;
+
+        // Check multiple completion indicators
+        const isCompleted =
+          envelopeStatus === 'completed' ||
+          signatureStatus === 'completed' ||
+          !!signedPdfUrl;
+
+        if (isCompleted) {
+          return true;
+        }
+
+        // Wait 2 seconds before next check
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
+        attempts++;
+      } catch (error: any) {
+        SHOW_TOAST(
+          error?.response?.data?.message ||
+          error?.message ||
+          'Error checking signature status',
+          'error',
+        );
+        return false;
+      }
+    }
+
+    SHOW_TOAST('Signature timeout - please try again', 'error');
+    return false;
+  };
+
   const openSigningUrl = async (url: string, requestId: string) => {
     try {
-      /**
-       * IMPORTANT:
-       * This must be a deep link registered in Android/iOS
-       */
       const redirectUrl = 'athome://docusign/callback';
-
       const isBrowserAvailable = await InAppBrowser.isAvailable();
 
-      /**
-       * Fallback if browser not available
-       */
+      // Fallback if browser not available
       if (!isBrowserAvailable) {
         await Linking.openURL(url);
         return;
       }
 
-      /**
-       * Open DocuSign signing flow
-       */
+      // Open DocuSign signing flow
       const authResult = await InAppBrowser.openAuth(url, redirectUrl, {
         dismissButtonStyle: 'close',
         preferredBarTintColor: COLORS.primary,
@@ -76,12 +122,8 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         animated: true,
         modalPresentationStyle: 'fullScreen',
         modalTransitionStyle: 'coverVertical',
-
-        // iOS
         enableBarCollapsing: false,
         ephemeralWebSession: false,
-
-        // Android
         showTitle: true,
         toolbarColor: COLORS.primary,
         secondaryToolbarColor: COLORS.black,
@@ -89,67 +131,32 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         navigationBarDividerColor: COLORS.white,
         enableUrlBarHiding: true,
         enableDefaultShare: false,
-
-        // IMPORTANT
         forceCloseOnRedirection: true,
       });
-      /**
-       * User closed browser manually
-       */
-      // if (authResult?.type === 'cancel') {
-      //   return;
-      // }
 
-      /**
-       * Redirect happened successfully
-       *
-       * Backend should redirect to:
-       * athome://docusign/callback
-       */
-      // if (
-      //   authResult?.type === 'success' &&
-      //   authResult?.url?.startsWith('athome://docusign/callback')
-      // ) {
-      dispatch(setLoading(true));
-
-      /**
-       * Fetch latest signature status
-       */
-      const response = await signatureApi.getSignatureStatus(requestId);
-      if (!response?.success) {
-        SHOW_TOAST(
-          response?.message || 'Failed to fetch signature status',
-          'error',
-        );
+      // Handle browser closure or cancellation
+      if (authResult?.type === 'cancel') {
+        SHOW_TOAST('Signing cancelled', 'info');
         return;
       }
 
-      // const signatureStatus =
-      //   response?.data?.signatureMetadata?.signatureStatus;
+      dispatch(setLoading(true));
 
-      const envelopeStatus = response?.data?.envelopeStatus;
-
-      // const signedPdfUrl = response?.data?.signedPdfUrl;
-
-      const isCompleted =
-        //   signatureStatus === 'completed' ||
-        envelopeStatus === 'completed';
-      // ||
-      //   !!signedPdfUrl;
+      // Poll for signature completion
+      const isCompleted = await pollSignatureStatus(requestId);
 
       if (isCompleted) {
         isSigned = true;
-        // Release the form lock on successful signature
         await serviceRequestApi.releaseFormLock(requestId);
-
         SHOW_TOAST('Document signed successfully', 'success');
+
         setTimeout(() => {
           NavigationService.goBack();
         }, 2000);
 
         onSignatureCompleted?.();
       } else {
-        SHOW_TOAST('Signature is not completed yet', 'error');
+        SHOW_TOAST('Signature not completed', 'error');
       }
     } catch (error: any) {
       SHOW_TOAST(

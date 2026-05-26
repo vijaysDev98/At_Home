@@ -252,7 +252,7 @@ const DoctorProfile: React.FC = () => {
                 label={STRING.phoneNumber}
                 value={userPhone}
                 isCountryCode
-                countryName={profileData?.country}
+                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.phone}

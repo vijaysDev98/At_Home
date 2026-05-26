@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText } from '../../../components';
+import { AppText, Input } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,12 +18,14 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
 import { userLogout } from '../../../actions/auth/authAction';
+import { countryCodes } from 'react-native-country-codes-picker';
 
 const ProviderProfile: React.FC = () => {
   const dispatch = useDispatch();
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+  console.log('profile data ', profileData);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -42,7 +44,6 @@ const ProviderProfile: React.FC = () => {
     dispatch(userLogout());
   };
 
-  console.log('profile data ', profileData);
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
@@ -134,28 +135,26 @@ const ProviderProfile: React.FC = () => {
             </View>
             <View style={styles.divider} />
             <View style={styles.fieldGroup}>
-              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                Email Address
-              </AppText>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._1A1D1F}
-              >
-                {providerEmail}
-              </AppText>
+              <Input
+                label="Email Address"
+                value={providerEmail}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.email_icon}
+                style={styles.inputContainer}
+              />
             </View>
             <View style={styles.fieldGroup}>
-              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                Phone Number
-              </AppText>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._1A1D1F}
-              >
-                {providerPhone}
-              </AppText>
+              <Input
+                label="Phone Number"
+                value={providerPhone}
+                isCountryCode
+                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.phone}
+                style={styles.inputContainer}
+              />
             </View>
           </View>
 
@@ -410,5 +409,8 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     tintColor: COLORS._526674,
     resizeMode: 'contain'
+  },
+  inputContainer: {
+    paddingHorizontal: 0,
   },
 });

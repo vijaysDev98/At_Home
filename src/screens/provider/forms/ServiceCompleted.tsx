@@ -205,7 +205,7 @@ const ServiceCompletedScreen: React.FC = () => {
                   numberOfLines={1}
                   allowFontScaling
                   adjustsFontSizeToFit                >
-                  {requestId || '-'}
+                  {requestId?.slice(-4).toUpperCase() || '-'}
                 </AppText>
               </View>
             </View>

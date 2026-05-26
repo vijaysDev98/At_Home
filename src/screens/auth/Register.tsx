@@ -546,47 +546,48 @@ const Register: React.FC = () => {
             </>
           )}
         </View>
+
+        {/* Footer Section - Inside ScrollView */}
+        <View style={styles.footer}>
+          {isEdit ? (
+            <View style={styles.editActions}>
+              <TouchableOpacity
+                style={styles.cancelAction}
+                activeOpacity={0.7}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
+              </TouchableOpacity>
+              <PrimaryButton
+                title={STRING.saveChanges}
+                onPress={() => handleSubmit()}
+                disabled={!isFormValid()}
+                style={styles.saveAction}
+              />
+            </View>
+          ) : (
+            <>
+              <PrimaryButton
+                title={STRING.submitRegistration}
+                icon={IMAGES.arrowRight}
+                onPress={() => handleSubmit()}
+                disabled={!isFormValid()}
+              />
+
+              <TouchableOpacity
+                style={styles.signInContainer}
+                onPress={() => NavigationService.navigate('Login')}
+              >
+                <Text style={styles.signInText}>
+                  {STRING.alreadyHaveAnAccount}{' '}
+                  <Text style={styles.signInLink}>{STRING.signIn}</Text>
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
         {/* </ScrollView> */}
       </KeyboardAwareScrollView>
-      {/* Sticky Footer Section */}
-      <View style={styles.footer}>
-        {isEdit ? (
-          <View style={styles.editActions}>
-            <TouchableOpacity
-              style={styles.cancelAction}
-              activeOpacity={0.7}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
-            </TouchableOpacity>
-            <PrimaryButton
-              title={STRING.saveChanges}
-              onPress={() => handleSubmit()}
-              disabled={!isFormValid()}
-              style={styles.saveAction}
-            />
-          </View>
-        ) : (
-          <>
-            <PrimaryButton
-              title={STRING.submitRegistration}
-              icon={IMAGES.arrowRight}
-              onPress={() => handleSubmit()}
-              disabled={!isFormValid()}
-            />
-
-            <TouchableOpacity
-              style={styles.signInContainer}
-              onPress={() => NavigationService.navigate('Login')}
-            >
-              <Text style={styles.signInText}>
-                {STRING.alreadyHaveAnAccount}{' '}
-                <Text style={styles.signInLink}>{STRING.signIn}</Text>
-              </Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
 
       <AppBottomSheet ref={imagePickerSheetRef}>
         <ImagePickerContent

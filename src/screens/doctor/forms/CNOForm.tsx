@@ -40,6 +40,7 @@ import {
   handleUpdateAndSign,
   handleSaveProgress,
   handleSubmitForReview,
+  handleEditForm,
 } from './formActionHandlers';
 
 const NUTRITION_CATEGORIES = [
@@ -123,7 +124,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       patient_last_name: selectedPatient?.lName || '',
       patient_first_name: selectedPatient?.fName || '',
       dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
-      weight: String(selectedPatient?.weight) || '',
+      weight: selectedPatient?.weight?.toString() || '',
       nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
@@ -213,7 +214,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 return ne;
               });
             }
-          } catch {}
+          } catch { }
           return next;
         });
       } else {
@@ -272,7 +273,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     };
 
     const checkedBoxesCount = useMemo(() => {
-      return state.reassessment_criteria.length;
+      return state.reassessment_criteria?.length || 0;
     }, [state]);
 
     // Validation function (aligned with schema required fields)
@@ -299,7 +300,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         .filter(i => i !== -1);
 
       if (filledProductIndices.length === 0) {
-        newErrors['nutrition_products[0].product_type'] =
+        newErrors['nutrition_products'] =
           STRING.atLeastOneProductRequired;
       }
 
@@ -412,12 +413,28 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       });
     };
 
-  // Handle submit for review (using centralized handler)
+    // Handle submit for review (using centralized handler)
     const submitForReview = async (): Promise<{
       success: boolean;
       error?: string;
     }> => {
       return await handleSubmitForReview({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
+    // Handle edit form (using centralized handler - no navigation)
+    const editForm = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleEditForm({
         dispatch,
         state,
         initialData,
@@ -434,6 +451,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       updateAndSign,
       saveProgress,
       submitForReview,
+      editForm,
       getFormData: () => state,
     }));
 

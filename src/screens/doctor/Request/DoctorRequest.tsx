@@ -29,7 +29,7 @@ import {
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useIsFocused } from '@react-navigation/native';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -74,6 +74,7 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
 
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const route = useRoute();
+  const isFocused = useIsFocused();
   const formStatus = (route.params as any)?.formStatus || 'all';
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchText, setSearchText] = useState('');
@@ -100,13 +101,21 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   // Fetch service requests
   const fetchServiceRequests = useCallback(
-    async (page: number = 1, isRefresh: boolean = false) => {
+    async (page: number = 1, isRefresh: boolean = false, filterStatus?: FilterType) => {
       if (!isRefresh) setIsLoading(true);
       try {
-        const response = await serviceRequestListApi.listServiceRequests({
+        const params: any = {
           page,
           size: PAGE_SIZE,
-        });
+        };
+
+        // Add filter status to API request if provided and not 'all'
+        const statusToFilter = filterStatus || filter;
+        if (statusToFilter && statusToFilter !== 'all') {
+          params.status = statusToFilter;
+        }
+
+        const response = await serviceRequestListApi.listServiceRequests(params);
         if (response) {
           // For page 1, replace the entire list
           // For subsequent pages, append to the existing list
@@ -125,13 +134,20 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         if (!isRefresh) setIsLoading(false);
       }
     },
-    [],
+    [filter],
   );
 
   // Load initial data
   useEffect(() => {
     fetchServiceRequests(1);
   }, [fetchServiceRequests]);
+
+  // Refresh data whenever screen comes into focus
+  useEffect(() => {
+    if (isFocused) {
+      fetchServiceRequests(1);
+    }
+  }, [isFocused, fetchServiceRequests]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -141,7 +157,10 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
-  }, []);
+    setCurrentPage(1);
+    setRequests([]);
+    fetchServiceRequests(1, false, newFilter);
+  }, [fetchServiceRequests]);
 
   useEffect(() => {
     setFilter(formStatus);
