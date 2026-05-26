@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -8,22 +8,25 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText } from '../../../components';
+import { AppText, Input, LogoutConfirmationSheet } from '../../../components';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
 import { userLogout } from '../../../actions/auth/authAction';
+import { countryCodes } from 'react-native-country-codes-picker';
 
 const ProviderProfile: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+  console.log('profile data ', profileData);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -38,11 +41,16 @@ const ProviderProfile: React.FC = () => {
   const providerPhone = profileData?.phoneNumber;
   const providerAssignedServices = profileData?.assignedServices || [];
 
+  const logoutSheetRef = useRef<ActionSheetRef>(null);
+
   const handleLogout = () => {
+    logoutSheetRef.current?.show();
+  };
+
+  const confirmLogout = () => {
     dispatch(userLogout());
   };
 
-  console.log('profile data ', profileData);
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
@@ -134,28 +142,26 @@ const ProviderProfile: React.FC = () => {
             </View>
             <View style={styles.divider} />
             <View style={styles.fieldGroup}>
-              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                Email Address
-              </AppText>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._1A1D1F}
-              >
-                {providerEmail}
-              </AppText>
+              <Input
+                label="Email Address"
+                value={providerEmail}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.email_icon}
+                style={styles.inputContainer}
+              />
             </View>
             <View style={styles.fieldGroup}>
-              <AppText size={getScaleSize(12)} color={COLORS._6F767E}>
-                Phone Number
-              </AppText>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._1A1D1F}
-              >
-                {providerPhone}
-              </AppText>
+              <Input
+                label="Phone Number"
+                value={providerPhone}
+                isCountryCode
+                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.phone}
+                style={styles.inputContainer}
+              />
             </View>
           </View>
 
@@ -211,6 +217,21 @@ const ProviderProfile: React.FC = () => {
           )}
 
           <TouchableOpacity
+            style={styles.changePasswordBtn}
+            activeOpacity={0.85}
+            onPress={() => NavigationService.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
+          >
+            <Image source={IMAGES.lock} style={styles.changePasswordIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._526674}
+            >
+              Change Password
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.logoutBtn}
             activeOpacity={0.85}
             onPress={handleLogout}
@@ -225,6 +246,10 @@ const ProviderProfile: React.FC = () => {
             </AppText>
           </TouchableOpacity>
         </ScrollView>
+        <LogoutConfirmationSheet
+          ref={logoutSheetRef}
+          onLogout={confirmLogout}
+        />
       </View>
     </SafeAreaView>
   );
@@ -372,5 +397,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(8),
     paddingVertical: getScaleSize(4),
     borderRadius: getScaleSize(6),
+  },
+  changePasswordBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  changePasswordIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain'
+  },
+  inputContainer: {
+    paddingHorizontal: 0,
   },
 });

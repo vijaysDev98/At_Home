@@ -25,6 +25,14 @@ import {
 } from '../../../services/serviceRequestListApi';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import {
+  handleFormSubmit,
+  handleSaveAsDraft,
+  handleUpdateAndSign,
+  handleSaveProgress,
+  handleSubmitForReview,
+  handleEditForm,
+} from './formActionHandlers';
 
 export interface PersonalHygieneCareProps {
   serviceId?: string;
@@ -49,6 +57,8 @@ const dressingType = ['Simple', 'Complex'];
 export interface PersonalHygieneCareRef {
   validateAndSubmit: () => Promise<void>;
   saveAsDraft: () => Promise<void>;
+  updateAndSign: () => Promise<{ success: boolean; error?: string }>;
+  saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
 }
 
@@ -154,7 +164,7 @@ const PersonalHygieneCare = forwardRef<
               return ne;
             });
           }
-        } catch {}
+        } catch { }
         return next;
       });
     } else {
@@ -182,12 +192,12 @@ const PersonalHygieneCare = forwardRef<
     const newErrors: { [key: string]: string } = {};
 
     // Required: patient_name
-    if (!state.patient_name.trim()) {
+    if (!state?.patient_name || !state.patient_name.trim()) {
       newErrors.patientName = STRING.patientNameIsRequired;
     }
 
     // Required: prescription_date
-    if (!state.prescription_date) {
+    if (!state?.prescription_date) {
       newErrors.prescriptionDate = STRING.prescriptionDateIsRequired;
     }
 
@@ -196,195 +206,107 @@ const PersonalHygieneCare = forwardRef<
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmitRequest = async () => {
-    const ok = validateForm();
-    if (!ok) {
-      const firstErrorKey = lastFirstErrorKey.current || '';
-      const firstErrorMessage =
-        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-      SHOW_TOAST(firstErrorMessage, 'error');
-
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-      return;
-    }
-
-    dispatch(setLoading(true));
-
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
-
-    try {
-      if (isExistingDraft && requestId) {
-        const submitResponse = await serviceRequestApi.submitForReview(
-          requestId,
-        );
-        if (submitResponse.success) {
-          SHOW_SUCCESS_TOAST(submitResponse.message);
-          dispatch(setLoading(false));
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(submitResponse.error, 'error');
-        }
-      } else {
-        const payload = {
-          serviceId: serviceId || '',
-          patientId: selectedPatient?.id || selectedPatient?._id || '',
-          priorityLevel: 'routine' as const,
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-            'YYYY-MM-DD',
-          ),
-          requestedTime: moment().format('HH:mm'),
-          initialNotes: '',
-          formData: state,
-        };
-
-        const response = await serviceRequestApi.createServiceRequest(payload);
-        dispatch(setLoading(false));
-
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response?.message);
-
-          const newRequestId = response.data?.data?.id;
-          if (newRequestId) {
-            const submitResponse = await serviceRequestApi.submitForReview(
-              newRequestId,
-            );
-            if (submitResponse.success) {
-              SHOW_SUCCESS_TOAST(submitResponse.message);
-              dispatch(setLoading(false));
-              setTimeout(() => {
-                NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: SCREENS.DOCTOR_REQUEST,
-                });
-              }, 500);
-            } else {
-              dispatch(setLoading(false));
-              SHOW_TOAST(submitResponse.error, 'error');
-            }
-          } else {
-            dispatch(setLoading(false));
-          }
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(response.error, 'error');
-        }
-      }
-    } catch (error: any) {
-      dispatch(setLoading(false));
-      SHOW_TOAST(error.message, 'error');
-    }
+  // Handle form submission (using centralized handler)
+  const validateAndSubmit = async () => {
+    await handleFormSubmit({
+      dispatch,
+      state,
+      initialData,
+      serviceId: serviceId || '',
+      selectedPatient,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
-  const handleSaveAsDraft = async () => {
-    const ok = validateForm();
-
-    if (!ok) {
-      const firstErrorKey = lastFirstErrorKey.current || '';
-      const firstErrorMessage =
-        errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-      SHOW_TOAST(firstErrorMessage, 'error');
-
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-      return;
-    }
-
-    dispatch(setLoading(true));
-
-    const isExistingDraft = initialData && initialData._id;
-    const requestId = isExistingDraft ? initialData._id : null;
-
-    try {
-      if (isExistingDraft && requestId) {
-        const response = await serviceRequestApi.updateDraft(requestId, {
-          formData: state,
-        });
-        dispatch(setLoading(false));
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response.message);
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          SHOW_TOAST(response.error, 'error');
-        }
-      } else {
-        const payload = {
-          serviceId: serviceId || '',
-          patientId: selectedPatient?.id || selectedPatient?._id || '',
-          priorityLevel: 'routine' as const,
-          requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-            'YYYY-MM-DD',
-          ),
-          requestedTime: moment().format('HH:mm'),
-          initialNotes: '',
-          formData: state,
-        };
-
-        const response = await serviceRequestApi.createServiceRequest(payload);
-        dispatch(setLoading(false));
-
-        if (response.success) {
-          SHOW_SUCCESS_TOAST(response?.message);
-          setTimeout(() => {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
-          }, 500);
-        } else {
-          SHOW_TOAST(response.error, 'error');
-        }
-      }
-    } catch (error: any) {
-      dispatch(setLoading(false));
-      SHOW_TOAST(error.message, 'error');
-    }
+  // Handle save as draft (using centralized handler)
+  const saveAsDraft = async () => {
+    await handleSaveAsDraft({
+      dispatch,
+      state,
+      initialData,
+      serviceId: serviceId || '',
+      selectedPatient,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
-  // Handle update & sign (for already-submitted requests)
-  const handleUpdateAndSign = async (): Promise<{
+  // Handle update & sign (using centralized handler)
+  const updateAndSign = async (): Promise<{
     success: boolean;
     error?: string;
   }> => {
-    const requestId = initialData?._id || initialData?.id;
-    if (!requestId) {
-      return { success: false, error: 'No request ID' };
-    }
-    try {
-      const response = await serviceRequestApi.updateFormData(requestId, {
-        formData: state,
-      });
-      if (response.success) {
-        return { success: true };
-      } else {
-        SHOW_TOAST(response.error, 'error');
-        return { success: false, error: response.error };
-      }
-    } catch (error: any) {
-      const msg = error.message;
-      SHOW_TOAST(msg, 'error');
-      return { success: false, error: msg };
-    }
+    return await handleUpdateAndSign({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
+  // Handle save progress (using centralized handler)
+  const saveProgress = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleSaveProgress({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
+  // Handle submit for review (using centralized handler)
+  const submitForReview = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleSubmitForReview({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
+  };
+
+  // Handle edit form (using centralized handler - no navigation)
+  const editForm = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    return await handleEditForm({
+      dispatch,
+      state,
+      initialData,
+      validateForm,
+      scrollRef,
+      lastFirstErrorKey,
+      errors,
+    });
   };
 
   useImperativeHandle(ref, () => ({
-    validateAndSubmit: async () => {
-      await handleSubmitRequest();
-    },
-    saveAsDraft: async () => {
-      await handleSaveAsDraft();
-    },
-    updateAndSign: handleUpdateAndSign,
+    validateAndSubmit,
+    saveAsDraft,
+    updateAndSign,
+    editForm,
+    saveProgress,
+    submitForReview,
     getFormData: () => {
       return state;
     },
@@ -425,6 +347,7 @@ const PersonalHygieneCare = forwardRef<
           {renderSectionHeader(STRING.basicInformation)}
 
           <Input
+            isLocked={readOnly}
             label={STRING.patientName}
             value={state.patient_name}
             isMandatory
@@ -435,6 +358,7 @@ const PersonalHygieneCare = forwardRef<
           />
 
           <Input
+            isLocked={readOnly}
             onPress={() => {
               setPickerType({ type: 'dob' });
               setOpen(true);
@@ -448,6 +372,7 @@ const PersonalHygieneCare = forwardRef<
           />
 
           <Input
+            isLocked={readOnly}
             label={STRING.prescriberIdentification}
             value={state.prescriber_name}
             onChangeText={value => setFormState({ prescriber_name: value })}
@@ -456,6 +381,7 @@ const PersonalHygieneCare = forwardRef<
           />
 
           <Input
+            isLocked={readOnly}
             onPress={() => {
               setPickerType({ type: 'prescription_date' });
               setOpen(true);
@@ -610,7 +536,7 @@ const PersonalHygieneCare = forwardRef<
 
         {/* PROCEDURES */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.procedures)}
+          {renderSectionHeader('Procedures')}
 
           <AppCheckBox
             disabled={readOnly}
@@ -772,6 +698,7 @@ const PersonalHygieneCare = forwardRef<
         open={open}
         date={date}
         mode="date"
+        minimumDate={new Date()}
         onConfirm={selectedDate => {
           setOpen(false);
           setDate(selectedDate);
@@ -803,7 +730,7 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: getScaleSize(190),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
     marginHorizontal: getScaleSize(16),
   },

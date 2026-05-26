@@ -60,7 +60,12 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
       <Input
         isLocked={readOnly}
         onPress={() => {
-          !readOnly && setOpen(true);
+          if (!readOnly) {
+            if (state.prescription_date) {
+              setDate(moment(state.prescription_date, 'DD/MM/YYYY').toDate());
+            }
+            setOpen(true);
+          }
         }}
         // editable={!readOnly}
         label="Prescription Date"
@@ -77,6 +82,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         mode="date"
         open={open}
         date={date}
+        minimumDate={new Date()}
         onConfirm={d => {
           setOpen(false);
           setDate(d);

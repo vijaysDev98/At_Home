@@ -25,12 +25,12 @@ import ProviderBottomTabs, {
   ProviderBottomTabParamList,
 } from './ProviderBottomTabs';
 import ProviderAvailableRequests from '../screens/provider/request/AvailableRequest';
-import ProviderForm from '../screens/provider/forms/ProviderForm';
 import ServiceScreen from '../screens/provider/forms/Service';
 import ServiceCompletedScreen from '../screens/provider/forms/ServiceCompleted';
 import NavigationService from './NavigationService';
 import { SCREENS } from './routes';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
+import ProviderFormScreen from '../screens/provider/forms/ProviderFormScreen';
 import FormReviewScreen from '../screens/doctor/forms/FormReviewScreen';
 import EditProviderProfile from '../screens/provider/profile/editProviderProfile';
 
@@ -43,28 +43,24 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
   ResetPassword:
-    | { email?: string; otp?: string; resetToken?: string }
-    | undefined;
+  | { email?: string; otp?: string; resetToken?: string; isChangePassword?: boolean }
+  | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
   DoctorRequest: undefined;
   CreateRequestStep2: undefined;
   CreateRequestStep3: undefined;
-  FORMS_SCREEN: undefined;
+  Forms_Screen: undefined;
+  ProviderFormScreen: undefined;
   FormReviewScreen: { request: any } | undefined;
   DoctorBottomTabs: NavigatorScreenParams<BottomTabParamList> | undefined;
   ProviderBottomTabs:
-    | NavigatorScreenParams<ProviderBottomTabParamList>
-    | undefined;
+  | NavigatorScreenParams<ProviderBottomTabParamList>
+  | undefined;
   ProviderAvailableRequests: undefined;
   AddPatient: undefined;
   PatientDetail: undefined;
   SignatureForm: undefined;
-  ProviderForm: {
-    mode: 'view' | 'update';
-    requestStatus: string;
-    formStatus: string;
-  };
   ServiceScreen: {
     requestStatus?: string;
     formStatus?: string;
@@ -153,6 +149,11 @@ export default function RootNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name={SCREENS.PROVIDER_FORMS_SCREEN}
+          component={ProviderFormScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name={SCREENS.FORM_REVIEW_SCREEN}
           component={FormReviewScreen}
           options={{ headerShown: false }}
@@ -185,7 +186,7 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.ADD_PATIENT}
           component={AddPatient}
-          // options={{ title: 'Add Patient' }}
+        // options={{ title: 'Add Patient' }}
         />
         <Stack.Screen
           name={SCREENS.PATIENT_DETAIL}
@@ -195,11 +196,6 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.SIGNATURE_FORM}
           component={SignatureForm}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ProviderForm"
-          component={ProviderForm}
           options={{ headerShown: false }}
         />
         <Stack.Screen

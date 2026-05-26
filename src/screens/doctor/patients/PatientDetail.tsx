@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   Image,
+  FlatList,
 } from 'react-native';
 import {
   AppButton,
@@ -19,12 +20,13 @@ import { useRoute, useIsFocused } from '@react-navigation/native';
 import { AppLoader } from '../../../components';
 import moment from 'moment';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
+import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
-import { STRING } from '../../../constant';
+import { getButtonConfig, REQUEST_STATUS, STRING } from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -34,8 +36,12 @@ const PatientDetail: React.FC = () => {
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
-  const homeAddress =
-    patient?.streetAddress + ', ' + patient?.city + ', ' + patient?.zip;
+  console.log('patient', patient);
+
+  const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
+    .filter(item => item && item !== 'null')
+    .join(', ');
+
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
@@ -67,7 +73,7 @@ const PatientDetail: React.FC = () => {
     return name.slice(0, 2).toUpperCase();
   };
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView edges>
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
@@ -116,7 +122,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._1A1D1F}
                   font={FONTS.Inter.Bold}
                 >
-                  {patient?.fName + ' ' + patient?.lName || '---'}
+                  {patient?.fullName || '---'}
                 </AppText>
                 <AppText
                   size={getScaleSize(13)}
@@ -147,7 +153,7 @@ const PatientDetail: React.FC = () => {
             <View style={styles.infoList}>
               <View style={styles.infoRow}>
                 <Image source={IMAGES.phone} style={styles.infoIcon} />
-                <View>
+                <View style={styles.infoContent}>
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
@@ -166,7 +172,7 @@ const PatientDetail: React.FC = () => {
               </View>
               <View style={styles.infoRow}>
                 <Image source={IMAGES.mail} style={styles.infoIcon} />
-                <View>
+                <View style={styles.infoContent}>
                   <AppText
                     size={getScaleSize(12)}
                     font={FONTS.Inter.Regular}
@@ -186,7 +192,7 @@ const PatientDetail: React.FC = () => {
               {homeAddress && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.location_pin} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -199,7 +205,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Medium}
                       color={COLORS._1A1D1F}
                     >
-                      {homeAddress}
+                      {homeAddress || '---'}
                     </AppText>
                   </View>
                 </View>
@@ -207,7 +213,7 @@ const PatientDetail: React.FC = () => {
               {patient?.gender && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -228,7 +234,7 @@ const PatientDetail: React.FC = () => {
               {patient?.socialInsuranceNumber && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -249,7 +255,7 @@ const PatientDetail: React.FC = () => {
               {patient?.weight && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
-                  <View>
+                  <View style={styles.infoContent}>
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
@@ -321,13 +327,87 @@ const PatientDetail: React.FC = () => {
             >
               {STRING.linkedRequests}
             </AppText>
-            <TouchableOpacity style={styles.plusBtn} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
+              }}
+              style={styles.plusBtn}
+              activeOpacity={0.8}
+            >
               <Image
                 source={IMAGES.new_request}
                 style={styles.newRequestIcon}
               />
             </TouchableOpacity>
           </View>
+
+          <FlatList
+            data={patient?.linkedRequests || [] as any[]}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                  align="center"
+                >
+                  No linked requests found
+                </AppText>
+              </View>
+            )}
+            renderItem={({ item }) => {
+              const formStatus = item?.formStatus;
+              const buttonConfig = getButtonConfig(formStatus, item?.status);
+
+              return (
+                <View style={{ marginBottom: getScaleSize(12) }}>
+                  <RequestCardDoctor
+                    name={patient?.fullName}
+                    requestId={item?.id}
+                    requestType={item?.service?.serviceName}
+                    status={item?.status}
+                    formStatus={item?.formStatus}
+                    buttonText={
+                      buttonConfig.show
+                        ? buttonConfig.label || undefined
+                        : undefined
+                    }
+                    onPress={() => {
+                      if (item.status == REQUEST_STATUS.COMPLETED) {
+                        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                          request: item,
+                        });
+                        return;
+                      }
+                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                        request: item,
+                        action: 'view',
+                      });
+                    }}
+                    onButtonPress={() => {
+                      if (buttonConfig.action === 'edit') {
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      } else if (buttonConfig.action === 'sign') {
+                        NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      } else if (buttonConfig.action === 'view') {
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: buttonConfig.action,
+                        });
+                      }
+                    }}
+                  />
+                </View>
+              );
+            }}
+            keyExtractor={item => item.id}
+          />
         </ScrollView>
       </View>
       <AppLoader visible={globalLoading} />
@@ -434,6 +514,10 @@ const styles = StyleSheet.create({
     width: getScaleSize(18),
     resizeMode: 'contain',
   },
+  infoContent: {
+    flex: 1,
+    gap: 2,
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -452,6 +536,11 @@ const styles = StyleSheet.create({
     width: getScaleSize(12),
     height: getScaleSize(21),
     tintColor: COLORS.primary,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(32),
   },
 });
 

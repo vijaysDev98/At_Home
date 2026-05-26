@@ -51,6 +51,11 @@ const EditProviderProfile: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState(
     profileData?.phoneNumber || '',
   );
+  const [selectedCountryCode, setSelectedCountryCode] = useState(
+    profileData?.country?.length && profileData?.country?.length > 3
+      ? profileData?.country?.slice(0, 2).toUpperCase()
+      : profileData?.country || 'US',
+  );
 
   const [errors, setErrors] = useState<{
     [key: string]: string;
@@ -124,6 +129,7 @@ const EditProviderProfile: React.FC = () => {
     const payload = {
       providerName: providerName.trim(),
       profileImg: profileImageUrl,
+      country: selectedCountryCode,
       phoneNumber: phoneNumber.trim(),
     };
 
@@ -209,6 +215,10 @@ const EditProviderProfile: React.FC = () => {
             isMandatory
             placeholder="Enter phone number"
             value={phoneNumber}
+            keyboardType="number-pad"
+            isCountryCode
+            countryCode={selectedCountryCode}
+            onCountryCodeSelect={(code: string) => setSelectedCountryCode(code)}
             leftIcon={IMAGES.phone}
             error={errors.phoneNumber}
             style={{

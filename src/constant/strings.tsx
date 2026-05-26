@@ -50,6 +50,7 @@ export const STRING = {
   finessNumberMustBe9Digits: 'FINESS number must be exactly 9 digits',
   pleaseSelectYourSpecialty: 'Please select your specialty',
   placeOfPracticeRequired: 'Place of practice is required',
+  facilityNameRequired: 'Facility name is required',
   addressRequired: 'Address is required',
   youMustAcceptTheTermsToContinue: 'You must accept the terms to continue',
   failedToUploadProfileImage: 'Failed to upload profile image',
@@ -61,7 +62,7 @@ export const STRING = {
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
   and: 'and',
-  alreadyHaveAnAccount: "Don't have an account?",
+  alreadyHaveAnAccount: 'Already have an account?',
   registrationSuccessful: 'Registration Successful',
   yourAccountHasBeenCreatedAndIsCurrently:
     'Your account has been created and is currently',
@@ -84,7 +85,7 @@ export const STRING = {
   invalidEmail: 'Please enter a valid email',
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
-  forgotQuestion: 'Forgot?',
+  forgotPasswordQuestion: 'Forgot Password?',
 
   // ─── Auth: Forgot Password ───────────────────────────────────
   sendOTP: 'Send OTP / Reset Link',
@@ -182,6 +183,7 @@ export const STRING = {
   socialInsuranceNumber: 'Social insurance number(SIN)',
   enterSocialInsuranceNumber: 'Enter social insurance number',
   genderRequired: 'Gender is required',
+  dateOfBirthRequired: 'Date of birth is required',
 
   // ─── Patient Request ──────────────────────────────────────────
   createRequest: 'Create Request',
@@ -297,7 +299,7 @@ export const STRING = {
   prescriptionDateRequired: 'Prescription date is required',
   lastNameRequired: 'Last name is required',
   firstNameRequired: 'First name is required',
-  atLeastOneProductRequired: 'At least one product name is required',
+  atLeastOneProductRequired: 'At least one product is required',
   pleaseFillAllRequiredFields: 'Please fill in all required fields',
   modeOfAdministration: 'Mode of Administration',
   thePatientMustRemainAmbulatoryDuringTreatment:
@@ -502,6 +504,7 @@ export const STRING = {
   //wound care
   woundDressingPrescriptionSupportForm:
     'Wound Dressing Prescription Support Form',
+  dateRequired: 'Date is required',
   physicianInformation: 'Physician Information',
   condition: 'Condition',
   careRelatedToLongTermConditionAld:

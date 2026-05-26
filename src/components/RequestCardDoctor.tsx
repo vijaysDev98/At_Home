@@ -11,6 +11,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
 import { DISPLAY_FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
+import ProfileAvatar from './ProfileAvatar';
 
 interface RequestCardProps {
   name?: string;
@@ -21,34 +22,40 @@ interface RequestCardProps {
   formStatus?: string;
   buttonText?: string;
   onButtonPress?: () => void;
+  onPress?: () => void;
 }
 
-const RequestCard: React.FC<RequestCardProps> = ({
+const RequestCardDoctor: React.FC<RequestCardProps> = ({
   name,
-  initials,
   requestType,
   status,
   requestId,
   formStatus,
   buttonText,
   onButtonPress = () => {},
+  onPress,
 }) => {
+  let initials = '';
+  if (name) {
+    initials = name
+      .split('')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  }
   return (
-    <View style={styles.requestCardContainer}>
+    <TouchableOpacity
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+      style={styles.requestCardContainer}
+    >
       <View style={styles.requestHeaderRow}>
-        <View style={styles.avatarContainer}>
-          {/* <Image
-               source={IMAGES.patient}
-               style={{width:getScaleSize(40), height:getScaleSize(40), resizeMode:'contain'}}
-               /> */}
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._2563EB}
-          >
-            {initials}
-          </AppText>
-        </View>
+        <ProfileAvatar
+          name={initials}
+          size="small"
+          backgroundColor={COLORS._E5E7EB}
+        />
 
         <View style={styles.patientInfoContainer}>
           <AppText
@@ -129,11 +136,11 @@ const RequestCard: React.FC<RequestCardProps> = ({
           style={styles.updateButtonStyle}
         />
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
-export default RequestCard;
+export default RequestCardDoctor;
 
 const styles = StyleSheet.create({
   requestCardContainer: {

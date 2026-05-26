@@ -11,6 +11,7 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import moment from 'moment';
+import ProfileAvatar from './ProfileAvatar';
 
 interface RequestSummaryCardProps {
   patient?: any;
@@ -48,7 +49,7 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
     <View style={[styles.summaryCard, style]}>
       <View style={styles.summaryRow}>
         <View style={styles.summaryLeft}>
-          <View style={styles.avatarWrap}>
+          {/* <View style={styles.avatarWrap}>
             <Image
               source={
                 avatar
@@ -59,7 +60,8 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
               }
               style={styles.avatar}
             />
-          </View>
+          </View> */}
+          <ProfileAvatar name={name} size="small" />
           <View style={styles.summaryTextBlock}>
             <AppText
               size={getScaleSize(14)}

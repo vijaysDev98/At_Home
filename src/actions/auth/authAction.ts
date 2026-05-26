@@ -109,11 +109,12 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
       data,
     );
     dispatch(setLoading(false));
+    console.log('response', response);
 
     if (response?.status && response?.code === 201) {
       SHOW_TOAST(
         response?.data?.message ||
-          'Registration successful. Please wait for admin approval.',
+        'Registration successful. Please wait for admin approval.',
         'success',
       );
       NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
@@ -136,8 +137,6 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       API.API_ROUTES.verifyLoginOtp,
       data,
     );
-
-    console.log('verifyOtp', response);
 
     if (response?.status && response?.code === 200) {
       const responseData = response?.data;
@@ -268,29 +267,97 @@ export const resetPassword =
     newPassword: string;
     confirmPassword: string;
   }) =>
-  async (dispatch: AppDispatch) => {
+    async (dispatch: AppDispatch) => {
+      try {
+        dispatch(setLoading(true));
+
+        const response: any = await API.Instance.post(
+          API.API_ROUTES.resetPassword,
+          data,
+        );
+        console.log('reset password response', JSON.stringify(response));
+
+        if (response?.status && response?.code === 200) {
+          SHOW_TOAST(
+            response?.message || 'Password changed successfully',
+            'success',
+          );
+          dispatch(setLoading(false));
+          NavigationService.reset(SCREENS.LOGIN);
+        } else {
+          dispatch(setLoading(false));
+          SHOW_TOAST(response?.message, 'error');
+        }
+      } catch (e) {
+        console.log('Reset Password Error', e);
+        SHOW_TOAST(undefined, 'error');
+        dispatch(setLoading(false));
+      }
+    };
+
+export const resendLoginOtp =
+  (email: string) => async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
-
       const response: any = await API.Instance.post(
-        API.API_ROUTES.resetPassword,
-        data,
+        API.API_ROUTES.resendLoginOtp,
+        { email },
       );
-      console.log('reset password response', JSON.stringify(response));
-
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(
-          response?.message || 'Password changed successfully',
-          'success',
-        );
+        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
         dispatch(setLoading(false));
-        NavigationService.reset(SCREENS.LOGIN);
       } else {
         dispatch(setLoading(false));
         SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
-      console.log('Reset Password Error', e);
+      console.log('Resend OTP Error', e);
+      SHOW_TOAST(undefined, 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const changePassword =
+  (data: { oldPassword: string; newPassword: string; confirmPassword: string }) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.changePassword,
+        data,
+      );
+
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.message || 'Password changed successfully', 'success');
+        dispatch(setLoading(false));
+        NavigationService.goBack();
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message || 'Failed to change password', 'error');
+      }
+    } catch (e) {
+      console.log('Change Password Error', e);
+      SHOW_TOAST('Failed to change password', 'error');
+      dispatch(setLoading(false));
+    }
+  };
+
+export const resendForgotPasswordOtp =
+  (email: string) => async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.forgotPassword,
+        { email },
+      );
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
+        dispatch(setLoading(false));
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.message, 'error');
+      }
+    } catch (e) {
+      console.log('Resend OTP Error', e);
       SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }

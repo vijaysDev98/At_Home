@@ -34,6 +34,7 @@ import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { CustomDropdown } from '../../../components/CustomDropDown';
 import { GENDER } from '../../../constant/constantData';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const AppDatePicker = ({
   open,
@@ -76,38 +77,144 @@ const AddPatient: React.FC = () => {
   const [zip, setZip] = useState('');
   const [notes, setNotes] = useState('');
   const [gender, setGender] = useState('');
+  const [country, setCountry] = useState('FR');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [socialInsuranceNumber, setSocialInsuranceNumber] = useState('');
   const [weight, setWeight] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
+  console.log('patientToEdit', patientToEdit);
+
   const isEdit = !!patientToEdit;
 
   const discardSheetRef = useRef<ActionSheetRef>(null);
 
+  // Store initial values for comparison
+  const initialValues = useRef<{
+    fName: string;
+    lName: string;
+    phone: string;
+    email: string;
+    dob: string;
+    street: string;
+    city: string;
+    zip: string;
+    notes: string;
+    country: string;
+    gender: string;
+    weight: string;
+    socialInsuranceNumber: string;
+  }>({
+    fName: '',
+    lName: '',
+    phone: '',
+    email: '',
+    dob: '',
+    street: '',
+    city: '',
+    zip: '',
+    notes: '',
+    country: 'FR',
+    gender: '',
+    weight: '',
+    socialInsuranceNumber: '',
+  });
+
   useEffect(() => {
     if (patientToEdit) {
-      setFName(patientToEdit.fName || '');
-      setLName(patientToEdit.lName || '');
-      setPhone(patientToEdit.phoneNumber || '');
-      setEmail(patientToEdit.email || '');
-      setDob(
-        patientToEdit.dateOfBirth
+      const values = {
+        fName: patientToEdit.fName || '',
+        lName: patientToEdit.lName || '',
+        phone: patientToEdit.phoneNumber || '',
+        email: patientToEdit.email || '',
+        dob: patientToEdit.dateOfBirth
           ? moment(patientToEdit.dateOfBirth).format('YYYY-MM-DD')
           : '',
-      );
+        street: patientToEdit.streetAddress || '',
+        city: patientToEdit.city || '',
+        zip: patientToEdit.zip || '',
+        notes: patientToEdit.medicalDescription || '',
+        country: patientToEdit.country || 'FR',
+        gender: patientToEdit.gender || '',
+        weight: patientToEdit?.weight?.toString() || '',
+        socialInsuranceNumber: patientToEdit.socialInsuranceNumber || '',
+      };
+
+      initialValues.current = values;
+
+      setFName(values.fName);
+      setLName(values.lName);
+      setPhone(values.phone);
+      setEmail(values.email);
+      setDob(values.dob);
       if (patientToEdit.dateOfBirth) {
         setSelectedDate(new Date(patientToEdit.dateOfBirth));
       }
-      setStreet(patientToEdit.streetAddress || '');
-      setCity(patientToEdit.city || '');
-      setZip(patientToEdit.zip || '');
-      setNotes(patientToEdit.medicalDescription || '');
-      setGender(patientToEdit.gender || '');
-      setSocialInsuranceNumber(patientToEdit.socialInsuranceNumber || '');
+      setStreet(values.street);
+      setCity(values.city);
+      setZip(values.zip);
+      setNotes(values.notes);
+      setCountry(values.country);
+      setGender(values.gender);
+      setWeight(values.weight);
+      setSocialInsuranceNumber(values.socialInsuranceNumber);
+    } else {
+      // For add patient, set initial values to empty strings
+      initialValues.current = {
+        fName: '',
+        lName: '',
+        phone: '',
+        email: '',
+        dob: '',
+        street: '',
+        city: '',
+        zip: '',
+        notes: '',
+        country: 'FR',
+        gender: '',
+        weight: '',
+        socialInsuranceNumber: '',
+      };
     }
+    // Mark as initialized after setting values
+    setIsInitialized(true);
   }, [patientToEdit]);
+
+  // Check if any field has changed
+  const checkForChanges = () => {
+    // Only check for changes after initialization
+    if (!isInitialized) return;
+
+    const currentValues = {
+      fName,
+      lName,
+      phone,
+      email,
+      dob,
+      street,
+      city,
+      zip,
+      notes,
+      country,
+      gender,
+      weight,
+      socialInsuranceNumber,
+    };
+
+    const hasAnyChanges = (Object.keys(currentValues) as Array<keyof typeof currentValues>).some(key => {
+      return currentValues[key] !== initialValues.current[key];
+    });
+
+    setHasChanges(hasAnyChanges);
+  };
+
+  // Update checkForChanges call when any field changes
+  useEffect(() => {
+    checkForChanges();
+  }, [fName, lName, phone, email, dob, street, city, zip, notes, country, gender, weight, socialInsuranceNumber, isInitialized]);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -127,8 +234,8 @@ const AddPatient: React.FC = () => {
       newErrors.email = STRING.invalidEmailAddress;
     }
 
-    if (dob.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
-      newErrors.dob = STRING.invalidDateFormat;
+    if (!dob.trim()) {
+      newErrors.dob = STRING.dateOfBirthRequired;
     }
 
     if (!gender) {
@@ -152,13 +259,14 @@ const AddPatient: React.FC = () => {
         zip: zip.trim(),
         medicalDescription: notes.trim(),
         gender: gender,
+        country: country,
         ...(socialInsuranceNumber.trim() && {
           socialInsuranceNumber: socialInsuranceNumber.trim(),
         }),
         ...(weight.trim() && { weight: weight.trim() }),
       };
       if (isEdit) {
-        dispatch(updatePatient(patientToEdit.id, payload));
+        dispatch(updatePatient(patientToEdit._id || patientToEdit.id, payload));
       } else {
         dispatch(addPatient(payload));
       }
@@ -166,7 +274,11 @@ const AddPatient: React.FC = () => {
   };
 
   const handleCancel = () => {
-    discardSheetRef.current?.show();
+    if (hasChanges) {
+      discardSheetRef.current?.show();
+    } else {
+      NavigationService.goBack();
+    }
   };
 
   const confirmDiscard = () => {
@@ -185,10 +297,7 @@ const AddPatient: React.FC = () => {
           style={styles.headerStyle}
           {...(!isEdit && {
             leftContent: () => (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => NavigationService.goBack()}
-              >
+              <TouchableOpacity activeOpacity={0.8} onPress={handleCancel}>
                 <AppText
                   size={getScaleSize(15)}
                   font={FONTS.Inter.Medium}
@@ -201,11 +310,21 @@ const AddPatient: React.FC = () => {
           })}
         />
         <View style={styles.container}>
-          <ScrollView
+          <KeyboardAwareScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            enableOnAndroid
+            extraScrollHeight={getScaleSize(100)}
+            enableAutomaticScroll
+            extraHeight={getScaleSize(200)}
           >
+            {/* <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          > */}
             {/* Personal Information */}
             <View style={styles.section}>
               <AppText
@@ -273,6 +392,7 @@ const AddPatient: React.FC = () => {
                 <View style={styles.fieldGroup}>
                   <Input
                     value={dob}
+                    isMandatory
                     onPress={() => setDatePickerOpen(true)}
                     placeholder={STRING.selectDateOfBirth}
                     placeholderTextColor={COLORS._7A7A7A}
@@ -392,6 +512,11 @@ const AddPatient: React.FC = () => {
                 <View style={styles.fieldGroup}>
                   <Input
                     value={phone}
+                    isCountryCode
+                    countryCode={country}
+                    onCountryCodeSelect={code => {
+                      setCountry(code);
+                    }}
                     onChangeText={t => {
                       setPhone(t);
                       setErrors(prev => ({ ...prev, phone: '' }));
@@ -425,6 +550,7 @@ const AddPatient: React.FC = () => {
                       setEmail(t);
                       setErrors(prev => ({ ...prev, email: '' }));
                     }}
+                    isMandatory
                     keyboardType="email-address"
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
@@ -465,6 +591,7 @@ const AddPatient: React.FC = () => {
                     onChangeText={setStreet}
                     placeholder={STRING.enterStreetAddress}
                     error={errors.street}
+                    isMandatory
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
                       errors.street && {
@@ -484,6 +611,7 @@ const AddPatient: React.FC = () => {
                 <View style={styles.rowGap}>
                   <View style={[styles.fieldGroup, styles.flex1]}>
                     <Input
+                      isMandatory
                       value={city}
                       onChangeText={setCity}
                       error={errors.city}
@@ -505,6 +633,7 @@ const AddPatient: React.FC = () => {
                   </View>
                   <View style={[styles.fieldGroup, styles.zipWidth]}>
                     <Input
+                      isMandatory
                       value={zip}
                       onChangeText={setZip}
                       error={errors.zip}
@@ -529,7 +658,7 @@ const AddPatient: React.FC = () => {
             </View>
 
             {/* Medical Information */}
-            <View style={styles.section}>
+            <View style={[styles.section, { paddingBottom: getScaleSize(20) }]}>
               <AppText
                 size={getScaleSize(14)}
                 font={FONTS.Inter.Bold}
@@ -577,45 +706,43 @@ const AddPatient: React.FC = () => {
                 </View>
               </View>
             </View>
-          </ScrollView>
-
-          {/* Sticky CTA */}
-          {isEdit ? (
-            <View style={styles.footerActions}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                activeOpacity={0.7}
-                onPress={handleCancel}
-              >
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
+            {isEdit ? (
+              <View style={styles.footerActions}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  activeOpacity={0.7}
+                  onPress={handleCancel}
                 >
-                  Cancel
-                </AppText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.saveBtn}
-                activeOpacity={0.8}
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    Cancel
+                  </AppText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.saveBtn}
+                  activeOpacity={0.8}
+                  onPress={handleSave}
+                >
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                  >
+                    Save
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <PrimaryButton
+                title={STRING.savePatient}
                 onPress={handleSave}
-              >
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.white}
-                >
-                  Save
-                </AppText>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <PrimaryButton
-              title={STRING.savePatient}
-              onPress={handleSave}
-              style={{ marginHorizontal: getScaleSize(20) }}
-            />
-          )}
+                style={{ marginHorizontal: getScaleSize(20) }}
+              />
+            )}
+          </KeyboardAwareScrollView>
         </View>
       </AppSafeAreaView>
 
@@ -691,9 +818,11 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
+    marginBottom: getScaleSize(10),
   },
   scrollContent: {
-    paddingBottom: getScaleSize(280),
+    flexGrow: 1,
+    paddingBottom: getScaleSize(20),
     // paddingTop: getScaleSize(16),
   },
   section: {

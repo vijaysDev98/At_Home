@@ -1,5 +1,6 @@
 import { API } from '../api';
 import { API_ROUTES } from '../api/apiRoutes';
+import { SHOW_TOAST } from '../constant';
 
 export interface DeletedInfo {
   status: boolean;
@@ -12,6 +13,7 @@ export interface PatientInfo {
   _id: string;
   fName: string;
   lName: string;
+  fullName: string;
   dateOfBirth: string;
   phoneNumber: string;
   email: string;
@@ -28,7 +30,8 @@ export interface PatientInfo {
 }
 
 export interface ServiceInfo {
-  _id: string;
+  id?: string;
+  _id?: string;
   serviceName: string;
   description: string;
   icon: string | null;
@@ -165,6 +168,7 @@ export interface StatusTimestamps {
 }
 
 export interface ServiceRequestDetail {
+  id?: string;
   _id: string;
   requestId: string;
   patientId: PatientDetailInfo;
@@ -235,6 +239,7 @@ export interface ListServiceRequestsResponse {
 export interface ListServiceRequestsParams {
   page?: number;
   size?: number;
+  status?: string;
 }
 
 export const serviceRequestListApi = {
@@ -258,11 +263,11 @@ export const serviceRequestListApi = {
       if (response.status) {
         return response.data as ListServiceRequestsResponse;
       } else {
-        console.error('Failed to fetch service requests:', response.message);
+        SHOW_TOAST(response.message, 'error');
         return null;
       }
     } catch (error: any) {
-      console.error('Error fetching service requests:', error.message);
+      SHOW_TOAST(error.message, 'error');
       return null;
     }
   },
@@ -296,6 +301,42 @@ export const serviceRequestListApi = {
     } catch (error: any) {
       console.error(
         'Error fetching available service requests:',
+        error.message,
+      );
+      return null;
+    }
+  },
+
+  /**
+   * Fetch list of service requests assigned to the current provider with pagination
+   */
+  listAssignedRequestsForProvider: async (
+    params: ListServiceRequestsParams = { page: 1, size: 10 },
+  ): Promise<ListServiceRequestsResponse | null> => {
+    try {
+      const response: any = await API.Instance.get(
+        '/service-requests/provider',
+        {
+          params: {
+            page: params.page || 1,
+            size: params.size || 10,
+            status: params.status,
+          },
+        },
+      );
+
+      if (response.status) {
+        return response.data as ListServiceRequestsResponse;
+      } else {
+        console.error(
+          'Failed to fetch provider assigned service requests:',
+          response.message,
+        );
+        return null;
+      }
+    } catch (error: any) {
+      console.error(
+        'Error fetching provider assigned service requests:',
         error.message,
       );
       return null;

@@ -12,6 +12,7 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
+import { CountryPicker, countryCodes } from 'react-native-country-codes-picker';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
@@ -26,7 +27,7 @@ export interface InputProps extends TextInputProps {
   labelSize?: number;
   labelColor?: string;
   labelFont?: string;
-  leftIcon?: string;
+  leftIcon?: any;
   handlePasswordVisibility?: () => void;
   isPasswordVisible?: boolean;
   isMandatory?: boolean;
@@ -43,6 +44,9 @@ export interface InputProps extends TextInputProps {
   renderPicker?: () => React.ReactNode;
   inputWrapperStyle?: StyleProp<ViewStyle>;
   placeholderTextColor?: string;
+  isCountryCode?: boolean;
+  countryCode?: string;
+  onCountryCodeSelect?: (code: string) => void;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -72,8 +76,12 @@ const Input: React.FC<InputProps> = ({
   renderPicker,
   inputWrapperStyle,
   placeholderTextColor,
+  isCountryCode,
+  countryCode,
+  onCountryCodeSelect,
   ...rest
 }) => {
+  const [showPicker, setShowPicker] = useState(false);
   const { multiline } = rest;
   // When locked: gray bg, no border colour, force non-editable
   const lockedBg = '#F3F4F6';
@@ -89,6 +97,22 @@ const Input: React.FC<InputProps> = ({
         style={[styles.lockIcon, multiline && styles.lockIconTop]}
       />
     ) : null);
+
+  const selectedCountry = React.useMemo(() => {
+    if (!countryCode) {
+      return countryCodes.find(item => item.code === 'US');
+    }
+
+    return (
+      countryCodes.find(
+        item => item.code?.toLowerCase() === countryCode.toLowerCase(),
+      ) || countryCodes.find(item => item.code === 'US')
+    );
+  }, [countryCode]);
+
+  const resolvedFlag = selectedCountry?.flag || '🇺🇸';
+  const resolvedCode = selectedCountry?.dial_code || '+1';
+
   return (
     <View style={[styles.root, style]}>
       {(labelRight || label) && (
@@ -121,7 +145,7 @@ const Input: React.FC<InputProps> = ({
 
       <Pressable
         onPress={onPress}
-        disabled={!onPress}
+        disabled={isLocked || !onPress}
         style={[
           styles.inputWrapper,
           { backgroundColor: resolvedBg, borderColor: resolvedBorder },
@@ -131,7 +155,36 @@ const Input: React.FC<InputProps> = ({
           inputWrapperStyle,
         ]}
       >
-        {leftIcon && <Image source={leftIcon} style={styles.icon} />}
+        {isCountryCode ? (
+          <>
+            <TouchableOpacity
+              disabled={rest.editable === false}
+              onPress={() => setShowPicker(true)}
+              style={styles.countryCodeSelector}
+              activeOpacity={0.8}
+            >
+              <AppText size={getScaleSize(16)} style={styles.flagText}>
+                {resolvedFlag}
+              </AppText>
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS._1E293B}
+                font={FONTS.Inter.Medium}
+              >
+                {resolvedCode}
+              </AppText>
+              {rest.editable !== false && (
+                <Image
+                  source={IMAGES.arrow_bottom}
+                  style={styles.dropdownArrow}
+                />
+              )}
+            </TouchableOpacity>
+            <View style={styles.verticalDivider} />
+          </>
+        ) : leftIcon ? (
+          <Image source={leftIcon} style={styles.icon} />
+        ) : null}
         {leftComponent && leftComponent}
 
         <TextInput
@@ -183,6 +236,24 @@ const Input: React.FC<InputProps> = ({
           {helper}
         </AppText>
       ) : null}
+
+      {isCountryCode && (
+        <CountryPicker
+          show={showPicker}
+          pickerButtonOnPress={item => {
+            onCountryCodeSelect?.(item.code);
+            setShowPicker(false);
+          }}
+          style={{
+            modal: {
+              flex: 0.5,
+            },
+          }}
+          onRequestClose={() => setShowPicker(false)}
+          onBackdropPress={() => setShowPicker(false)}
+          lang={'en'}
+        />
+      )}
     </View>
   );
 };
@@ -255,6 +326,27 @@ const styles = StyleSheet.create({
   },
   helperText: {
     // marginTop: 6,
+  },
+  countryCodeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    paddingRight: getScaleSize(4),
+  },
+  flagText: {
+    marginRight: getScaleSize(2),
+  },
+  dropdownArrow: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    resizeMode: 'contain',
+    tintColor: COLORS._64748B,
+  },
+  verticalDivider: {
+    width: 1,
+    height: getScaleSize(24),
+    backgroundColor: COLORS._E5E7EB,
+    marginRight: getScaleSize(4),
   },
 });
 

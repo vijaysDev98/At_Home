@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "HelathCare.app"
-               BlueprintName = "HelathCare"
-               ReferencedContainer = "container:HelathCare.xcodeproj">
+               BuildableName = "HealthCare.app"
+               BlueprintName = "HealthCare"
+               ReferencedContainer = "container:HealthCare.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,7 +35,7 @@
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
                BuildableName = "HelathCareTests.xctest"
                BlueprintName = "HelathCareTests"
-               ReferencedContainer = "container:HelathCare.xcodeproj">
+               ReferencedContainer = "container:HealthCare.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "HelathCare.app"
-            BlueprintName = "HelathCare"
-            ReferencedContainer = "container:HelathCare.xcodeproj">
+            BuildableName = "HealthCare.app"
+            BlueprintName = "HealthCare"
+            ReferencedContainer = "container:HealthCare.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "HelathCare.app"
-            BlueprintName = "HelathCare"
-            ReferencedContainer = "container:HelathCare.xcodeproj">
+            BuildableName = "HealthCare.app"
+            BlueprintName = "HealthCare"
+            ReferencedContainer = "container:HealthCare.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

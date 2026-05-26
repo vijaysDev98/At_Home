@@ -25,8 +25,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
       fontSize: getScaleSize(14),
     },
     medium: {
-      width: getScaleSize(56),
-      height: getScaleSize(56),
+      width: getScaleSize(50),
+      height: getScaleSize(50),
       borderRadius: getScaleSize(28),
       fontSize: getScaleSize(20),
     },
@@ -41,12 +41,13 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   const config = sizeConfig[size];
 
   // Get first letter of first name
-  const initials = name
-    ?.trim()
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase() || 'U';
+  const initials =
+    name
+      ?.trim()
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase() || 'U';
 
   const styles = StyleSheet.create({
     container: {

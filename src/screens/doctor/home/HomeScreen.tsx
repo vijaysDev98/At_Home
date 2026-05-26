@@ -8,8 +8,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { AppSafeAreaView, AppText } from '../../../components';
-import RequestCard from '../../../components/RequestCard';
+import { AppSafeAreaView, AppText, ProfileAvatar } from '../../../components';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -17,13 +17,17 @@ import { STRING } from '../../../constant/strings';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
 import { useLocalization } from '../../../localization/useLocalization';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import { setLoading } from '../../../actions/common/commonSlice';
+import { fetchProfile } from '../../../actions/profile/profileAction';
+import { getUnreadCountService } from '../../../services/notificationService';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -50,6 +54,7 @@ interface DashboardRequestsOverview {
   inProgressCount: number;
   submittedCount: number;
   returnedCount: number;
+  completedCount?: number;
 }
 
 interface DashboardActionRequired {
@@ -69,12 +74,15 @@ interface DashboardData {
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
-
+  const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  // const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const doctorName =
+    (profileData?.fName || '') + ' ' + (profileData?.lName || '');
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -84,24 +92,28 @@ const HomeScreen: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    // dispatch(setLoading(true));
     try {
-      const response = await dashboardApi.getDashboardOverview(5);
-      console.log('dashdata', response);
+      const [response, count] = await Promise.all([
+        dashboardApi.getDashboardOverview(5),
+        getUnreadCountService(),
+      ]);
 
       if (response.success) {
         setDashboardData(response.data);
       }
+      setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchDashboardData();
+    dispatch(fetchProfile());
     setRefreshing(false);
   }, []);
 
@@ -171,14 +183,23 @@ const HomeScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image
-              source={
-                profileData?.profileImg
-                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
-                  : IMAGES.ic_profile
-              }
-              style={styles.avatar}
-            />
+            {profileData?.profileImg ? (
+              <Image
+                source={
+                  profileData?.profileImg
+                    ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                    : IMAGES.ic_profile
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <ProfileAvatar
+                size="medium"
+                name={`${profileData?.fName || ''} ${
+                  profileData?.lName || ''
+                }`.trim()}
+              />
+            )}
             <View>
               <AppText
                 size={getScaleSize(12)}
@@ -192,7 +213,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
               >
-                Dr. {profileData?.fName + ' ' + profileData?.lName}
+                Dr. {capitalizeFirstLetter(doctorName)}
               </AppText>
             </View>
           </View>
@@ -203,10 +224,24 @@ const HomeScreen: React.FC = () => {
             activeOpacity={0.7}
             style={styles.notificationBtn}
           >
-            <Image
-              source={IMAGES.notification_icon}
-              style={styles.notificationIcon}
-            />
+            <View style={styles.notificationIconContainer}>
+              <Image
+                source={IMAGES.notification_icon}
+                style={styles.notificationIcon}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <AppText
+                    size={getScaleSize(8)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                    style={styles.badgeText}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </AppText>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -290,7 +325,7 @@ const HomeScreen: React.FC = () => {
                             {
                               screen: DOCTOR_TAB_SCREENS.DOCTOR_REQUEST,
                               params: {
-                                formStatus: FORM_STATUS.RETURNED,
+                                formStatus: FORM_STATUS.SUBMITTED,
                               },
                             },
                           );
@@ -445,18 +480,8 @@ const HomeScreen: React.FC = () => {
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const initials =
-                  item.patient?.fullName
-                    ?.split(' ')
-                    .map((n: string) => n[0])
-                    .join('')
-                    .toUpperCase() || '';
-
-                const formStatus = item.formStatus || item.status;
-                const buttonConfig = getButtonConfig(formStatus);
-
-                console.log('recentQueue', item);
-
+                const formStatus = item.formStatus;
+                const buttonConfig = getButtonConfig(formStatus, item.status);
                 return (
                   <View
                     key={item.id || index}
@@ -465,9 +490,8 @@ const HomeScreen: React.FC = () => {
                       marginBottom: getScaleSize(12),
                     }}
                   >
-                    <RequestCard
+                    <RequestCardDoctor
                       name={item.patient?.fullName || ''}
-                      initials={initials}
                       requestId={item.id}
                       requestType={item.service?.serviceName || ''}
                       formStatus={formStatus}
@@ -477,11 +501,42 @@ const HomeScreen: React.FC = () => {
                           ? buttonConfig.label || undefined
                           : undefined
                       }
-                      onButtonPress={() =>
+                      onPress={() => {
+                        if (item.status == REQUEST_STATUS.COMPLETED) {
+                          NavigationService.navigate(
+                            SCREENS.SERVICE_COMPLETED,
+                            {
+                              request: item,
+                            },
+                          );
+                          return;
+                        }
                         NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                           request: item,
-                        })
-                      }
+                          action: 'view',
+                        });
+                      }}
+                      onButtonPress={() => {
+                        if (buttonConfig.action === 'edit') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        } else if (buttonConfig.action === 'sign') {
+                          NavigationService.navigate(
+                            SCREENS.FORM_REVIEW_SCREEN,
+                            {
+                              request: item,
+                              action: buttonConfig.action,
+                            },
+                          );
+                        } else if (buttonConfig.action === 'view') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        }
+                      }}
                     />
                   </View>
                 );
@@ -573,6 +628,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF4D4F',
     borderWidth: 1.5,
     borderColor: COLORS.white,
+  },
+  notificationIconContainer: {
+    position: 'relative',
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: getScaleSize(8),
+    minWidth: getScaleSize(16),
+    height: getScaleSize(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(3),
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+  },
+  badgeText: {
+    textAlign: 'center',
+    lineHeight: getScaleSize(13),
   },
   scrollContent: {
     paddingBottom: getScaleSize(100),

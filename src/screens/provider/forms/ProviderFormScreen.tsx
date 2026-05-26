@@ -1,25 +1,13 @@
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useCallback,
-  useRef,
-} from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  useFocusEffect,
-  useIsFocused,
-  useRoute,
-} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
+import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import {
   Alert,
-  Image,
   ScrollView,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -27,58 +15,54 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AppSafeAreaView,
   AppText,
-  Input,
-  RequestSummaryCard,
   AppLoader,
+  AppButton,
+  CompleteServiceSheet,
   WarningSheet,
-  Header,
-  FormSignature,
-  REVIEW_REASONS,
 } from '../../../components';
-import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
-import moment from 'moment';
 import { RootStackParamList } from '../../../navigation';
-import { STRING } from '../../../constant';
-
 import {
-  FORM_STATUS,
-  REQUEST_STATUS,
   getFormScreenButtons,
   FormScreenButtonConfig,
   FormScreenHandlerKey,
+  REQUEST_STATUS,
+  FORM_STATUS,
 } from '../../../constant/RequestStatus';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import {
-  ServiceDetailInfo,
   ServiceInfo,
   ServiceRequest,
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
 
-import FormRequestHeader from '../../../components/FormRequestHeader';
-import { getServiceIcon } from '../createRequest/createRequestStep2';
+// Import all form components
 import { ActionSheetRef } from 'react-native-actions-sheet';
+import ServiceFormRenderer from '../../doctor/forms/ServiceFormRenderer';
+import HeaderProvider, {
+  openPdfInBrowser,
+} from '../../../components/HeaderProvider';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import ServiceFormRenderer from './ServiceFormRenderer';
-import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
+import { SCREENS } from '../../../navigation/routes';
+import { API_BASE_URL } from '../../../api/apiRoutes';
 
-export type CreateRequestStep3Props = NativeStackScreenProps<
+export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
-  'CreateRequestStep3'
+  'ProviderFormScreen'
 >;
 
-const FormsScreen: React.FC = () => {
+const ProviderFormScreen: React.FC = () => {
   const route = useRoute();
-  const isFocused = useIsFocused();
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
-  const from = (route.params as any)?.from;
-  const readOnly = action === 'view';
+  const isComplete = (route.params as any)?.isComplete;
+  const readOnly =
+    action === 'view' ||
+    action === 'claim' ||
+    requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE;
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -86,7 +70,6 @@ const FormsScreen: React.FC = () => {
 
   // Extract service and patient from request object
   const patientData = request?.patient || {};
-  const serviceName = service?.serviceName;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
@@ -96,19 +79,21 @@ const FormsScreen: React.FC = () => {
   const [isFetched, setIsFetched] = useState(false);
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
+  let isInProgress: boolean = request?.status == REQUEST_STATUS.IN_PROGRESS;
 
   const serviceId = service?.id || service?._id || requestData?.serviceId._id;
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const completeSheetRef = useRef<ActionSheetRef>(null);
 
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
-
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
   // Use custom hook for lock refresh
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
+
   useFormLockRefresh({
     requestId,
     isLocked: requestData?.isLocked,
@@ -122,94 +107,68 @@ const FormsScreen: React.FC = () => {
     },
   });
 
-  // config in RequestStatus.ts picks which one gets called.
+  // ─── Named action handlers ─────────────────────────────────────────────────
+  // Provider-only handlers
   const handlerMap: Record<FormScreenHandlerKey, () => Promise<void>> = {
-    // Doctor: save current form state without submitting
-    saveAsDraft: async () => {
-      if (formRef.current?.saveAsDraft) {
-        await formRef.current.saveAsDraft();
+    // Provider: submit pre-claim form for doctor review
+    submitForReview: async () => {
+      if (formRef.current?.submitForReview) {
+        await formRef.current.submitForReview();
       }
     },
 
-    // Doctor: first-time submit (draft → submitted)
-    submitRequest: async () => {
-      if (formRef.current?.validateAndSubmit) {
-        await formRef.current.validateAndSubmit();
-      }
-    },
-
-    // Doctor: update already-submitted form and navigate to review / sign
-    updateAndSign: async () => {
-      dispatch(setLoading(true));
-      try {
-        if (formRef.current?.updateAndSign) {
-          const result = await formRef.current.updateAndSign();
-          if (!result.success) return;
-        }
-        const reviewResponse = await serviceRequestApi.getReviewData(
-          requestId || '',
-        );
-        if (reviewResponse.success) {
-          NavigationService.replace(SCREENS.FORM_REVIEW_SCREEN, {
-            request: { ...request, ...reviewResponse.data },
-          });
-        } else {
-          SHOW_TOAST(
-            reviewResponse.error || 'Failed to get review data',
-            'error',
-          );
-        }
-      } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Error preparing review', 'error');
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-
-    // Doctor: re-edit a returned form and re-sign (same flow as updateAndSign for now)
-    updateAndResign: async () => {
-      dispatch(setLoading(true));
-      try {
-        if (formRef.current?.updateAndSign) {
-          const result = await formRef.current.updateAndSign();
-          if (!result.success) return;
-        }
-        const reviewResponse = await serviceRequestApi.getReviewData(
-          requestId || '',
-        );
-        if (reviewResponse.success) {
-          NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
-            request: { ...request, ...reviewResponse.data },
-          });
-        } else {
-          SHOW_TOAST(
-            reviewResponse.error || 'Failed to get review data',
-            'error',
-          );
-        }
-      } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Error re-signing', 'error');
-      } finally {
-        dispatch(setLoading(false));
-      }
-    },
-
-    updateFormData: async () => {
-      if (formRef.current?.saveProgress) {
-        await formRef.current.saveProgress();
-      }
-    },
-
+    // Provider: persist pre-claim without submitting
     saveProgress: async () => {
       if (formRef.current?.saveProgress) {
-        await formRef.current.saveProgress();
+        const result = await formRef.current.saveProgress();
+        if (!result.success) return;
+        if (result.success) {
+          // NavigationService.goBack();
+          return;
+        }
       }
     },
 
-    // Unused provider handlers (kept for type safety)
-    submitForReview: async () => {},
-    claimService: async () => {},
+    // Provider: claim a signed service
+    claimService: async () => {
+      if (!requestId) {
+        SHOW_TOAST('Missing Request ID', 'error');
+        return;
+      }
+      dispatch(setLoading(true));
+      try {
+        const response = await serviceRequestApi.claimRequest(requestId);
+        if (response.success) {
+          SHOW_TOAST(
+            response.message || 'Request claimed successfully',
+            'success',
+          );
+          NavigationService.goBack();
+        } else {
+          SHOW_TOAST(response.error || 'Failed to claim request', 'error');
+        }
+      } catch (error: any) {
+        SHOW_TOAST(error?.message || 'Failed to claim request', 'error');
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+
+    // Unused doctor handlers (kept for type safety)
+    updateFormData: async () => {},
+    saveAsDraft: async () => {},
+    submitRequest: async () => {},
+    updateAndSign: async () => {},
+    updateAndResign: async () => {},
   };
+
+  // Fetch service request details when in view mode
+  useEffect(() => {
+    if (requestId) {
+      fetchServiceRequestDetails(isInProgress);
+      handleViewRequest();
+    }
+  }, [requestId]);
 
   const acquireFormLock = async () => {
     try {
@@ -222,18 +181,10 @@ const FormsScreen: React.FC = () => {
     }
   };
 
-  // Fetch service request details when in view mode
-  useEffect(() => {
-    if (isFocused && requestId) {
-      fetchServiceRequestDetails();
-    }
-  }, [isFocused, requestId]);
-
   // useEffect(() => {
   //   if (readOnly) {
   //     return;
   //   }
-
   //   if (requestData && requestData?.isLocked) {
   //     let lockedBy = requestData?.formLock?.lockedBy;
   //     if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
@@ -245,23 +196,25 @@ const FormsScreen: React.FC = () => {
   //   }
   // }, [requestData]);
 
-  const fetchServiceRequestDetails = async () => {
+  const fetchServiceRequestDetails = async (isInProgress: boolean) => {
     try {
       setHasError(false);
-      const data = await serviceRequestApi.getServiceRequestDetails(
-        requestId || '',
-      );
+      const data = isInProgress
+        ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
+        : await serviceRequestApi.getPreClaimDetails(requestId || '');
 
       if (data) {
         setRequestData(data);
-        // Acquire lock if both statuses are submitted
+        console.log('provider side', data);
+
+        // Acquire lock if request and form are both submitted and unlocked
         // if (
         //   !readOnly &&
         //   !data?.isLocked &&
         //   data.status === REQUEST_STATUS.SUBMITTED &&
         //   data.formStatus === FORM_STATUS.SUBMITTED
         // ) {
-        //   await acquireFormLock();
+        //   acquireFormLock();
         // }
       } else {
         setHasError(true);
@@ -273,10 +226,52 @@ const FormsScreen: React.FC = () => {
     }
   };
 
+  const handleCompleteRequest = async () => {
+    if (!requestId) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      const response = await serviceRequestApi.completeRequest(requestId);
+      if (response.success) {
+        SHOW_TOAST(
+          response.message || 'Service completed successfully',
+          'success',
+        );
+        completeSheetRef?.current?.hide();
+        NavigationService.replace(SCREENS.SERVICE_COMPLETED, {
+          requestId: requestId,
+        });
+      } else {
+        SHOW_TOAST(response.error || 'Failed to complete service', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to complete service', 'error');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const handleViewRequest = async () => {
+    if (!requestId) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      await serviceRequestApi.providerViewRequest(requestId);
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to view service', 'error');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons('doctor', status, formStatus, action, from),
-    [status, formStatus, action, from],
+    () => getFormScreenButtons('serviceProvider', status, formStatus, action),
+    [status, formStatus, action],
   );
 
   const renderBottomBar = () => {
@@ -321,20 +316,32 @@ const FormsScreen: React.FC = () => {
 
   return (
     <AppSafeAreaView edges={true}>
-      <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <Header title="Medical Form" isBack={true} style={styles.header} />
+        <HeaderProvider
+          title={
+            readOnly ? 'View Form' : isInProgress ? 'Service' : 'Update Form'
+          }
+          onViewFormPress={() => {
+            console.log(API_BASE_URL + requestData?.signedPdfUrl || '');
+
+            openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');
+          }}
+          isBack
+          isViewForm={requestData?.status == REQUEST_STATUS.IN_PROGRESS}
+          formStatus={requestData?.formStatus}
+          status={requestData?.status}
+          style={
+            {
+              ...styles.header,
+              marginBottom: getScaleSize(12),
+            } as any
+          }
+        />
         {isFetched && hasError ? (
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
             <AppText color={COLORS.primary}>Something went wrong</AppText>
-          </View>
-        ) : !isFetched ? (
-          <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <AppLoader visible={true} />
           </View>
         ) : (
           <>
@@ -344,36 +351,6 @@ const FormsScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {requestData?.status === REQUEST_STATUS.RETURNED &&
-                  requestData?.returnReasons &&
-                  requestData.returnReasons.length > 0 && (
-                    <View style={styles.returnCard}>
-                      <AppText
-                        font={FONTS.Inter.SemiBold}
-                        color={COLORS.returned}
-                      >
-                        {REVIEW_REASONS.find(
-                          reason =>
-                            reason.key ===
-                            requestData.returnReasons[
-                              requestData.returnReasons.length - 1
-                            ].reason,
-                        )?.value || ''}
-                      </AppText>
-                      <AppText
-                        font={FONTS.Inter.Regular}
-                        color={COLORS.returned}
-                      >
-                        {requestData?.returnComments}
-                      </AppText>
-                    </View>
-                  )}
-                {/* Patient Info Header */}
-                <FormRequestHeader
-                  patientData={requestData?.patientId as any}
-                  serviceName={serviceName}
-                  requestData={requestData}
-                />
                 <View>
                   <View
                     style={{
@@ -389,16 +366,25 @@ const FormsScreen: React.FC = () => {
                     />
                   </View>
                 </View>
-                {formStatus == FORM_STATUS.SIGNED && (
-                  <View style={styles.signatureContainer}>
-                    <FormSignature readOnly={true} requestData={requestData} />
-                  </View>
-                )}
               </ScrollView>
             </View>
-
-            {renderBottomBar()}
+            <CompleteServiceSheet
+              ref={completeSheetRef}
+              onComplete={async () => {
+                handleCompleteRequest();
+              }}
+            />
             {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
+            {renderBottomBar()}
+            {isInProgress && isComplete && (
+              <AppButton
+                title={'Mark as Completed'}
+                onPress={() => {
+                  completeSheetRef?.current?.show();
+                }}
+                style={styles.completeBtn}
+              />
+            )}
           </>
         )}
       </View>
@@ -412,25 +398,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  returnCard: {
-    backgroundColor: `${COLORS.returned}10`,
-    padding: getScaleSize(16),
-    marginHorizontal: getScaleSize(12),
-    marginTop: getScaleSize(10),
-    // margin: getScaleSize(16),
-    borderRadius: getScaleSize(8),
-    borderWidth: 1,
-    borderColor: COLORS.returned,
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS._F9FAFB,
   },
-  signatureContainer: {
-    paddingHorizontal: getScaleSize(16),
+  completeBtn: {
+    marginBottom: getScaleSize(16),
+    marginHorizontal: getScaleSize(16),
+    backgroundColor: COLORS.completed,
+    elevation: 5,
+    shadowColor: COLORS.completed,
   },
   header: {
-    height: 60,
+    // height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -472,9 +452,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     backgroundColor: COLORS._F9FAFB,
-    // paddingHorizontal: 20,
     paddingBottom: 160,
-    // paddingTop: 12,
     gap: 18,
   },
   sectionTitleRow: {
@@ -621,4 +599,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FormsScreen;
+export default ProviderFormScreen;

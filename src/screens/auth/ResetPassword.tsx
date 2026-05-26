@@ -22,8 +22,9 @@ import { useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { resetPassword } from '../../actions/auth/authAction';
+import { resetPassword, changePassword } from '../../actions/auth/authAction';
 import { AppLoader } from '../../components';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export type ResetPasswordProps = NativeStackScreenProps<
   RootStackParamList,
@@ -32,12 +33,15 @@ export type ResetPasswordProps = NativeStackScreenProps<
 
 const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   const resetToken = route.params?.resetToken ?? '';
+  const isChangePassword = route.params?.isChangePassword ?? false;
 
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading } = useSelector((state: RootState) => state.common);
 
+  const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [showOldPass, setShowOldPass] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -49,6 +53,11 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
     return { hasLength, hasUpper, hasNumber, hasSpecial };
   }, [password]);
 
+  const oldPasswordReqs = useMemo(() => {
+    const hasLength = oldPassword.length >= 1;
+    return { hasLength };
+  }, [oldPassword]);
+
   const strengthLevel = useMemo(() => {
     const count = Object.values(reqs).filter(Boolean).length;
     if (!password) return 0;
@@ -56,30 +65,48 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   }, [reqs, password]);
 
   const isMatch = confirm.length > 0 && confirm === password;
-  const canSubmit = strengthLevel === 4 && isMatch;
+  const canSubmit = isChangePassword
+    ? oldPassword.length > 0 && strengthLevel === 4 && isMatch
+    : strengthLevel === 4 && isMatch;
 
   const onSubmit = () => {
     if (!canSubmit || isLoading) return;
 
-    dispatch(
-      resetPassword({
-        resetToken,
-        newPassword: password,
-        confirmPassword: confirm,
-      }),
-    );
+    if (isChangePassword) {
+      dispatch(
+        changePassword({
+          oldPassword,
+          newPassword: password,
+          confirmPassword: confirm,
+        }),
+      );
+    } else {
+      dispatch(
+        resetPassword({
+          resetToken,
+          newPassword: password,
+          confirmPassword: confirm,
+        }),
+      );
+    }
   };
 
   return (
     <AppSafeAreaView edges style={styles.safe}>
       <AppLoader visible={isLoading} />
-      <ScrollView
+      <Header isBack style={{ paddingHorizontal: getScaleSize(16) }} />
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid
+        extraScrollHeight={20}
       >
+        {/* <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      > */}
         <View style={styles.container}>
-          <Header isBack />
-
           <View style={styles.logoWrap}>
             <Image source={IMAGES.logo} style={styles.logo} />
           </View>
@@ -91,7 +118,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               font={FONTS.Inter.Bold}
               align="center"
             >
-              {STRING.resetPassword}
+              {isChangePassword ? 'Change Password' : STRING.resetPassword}
             </AppText>
             <AppText
               size={getScaleSize(15)}
@@ -100,19 +127,35 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               align="center"
               style={{ marginTop: getScaleSize(10) }}
             >
-              {STRING.resetPasswordMessage}
+              {isChangePassword ? 'Enter your current password and create a new password for your account.' : STRING.resetPasswordMessage}
             </AppText>
           </View>
 
           <View style={styles.form}>
+            {isChangePassword && (
+              <Input
+                label="Current Password"
+                placeholder="Enter current password"
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                leftIcon={IMAGES.lock}
+                isPasswordVisible={showOldPass}
+                secureTextEntry={true}
+                handlePasswordVisibility={() => setShowOldPass(p => !p)}
+                containerBackgroundColor={COLORS._F8F9FA}
+                style={styles.inputField}
+              />
+            )}
+
             <Input
-              label={STRING.newPassword}
+              label={isChangePassword ? 'New Password' : STRING.newPassword}
               placeholder={STRING.enterNewPassword}
-              secureTextEntry={!showPass}
+              // secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
               leftIcon={IMAGES.lock}
               isPasswordVisible={showPass}
+              secureTextEntry={true}
               handlePasswordVisibility={() => setShowPass(p => !p)}
               containerBackgroundColor={COLORS._F8F9FA}
               style={styles.inputField}
@@ -167,7 +210,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             <Input
               label={STRING.confirmPassword}
               placeholder={STRING.enterConfirmPassword}
-              secureTextEntry={!showConfirm}
+              secureTextEntry={true}
               value={confirm}
               onChangeText={setConfirm}
               leftIcon={IMAGES.lock} // Fallback for help_icon
@@ -185,14 +228,15 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
 
           <View style={styles.ctaBar}>
             <PrimaryButton
-              title={STRING.resetPassword}
+              title={isChangePassword ? 'Change Password' : STRING.resetPassword}
               onPress={onSubmit}
               disabled={!canSubmit || isLoading}
               style={{ marginTop: getScaleSize(40) }}
             />
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      {/* </ScrollView> */}
     </AppSafeAreaView>
   );
 };
@@ -209,11 +253,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
     paddingHorizontal: getScaleSize(24),
-    paddingTop: getScaleSize(20),
+    // paddingTop: getScaleSize(20),
   },
   logoWrap: {
     alignItems: 'center',
-    marginTop: getScaleSize(32),
+    // marginTop: getScaleSize(32),
     marginBottom: getScaleSize(32),
   },
   logo: {

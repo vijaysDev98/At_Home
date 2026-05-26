@@ -18,7 +18,10 @@ import {
   Header,
   Input,
   AppLoader,
+  ProfileAvatar,
+  LogoutConfirmationSheet,
 } from '../../../components';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 import AppBottomSheet from '../../../components/AppBottomSheet';
 import { ImagePickerContent } from '../../../components/ImagePickerContent';
 import { IMAGES } from '../../../assets/images';
@@ -34,12 +37,14 @@ import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { SCREENS } from '../../../navigation/routes';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const DoctorProfile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const { isLoading } = useSelector((state: RootState) => state.common);
+  console.log('profileData', profileData);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -50,7 +55,13 @@ const DoctorProfile: React.FC = () => {
     }
   }, [profileData?.profileImg]);
 
+  const logoutSheetRef = useRef<ActionSheetRef>(null);
+
   const handleLogout = () => {
+    logoutSheetRef.current?.show();
+  };
+
+  const confirmLogout = () => {
     dispatch(userLogout());
   };
 
@@ -68,12 +79,15 @@ const DoctorProfile: React.FC = () => {
         practiceType: profileData?.practiceType,
         businessAddress: profileData?.businessAddress,
         profileImg: profileData?.profileImg,
+        roles: profileData?.roles,
+        facilityName: profileData?.facilityName,
       },
     });
   };
 
   const fName = profileData?.fName || '';
   const lName = profileData?.lName || '';
+  const fullName = `${fName} ${lName}`.trim();
   const userEmail = profileData?.email;
   const userPhone = profileData?.phoneNumber;
   const userSpecialty = profileData?.specialty;
@@ -104,7 +118,7 @@ const DoctorProfile: React.FC = () => {
         >
           {/* Avatar section */}
           <View style={styles.avatarSection}>
-            <View>
+            {userAvatar ? (
               <View style={styles.avatarWrap}>
                 <Image
                   source={
@@ -119,14 +133,11 @@ const DoctorProfile: React.FC = () => {
                   style={styles.avatar}
                 />
               </View>
-              {/* <TouchableOpacity
-                  style={styles.cameraBtn}
-                  activeOpacity={0.85}
-                  onPress={handleEditProfile}
-                >
-                  <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
-                </TouchableOpacity> */}
-            </View>
+            ) : (
+              <View style={{ marginBottom: getScaleSize(10) }}>
+                <ProfileAvatar size="large" name={fullName} />
+              </View>
+            )}
             <View style={styles.avatarInfo}>
               <View>
                 <AppText
@@ -134,9 +145,7 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  {fName.startsWith('Dr.')
-                    ? fName + ' ' + lName
-                    : `Dr. ${fName} ${lName}`}
+                  {`Dr. ${capitalizeFirstLetter(fullName)}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}
@@ -144,7 +153,7 @@ const DoctorProfile: React.FC = () => {
                   style={{ marginVertical: getScaleSize(5) }}
                   color={COLORS._6B7280}
                 >
-                  {userSpecialty}
+                  {capitalizeFirstLetter(userSpecialty || '')}
                 </AppText>
               </View>
               <TouchableOpacity
@@ -177,7 +186,7 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.fName}
                 style={styles.inputContainer}
-                value={fName}
+                value={capitalizeFirstLetter(fName)}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.person}
@@ -187,7 +196,7 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.lName}
                 style={styles.inputContainer}
-                value={lName}
+                value={capitalizeFirstLetter(lName)}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.person}
@@ -238,7 +247,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.businessAddress}
-                value={userAddress}
+                value={capitalizeFirstLetter(userAddress || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.location_pin}
@@ -250,6 +259,8 @@ const DoctorProfile: React.FC = () => {
               <Input
                 label={STRING.phoneNumber}
                 value={userPhone}
+                isCountryCode
+                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.phone}
@@ -259,7 +270,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.specialty}
-                value={userSpecialty}
+                value={capitalizeFirstLetter(userSpecialty || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.stethoscope}
@@ -269,7 +280,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.placeOfPractice}
-                value={userPracticeType}
+                value={capitalizeFirstLetter(userPracticeType || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.hospital}
@@ -279,7 +290,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               <Input
                 label={STRING.facilityName}
-                value={userFacilityName}
+                value={capitalizeFirstLetter(userFacilityName || '')}
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.hospital}
@@ -288,13 +299,28 @@ const DoctorProfile: React.FC = () => {
             </View>
           </View>
 
-          <View style={styles.card}>
+          {/* <View style={styles.card}>
             <RowItem label={STRING.appVersion} value={STRING.appVersionValue} />
             <Divider />
             <RowItem label={STRING.termsOfService} chevron />
             <Divider />
             <RowItem label={STRING.privacyPolicy} chevron />
-          </View>
+          </View> */}
+
+          <TouchableOpacity
+            style={styles.changePasswordBtn}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
+          >
+            <Image source={IMAGES.lock} style={styles.changePasswordIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._526674}
+            >
+              Change Password
+            </AppText>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.logoutBtn}
@@ -311,6 +337,10 @@ const DoctorProfile: React.FC = () => {
             </AppText>
           </TouchableOpacity>
         </ScrollView>
+        <LogoutConfirmationSheet
+          ref={logoutSheetRef}
+          onLogout={confirmLogout}
+        />
       </View>
     </AppSafeAreaView>
   );
@@ -666,6 +696,29 @@ const styles = StyleSheet.create({
     width: getScaleSize(14),
     height: getScaleSize(14),
     tintColor: COLORS._526674,
+  },
+  changePasswordBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  changePasswordIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain'
   },
 });
 

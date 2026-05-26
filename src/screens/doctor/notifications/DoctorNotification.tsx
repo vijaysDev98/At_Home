@@ -1,261 +1,330 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  SectionList,
+  FlatList,
   StyleSheet,
-  TouchableOpacity,
   View,
-  Image,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { AppSafeAreaView, AppText, Header } from '../../../components';
-import { IMAGES } from '../../../assets/images';
-import { getScaleSize } from '../../../utils/scaleSize';
+import { useFocusEffect } from '@react-navigation/native';
+import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
-
-const today = [
-  {
-    id: 'today-1',
-    title: 'Form Returned',
-    desc: 'Provider Sarah M. requested clarification on medication list for John Doe (#REQ-8294).',
-    time: '10:42 AM',
-    icon: IMAGES.ic_reload,
-    iconColor: COLORS._FFF4E5,
-    unread: true,
-  },
-  {
-    id: 'today-2',
-    title: 'Service Completed',
-    desc: 'Wound care service for Maria Garcia (#REQ-8288) has been marked as completed.',
-    time: '08:15 AM',
-    icon: IMAGES.ic_ServiceCompleted,
-    iconColor: COLORS._E6F9F0,
-    unread: false,
-  },
-];
-
-const week = [
-  {
-    id: 'week-1',
-    title: 'Status Update',
-    desc: 'Request #REQ-8290 for Robert Smith is now In Progress.',
-    time: 'Yesterday',
-    icon: IMAGES.ic_inprogress,
-    iconColor: COLORS.primary,
-  },
-  {
-    id: 'week-2',
-    title: 'Form Returned',
-    desc: 'Missing signature on authorization form for Emma Davis (#REQ-8285).',
-    time: 'Mon',
-    icon: IMAGES.ic_reload,
-    iconColor: COLORS._FFF4E5,
-  },
-  {
-    id: 'week-3',
-    title: 'Service Completed',
-    desc: 'IV Therapy for James Wilson (#REQ-8280) successfully completed.',
-    time: 'Oct 22',
-    icon: IMAGES.ic_ServiceCompleted,
-    iconColor: COLORS._E6F9F0,
-  },
-];
-
-// SectionList data structure
-const notificationSections = [
-  {
-    title: 'Today',
-    data: today,
-  },
-  {
-    title: 'This Week',
-    data: week,
-  },
-];
+import { IMAGES } from '../../../assets/images';
+import {
+  AppSafeAreaView,
+  AppText,
+  Header,
+  AppLoader,
+} from '../../../components';
+import { getScaleSize } from '../../../utils/scaleSize';
+import { NotificationItem } from '../../../components/NotificationComponents';
+import {
+  getNotificationsService,
+  markNotificationAsReadService,
+  Notification,
+  PaginationInfo,
+} from '../../../services/notificationService';
 
 const DoctorNotification: React.FC = () => {
-  const renderItem = ({ item, index }: { item: typeof today[number]; index: number; }) => {
-    const isUnread = item.unread || false;
+  const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const fetchNotificationsData = async (
+    p: number = 1,
+    statusFilter?: string,
+    refresh: boolean = false,
+  ) => {
+    if (p > 1) {
+      setIsFetchingNextPage(true);
+    } else if (!refresh) {
+      setInitialLoading(true);
+    }
+
+    const params = {
+      page: p,
+      size: 10,
+      status: statusFilter,
+    };
+
+    try {
+      const response = await getNotificationsService(params);
+      if (response && response.status === 200) {
+        const fetchedNotifications = response.data?.notifications || [];
+        const pag = response.data?.pagination || null;
+        console.log('fetchedNotifications', fetchedNotifications);
+
+        if (refresh || p === 1) {
+          setNotifications(fetchedNotifications);
+        } else {
+          setNotifications(prev => [...prev, ...fetchedNotifications]);
+        }
+        setPagination(pag);
+      }
+    } catch (error) {
+      console.log('Error fetching notifications:', error);
+    } finally {
+      setInitialLoading(false);
+      setIsFetchingNextPage(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setPage(1);
+      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+      fetchNotificationsData(1, statusFilter, true);
+    }, [activeTab]),
+  );
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    setPage(1);
+    const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+    fetchNotificationsData(1, statusFilter, true);
+  };
+
+  const onLoadMore = () => {
+    const hasNextPage = pagination ? page < pagination.totalPages : false;
+    if (hasNextPage && !isFetchingNextPage) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+      fetchNotificationsData(nextPage, statusFilter, false);
+    }
+  };
+
+  const handleNotificationPress = async (item: Notification) => {
+    console.log('NOTIFICATION ITEM', item);
+
+    // if (item.status === 'unread') {
+    //   // Optimistically update the UI notification's status to 'read'
+    //   setNotifications(prev =>
+    //     prev.map(n =>
+    //       n.id === item.id ? { ...n, status: 'read' as const } : n,
+    //     ),
+    //   );
+
+    //   const success = await markNotificationAsReadService(item.id);
+    //   if (!success) {
+    //     // Rollback state if the API failed
+    //     setNotifications(prev =>
+    //       prev.map(n =>
+    //         n.id === item.id ? { ...n, status: 'unread' as const } : n,
+    //       ),
+    //     );
+    //   }
+    // }
+  };
+
+  const getNotificationIcon = (type: string, title: string = '') => {
+    const normalizedType = type?.toLowerCase() || '';
+    const normalizedTitle = title?.toLowerCase() || '';
+
+    if (
+      normalizedType.includes('patient') ||
+      normalizedTitle.includes('patient') ||
+      normalizedTitle.includes('assignment')
+    ) {
+      return IMAGES.alert_newPatient;
+    }
+    if (
+      normalizedType.includes('form') ||
+      normalizedTitle.includes('form') ||
+      normalizedTitle.includes('update')
+    ) {
+      return IMAGES.alert_formUpdate;
+    }
+    if (
+      normalizedType.includes('progress') ||
+      normalizedTitle.includes('progress') ||
+      normalizedType.includes('inprogress')
+    ) {
+      return IMAGES.alert_serviceInProgress;
+    }
+    if (
+      normalizedType.includes('complete') ||
+      normalizedTitle.includes('complete')
+    ) {
+      return IMAGES.alert_serviceCompleted;
+    }
+    return IMAGES.ic_announcement;
+  };
+
+  const getNotificationAction = (type: string, actionUrl?: string) => {
+    if (!actionUrl) return undefined;
+    const normalizedType = type?.toLowerCase() || '';
+    if (
+      normalizedType.includes('submit') ||
+      normalizedType.includes('submission')
+    ) {
+      return 'View Request';
+    }
+    if (normalizedType.includes('assign')) {
+      return 'Open Form';
+    }
+    return 'View';
+  };
+
+  const renderItem = ({ item }: { item: Notification }) => {
+    const isUnread = item.status === 'unread';
     return (
-      <View style={[styles.notificationItem, isUnread ? styles.unreadCard : null]}>
-        {isUnread ? <View style={styles.unreadDot} /> : null}
-        <View style={[styles.iconWrap, { borderColor: `${item.iconColor}22` }]}>
-          <Image source={item.icon} style={[styles.iconImage, { tintColor: item.iconColor }]} />
-        </View>
-        <View style={styles.textCol}>
-          <View style={styles.titleRow}>
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold} color={COLORS._1A1D1F}>{item.title}</AppText>
-            <AppText size={getScaleSize(10)} color={COLORS._6B7280}>{item.time}</AppText>
-          </View>
-          <AppText size={getScaleSize(12)} color={COLORS._6F767E}>{item.desc}</AppText>
-        </View>
-      </View>
+      <NotificationItem
+        title={item.title}
+        subtitle={item.message}
+        time={moment(item.createdAt).fromNow()}
+        iconSource={getNotificationIcon(item.type, item.title)}
+        unread={isUnread}
+        action={getNotificationAction(item.type, item.actionUrl)}
+        onPress={() => handleNotificationPress(item)}
+      />
     );
   };
 
-  const renderSectionHeader = ({ section }: { section: typeof notificationSections[number] }) => (
-    <View style={styles.sectionHeader}>
-      <AppText size={getScaleSize(12)} font={FONTS.Inter.Bold} color={COLORS._6B7280}>{section.title}</AppText>
-    </View>
-  );
-
   return (
-    <AppSafeAreaView>
+    <AppSafeAreaView edges style={{ backgroundColor: COLORS.white }}>
+      <AppLoader visible={initialLoading && !isRefreshing} />
       <View style={styles.container}>
-        <Header
-          style={styles.headerStyle}
-          title="Notifications"
-          leftContent={() => (
-            <TouchableOpacity activeOpacity={0.7}>
-              <AppText size={getScaleSize(13)} font={FONTS.Inter.Bold} color={COLORS._526674}>Mark all read</AppText>
-            </TouchableOpacity>
-          )}
-        />
+        <Header style={styles.headerStyle} title="Notifications" />
 
-        <SectionList
-          style={styles.sectionList}
-          sections={notificationSections}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          renderSectionHeader={renderSectionHeader}
-          SectionSeparatorComponent={() => <View style={styles.sectionSeparator} />}
+        {/* Tabs */}
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={styles.tabWrap}
+            activeOpacity={0.7}
+            onPress={() => setActiveTab('All')}
+          >
+            <AppText
+              size={getScaleSize(15)}
+              font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
+              color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
+            >
+              All
+            </AppText>
+            {activeTab === 'All' && <View style={styles.activeBorder} />}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.tabWrap}
+            activeOpacity={0.7}
+            onPress={() => setActiveTab('Unread')}
+          >
+            <AppText
+              size={getScaleSize(15)}
+              font={
+                activeTab === 'Unread' ? FONTS.Inter.Bold : FONTS.Inter.Medium
+              }
+              color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
+            >
+              Unread
+            </AppText>
+            {notifications.some(n => n.status === 'unread') && (
+              <View style={styles.unreadBadge} />
+            )}
+            {activeTab === 'Unread' && <View style={styles.activeBorder} />}
+          </TouchableOpacity>
+        </View>
+
+        {/* Notifications List */}
+        <FlatList
+          data={notifications}
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            notifications.length === 0 && { flexGrow: 1 },
+          ]}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.sectionListContent}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          onRefresh={onRefresh}
+          refreshing={isRefreshing}
+          onEndReached={onLoadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._6F767E}
+                align="center"
+              >
+                No notifications found
+              </AppText>
+            </View>
+          )}
+          ListFooterComponent={() =>
+            isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={COLORS._526674} />
+              </View>
+            ) : null
+          }
         />
       </View>
-   </AppSafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
+export default DoctorNotification;
+
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
   container: {
     flex: 1,
-    backgroundColor: COLORS._F8F9FA,
+    backgroundColor: COLORS.white,
   },
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
   },
-  header: {
+  tabs: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 24,
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1f2937',
+  tabWrap: {
+    position: 'relative',
+    paddingBottom: 12,
   },
-  markRead: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#526674',
-  },
-  sectionList: {
-    flex: 1,
-  },
-  sectionListContent: {
-    // paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(12),
-  },
-  sectionHeader: {
-    marginBottom: getScaleSize(8),
-  },
-  sectionSeparator: {
-    height: getScaleSize(16),
-  },
-  section: {
-    gap: 10,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6b7280',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  sectionCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  notificationItem: {
-    flexDirection: 'row',
-    paddingHorizontal: getScaleSize(14),
-    paddingVertical: getScaleSize(14),
-    gap: getScaleSize(12),
-    alignItems: 'flex-start',
-    backgroundColor: COLORS.white,
-    // marginHorizontal: getScaleSize(20),
-    borderRadius: getScaleSize(14),
-    // borderWidth: 1,
-  },
-  unreadCard: {
-    backgroundColor: '#f4f7ff',
-  },
-  unreadDot: {
+  activeBorder: {
     position: 'absolute',
-    left: getScaleSize(8),
-    top: '50%',
-    marginTop: -4,
-    width: getScaleSize(8),
-    height: getScaleSize(8),
-    borderRadius: getScaleSize(4),
-    backgroundColor: COLORS._526674,
+    bottom: -1,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: '#526674',
   },
-  iconWrap: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
-    borderWidth: 1,
+  unreadBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  scroll: {
+    flex: 1,
+    paddingTop: getScaleSize(15),
+  },
+  scrollContent: {
+    paddingBottom: 32,
+  },
+  emptyContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.white,
+    paddingVertical: getScaleSize(60),
   },
-  iconImage: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
-    resizeMode: 'contain',
-  },
-  textCol: {
-    flex: 1,
-    gap: getScaleSize(4),
-    paddingRight: getScaleSize(6),
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: getScaleSize(8),
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#1f2937',
-    flex: 1,
-  },
-  time: {
-    fontSize: 10,
-    color: '#6b7280',
-    fontWeight: '600',
-  },
-  desc: {
-    fontSize: 12,
-    color: '#4b5563',
-    lineHeight: 18,
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });
-
-export default DoctorNotification;

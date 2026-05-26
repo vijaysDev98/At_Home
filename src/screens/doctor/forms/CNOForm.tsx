@@ -34,6 +34,14 @@ import {
   PatientInfo,
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
+import {
+  handleFormSubmit,
+  handleSaveAsDraft,
+  handleUpdateAndSign,
+  handleSaveProgress,
+  handleSubmitForReview,
+  handleEditForm,
+} from './formActionHandlers';
 
 const NUTRITION_CATEGORIES = [
   { label: 'Diabetic Range', value: 'Diabetic Range' },
@@ -83,6 +91,8 @@ export interface CNOFormProps {
 export interface CNOFormRef {
   validateAndSubmit: () => Promise<void>;
   saveAsDraft: () => Promise<void>;
+  updateAndSign: () => Promise<{ success: boolean; error?: string }>;
+  saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
 }
 
@@ -114,8 +124,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       patient_last_name: selectedPatient?.lName || '',
       patient_first_name: selectedPatient?.fName || '',
       dob: moment(selectedPatient?.dateOfBirth).format('DD/MM/YYYY'),
-      weight: '',
-      nir: '',
+      weight: selectedPatient?.weight?.toString() || '',
+      nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
       // Patient Condition
@@ -129,8 +139,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       rpps_id: profileData?.rppsNumber || '',
 
       // Facility
-      hospital_name: '',
-      hospital_address: '',
+      hospital_name: profileData?.facilityName || '',
+      hospital_address: profileData?.businessAddress || '',
       finess_number: profileData?.finessNumber || '',
 
       // Nutrition Products (repeatable)
@@ -204,7 +214,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 return ne;
               });
             }
-          } catch {}
+          } catch { }
           return next;
         });
       } else {
@@ -263,7 +273,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     };
 
     const checkedBoxesCount = useMemo(() => {
-      return state.reassessment_criteria.length;
+      return state.reassessment_criteria?.length || 0;
     }, [state]);
 
     // Validation function (aligned with schema required fields)
@@ -271,31 +281,32 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       const newErrors: { [key: string]: string } = {};
 
       // Patient Information - Required fields
-      if (!state.patient_last_name.trim()) {
+      if (!state?.patient_last_name || !state.patient_last_name.trim()) {
         newErrors.patientLastName = STRING.lNameRequired;
       }
-      if (!state.patient_first_name.trim()) {
+      if (!state?.patient_first_name || !state.patient_first_name.trim()) {
         newErrors.patientFirstName = STRING.fNameRequired;
       }
 
       // Prescription Context - Required fields
-      if (!state.prescription_date) {
+      if (!state?.prescription_date) {
         newErrors.prescriptionDate = STRING.prescriptionDateRequired;
       }
 
       // Nutrition Products validation - at least 1 product must be filled
-      const filledProductIndices = state.nutrition_products
-        .map((p, i) => (p.product_type.trim() ? i : -1))
+      const products = state?.nutrition_products || [];
+      const filledProductIndices = products
+        .map((p, i) => (p?.product_type && p.product_type.trim() ? i : -1))
         .filter(i => i !== -1);
 
       if (filledProductIndices.length === 0) {
-        newErrors['nutrition_products[0].product_type'] =
+        newErrors['nutrition_products'] =
           STRING.atLeastOneProductRequired;
       }
 
       // Validate numeric fields for filled products
-      state.nutrition_products.forEach((product, index) => {
-        if (product.product_type.trim()) {
+      products.forEach((product, index) => {
+        if (product?.product_type && product.product_type.trim()) {
           const val = product.quantity_per_day;
           if (
             val !== '' &&
@@ -310,25 +321,28 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       });
 
       // Patient Condition - Numeric validation
-      if (state.patient_age !== '' && isNaN(Number(state.patient_age))) {
-        newErrors.patient_age = STRING.ageMustBeNumber;
+      if (
+        state?.patient_age &&
+        state.patient_age !== '' &&
+        isNaN(Number(state.patient_age))
+      ) {
+        newErrors.patient_age = STRING.mustBeNumber;
       }
       if (
+        state?.patient_weight_confirm &&
         state.patient_weight_confirm !== '' &&
         isNaN(Number(state.patient_weight_confirm))
       ) {
-        newErrors.patient_weight_confirm = STRING.weightMustBeNumber;
+        newErrors.patient_weight_confirm = STRING.mustBeNumber;
       }
 
       // Reassessment - Numeric validation
       if (
+        state?.reassessment_after_month &&
         state.reassessment_after_month !== '' &&
         isNaN(Number(state.reassessment_after_month))
       ) {
         newErrors.reassessment_after_month = STRING.mustBeNumber;
-      }
-      if (state.renewal_months !== '' && isNaN(Number(state.renewal_months))) {
-        newErrors.renewal_months = STRING.mustBeNumber;
       }
 
       setErrors(newErrors);
@@ -336,232 +350,108 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       return Object.keys(newErrors).length === 0;
     };
 
-    // Handle form submission
-    const handleSubmitRequest = async () => {
-      // Always validate first
-      const ok = validateForm();
-      if (!ok) {
-        // Show first error in toast
-        const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage =
-          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-        SHOW_TOAST(firstErrorMessage, 'error');
-
-        const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
-        if (match) {
-          const idx = Number(match[1]);
-          const y = productPositions[idx] ?? 0;
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({
-              y: Math.max(y - 20, 0),
-              animated: true,
-            });
-          }, 50);
-        } else {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-          }, 50);
-        }
-        return;
-      }
-
-      // Show loader
-      dispatch(setLoading(true));
-
-      // Check if it's an existing draft
-      const isExistingDraft = initialData && initialData._id;
-      const requestId = isExistingDraft ? initialData._id : null;
-
-      try {
-        if (isExistingDraft && requestId) {
-          const submitResponse = await serviceRequestApi.submitForReview(
-            requestId,
-          );
-          if (submitResponse.success) {
-            SHOW_SUCCESS_TOAST(submitResponse.message);
-            dispatch(setLoading(false));
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            dispatch(setLoading(false));
-            SHOW_TOAST(submitResponse.error, 'error');
-          }
-        } else {
-          // Create new service request
-          const payload = {
-            serviceId: serviceId || '',
-            patientId: selectedPatient?.id || selectedPatient?._id || '',
-            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-              'YYYY-MM-DD',
-            ),
-            requestedTime: moment().format('HH:mm'),
-            initialNotes: '',
-            formData: state,
-          };
-
-          const response = await serviceRequestApi.createServiceRequest(
-            payload,
-          );
-
-          dispatch(setLoading(false));
-
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response?.message);
-
-            // Submit for review to lock the request
-            const newRequestId = response.data?.data?.id;
-            if (newRequestId) {
-              const submitResponse = await serviceRequestApi.submitForReview(
-                newRequestId,
-              );
-              if (submitResponse.success) {
-                SHOW_SUCCESS_TOAST(submitResponse.message);
-                dispatch(setLoading(false));
-                setTimeout(() => {
-                  NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                    screen: SCREENS.DOCTOR_REQUEST,
-                  });
-                }, 500);
-              } else {
-                dispatch(setLoading(false));
-                SHOW_TOAST(submitResponse.error, 'error');
-              }
-            } else {
-              dispatch(setLoading(false));
-            }
-          } else {
-            dispatch(setLoading(false));
-            SHOW_TOAST(response.error, 'error');
-          }
-        }
-      } catch (error: any) {
-        dispatch(setLoading(false));
-        SHOW_TOAST(error.message, 'error');
-      }
+    // Handle form submission (using centralized handler)
+    const validateAndSubmit = async () => {
+      await handleFormSubmit({
+        dispatch,
+        state,
+        initialData,
+        serviceId,
+        selectedPatient,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
-    // Handle save as draft
-    const handleSaveAsDraft = async () => {
-      // Always validate first
-      const ok = validateForm();
-      if (!ok) {
-        // Show first error in toast
-        const firstErrorKey = lastFirstErrorKey.current || '';
-        const firstErrorMessage =
-          errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
-        SHOW_TOAST(firstErrorMessage, 'error');
-
-        const match = firstErrorKey.match(/nutrition_products\[(\d+)\]/);
-        if (match) {
-          const idx = Number(match[1]);
-          const y = productPositions[idx] ?? 0;
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({
-              y: Math.max(y - 20, 0),
-              animated: true,
-            });
-          }, 50);
-        } else {
-          setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: 0, animated: true });
-          }, 50);
-        }
-        return;
-      }
-
-      // Show loader
-      dispatch(setLoading(true));
-
-      // Check if it's an existing draft
-      const isExistingDraft = initialData && initialData._id;
-      const requestId = isExistingDraft ? initialData._id : null;
-
-      try {
-        if (isExistingDraft && requestId) {
-          // Update existing draft
-          const response = await serviceRequestApi.updateDraft(requestId, {
-            formData: state,
-          });
-          dispatch(setLoading(false));
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response.message);
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            SHOW_TOAST(response.error, 'error');
-          }
-        } else {
-          // Create new service request as draft
-          const payload = {
-            serviceId: serviceId || '',
-            patientId: selectedPatient?.id || selectedPatient?._id || '',
-            requestedDate: moment(state.prescription_date, 'DD/MM/YYYY').format(
-              'YYYY-MM-DD',
-            ),
-            requestedTime: moment().format('HH:mm'),
-            initialNotes: '',
-            formData: state,
-          };
-
-          const response = await serviceRequestApi.createServiceRequest(
-            payload,
-          );
-          dispatch(setLoading(false));
-
-          if (response.success) {
-            SHOW_SUCCESS_TOAST(response?.message);
-            setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
-            }, 500);
-          } else {
-            SHOW_TOAST(response.error, 'error');
-          }
-        }
-      } catch (error: any) {
-        dispatch(setLoading(false));
-        SHOW_TOAST(error.message, 'error');
-      }
+    // Handle save as draft (using centralized handler)
+    const saveAsDraft = async () => {
+      await handleSaveAsDraft({
+        dispatch,
+        state,
+        initialData,
+        serviceId,
+        selectedPatient,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
-    // Handle update & sign (for already-submitted requests)
-    const handleUpdateAndSign = async (): Promise<{
+    // Handle update & sign (using centralized handler)
+    const updateAndSign = async (): Promise<{
       success: boolean;
       error?: string;
     }> => {
-      const requestId = initialData?._id || initialData?.id;
-      if (!requestId) {
-        return { success: false, error: 'No request ID' };
-      }
-      try {
-        const response = await serviceRequestApi.updateFormData(requestId, {
-          formData: state,
-        });
-        if (response.success) {
-          return { success: true };
-        } else {
-          SHOW_TOAST(response.error, 'error');
-          return { success: false, error: response.error };
-        }
-      } catch (error: any) {
-        const msg = error.message;
-        SHOW_TOAST(msg, 'error');
-        return { success: false, error: msg };
-      }
+      return await handleUpdateAndSign({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
     };
 
     // Expose methods to parent via ref
+    // Handle save progress (using centralized handler)
+    const saveProgress = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleSaveProgress({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
+    // Handle submit for review (using centralized handler)
+    const submitForReview = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleSubmitForReview({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
+    // Handle edit form (using centralized handler - no navigation)
+    const editForm = async (): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return await handleEditForm({
+        dispatch,
+        state,
+        initialData,
+        validateForm,
+        scrollRef,
+        lastFirstErrorKey,
+        errors,
+      });
+    };
+
     useImperativeHandle(ref, () => ({
-      validateAndSubmit: handleSubmitRequest,
-      saveAsDraft: handleSaveAsDraft,
-      updateAndSign: handleUpdateAndSign,
+      validateAndSubmit,
+      saveAsDraft,
+      updateAndSign,
+      saveProgress,
+      submitForReview,
+      editForm,
       getFormData: () => state,
     }));
 
@@ -868,7 +758,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: getScaleSize(190),
+    paddingBottom: getScaleSize(20),
     gap: getScaleSize(12),
     marginHorizontal: getScaleSize(16),
   },

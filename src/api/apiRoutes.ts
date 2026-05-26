@@ -15,6 +15,7 @@ const API_ROUTES = {
   resetPassword: 'auth/resetPassword',
   getProfile: 'user/profile',
   updateProfile: 'user/profile',
+  changePassword: 'user/changePassword',
   uploadFile: 'common/file/upload',
   addPatient: 'patients',
   getPatients: 'patients',
@@ -26,6 +27,8 @@ const API_ROUTES = {
   updateServiceRequest: 'service-requests',
   listServiceRequests: 'service-requests',
   listAvailableRequests: 'service-requests/available',
+  resendLoginOtp: 'auth/resendLoginOtp',
+  notifications: 'notifications',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

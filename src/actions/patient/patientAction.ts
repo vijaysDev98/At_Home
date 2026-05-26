@@ -103,7 +103,7 @@ export const addPatient = (data: any) => async (dispatch: AppDispatch) => {
 export const updatePatient =
   (id: string, data: any) => async (dispatch: AppDispatch) => {
     try {
-      console.log('dataaaaa', data);
+      console.log('dataaaaa', id, data);
 
       dispatch(setLoading(true));
       const response: any = await updatePatientService(id, data);

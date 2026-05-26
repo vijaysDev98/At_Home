@@ -48,6 +48,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </AppText>
     </View>
   );
+  console.log('statestate', state);
 
   return (
     <View style={styles.card}>
@@ -58,7 +59,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           label="First name"
           placeholder="Enter first name"
           isMandatory
-          value={state.patient_first_name}
+          value={state.patient_first_name || ''}
           onChangeText={text => setState({ patient_first_name: text })}
           style={[styles.inputField, { flex: 1 }]}
           error={errors.patientFirstName}
@@ -68,7 +69,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           label="Last name"
           isMandatory
           placeholder="Enter last name"
-          value={state.patient_last_name}
+          value={state.patient_last_name || ''}
           onChangeText={text => setState({ patient_last_name: text })}
           style={[styles.inputField, { flex: 1 }]}
           error={errors.patientLastName}
@@ -80,7 +81,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           onPress={() => !readOnly && setOpenDob(true)}
           label="Date of birth"
           placeholder="DD/MM/YYYY"
-          value={state.dob}
+          value={state.dob || ''}
           style={[styles.inputField, { flex: 1 }]}
           pointerEvents="none"
         />
@@ -90,7 +91,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
             onPress={() => !readOnly && setOpenDob(true)}
             label="Date"
             placeholder="DD/MM/YYYY"
-            value={state.dob}
+            value={state.dob || ''}
             style={[styles.inputField, { flex: 1 }]}
             pointerEvents="none"
           />
@@ -100,7 +101,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
             isLocked={readOnly}
             label="Weight (kg)"
             placeholder="e.g. 70"
-            value={state.weight}
+            value={state.weight || ''}
             onChangeText={text => setState({ weight: text })}
             style={[styles.inputField, { flex: 1 }]}
             keyboardType="numeric"
@@ -127,7 +128,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           isLocked={readOnly}
           label="Social Insurance number (NIR)"
           placeholder="Enter NIR"
-          value={state.nir}
+          value={state.nir || ''}
           onChangeText={text => setState({ nir: text })}
           style={[styles.inputField, { marginBottom: 0 }]}
         />
@@ -153,6 +154,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
       {showNALD && (
         <AppCheckBox
+          disabled={readOnly}
           value={
             state.careNotRelatedToALD === true ||
             state.careNotRelatedToALD === 'NALD'

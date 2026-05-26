@@ -26,7 +26,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
       <View style={styles.row}>
         {/* Patient Avatar */}
         <ProfileAvatar
-          name={`${patientData?.fName} ${patientData?.lName}`}
+          name={`${patientData?.fullName}`}
           size="medium"
           backgroundColor={COLORS._E5E7EB}
         />
@@ -38,7 +38,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             color={COLORS._1A1D1F}
             font={FONTS.Inter.Bold}
           >
-            {`${patientData?.fName} ${patientData?.lName}` || 'Patient'}
+            {`${patientData?.fullName}` || 'Patient'}
           </AppText>
           <AppText
             size={getScaleSize(13)}
@@ -63,10 +63,93 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
                 color={COLORS[requestData?.status]}
                 font={FONTS.Inter.SemiBold}
               >
-                {requestData?.status
-                  ? requestData.status.charAt(0).toUpperCase() +
-                    requestData.status.slice(1)
-                  : 'Draft'}
+                {DISPLAY_FORM_STATUS[requestData?.status] ||
+                  DISPLAY_FORM_STATUS[FORM_STATUS.DRAFT]}
+              </AppText>
+            </View>
+            <View style={styles.statusBadge}>
+              <AppText
+                size={getScaleSize(12)}
+                color={COLORS._526674}
+                font={FONTS.Inter.Regular}
+              >
+                Form Status:
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                color={
+                  COLORS[
+                    fromReview
+                      ? FORM_STATUS.AWAITING_SIGNATURE
+                      : requestData?.formStatus
+                  ]
+                }
+                font={FONTS.Inter.SemiBold}
+              >
+                {fromReview
+                  ? DISPLAY_FORM_STATUS[FORM_STATUS.AWAITING_SIGNATURE]
+                  : DISPLAY_FORM_STATUS[requestData?.formStatus] || 'Draft'}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const FormRequestHeaderForProvider: React.FC<FormRequestHeaderProps> = ({
+  patientData,
+  serviceName,
+  requestData,
+  fromReview = false,
+}) => {
+  console.log('requestData', requestData);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.row}>
+        {/* Patient Avatar */}
+        {/* <ProfileAvatar
+          name={`${patientData?.fullName}`}
+          size="medium"
+          backgroundColor={COLORS._E5E7EB}
+        /> */}
+
+        {/* Patient Details */}
+        <View style={styles.detailsContainer}>
+          <AppText
+            size={getScaleSize(16)}
+            color={COLORS._1A1D1F}
+            font={FONTS.Inter.Bold}
+          >
+            {`${patientData?.fullName}` || 'Patient'}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._526674}
+            font={FONTS.Inter.Regular}
+          >
+            {serviceName} • ID #
+            {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() ||
+              ''}
+          </AppText>
+          <View style={styles.statusRow}>
+            <View style={styles.statusBadge}>
+              <AppText
+                size={getScaleSize(12)}
+                color={COLORS._526674}
+                font={FONTS.Inter.Regular}
+              >
+                Request Status:
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                color={COLORS[requestData?.status]}
+                font={FONTS.Inter.SemiBold}
+              >
+                {DISPLAY_FORM_STATUS[requestData?.status] ||
+                  DISPLAY_FORM_STATUS[FORM_STATUS.DRAFT]}
               </AppText>
             </View>
             <View style={styles.statusBadge}>
@@ -101,6 +184,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
 };
 
 export default FormRequestHeader;
+export { FormRequestHeaderForProvider };
 const styles = StyleSheet.create({
   container: {
     paddingVertical: getScaleSize(16),
@@ -135,7 +219,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     gap: getScaleSize(4),
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   statusLabel: {
     fontSize: getScaleSize(12),

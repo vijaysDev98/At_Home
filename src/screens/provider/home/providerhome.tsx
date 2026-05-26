@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Image,
   ScrollView,
@@ -12,16 +12,32 @@ import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { AppText } from '../../../components';
+import {
+  AppText,
+  ReviewRequestSheet,
+  AppLoader,
+  ProfileAvatar,
+} from '../../../components';
+import { SHOW_TOAST } from '../../../constant/showToast';
+import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
 import LinearGradient from 'react-native-linear-gradient';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
-import { useSelector } from 'react-redux';
+import { PROVIDER_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { FORM_STATUS, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
+import { getUnreadCountService } from '../../../services/notificationService';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import RequestCardProvider from '../../../components/RequestCardProvider';
+import {
+  getButtonConfigProvider,
+  REQUEST_STATUS,
+} from '../../../constant/RequestStatus';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -46,24 +62,29 @@ interface DashboardRecentQueue {
 
 interface DashboardRequestsOverview {
   inProgressCount: number;
-  submittedCount: number;
+  submittedAvailableCount: number;
   returnedCount: number;
-  completedCount?: number;
+  completedTodayCount?: number;
 }
 
 interface DashboardData {
-  requestsOverview: DashboardRequestsOverview;
+  overview: DashboardRequestsOverview;
   recentQueue: DashboardRecentQueue[];
 }
 
 const ProviderHome: React.FC = () => {
+  const dispatch = useDispatch();
   const { profileData } = useSelector((state: RootState) => state.profile);
+  const isLoading = useSelector((state: RootState) => state.common.isLoading);
+  const reviewSheetRef = useRef<ActionSheetRef>(null);
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedRequest, setSelectedRequest] =
+    useState<DashboardRecentQueue | null>(null);
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -73,18 +94,21 @@ const ProviderHome: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    // dispatch(setGlobalLoading(true));
     try {
-      const response = await dashboardApi.getProviderDashboardOverview(5);
-      console.log('provider dashdata', response);
+      const [dashboardResponse, count] = await Promise.all([
+        dashboardApi.getProviderDashboardOverview(5),
+        getUnreadCountService(),
+      ]);
 
-      if (response.success) {
-        setDashboardData(response.data);
+      if (dashboardResponse.success) {
+        setDashboardData(dashboardResponse.data);
       }
+      setUnreadCount(count);
     } catch (error) {
       console.log('Error fetching provider dashboard data:', error);
     } finally {
-      setLoading(false);
+      dispatch(setGlobalLoading(false));
     }
   };
 
@@ -96,38 +120,63 @@ const ProviderHome: React.FC = () => {
 
   const recentQueue = dashboardData?.recentQueue || [];
 
-  const getBadgeStyle = (status: string) => {
-    switch (status) {
-      case 'Submitted':
-        return { bg: '#E8F1FF', color: '#2F80ED' };
-      case 'InProgress':
-      case 'In Progress':
-        return { bg: '#FFF7E8', color: '#F2994A' };
-      case 'Completed':
-        return { bg: '#E8F5E9', color: '#4CAF50' };
-      case 'Returned':
-        return { bg: '#FFEBEE', color: '#F44336' };
-      default:
-        return { bg: '#F4F6F8', color: '#6F767E' };
+  const onReturnRequest = async (
+    reason: string,
+    details: string,
+    requestId: string,
+  ) => {
+    if (!selectedRequest?.id) {
+      SHOW_TOAST('Missing Request ID', 'error');
+      return;
+    }
+    dispatch(setGlobalLoading(true));
+    try {
+      let obj = {
+        reasonType: reason,
+        comments: details,
+      };
+
+      const response = await serviceRequestApi.returnRequest(
+        selectedRequest.id,
+        obj,
+      );
+      if (response.success) {
+        await serviceRequestApi.releaseFormLock(requestId);
+        SHOW_TOAST(
+          response.message || 'Request returned successfully',
+          'success',
+        );
+        reviewSheetRef?.current?.hide();
+        await fetchDashboardData();
+      } else {
+        SHOW_TOAST(response.error || 'Failed to return request', 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message || 'Failed to return request', 'error');
+    } finally {
+      dispatch(setGlobalLoading(false));
     }
   };
 
-  console.log('profileData', profileData);
-
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image
-              source={
-                profileData?.profileImg
-                  ? { uri: IMAGE_BASE_URL + profileData.profileImg }
-                  : IMAGES.ic_profile
-              }
-              style={styles.avatar}
-            />
+            {profileData?.profileImg ? (
+              <Image
+                source={
+                  profileData?.profileImg
+                    ? { uri: IMAGE_BASE_URL + profileData.profileImg }
+                    : IMAGES.ic_profile
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <ProfileAvatar size="medium" name={profileData?.fullName} />
+            )}
             <View>
               <AppText
                 size={getScaleSize(12)}
@@ -147,15 +196,29 @@ const ProviderHome: React.FC = () => {
           </View>
           <TouchableOpacity
             onPress={() =>
-              NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
+              NavigationService.navigate(PROVIDER_TAB_SCREENS.ALERTS)
             }
             activeOpacity={0.7}
             style={styles.notificationBtn}
           >
-            <Image
-              source={IMAGES.notification_icon}
-              style={styles.notificationIcon}
-            />
+            <View style={styles.notificationIconContainer}>
+              <Image
+                source={IMAGES.notification_icon}
+                style={styles.notificationIcon}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badgeContainer}>
+                  <AppText
+                    size={getScaleSize(8)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                    style={styles.badgeText}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </AppText>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
         <ScrollView
@@ -205,7 +268,7 @@ const ProviderHome: React.FC = () => {
                 color="#111827"
                 style={{ marginTop: getScaleSize(4) }}
               >
-                {dashboardData?.requestsOverview?.submittedCount || '0'}
+                {dashboardData?.overview?.submittedAvailableCount || '0'}
               </AppText>
             </View>
 
@@ -232,7 +295,7 @@ const ProviderHome: React.FC = () => {
                 color="#111827"
                 style={{ marginTop: getScaleSize(4) }}
               >
-                {dashboardData?.requestsOverview?.inProgressCount || '0'}
+                {dashboardData?.overview?.inProgressCount || '0'}
               </AppText>
             </View>
           </View>
@@ -260,8 +323,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color="#111827"
                 >
-                  {dashboardData?.requestsOverview?.completedCount || '0'}{' '}
-                  Services
+                  {dashboardData?.overview?.completedTodayCount || '0'} Services
                 </AppText>
               </View>
             </View>
@@ -277,7 +339,11 @@ const ProviderHome: React.FC = () => {
             >
               Recent Queue
             </AppText>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.navigate(PROVIDER_TAB_SCREENS.REQUESTS);
+              }}
+            >
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Medium}
@@ -290,144 +356,62 @@ const ProviderHome: React.FC = () => {
 
           {recentQueue.length > 0 ? (
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
-              const initials =
-                item.patient?.fullName
-                  ?.split(' ')
-                  .map((n: string) => n[0])
-                  .join('')
-                  .toUpperCase() || '';
-
-              const badgeStyle = getBadgeStyle(item.status);
-              const formStatus = item.formStatus || item.status;
-
-              const handlePress = () => {
-                NavigationService.navigate(SCREENS.PROVIDER_FORM, {
-                  mode:
-                    item.status === FORM_STATUS.IN_PROGRESS ||
-                    item.status === FORM_STATUS.SUBMITTED
-                      ? 'update'
-                      : 'view',
-                  requestStatus: item.status,
-                  formStatus: formStatus,
-                } as never);
-              };
-
-              const handleServicePress = () => {
-                NavigationService.navigate(SCREENS.SERVICE_SCREEN, {
-                  requestStatus: item.status,
-                  formStatus: formStatus,
-                  patientName: item.patient?.fullName || '',
-                  service: item.service?.serviceName || '',
-                  requestId: item.id,
-                } as never);
-              };
-
-              const buttonText =
-                item.status === 'InProgress'
-                  ? 'Open Service'
-                  : 'Start a Service';
-
+              const formStatus = item.formStatus;
+              const buttonConfig = getButtonConfigProvider(
+                formStatus,
+                item?.status,
+              );
               return (
-                <TouchableOpacity
+                <View
                   key={item.id || index}
-                  activeOpacity={0.9}
-                  onPress={handlePress}
-                  style={styles.queueCard}
+                  style={{
+                    marginBottom: getScaleSize(12),
+                  }}
                 >
-                  <View style={styles.queueTopRow}>
-                    <View style={styles.queueUserInfo}>
-                      <View style={styles.initialsBox}>
-                        <AppText
-                          size={getScaleSize(14)}
-                          font={FONTS.Inter.Bold}
-                          color={COLORS._6F767E}
-                        >
-                          {initials}
-                        </AppText>
-                      </View>
-                      <View style={{ marginLeft: getScaleSize(12) }}>
-                        <AppText
-                          size={getScaleSize(15)}
-                          font={FONTS.Inter.Bold}
-                          color="#111827"
-                        >
-                          {item.patient?.fullName}
-                        </AppText>
-                        <AppText
-                          size={getScaleSize(12)}
-                          font={FONTS.Inter.Medium}
-                          color={COLORS._6F767E}
-                        >
-                          {item.service?.serviceName}
-                        </AppText>
-                      </View>
-                    </View>
-                    <View
-                      style={[styles.badge, { backgroundColor: badgeStyle.bg }]}
-                    >
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Bold}
-                        color={badgeStyle.color}
-                      >
-                        {item.status}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.detailsRow}>
-                    <View>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Medium}
-                        color={COLORS._6F767E}
-                        style={{ marginBottom: getScaleSize(4) }}
-                      >
-                        Request ID
-                      </AppText>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={FONTS.Inter.Bold}
-                        color="#1A1A1A"
-                      >
-                        {item.requestId}
-                      </AppText>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Medium}
-                        color={COLORS._6F767E}
-                        style={{ marginBottom: getScaleSize(4) }}
-                      >
-                        Form Status
-                      </AppText>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={FONTS.Inter.Bold}
-                        color="#1A1D1F"
-                      >
-                        {formStatus}
-                      </AppText>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.startServiceBtn}
-                    onPress={handleServicePress}
-                  >
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS.white}
-                    >
-                      {buttonText}
-                    </AppText>
-                  </TouchableOpacity>
-                </TouchableOpacity>
+                  <RequestCardProvider
+                    name={item?.patient?.fullName || ''}
+                    requestId={item?.id}
+                    requestType={item?.service?.serviceName || ''}
+                    formStatus={item?.formStatus}
+                    status={item?.status}
+                    buttonText={
+                      buttonConfig.show
+                        ? buttonConfig.label || undefined
+                        : undefined
+                    }
+                    onPress={() => {
+                      if (item.status == REQUEST_STATUS.COMPLETED) {
+                        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                          request: item,
+                        });
+                        return;
+                      }
+                      NavigationService.navigate(
+                        SCREENS.PROVIDER_FORMS_SCREEN,
+                        {
+                          request: item,
+                          action: 'view',
+                        },
+                      );
+                    }}
+                    onButtonPress={() =>
+                      NavigationService.navigate(
+                        SCREENS.PROVIDER_FORMS_SCREEN,
+                        {
+                          request: item,
+                          action: buttonConfig.action,
+                          ...(buttonConfig.isComplete && {
+                            isComplete: buttonConfig.isComplete,
+                          }),
+                        },
+                      )
+                    }
+                    onLeftButtonPress={() => {
+                      setSelectedRequest(item);
+                      reviewSheetRef.current?.show();
+                    }}
+                  />
+                </View>
               );
             })
           ) : (
@@ -447,6 +431,23 @@ const ProviderHome: React.FC = () => {
             </View>
           )}
         </ScrollView>
+        <ReviewRequestSheet
+          ref={reviewSheetRef}
+          onSend={async (reason, details) => {
+            await handleClaimService({
+              requestId: selectedRequest?.id || '',
+              dispatch,
+              onSuccess: async () => {
+                await onReturnRequest(
+                  reason,
+                  details,
+                  selectedRequest?.id || '',
+                );
+              },
+            });
+            // await onReturnRequest(reason, details, selectedRequest?.id || '');
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -631,5 +632,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 0,
+  },
+  notificationIconContainer: {
+    position: 'relative',
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: getScaleSize(8),
+    minWidth: getScaleSize(16),
+    height: getScaleSize(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(3),
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+  },
+  badgeText: {
+    textAlign: 'center',
+    lineHeight: getScaleSize(13),
   },
 });

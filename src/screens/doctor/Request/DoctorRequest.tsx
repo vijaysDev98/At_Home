@@ -21,15 +21,15 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
-import RequestCard from '../../../components/RequestCard';
+import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import {
   serviceRequestListApi,
   ServiceRequest,
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig } from '../../../constant';
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
-import { useRoute } from '@react-navigation/native';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { useRoute, useIsFocused } from '@react-navigation/native';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -74,7 +74,8 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
 
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const route = useRoute();
-  const formStatus = route.params?.formStatus || 'all';
+  const isFocused = useIsFocused();
+  const formStatus = (route.params as any)?.formStatus || 'all';
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchText, setSearchText] = useState('');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
@@ -100,13 +101,21 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   // Fetch service requests
   const fetchServiceRequests = useCallback(
-    async (page: number = 1, isRefresh: boolean = false) => {
+    async (page: number = 1, isRefresh: boolean = false, filterStatus?: FilterType) => {
       if (!isRefresh) setIsLoading(true);
       try {
-        const response = await serviceRequestListApi.listServiceRequests({
+        const params: any = {
           page,
           size: PAGE_SIZE,
-        });
+        };
+
+        // Add filter status to API request if provided and not 'all'
+        const statusToFilter = filterStatus || filter;
+        if (statusToFilter && statusToFilter !== 'all') {
+          params.status = statusToFilter;
+        }
+
+        const response = await serviceRequestListApi.listServiceRequests(params);
         if (response) {
           // For page 1, replace the entire list
           // For subsequent pages, append to the existing list
@@ -125,13 +134,20 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         if (!isRefresh) setIsLoading(false);
       }
     },
-    [],
+    [filter],
   );
 
   // Load initial data
   useEffect(() => {
     fetchServiceRequests(1);
   }, [fetchServiceRequests]);
+
+  // Refresh data whenever screen comes into focus
+  useEffect(() => {
+    if (isFocused) {
+      fetchServiceRequests(1);
+    }
+  }, [isFocused, fetchServiceRequests]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -141,19 +157,20 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
-  }, []);
+    setCurrentPage(1);
+    setRequests([]);
+    fetchServiceRequests(1, false, newFilter);
+  }, [fetchServiceRequests]);
 
   useEffect(() => {
     setFilter(formStatus);
   }, [formStatus]);
-  console.log('requests', requests);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
       // Search filter
       const searchStr = searchText.toLowerCase();
-      const patientName =
-        `${request.patient.fName} ${request.patient.lName}`.toLowerCase();
+      const patientName = `${request.patient.fullName}`.toLowerCase();
       const serviceName = request.service.serviceName.toLowerCase();
       const matchesSearch =
         !searchText ||
@@ -163,8 +180,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
       // Status filter
       let matchesStatus = true;
       if (filter !== 'all') {
-        const formStatus = request.formStatus || request.status;
-        matchesStatus = formStatus === filter;
+        const status = request.status;
+        matchesStatus = status === filter;
+      }
+      if (filter == FORM_STATUS.SIGNED) {
+        const status = request.formStatus;
+        matchesStatus = status === filter;
       }
 
       return matchesSearch && matchesStatus;
@@ -178,20 +199,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   }, [pagination, currentPage, fetchServiceRequests]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    const initials = (item.patient.fName + ' ' + item.patient.lName)
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-
     // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item.formStatus || item.status;
-    const buttonConfig = getButtonConfig(formStatus);
-
+    const formStatus = item?.formStatus;
+    const buttonConfig = getButtonConfig(formStatus || '', item?.status);
     return (
-      <RequestCard
-        name={item.patient.fName + ' ' + item.patient.lName}
-        initials={initials}
+      <RequestCardDoctor
+        name={item?.patient?.fullName || ''}
         requestId={item.id}
         requestType={item.service.serviceName}
         formStatus={formStatus}
@@ -199,9 +212,36 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         buttonText={
           buttonConfig.show ? buttonConfig.label || undefined : undefined
         }
-        onButtonPress={() =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item })
-        }
+        onPress={() => {
+          if (item.status == REQUEST_STATUS.COMPLETED) {
+            NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+              request: item,
+            });
+            return;
+          }
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: item,
+            action: 'view',
+          });
+        }}
+        onButtonPress={() => {
+          if (buttonConfig.action === 'edit') {
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+              request: item,
+              action: buttonConfig.action,
+            });
+          } else if (buttonConfig.action === 'sign') {
+            NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+              request: item,
+              action: buttonConfig.action,
+            });
+          } else if (buttonConfig.action === 'view') {
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+              request: item,
+              action: buttonConfig.action,
+            });
+          }
+        }}
       />
     );
   };

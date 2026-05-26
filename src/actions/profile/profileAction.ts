@@ -33,35 +33,36 @@ export const fetchProfile = () => async (dispatch: AppDispatch) => {
 };
 export const updateProfile =
   (profileData: any, fromProvider = false) =>
-  async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
+    async (dispatch: AppDispatch) => {
+      dispatch(setLoading(true));
 
-    try {
-      console.log('profileData for upload', profileData);
+      try {
 
-      const {
-        fName,
-        lName,
-        phoneNumber,
-        specialty,
-        providerName = '',
-        facilityName,
-        profileImg = '',
-        businessAddress,
-        practiceType,
-      } = profileData;
+        const {
+          fName,
+          lName,
+          phoneNumber,
+          specialty,
+          providerName = '',
+          facilityName,
+          profileImg = '',
+          businessAddress,
+          practiceType,
+          country
+        } = profileData;
 
-      const [firstName = '', lastName = ''] = providerName.trim().split(' ');
+        const [firstName = '', lastName = ''] = providerName.trim().split(' ');
 
-      const payload = fromProvider
-        ? {
+        const payload = fromProvider
+          ? {
             providerName,
             fName: firstName,
             lName: lastName,
             profileImg,
             phoneNumber,
+            country: country,
           }
-        : {
+          : {
             fName,
             lName,
             phoneNumber,
@@ -73,34 +74,34 @@ export const updateProfile =
             practiceType,
           };
 
-      const response: any = await API.Instance.put(
-        API.API_ROUTES.updateProfile,
-        payload,
-      );
+        const response: any = await API.Instance.put(
+          API.API_ROUTES.updateProfile,
+          payload,
+        );
 
-      console.log('update profile response', JSON.stringify(response));
+        console.log('update profile response', JSON.stringify(response));
 
-      if (response?.status && response?.code === 200) {
-        SHOW_TOAST('Profile updated successfully', 'success');
+        if (response?.status && response?.code === 200) {
+          SHOW_TOAST('Profile updated successfully', 'success');
 
-        dispatch(fetchProfile());
-        return true;
+          dispatch(fetchProfile());
+          return true;
+        }
+
+        SHOW_TOAST(response?.message, 'error');
+        return false;
+      } catch (e: any) {
+        console.log('Update Profile Error', e);
+
+        SHOW_TOAST(
+          e?.response?.code === 400
+            ? 'Validation error - RPPS and FINESS cannot be modified'
+            : undefined,
+          'error',
+        );
+
+        return false;
+      } finally {
+        dispatch(setLoading(false));
       }
-
-      SHOW_TOAST(response?.message, 'error');
-      return false;
-    } catch (e: any) {
-      console.log('Update Profile Error', e);
-
-      SHOW_TOAST(
-        e?.response?.code === 400
-          ? 'Validation error - RPPS and FINESS cannot be modified'
-          : undefined,
-        'error',
-      );
-
-      return false;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
+    };
