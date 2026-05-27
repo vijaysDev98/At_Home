@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { ScrollView, StyleSheet, View, Image } from 'react-native';
+import { ScrollView, StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 import moment from 'moment';
 
 import {
@@ -272,6 +272,29 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       }
     };
 
+    const addProduct = () => {
+      if (state.nutrition_products.length >= 10) {
+        SHOW_TOAST(STRING.youCanOnlyAddUpto10Products, 'info');
+        return;
+      }
+      setFormState(prev => ({
+        ...prev,
+        nutrition_products: [
+          ...prev.nutrition_products,
+          { category: '', product_type: '', quantity_per_day: '' },
+        ],
+      }));
+    };
+
+    const removeProduct = (index: number) => {
+      setFormState(prev => ({
+        ...prev,
+        nutrition_products: prev.nutrition_products.filter(
+          (_, i) => i !== index,
+        ),
+      }));
+    };
+
     const checkedBoxesCount = useMemo(() => {
       return state.reassessment_criteria?.length || 0;
     }, [state]);
@@ -532,7 +555,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
           <FormPrescriptionDetails
             readOnly={readOnly}
             state={state}
-            setState={setState}
+            setState={setFormState}
             errors={errors}
           />
 
@@ -591,14 +614,27 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                   productPositions[index] = e.nativeEvent.layout.y;
                 }}
               >
-                <AppText
-                  size={getScaleSize(13)}
-                  color={COLORS._1A1D1F}
-                  font={FONTS.Inter.SemiBold}
-                  style={styles.productIndex}
-                >
-                  {index + 1}.
-                </AppText>
+                <View style={styles.productHeader}>
+                  <AppText
+                    size={getScaleSize(13)}
+                    color={COLORS._1A1D1F}
+                    font={FONTS.Inter.SemiBold}
+                    style={styles.productIndex}
+                  >
+                    {index + 1}.
+                  </AppText>
+                  {!readOnly && state.nutrition_products.length > 1 && (
+                    <TouchableOpacity onPress={() => removeProduct(index)}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        color={COLORS.error}
+                        font={FONTS.Inter.Medium}
+                      >
+                        Remove
+                      </AppText>
+                    </TouchableOpacity>
+                  )}
+                </View>
                 <AppDropDown
                   disabled={readOnly}
                   label={STRING.category}
@@ -644,6 +680,19 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
               </View>
             ))}
           </View>
+
+          {!readOnly && state.nutrition_products.length < 10 && (
+            <TouchableOpacity style={styles.addButton} onPress={addProduct}>
+              <Image source={IMAGES.add_patient} style={styles.addIcon} />
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._526674}
+              >
+                {STRING.addAnotherProduct}
+              </AppText>
+            </TouchableOpacity>
+          )}
 
           {/* OTHER NUTRITION */}
           <View style={styles.card}>
@@ -793,8 +842,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS._E5E7EB,
   },
-  productIndex: {
+  productHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: getScaleSize(8),
+  },
+  productIndex: {
+    marginBottom: 0,
   },
   productInputRoot: {
     paddingHorizontal: 0,
@@ -841,6 +896,24 @@ const styles = StyleSheet.create({
   },
   productErrorText: {
     marginBottom: 0,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    borderRadius: getScaleSize(12),
+    backgroundColor: COLORS._F8F9FA,
+    marginHorizontal: getScaleSize(16),
+    marginBottom: getScaleSize(12),
+  },
+  addIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    marginRight: getScaleSize(8),
   },
 });
 

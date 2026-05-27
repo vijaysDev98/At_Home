@@ -74,7 +74,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         value={state.prescription_date}
         style={styles.inputField}
         pointerEvents="none"
-        error={errors.prescription_date}
+        error={errors.prescriptionDate}
       />
 
       <DatePicker

@@ -81,10 +81,11 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
-        requestedDate: moment(
-          state?.prescription_date || state?.date,
-          'DD/MM/YYYY',
-        ).format('YYYY-MM-DD'),
+        // requestedDate: moment(
+        //   state?.prescription_date || state?.date,
+        //   'DD/MM/YYYY',
+        // ).format('YYYY-MM-DD'),
+        requestedDate: moment().format('YYYY-MM-DD'),
         requestedTime: moment().format('HH:mm'),
         initialNotes: '',
         formData: state,
@@ -189,10 +190,13 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
-        requestedDate: moment(
-          state?.prescription_date || state?.date,
-          'DD/MM/YYYY',
-        ).format('YYYY-MM-DD'),
+        // requestedDate: state?.prescription_date || state?.date
+        //   ? moment(
+        //     state?.prescription_date || state?.date,
+        //     'DD/MM/YYYY',
+        //   ).format('YYYY-MM-DD')
+        //   : moment().format('YYYY-MM-DD'),
+        requestedDate: moment().format('YYYY-MM-DD'),
         requestedTime: moment().format('HH:mm'),
         initialNotes: '',
         formData: state,
