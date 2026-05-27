@@ -125,11 +125,11 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       duration_hours_per_day: '',
       flow_rate_rest: '',
       flow_rate_exertion: '',
-      humidifier_required: false,
-      backup_source: true,
-      mobility_source: true,
-      pulse_oximeter_provided: false,
-      non_kinking_tubing: false,
+      humidifier_required: null,
+      backup_source: null,
+      mobility_source: null,
+      pulse_oximeter_provided: null,
+      non_kinking_tubing: null,
       target_spo2: '',
       contact_phone: '',
 
@@ -624,6 +624,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             <AppText style={styles.instructionText}>
               {STRING.NEVERkeepTheEquipmentNearHeatSources}
             </AppText>
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.instructions_acknowledged}
+              onValueChange={value =>
+                setFormState({ instructions_acknowledged: value })
+              }
+              label={STRING.patientacknowledgesinstructions}
+            />
           </View>
 
           {/* Palliative Care Section */}
@@ -635,14 +643,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           />
 
           {/* Instructions Acknowledged */}
-          <AppCheckBox
-            disabled={readOnly}
-            value={state.instructions_acknowledged}
-            onValueChange={value =>
-              setFormState({ instructions_acknowledged: value })
-            }
-            label={STRING.patientacknowledgesinstructions}
-          />
+
 
           {/* <FormSignature readOnly={readOnly} /> */}
         </ScrollView>

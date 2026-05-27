@@ -104,7 +104,7 @@ const PersonalHygieneCare = forwardRef<
     weekly_weight_monitoring: false,
 
     // Treatment Administration
-    glucose_monitoring: true,
+    glucose_monitoring: null,
     glucose_frequency: '',
 
     // Dressing Care
