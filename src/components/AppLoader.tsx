@@ -4,6 +4,8 @@ import { COLORS, FONTS } from '../utils';
 import { AppSafeAreaView } from './AppSafeAreaView';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 interface AppLoaderProps {
   visible: boolean;
@@ -11,12 +13,13 @@ interface AppLoaderProps {
 }
 
 const AppLoader: React.FC<AppLoaderProps> = ({ visible, signing = false }) => {
+  const { t } = useTranslation();
   return (
     <Modal transparent animationType="fade" visible={visible}>
       <AppSafeAreaView edges={false} style={styles.container}>
         <View style={styles.loaderWrapper}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          {signing && <AppText style={{ marginTop: getScaleSize(10) }} font={FONTS.Inter.SemiBold} color={COLORS.primary}>Signing...</AppText>}
+          {signing && <AppText style={{ marginTop: getScaleSize(10) }} font={FONTS.Inter.SemiBold} color={COLORS.primary}>{t(STRING.signing)}</AppText>}
         </View>
       </AppSafeAreaView>
     </Modal>
