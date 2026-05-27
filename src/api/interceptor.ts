@@ -8,6 +8,7 @@ import { API_BASE_URL, DISABLE_API_LOGS } from './apiRoutes';
 import NetInfo from '@react-native-community/netinfo';
 // import { EventRegister } from "react-native-event-listeners";
 import { isTokenExpire, refreshAccessToken } from './token';
+import { getLanguageParam } from '../utils/languageHelper';
 
 let hasShownNoInternetAlert = false;
 
@@ -74,6 +75,15 @@ Instance.interceptors.request.use(
         }
       }
     }
+
+    // Add language parameter to all requests
+    const currentLanguage = getLanguageParam();
+    if (config.params) {
+      config.params.lang = currentLanguage;
+    } else {
+      config.params = { lang: currentLanguage };
+    }
+
     return config;
   },
   error => {

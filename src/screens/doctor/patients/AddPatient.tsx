@@ -35,6 +35,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { CustomDropdown } from '../../../components/CustomDropDown';
 import { GENDER } from '../../../constant/constantData';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useTranslation } from 'react-i18next';
 
 const AppDatePicker = ({
   open,
@@ -63,6 +64,7 @@ const AppDatePicker = ({
 
 const AddPatient: React.FC = () => {
   const dispatch = useDispatch<any>();
+  const { t } = useTranslation();
   const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [fName, setFName] = useState('');
@@ -86,7 +88,6 @@ const AddPatient: React.FC = () => {
 
   const route = useRoute<any>();
   const patientToEdit = route.params?.patient;
-  console.log('patientToEdit', patientToEdit);
 
   const isEdit = !!patientToEdit;
 
@@ -220,26 +221,26 @@ const AddPatient: React.FC = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!fName.trim()) {
-      newErrors.fName = STRING.fNameRequired;
+      newErrors.fName = t(STRING.fNameRequired);
     }
     if (!lName.trim()) {
-      newErrors.lName = STRING.lNameRequired;
+      newErrors.lName = t(STRING.lNameRequired);
     }
 
     if (!phone.trim()) {
-      newErrors.phone = STRING.phoneRequired;
+      newErrors.phone = t(STRING.phoneRequired);
     }
 
     if (!email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = STRING.invalidEmailAddress;
+      newErrors.email = t(STRING.invalidEmailAddress);
     }
 
     if (!dob.trim()) {
-      newErrors.dob = STRING.dateOfBirthRequired;
+      newErrors.dob = t(STRING.dateOfBirthRequired);
     }
 
     if (!gender) {
-      newErrors.gender = STRING.genderRequired;
+      newErrors.gender = t(STRING.genderRequired);
     }
 
     setErrors(newErrors);
@@ -292,7 +293,7 @@ const AddPatient: React.FC = () => {
       <AppSafeAreaView edges={true}>
         <Header
           isBack
-          title={isEdit ? STRING.editPatient : STRING.addPatientTitle}
+          title={isEdit ? t(STRING.editPatient) : t(STRING.addPatientTitle)}
           backIcon={IMAGES.arrowLeft}
           style={styles.headerStyle}
           {...(!isEdit && {
@@ -303,7 +304,7 @@ const AddPatient: React.FC = () => {
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
                 >
-                  {STRING.cancel}
+                  {t(STRING.cancel)}
                 </AppText>
               </TouchableOpacity>
             ),
@@ -320,11 +321,6 @@ const AddPatient: React.FC = () => {
             enableAutomaticScroll
             extraHeight={getScaleSize(200)}
           >
-            {/* <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          > */}
             {/* Personal Information */}
             <View style={styles.section}>
               <AppText
@@ -333,7 +329,7 @@ const AddPatient: React.FC = () => {
                 color={COLORS._6F767E}
                 style={styles.sectionTitle}
               >
-                {STRING.personalInformation}
+                {t(STRING.personalInformation)}
               </AppText>
               <View style={styles.card}>
                 <View style={styles.nameRow}>
@@ -344,9 +340,9 @@ const AddPatient: React.FC = () => {
                         setFName(t);
                         setErrors(prev => ({ ...prev, fName: '' }));
                       }}
-                      placeholder={STRING.enterFName}
+                      placeholder={t(STRING.enterFName)}
                       placeholderTextColor={COLORS._7A7A7A}
-                      label={STRING.fName}
+                      label={t(STRING.fName)}
                       labelColor={COLORS.black}
                       labelFont={FONTS.Inter.SemiBold}
                       labelSize={getScaleSize(13)}
@@ -369,9 +365,9 @@ const AddPatient: React.FC = () => {
                         setLName(t);
                         setErrors(prev => ({ ...prev, lName: '' }));
                       }}
-                      placeholder={STRING.enterLName}
+                      placeholder={t(STRING.enterLName)}
                       placeholderTextColor={COLORS._7A7A7A}
-                      label={STRING.lName}
+                      label={t(STRING.lName)}
                       labelColor={COLORS.black}
                       labelFont={FONTS.Inter.SemiBold}
                       labelSize={getScaleSize(13)}
@@ -394,9 +390,9 @@ const AddPatient: React.FC = () => {
                     value={dob}
                     isMandatory
                     onPress={() => setDatePickerOpen(true)}
-                    placeholder={STRING.selectDateOfBirth}
+                    placeholder={t(STRING.selectDateOfBirth)}
                     placeholderTextColor={COLORS._7A7A7A}
-                    label={STRING.dateOfBirth}
+                    label={t(STRING.dateOfBirth)}
                     error={errors.dob}
                     style={styles.inputContainer}
                     labelColor={COLORS.black}
@@ -442,14 +438,14 @@ const AddPatient: React.FC = () => {
                         backgroundColor: COLORS._F9FAFB,
                         borderWidth: 0,
                       }}
-                      label={STRING.gender}
+                      label={t(STRING.gender)}
                       data={GENDER}
                       value={gender}
                       onChange={val => {
                         setGender(val);
                         setErrors(e => ({ ...e, gender: '' }));
                       }}
-                      placeholder={STRING.selectGender}
+                      placeholder={t(STRING.selectGender)}
                       leftIcon={IMAGES.ic_gender}
                       error={errors.gender}
                       zIndex={1000}
@@ -463,7 +459,7 @@ const AddPatient: React.FC = () => {
                       keyboardType="numeric"
                       placeholder="e.g. 70"
                       placeholderTextColor={COLORS._7A7A7A}
-                      label="Weight (kg)"
+                      label={t(STRING.weightKg)}
                       labelColor={COLORS.black}
                       labelFont={FONTS.Inter.SemiBold}
                       labelSize={getScaleSize(13)}
@@ -478,9 +474,9 @@ const AddPatient: React.FC = () => {
                     setSocialInsuranceNumber(t);
                     setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));
                   }}
-                  placeholder={STRING.enterSocialInsuranceNumber}
+                  placeholder={t(STRING.enterSocialInsuranceNumber)}
                   placeholderTextColor={COLORS._7A7A7A}
-                  label={STRING.socialInsuranceNumber}
+                  label={t(STRING.socialInsuranceNumber)}
                   labelColor={COLORS.black}
                   labelFont={FONTS.Inter.SemiBold}
                   leftIcon={IMAGES.ic_insurance}
@@ -531,8 +527,8 @@ const AddPatient: React.FC = () => {
                       },
                     ]}
                     placeholderTextColor={COLORS._7A7A7A}
-                    placeholder={STRING.enterPhoneNumber}
-                    label={STRING.phoneNumber}
+                    placeholder={t(STRING.enterPhoneNumber)}
+                    label={t(STRING.phoneNumber)}
                     labelColor={COLORS.black}
                     labelFont={FONTS.Inter.SemiBold}
                     labelSize={getScaleSize(13)}
@@ -561,11 +557,11 @@ const AddPatient: React.FC = () => {
                     ]}
                     placeholderTextColor={COLORS._7A7A7A}
                     autoCapitalize="none"
-                    placeholder={STRING.enterEmailAddress}
+                    placeholder={t(STRING.enterEmailAddress)}
                     labelColor={COLORS.black}
                     labelFont={FONTS.Inter.SemiBold}
                     labelSize={getScaleSize(13)}
-                    label={STRING.emailAddress}
+                    label={t(STRING.emailAddress)}
                     error={errors.email}
                     leftIcon={IMAGES.email_icon}
                     style={styles.inputContainer}
@@ -589,7 +585,7 @@ const AddPatient: React.FC = () => {
                   <Input
                     value={street}
                     onChangeText={setStreet}
-                    placeholder={STRING.enterStreetAddress}
+                    placeholder={t(STRING.enterStreetAddress)}
                     error={errors.street}
                     isMandatory
                     inputWrapperStyle={[
@@ -603,7 +599,7 @@ const AddPatient: React.FC = () => {
                     labelColor={COLORS.black}
                     labelFont={FONTS.Inter.SemiBold}
                     labelSize={getScaleSize(13)}
-                    label={STRING.streetAddress}
+                    label={t(STRING.streetAddress)}
                     style={styles.inputContainer}
                   />
                 </View>
@@ -626,8 +622,8 @@ const AddPatient: React.FC = () => {
                       labelFont={FONTS.Inter.SemiBold}
                       labelSize={getScaleSize(13)}
                       placeholderTextColor={COLORS._7A7A7A}
-                      placeholder={STRING.enterCity}
-                      label={STRING.city}
+                      placeholder={t(STRING.enterCity)}
+                      label={t(STRING.city)}
                       style={styles.inputContainer}
                     />
                   </View>
@@ -645,11 +641,11 @@ const AddPatient: React.FC = () => {
                         },
                       ]}
                       placeholderTextColor={COLORS._7A7A7A}
-                      placeholder={STRING.enterZip}
+                      placeholder={t(STRING.enterZip)}
                       labelColor={COLORS.black}
                       labelFont={FONTS.Inter.SemiBold}
                       labelSize={getScaleSize(13)}
-                      label={STRING.zip}
+                      label={t(STRING.zip)}
                       style={styles.inputContainer}
                     />
                   </View>
@@ -686,9 +682,9 @@ const AddPatient: React.FC = () => {
                     labelSize={getScaleSize(13)}
                     multiline
                     numberOfLines={4}
-                    placeholder={STRING.notesPlaceholder}
-                    label={STRING.initialNotes}
-                    helper={STRING.notesHelper}
+                    placeholder={t(STRING.notesPlaceholder)}
+                    label={t(STRING.initialNotes)}
+                    helper={t(STRING.notesHelper)}
                     helperStyle={{
                       color: COLORS._6F767E,
                       marginTop: getScaleSize(3),
@@ -718,7 +714,7 @@ const AddPatient: React.FC = () => {
                     font={FONTS.Inter.Bold}
                     color={COLORS._1A1D1F}
                   >
-                    Cancel
+                    {t(STRING.cancel)}
                   </AppText>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -731,7 +727,7 @@ const AddPatient: React.FC = () => {
                     font={FONTS.Inter.Bold}
                     color={COLORS.white}
                   >
-                    Save
+                    {t(STRING.save)}
                   </AppText>
                 </TouchableOpacity>
               </View>
@@ -755,7 +751,7 @@ const AddPatient: React.FC = () => {
             align="center"
             style={{ marginBottom: 24 }}
           >
-            Discard changes?
+            {t(STRING.discardChanges)}
           </AppText>
           <View style={styles.sheetButtons}>
             <TouchableOpacity
@@ -768,7 +764,7 @@ const AddPatient: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
               >
-                No
+                {t(STRING.no)}
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity
@@ -781,7 +777,7 @@ const AddPatient: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.white}
               >
-                Yes
+                {t(STRING.yes)}
               </AppText>
             </TouchableOpacity>
           </View>

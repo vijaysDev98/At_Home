@@ -41,6 +41,7 @@ import { IMAGE_BASE_URL } from '../../api/apiRoutes';
 import { SHOW_TOAST } from '../../constant';
 import { CustomDropdown } from '../../components/CustomDropDown';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useTranslation } from 'react-i18next';
 
 // --- Sub-components ---
 
@@ -86,7 +87,7 @@ const Register: React.FC = () => {
   const route = useRoute<any>();
   const isEdit = route.params?.isEdit || false;
   const userData = route.params?.userData || {};
-
+  const { t } = useTranslation();
   const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [fName, setFName] = useState(userData.fName || '');
@@ -138,50 +139,50 @@ const Register: React.FC = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!fName.trim()) {
-      newErrors.fName = STRING.fNameRequired;
+      newErrors.fName = t(STRING.fNameRequired);
     }
     if (!lName.trim()) {
-      newErrors.lName = STRING.lNameRequired;
+      newErrors.lName = t(STRING.lNameRequired);
     }
     if (!isEdit) {
       if (!email.trim()) {
-        newErrors.email = STRING.emailRequired;
+        newErrors.email = t(STRING.emailRequired);
       } else if (!EMAIL_REGEX.test(email.trim())) {
-        newErrors.email = STRING.enterValidEmail;
+        newErrors.email = t(STRING.enterValidEmail);
       }
       if (!password) {
-        newErrors.password = STRING.passwordRequired;
+        newErrors.password = t(STRING.passwordRequired);
       } else if (!PASSWORD_REGEX.test(password)) {
         newErrors.password =
-          STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number;
+          t(STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number);
       }
       if (!rpps.trim()) {
-        newErrors.rpps = STRING.rppsNumberRequired;
+        newErrors.rpps = t(STRING.rppsNumberRequired);
       } else if (!/^\d{11}$/.test(rpps.trim())) {
-        newErrors.rpps = STRING.rppsNumberMustBe11Digits;
+        newErrors.rpps = t(STRING.rppsNumberMustBe11Digits);
       }
       if (!finess.trim()) {
-        newErrors.finess = STRING.finessNumberRequired;
+        newErrors.finess = t(STRING.finessNumberRequired);
       } else if (!/^\d{9}$/.test(finess.trim())) {
-        newErrors.finess = STRING.finessNumberMustBe9Digits;
+        newErrors.finess = t(STRING.finessNumberMustBe9Digits);
       }
     }
     if (!specialty) {
-      newErrors.specialty = STRING.pleaseSelectYourSpecialty;
+      newErrors.specialty = t(STRING.pleaseSelectYourSpecialty);
     }
     if (!placeOfPractice.trim()) {
-      newErrors.placeOfPractice = STRING.placeOfPracticeRequired;
+      newErrors.placeOfPractice = t(STRING.placeOfPracticeRequired);
     }
 
     if (!facilityName.trim()) {
-      newErrors.facilityName = STRING.facilityNameRequired;
+      newErrors.facilityName = t(STRING.facilityNameRequired);
     }
 
     if (!address.trim()) {
-      newErrors.address = STRING.addressRequired;
+      newErrors.address = t(STRING.addressRequired);
     }
     if (!isEdit && !agreed) {
-      newErrors.agreed = STRING.youMustAcceptTheTermsToContinue;
+      newErrors.agreed = t(STRING.youMustAcceptTheTermsToContinue);
     }
 
     setErrors(newErrors);
@@ -228,7 +229,7 @@ const Register: React.FC = () => {
           );
           profileImageUrl = uploadResponse.data.filePath;
         } catch (error) {
-          SHOW_TOAST(STRING.failedToUploadProfileImage, 'error');
+          SHOW_TOAST(t(STRING.failedToUploadProfileImage), 'error');
           return;
         }
       }
@@ -287,12 +288,12 @@ const Register: React.FC = () => {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>
-              {isEdit ? STRING.updateYourProfile : STRING.createYourAccount}
+              {isEdit ? t(STRING.updateYourProfile) : t(STRING.createYourAccount)}
             </Text>
             <Text style={styles.subtitle}>
               {isEdit
-                ? STRING.updateYourProfessionalDetails
-                : STRING.createAccountSubtitle}
+                ? t(STRING.updateYourProfessionalDetails)
+                : t(STRING.createAccountSubtitle)}
             </Text>
           </View>
           {/* Profile Image Section (Only in Edit mode) */}
@@ -327,9 +328,9 @@ const Register: React.FC = () => {
 
           {/* Form Fields */}
           <Input
-            label={STRING.fName}
+            label={t(STRING.fName)}
             isMandatory
-            placeholder={STRING.enterFName}
+            placeholder={t(STRING.enterFName)}
             value={fName}
             leftIcon={IMAGES.person}
             style={{ marginBottom: getScaleSize(errors.fName ? 4 : 20) }}
@@ -341,11 +342,11 @@ const Register: React.FC = () => {
           />
 
           <Input
-            label={STRING.lName}
+            label={t(STRING.lName)}
             isMandatory
             leftIcon={IMAGES.person}
             style={{ marginBottom: getScaleSize(errors.lName ? 4 : 20) }}
-            placeholder={STRING.enterLName}
+            placeholder={t(STRING.enterLName)}
             value={lName}
             onChangeText={t => {
               setLName(t);
@@ -357,9 +358,9 @@ const Register: React.FC = () => {
           {!isEdit && (
             <>
               <Input
-                label={STRING.emailAddress}
+                label={t(STRING.emailAddress)}
                 isMandatory
-                placeholder={STRING.enterEmailAddress}
+                placeholder={t(STRING.enterEmailAddress)}
                 leftIcon={IMAGES.mail}
                 value={email}
                 onChangeText={t => {
@@ -371,16 +372,16 @@ const Register: React.FC = () => {
                 helper={
                   errors.email
                     ? undefined
-                    : STRING.weWillSendVerificationToThisEmail
+                    : t(STRING.weWillSendVerificationToThisEmail)
                 }
                 style={{ marginBottom: getScaleSize(errors.email ? 4 : 20) }}
                 helperStyle={{ marginTop: getScaleSize(8) }}
               />
 
               <Input
-                label={STRING.password}
+                label={t(STRING.password)}
                 isMandatory
-                placeholder={STRING.createPassword}
+                placeholder={t(STRING.createPassword)}
                 leftIcon={IMAGES.lock}
                 value={password}
                 onChangeText={t => {
@@ -397,9 +398,9 @@ const Register: React.FC = () => {
               />
 
               <Input
-                label={STRING.rppsNumber}
+                label={t(STRING.rppsNumber)}
                 isMandatory
-                placeholder={`${STRING.enterRppsNumber} (${STRING.elevenDigit})`}
+                placeholder={`${t(STRING.enterRppsNumber)} (${t(STRING.elevenDigit)})`}
                 leftIcon={IMAGES.card}
                 value={rpps}
                 onChangeText={t => {
@@ -414,9 +415,9 @@ const Register: React.FC = () => {
               />
 
               <Input
-                label={STRING.phoneNumber}
+                label={t(STRING.phoneNumber)}
                 isMandatory
-                placeholder={`${STRING.enterPhoneNumber}`}
+                placeholder={t(STRING.enterPhoneNumber)}
                 isCountryCode
                 countryCode={country}
                 onCountryCodeSelect={code => {
@@ -433,9 +434,9 @@ const Register: React.FC = () => {
               />
 
               <Input
-                label={STRING.finessNumber}
+                label={t(STRING.finessNumber)}
                 isMandatory
-                placeholder={`${STRING.enterFinessNumber} (${STRING.nineDigit})`}
+                placeholder={`${t(STRING.enterFinessNumber)} (${t(STRING.nineDigit)})`}
                 leftIcon={IMAGES.hospital}
                 value={finess}
                 onChangeText={t => {
@@ -457,7 +458,7 @@ const Register: React.FC = () => {
 
           {/* Specialty Dropdown */}
           <CustomDropdown
-            label={STRING.specialty}
+            label={t(STRING.specialty)}
             isMandatory
             data={doctorSpecialities}
             value={specialty}

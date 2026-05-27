@@ -1,5 +1,6 @@
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { SHOW_TOAST, STRING } from '../constant';
 
 export const downloadPdfFromUrl = async (url: string) => {
     try {
@@ -50,7 +51,6 @@ export const downloadPdfFromUrl = async (url: string) => {
             );
         }
     } catch (error) {
-        console.log('PDF download error:', error);
-        Alert.alert('Download failed');
+        SHOW_TOAST(STRING.downloadFailed);
     }
 };

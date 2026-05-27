@@ -22,9 +22,12 @@ import HeaderProvider, {
 } from '../../../components/HeaderProvider';
 import { AppLoader, ProfileAvatar } from '../../../components';
 import { downloadPdfFromUrl } from '../../../hooks/pdfDownloader';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../../../constant';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
+  const { t } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
 
   const [loading, setLoading] = useState(true);
@@ -84,17 +87,11 @@ const ServiceCompletedScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <HeaderProvider
-        title="Service Completed"
+        title={t(STRING.serviceCompleted)}
         isBack
         style={styles.header}
         status={requestData?.status}
         formStatus={requestData?.formStatus}
-      // onViewFormPress={() => {
-      //   if (requestData?.signedPdfUrl) {
-      //     openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
-      //   }
-      // }}
-      // isViewForm={true}
       />
 
       <ScrollView
@@ -120,7 +117,7 @@ const ServiceCompletedScreen: React.FC = () => {
               color={COLORS._1A1D1F}
               style={styles.successTitle}
             >
-              Service Completed
+              {t(STRING.serviceCompleted)}
             </AppText>
 
             <AppText
@@ -129,7 +126,7 @@ const ServiceCompletedScreen: React.FC = () => {
               align="center"
               style={styles.successDesc}
             >
-              This service has been completed and the record is now locked.
+              {t(STRING.serviceCompletedDescription)}
             </AppText>
 
             <View style={styles.timePill}>
@@ -139,7 +136,7 @@ const ServiceCompletedScreen: React.FC = () => {
               />
 
               <AppText size={getScaleSize(12)} color={COLORS._64748B}>
-                Completed on {completedDate}
+                {t(STRING.completedOn)} {completedDate}
               </AppText>
             </View>
 
@@ -154,7 +151,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 color={COLORS.submitted}
                 font={FONTS.Inter.Medium}
               >
-                Doctor: {doctorName}
+                {t(STRING.doctor)}: {doctorName}
               </AppText>
             </View>
           </View>
@@ -173,7 +170,7 @@ const ServiceCompletedScreen: React.FC = () => {
               size={getScaleSize(14)}
               color={COLORS._1A1D1F}
             >
-              Service Summary
+              {t(STRING.serviceSummary)}
             </AppText>
           </View>
 
@@ -181,7 +178,7 @@ const ServiceCompletedScreen: React.FC = () => {
             <View style={styles.gridRow}>
               <View style={styles.gridItem}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-                  Patient Name
+                  {t(STRING.patientName)}
                 </AppText>
 
                 <AppText
@@ -195,7 +192,7 @@ const ServiceCompletedScreen: React.FC = () => {
 
               <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-                  Request ID
+                  {t(STRING.requestId)}
                 </AppText>
 
                 <AppText
@@ -213,7 +210,7 @@ const ServiceCompletedScreen: React.FC = () => {
             <View style={styles.gridRow}>
               <View style={styles.gridItem}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-                  Service Type
+                  {t(STRING.serviceType)}
                 </AppText>
 
                 <AppText
@@ -227,7 +224,7 @@ const ServiceCompletedScreen: React.FC = () => {
 
               <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
-                  Priority
+                  {t(STRING.priority)}
                 </AppText>
 
                 <AppText
@@ -246,7 +243,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 color={COLORS._6B7280}
                 style={{ marginBottom: 8 }}
               >
-                Provider
+                {t(STRING.provider)}
               </AppText>
 
               <View style={styles.providerRow}>
@@ -277,50 +274,28 @@ const ServiceCompletedScreen: React.FC = () => {
               size={getScaleSize(14)}
               color={COLORS._1A1D1F}
             >
-              Patient Details
+              {t(STRING.patientDetails)}
             </AppText>
           </View>
 
           <View style={styles.vitalsGrid}>
             <View style={styles.vitalsRow}>
               <VitalsItem
-                label="Gender"
+                label={t(STRING.gender)}
                 value={requestData?.patientId?.gender || '-'}
               />
-              <VitalsItem label="Weight" value={`${weight} kg`} />
+              <VitalsItem label={t(STRING.weight)} value={`${weight} kg`} />
             </View>
 
             <View style={styles.vitalsRow}>
-              <VitalsItem label="DOB" value={dob} />
+              <VitalsItem label={t(STRING.dateOfBirth)} value={dob} />
               <VitalsItem
-                label="Phone"
+                label={t(STRING.phone)}
                 value={requestData?.patientId?.phoneNumber || '-'}
               />
             </View>
           </View>
         </View>
-
-        {/* Form Data */}
-        {/* <View style={styles.summaryCard}>
-          <View style={styles.summaryHeader}>
-            <Image
-              source={IMAGES.serviceNotesIcon}
-              style={styles.summaryIcon}
-            />
-
-            <AppText
-              font={FONTS.Inter.SemiBold}
-              size={getScaleSize(14)}
-              color={COLORS._1A1D1F}
-            >
-              Form Details
-            </AppText>
-          </View>
-
-          <View style={styles.notesBox}>
-          
-          </View>
-        </View> */}
 
         {/* Bottom Actions */}
         <View style={styles.bottomActions}>
@@ -342,7 +317,7 @@ const ServiceCompletedScreen: React.FC = () => {
               size={getScaleSize(12)}
               color={COLORS._1A1D1F}
             >
-              View Form
+              {t(STRING.viewForm)}
             </AppText>
           </TouchableOpacity>
 
@@ -364,7 +339,7 @@ const ServiceCompletedScreen: React.FC = () => {
               size={getScaleSize(12)}
               color={COLORS._1A1D1F}
             >
-              Download PDF
+              {t(STRING.downloadPdf)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -403,7 +378,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   header: {
-    height: getScaleSize(79),
+    // height: getScaleSize(79),
     paddingHorizontal: getScaleSize(20),
     paddingTop: getScaleSize(16),
     paddingBottom: getScaleSize(17),

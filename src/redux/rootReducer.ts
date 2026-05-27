@@ -3,12 +3,14 @@ import authReducer from '../actions/auth/authSlice';
 import profileReducer from '../actions/profile/profileSlice';
 import commonReducer from '../actions/common/commonSlice';
 import patientReducer from '../actions/patient/patientSlice';
+import languageReducer from '../actions/language/languageSlice';
 
 const appReducer = combineReducers({
   login: authReducer,
   profile: profileReducer,
   common: commonReducer,
   patient: patientReducer,
+  language: languageReducer,
 });
 
 const rootReducer = (state: any, action: any) => {

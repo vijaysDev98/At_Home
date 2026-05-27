@@ -33,10 +33,12 @@ import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../../services/uploadService';
 
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { SHOW_TOAST } from '../../../constant';
+import { SHOW_TOAST, STRING } from '../../../constant';
+import { useTranslation } from 'react-i18next';
 
 const EditProviderProfile: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
 
   const { isLoading } = useSelector((state: RootState) => state.common);
@@ -94,7 +96,7 @@ const EditProviderProfile: React.FC = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!providerName.trim()) {
-      newErrors.providerName = 'Provider name is required';
+      newErrors.providerName = t(STRING.providerNameRequired);
     }
 
     setErrors(newErrors);
@@ -121,7 +123,6 @@ const EditProviderProfile: React.FC = () => {
 
         profileImageUrl = uploadResponse.data.filePath;
       } catch (error) {
-        SHOW_TOAST('Failed to upload profile image', 'error');
         return;
       }
     }
@@ -154,10 +155,10 @@ const EditProviderProfile: React.FC = () => {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Edit Profile</Text>
+            <Text style={styles.title}>{t(STRING.editProfile)}</Text>
 
             <Text style={styles.subtitle}>
-              Update your provider profile details
+              {t(STRING.updateProviderProfileDetails)}
             </Text>
           </View>
 
@@ -186,14 +187,14 @@ const EditProviderProfile: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.avatarTip}>Tap to change profile photo</Text>
+            <Text style={styles.avatarTip}>{t(STRING.tapToChangeProfilePhoto)}</Text>
           </View>
 
           {/* Provider Name */}
           <Input
-            label="Provider Name"
+            label={t(STRING.providerName)}
             isMandatory
-            placeholder="Enter provider name"
+            placeholder={t(STRING.enterProviderName)}
             value={providerName}
             leftIcon={IMAGES.person}
             error={errors.providerName}
@@ -211,9 +212,9 @@ const EditProviderProfile: React.FC = () => {
           />
 
           <Input
-            label="Phone number"
+            label={t(STRING.phoneNumber)}
             isMandatory
-            placeholder="Enter phone number"
+            placeholder={t(STRING.enterPhoneNumber)}
             value={phoneNumber}
             keyboardType="number-pad"
             isCountryCode
@@ -243,11 +244,11 @@ const EditProviderProfile: React.FC = () => {
               style={styles.cancelBtn}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t(STRING.cancel)}</Text>
             </TouchableOpacity>
 
             <PrimaryButton
-              title="Save Changes"
+              title={t(STRING.saveChanges)}
               onPress={handleSubmit}
               disabled={!isFormValid()}
               style={styles.saveBtn}

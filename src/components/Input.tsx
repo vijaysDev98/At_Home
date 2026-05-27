@@ -221,7 +221,7 @@ const Input: React.FC<InputProps> = ({
           <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
           <AppText
             size={getScaleSize(12)}
-            color="#ef4444"
+            color={COLORS.error}
             style={[styles.helperText, helperStyle]}
           >
             {error}
@@ -293,12 +293,12 @@ const styles = StyleSheet.create({
     // paddingVertical: getScaleSize(14),
   },
   inputWrapperError: {
-    borderColor: '#ef4444',
+    borderColor: COLORS.error,
   },
   input: {
     flex: 1,
     fontSize: getScaleSize(15),
-    color: '#1e293b',
+    color: COLORS._1E293B,
   },
   inputLocked: {
     color: COLORS._6B7280,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     resizeMode: 'contain',
-    tintColor: '#C4C8CC',
+    tintColor: COLORS._C4C8CC,
   },
   lockIconTop: {
     alignSelf: 'flex-start',

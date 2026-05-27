@@ -42,6 +42,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const NUTRITION_CATEGORIES = [
   { label: 'Diabetic Range', value: 'Diabetic Range' },
@@ -73,12 +75,12 @@ const NUTRITION_PRODUCT_TYPES = [
 ];
 
 const CNO_REASSESSMENT_CRITERIA = [
-  'Weight',
-  'Nutritional status',
-  'Pathology progression',
-  'Oral intake level',
-  'ONS tolerance',
-  'Compliance with ONS',
+  STRING.weight,
+  STRING.nutritionalStatus,
+  STRING.pathologyProgression,
+  STRING.oralIntakeLevel,
+  STRING.onsTolerance,
+  STRING.complianceWithOns,
 ];
 
 export interface CNOFormProps {
@@ -99,7 +101,7 @@ export interface CNOFormRef {
 const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
   ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
-
+    const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -108,7 +110,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const scrollRef = useRef<ScrollView>(null);
     const productPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -146,8 +147,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       // Nutrition Products (repeatable)
       nutrition_products: [
         { category: '', product_type: '', quantity_per_day: '' },
-        { category: '', product_type: '', quantity_per_day: '' },
-        { category: '', product_type: '', quantity_per_day: '' },
+        // { category: '', product_type: '', quantity_per_day: '' },
+        // { category: '', product_type: '', quantity_per_day: '' },
       ],
 
       // Other Nutrition
@@ -305,15 +306,15 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
       // Patient Information - Required fields
       if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-        newErrors.patientLastName = STRING.lNameRequired;
+        newErrors.patientLastName = t(STRING.lNameRequired);
       }
       if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-        newErrors.patientFirstName = STRING.fNameRequired;
+        newErrors.patientFirstName = t(STRING.fNameRequired);
       }
 
       // Prescription Context - Required fields
       if (!state?.prescription_date) {
-        newErrors.prescriptionDate = STRING.prescriptionDateRequired;
+        newErrors.prescriptionDate = t(STRING.prescriptionDateRequired);
       }
 
       // Nutrition Products validation - at least 1 product must be filled
@@ -323,8 +324,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         .filter(i => i !== -1);
 
       if (filledProductIndices.length === 0) {
-        newErrors['nutrition_products'] =
-          STRING.atLeastOneProductRequired;
+        newErrors['nutrition_products'] = t(STRING.atLeastOneProductRequired);
       }
 
       // Validate numeric fields for filled products
@@ -338,7 +338,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             isNaN(Number(val))
           ) {
             newErrors[`nutrition_products[${index}].quantity_per_day`] =
-              STRING.quantityMustBeNumber;
+              t(STRING.quantityMustBeNumber);
           }
         }
       });
@@ -349,14 +349,14 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state.patient_age !== '' &&
         isNaN(Number(state.patient_age))
       ) {
-        newErrors.patient_age = STRING.mustBeNumber;
+        newErrors.patient_age = t(STRING.mustBeNumber);
       }
       if (
         state?.patient_weight_confirm &&
         state.patient_weight_confirm !== '' &&
         isNaN(Number(state.patient_weight_confirm))
       ) {
-        newErrors.patient_weight_confirm = STRING.mustBeNumber;
+        newErrors.patient_weight_confirm = t(STRING.mustBeNumber);
       }
 
       // Reassessment - Numeric validation
@@ -365,7 +365,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state.reassessment_after_month !== '' &&
         isNaN(Number(state.reassessment_after_month))
       ) {
-        newErrors.reassessment_after_month = STRING.mustBeNumber;
+        newErrors.reassessment_after_month = t(STRING.mustBeNumber);
       }
 
       setErrors(newErrors);
@@ -382,7 +382,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -397,7 +396,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -413,7 +411,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -430,7 +427,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -446,7 +442,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -462,7 +457,6 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -492,11 +486,13 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
     return (
       <View style={styles.container}>
-        <ScrollView
-          ref={scrollRef}
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -504,7 +500,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {STRING.cnoForm}
+              {t(STRING.cnoForm)}
             </AppText>
           </View>
 
@@ -512,43 +508,21 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
           <FormPatientSection
             readOnly={readOnly}
             state={state}
-            setState={updates => {
-              setFormState(updates);
-            }}
+            setState={setFormState}
             errors={errors}
           />
 
           {/* PRESCRIBER IDENTIFICATION */}
           <FormPrescriberSection
             state={state}
-            setState={updates => {
-              const mapped: any = {};
-              if ('prescriberLastName' in updates)
-                mapped.prescriber_last_name = updates.prescriberLastName;
-              if ('prescriberFirstName' in updates)
-                mapped.prescriber_first_name = updates.prescriberFirstName;
-              if ('prescriberPhone' in updates)
-                mapped.prescriber_phone = updates.prescriberPhone;
-              if ('prescriberRPPS' in updates)
-                mapped.rpps_id = updates.prescriberRPPS;
-              setFormState(mapped);
-            }}
+            setState={setFormState}
           />
 
           {/* FACILITY INFORMATION */}
           <FormFacilitySection
             readOnly={readOnly}
             state={state}
-            setState={updates => {
-              const mapped: any = {};
-              if ('hospitalName' in updates)
-                mapped.hospital_name = updates.hospitalName;
-              if ('hospitalAddress' in updates)
-                mapped.hospital_address = updates.hospitalAddress;
-              if ('finessNo' in updates)
-                mapped.finess_number = updates.finessNo;
-              setFormState(mapped);
-            }}
+            setState={setFormState}
           />
 
           {/* PRESCRIPTION DETAILS */}
@@ -565,21 +539,21 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             <View style={styles.row}>
               <Input
                 isLocked={readOnly}
-                label={STRING.age}
+                label={t(STRING.age)}
                 value={state.patient_age}
                 onChangeText={value => setFormState({ patient_age: value })}
-                placeholder={STRING.years}
+                placeholder={t(STRING.years)}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
               <Input
                 isLocked={readOnly}
-                label={STRING.weightKg}
+                label={t(STRING.weightKg)}
                 value={state.patient_weight_confirm}
                 onChangeText={value =>
                   setFormState({ patient_weight_confirm: value })
                 }
-                placeholder={STRING.kg}
+                placeholder={t(STRING.kg)}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
@@ -588,7 +562,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* NUTRITION PRODUCTS */}
           <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
-            {STRING.nutritionProducts}
+            {t(STRING.nutritionProducts)}
           </AppText>
           {errors.nutrition_products && (
             <View style={styles.productErrorRow}>
@@ -598,7 +572,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
               />
               <AppText
                 size={getScaleSize(12)}
-                color="#ef4444"
+                color={COLORS.error}
                 style={styles.productErrorText}
               >
                 {errors.nutrition_products}
@@ -630,30 +604,30 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                         color={COLORS.error}
                         font={FONTS.Inter.Medium}
                       >
-                        Remove
+                        {t(STRING.remove)}
                       </AppText>
                     </TouchableOpacity>
                   )}
                 </View>
                 <AppDropDown
                   disabled={readOnly}
-                  label={STRING.category}
+                  label={t(STRING.category)}
                   data={NUTRITION_CATEGORIES}
                   value={product.category}
                   onChange={value => updateProduct(index, 'category', value)}
                   style={styles.productInputRoot}
-                  placeholder={STRING.selectCategory}
+                  placeholder={t(STRING.selectCategory)}
                 />
                 <AppDropDown
                   disabled={readOnly}
-                  label={STRING.productType}
+                  label={t(STRING.productType)}
                   data={NUTRITION_PRODUCT_TYPES}
                   value={product.product_type}
                   onChange={value =>
                     updateProduct(index, 'product_type', value)
                   }
                   style={styles.productInputRoot}
-                  placeholder={STRING.selectProductType}
+                  placeholder={t(STRING.selectProductType)}
                   error={errors[`nutrition_products[${index}].product_type`]}
                 />
                 <View style={styles.productBottomRow}>
@@ -667,14 +641,14 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                     style={styles.productSmallInputRoot}
                     inputWrapperStyle={styles.productSmallBox}
                     inputStyle={styles.productSmallText}
-                    placeholder={STRING.qty}
+                    placeholder={t(STRING.qty)}
                     placeholderTextColor={COLORS._6F767E}
                     error={
                       errors[`nutrition_products[${index}].quantity_per_day`]
                     }
                   />
                   <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-                    {STRING.perDay}
+                    {t(STRING.perDay)}
                   </AppText>
                 </View>
               </View>
@@ -689,20 +663,20 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
               >
-                {STRING.addAnotherProduct}
+                {t(STRING.addAnotherProduct)}
               </AppText>
             </TouchableOpacity>
           )}
 
           {/* OTHER NUTRITION */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.otherNutrition)}
+            {renderSectionHeader(t(STRING.otherNutrition))}
             <Input
               isLocked={readOnly}
               // label="Other Nutrition"
               value={state.other_nutrition}
               onChangeText={value => setFormState({ other_nutrition: value })}
-              placeholder={STRING.enterOtherNutritionDetails}
+              placeholder={t(STRING.enterOtherNutritionDetails)}
               multiline
               numberOfLines={4}
               style={styles.inputField}
@@ -711,31 +685,31 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
           {/* INSTRUCTIONS */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.instructions)}
+            {renderSectionHeader(t(STRING.instructions))}
             <AppText
               size={getScaleSize(12)}
               color={COLORS._6F767E}
               style={{ marginBottom: getScaleSize(12) }}
             >
-              {STRING.consumeAtLeast2HoursBeforeOrAfterMealsFor1Month}
+              {t(STRING.consumeAtLeast2HoursBeforeOrAfterMealsFor1Month)}
             </AppText>
             <Input
               isLocked={readOnly}
-              label={STRING.texture}
+              label={t(STRING.texture)}
               value={state.texture}
               onChangeText={value => setFormState({ texture: value })}
-              placeholder={STRING.enterTextureDetails}
+              placeholder={t(STRING.enterTextureDetails)}
               style={styles.inputField}
             />
           </View>
 
           {/* REASSESSMENT */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.reassessment)}
+            {renderSectionHeader(t(STRING.reassessment))}
             <View style={styles.row}>
               <Input
                 isLocked={readOnly}
-                label={STRING.reassessmentAfterMonths}
+                label={t(STRING.reassessmentAfterMonths)}
                 value={state.reassessment_after_month}
                 onChangeText={value =>
                   setFormState({ reassessment_after_month: value })
@@ -746,10 +720,10 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
               />
               <Input
                 isLocked={readOnly}
-                label={STRING.renewalMonths}
+                label={t(STRING.renewalMonths)}
                 value={state.renewal_months}
                 onChangeText={value => setFormState({ renewal_months: value })}
-                placeholder={STRING.months}
+                placeholder={t(STRING.months)}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
@@ -762,8 +736,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 marginBottom: getScaleSize(8),
               }}
             >
-              {STRING.reassessmentCriteria} ({checkedBoxesCount}{' '}
-              {STRING.selected})
+              {t(STRING.reassessmentCriteria)} ({checkedBoxesCount}{' '}
+              {t(STRING.selected)})
             </AppText>
             {CNO_REASSESSMENT_CRITERIA.map(criterion => (
               <AppCheckBox
@@ -776,7 +750,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                     : state.reassessment_criteria.filter(c => c !== criterion);
                   setFormState({ reassessment_criteria: updated });
                 }}
-                label={criterion}
+                label={t(criterion)}
               />
             ))}
           </View>
@@ -787,7 +761,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             title="Physician Signature"
             showDate={true}
           /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
     );
   },
@@ -858,6 +832,7 @@ const styles = StyleSheet.create({
   productSmallInputRoot: {
     flex: 1,
     paddingHorizontal: 0,
+    textAlign: 'center'
   },
   productNameBox: {
     borderWidth: 1,

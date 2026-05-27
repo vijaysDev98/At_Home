@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import NavigationService from '../../../navigation/NavigationService';
 import {
   AppSafeAreaView,
@@ -20,6 +21,7 @@ import {
   AppLoader,
   ProfileAvatar,
   LogoutConfirmationSheet,
+  LanguagePickerSheet,
 } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import AppBottomSheet from '../../../components/AppBottomSheet';
@@ -31,6 +33,7 @@ import { AppDispatch, RootState } from '../../../redux/store';
 import { userLogout } from '../../../actions/auth/authAction';
 import { updateProfile } from '../../../actions/profile/profileAction';
 import { setLoading } from '../../../actions/common/commonSlice';
+import { updateLanguage, fetchLanguage } from '../../../actions/language/languageAction';
 import { SHOW_TOAST } from '../../../constant';
 import { STRING } from '../../../constant/strings';
 import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
@@ -40,11 +43,12 @@ import { SCREENS } from '../../../navigation/routes';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const DoctorProfile: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const { isLoading } = useSelector((state: RootState) => state.common);
-  console.log('profileData', profileData);
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -55,7 +59,13 @@ const DoctorProfile: React.FC = () => {
     }
   }, [profileData?.profileImg]);
 
+  // Fetch stored language on component mount
+  useEffect(() => {
+    dispatch(fetchLanguage());
+  }, [dispatch]);
+
   const logoutSheetRef = useRef<ActionSheetRef>(null);
+  const languageSheetRef = useRef<ActionSheetRef>(null);
 
   const handleLogout = () => {
     logoutSheetRef.current?.show();
@@ -63,6 +73,19 @@ const DoctorProfile: React.FC = () => {
 
   const confirmLogout = () => {
     dispatch(userLogout());
+  };
+
+  const handleLanguagePicker = () => {
+    languageSheetRef.current?.show();
+  };
+
+  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+    const success = await dispatch(updateLanguage(language.key));
+    if (success) {
+      SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
+    } else {
+      SHOW_TOAST(t(STRING.failedToChangeLanguage), 'error');
+    }
   };
 
   const handleEditProfile = () => {
@@ -167,7 +190,7 @@ const DoctorProfile: React.FC = () => {
                   font={FONTS.Inter.SemiBold}
                   color={COLORS._526674}
                 >
-                  {STRING.editProfile}
+                  {t(STRING.editProfile)}
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -180,11 +203,11 @@ const DoctorProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
-              {STRING.personalInformation}
+              {t(STRING.personalInformation)}
             </AppText>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.fName}
+                label={t(STRING.fName)}
                 style={styles.inputContainer}
                 value={capitalizeFirstLetter(fName)}
                 isLocked={false}
@@ -194,7 +217,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.lName}
+                label={t(STRING.lName)}
                 style={styles.inputContainer}
                 value={capitalizeFirstLetter(lName)}
                 isLocked={false}
@@ -204,7 +227,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.emailAddress}
+                label={t(STRING.emailAddress)}
                 style={styles.inputContainer}
                 isLocked={false}
                 editable={false}
@@ -220,12 +243,12 @@ const DoctorProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
-              {STRING.professionalCredentials}
+              {t(STRING.professionalCredentials)}
             </AppText>
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
               <Input
-                label={STRING.rppsNumber}
+                label={t(STRING.rppsNumber)}
                 style={styles.inputContainer}
                 value={userRpps}
                 isLocked={false}
@@ -236,7 +259,7 @@ const DoctorProfile: React.FC = () => {
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
               <Input
-                label={STRING.finessNumber}
+                label={t(STRING.finessNumber)}
                 style={styles.inputContainer}
                 value={userFiness}
                 isLocked={false}
@@ -246,7 +269,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.businessAddress}
+                label={t(STRING.businessAddress)}
                 value={capitalizeFirstLetter(userAddress || '')}
                 isLocked={false}
                 editable={false}
@@ -257,7 +280,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.phoneNumber}
+                label={t(STRING.phoneNumber)}
                 value={userPhone}
                 isCountryCode
                 countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
@@ -269,7 +292,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.specialty}
+                label={t(STRING.specialty)}
                 value={capitalizeFirstLetter(userSpecialty || '')}
                 isLocked={false}
                 editable={false}
@@ -279,7 +302,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.placeOfPractice}
+                label={t(STRING.placeOfPractice)}
                 value={capitalizeFirstLetter(userPracticeType || '')}
                 isLocked={false}
                 editable={false}
@@ -289,7 +312,7 @@ const DoctorProfile: React.FC = () => {
             </View>
             <View style={styles.fieldBlock}>
               <Input
-                label={STRING.facilityName}
+                label={t(STRING.facilityName)}
                 value={capitalizeFirstLetter(userFacilityName || '')}
                 isLocked={false}
                 editable={false}
@@ -308,6 +331,21 @@ const DoctorProfile: React.FC = () => {
           </View> */}
 
           <TouchableOpacity
+            style={styles.languageBtn}
+            activeOpacity={0.85}
+            onPress={handleLanguagePicker}
+          >
+            <Image source={IMAGES.language} style={styles.languageIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._526674}
+            >
+              {t(STRING.language)}
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.changePasswordBtn}
             activeOpacity={0.85}
             onPress={() => navigation.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
@@ -318,7 +356,7 @@ const DoctorProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._526674}
             >
-              Change Password
+              {t(STRING.changePassword)}
             </AppText>
           </TouchableOpacity>
 
@@ -341,40 +379,15 @@ const DoctorProfile: React.FC = () => {
           ref={logoutSheetRef}
           onLogout={confirmLogout}
         />
+        <LanguagePickerSheet
+          ref={languageSheetRef}
+          onLanguageSelect={handleLanguageSelect}
+          currentLanguage={currentLanguage}
+        />
       </View>
     </AppSafeAreaView>
   );
 };
-
-const RowItem = ({
-  label,
-  value,
-  chevron,
-}: {
-  label: string;
-  value?: string;
-  chevron?: boolean;
-}) => (
-  <View style={styles.rowItem}>
-    <AppText
-      size={getScaleSize(14)}
-      font={FONTS.Inter.SemiBold}
-      color={COLORS._1A1D1F}
-    >
-      {label}
-    </AppText>
-    {value ? (
-      <AppText size={getScaleSize(14)} color={COLORS._6B7280}>
-        {value}
-      </AppText>
-    ) : null}
-    {chevron ? (
-      <Image source={IMAGES.forwardIcon} style={styles.chevronIcon} />
-    ) : null}
-  </View>
-);
-
-const Divider = () => <View style={styles.divider} />;
 
 const styles = StyleSheet.create({
   safe: {
@@ -715,6 +728,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   changePasswordIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain'
+  },
+  languageBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  languageIcon: {
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,

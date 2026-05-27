@@ -86,4 +86,5 @@ export const IMAGES = {
   ic_weight: require('./ic_weight.png'),
   ic_gender: require('./ic_gender.png'),
   ic_insurance: require('./ic_insurance.png'),
+  language: require('./language.png'),
 };

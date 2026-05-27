@@ -33,9 +33,10 @@ import {
   ServiceRequest,
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
-import { getButtonConfig } from '../../../constant';
+import { getButtonConfig, STRING } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { useRoute, useIsFocused } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -89,6 +90,7 @@ const FILTER_OPTIONS: { key: FilterType; label: string }[] = [
 const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const route = useRoute();
   const isFocused = useIsFocused();
+  const { t } = useTranslation();
 
   const initialFilter = (route.params as any)?.formStatus || 'all';
 
@@ -100,6 +102,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (initialFilter) {
+      setFilter(initialFilter);
+    }
+  }, [initialFilter]);
 
   // Debounce timer for search
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -230,7 +238,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         formStatus={formStatus}
         status={item.status}
         buttonText={
-          buttonConfig.show ? buttonConfig.label || undefined : undefined
+          buttonConfig.show ? t(buttonConfig.label || '') || undefined : undefined
         }
         onPress={() => {
           if (item.status === REQUEST_STATUS.COMPLETED) {
@@ -256,7 +264,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         }}
       />
     );
-  }, []);
+  }, [t]);
 
   const renderFooter = useCallback(
     () =>
@@ -277,7 +285,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
             font={FONTS.Inter.Medium}
             color={COLORS._6F767E}
           >
-            No requests found
+            {t(STRING.noRequestsFound)}
           </AppText>
         </View>
       ) : null,
@@ -290,8 +298,8 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   return (
     <AppSafeAreaView style={styles.safeArea}>
       <Header
-        title="Service Request"
-        subTitle="Manage your service requests"
+        title={t(STRING.serviceRequest)}
+        subTitle={t(STRING.manageYourServiceRequests)}
         style={{ paddingHorizontal: getScaleSize(20) }}
       />
 
@@ -300,7 +308,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           leftIcon={IMAGES.search}
           style={styles.searchInput}
           inputWrapperStyle={{ backgroundColor: COLORS._F8F9FA }}
-          placeholder="Search patients, services..."
+          placeholder={t(STRING.searchPatientsServices)}
           placeholderTextColor={COLORS._6F767E}
           onChangeText={handleSearchChange}
         />
@@ -314,7 +322,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           {FILTER_OPTIONS.map(option => (
             <FilterChip
               key={option.key}
-              label={option.label}
+              label={t(option.label)}
               isActive={filter === option.key}
               onPress={() => handleFilterChange(option.key)}
             />
@@ -327,9 +335,8 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           color={COLORS._6B7280}
           style={styles.resultCount}
         >
-          {`${filteredRequests.length} Form${
-            filteredRequests.length !== 1 ? 's' : ''
-          } Found`}
+          {`${filteredRequests.length} ${t(STRING.form)}${filteredRequests.length !== 1 ? 's' : ''
+            } ${t(STRING.found)}`}
         </AppText>
       </View>
 

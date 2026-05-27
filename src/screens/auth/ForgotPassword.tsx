@@ -29,6 +29,7 @@ import { STRING } from '../../constant/strings';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { forgotPassword } from '../../actions/auth/authAction';
+import { useTranslation } from 'react-i18next';
 
 export type ForgotPasswordProps = NativeStackScreenProps<
   RootStackParamList,
@@ -38,6 +39,8 @@ export type ForgotPasswordProps = NativeStackScreenProps<
 const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
+
+  const { t } = useTranslation();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -90,7 +93,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
                 color={COLORS._1E293B}
                 align="center"
               >
-                {STRING.forgotPassword}
+                {t(STRING.forgotPassword)}
               </AppText>
 
               <AppText
@@ -99,14 +102,14 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
                 lineHeight={25}
                 color={COLORS._64748B}
               >
-                {STRING.forgetPasswordMessage}
+                {t(STRING.forgetPasswordMessage)}
               </AppText>
             </View>
 
             {/* Email Input */}
             <Input
-              label={STRING.emailAddress}
-              placeholder={STRING.enterEmailAddress}
+              label={t(STRING.emailAddress)}
+              placeholder={t(STRING.enterEmailAddress)}
               value={email}
               onChangeText={setEmail}
               onBlur={() => setTouched(true)}
@@ -130,14 +133,14 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
                 font={FONTS.Inter.SemiBold}
                 color={COLORS.primary}
               >
-                {STRING.backToLogin}
+                {t(STRING.backToLogin)}
               </AppText>
             </TouchableOpacity>
           </View>
 
           {/* Bottom Button */}
           <PrimaryButton
-            title={STRING.sendOTP}
+            title={t(STRING.sendOTP)}
             onPress={onSubmit}
             disabled={isDisabled}
             style={styles.button}

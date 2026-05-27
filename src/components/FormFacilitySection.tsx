@@ -5,6 +5,8 @@ import Input from './Input';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 export interface FacilitySectionProps {
   state: any;
@@ -19,8 +21,7 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
   children,
   readOnly = false,
 }) => {
-  console.log('state', state);
-
+  const { t } = useTranslation();
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
       {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
@@ -36,26 +37,26 @@ const FormFacilitySection: React.FC<FacilitySectionProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader("Prescriber's Practice / Facility")}
+      {renderSectionHeader(t(STRING.prescribersPracticeFacility))}
       <Input
         isLocked={readOnly}
-        label="Hospital name"
-        placeholder="Enter hospital name"
+        label={t(STRING.hospitalName)}
+        placeholder={t(STRING.enterHospitalName)}
         value={state.hospital_name}
         onChangeText={text => setState({ hospital_name: text })}
         style={styles.inputField}
       />
       <Input
-        label="Address"
+        label={t(STRING.address)}
         isLocked={readOnly}
-        placeholder="Enter address"
+        placeholder={t(STRING.enterAddress)}
         value={state.hospital_address}
         onChangeText={text => setState({ hospital_address: text })}
         style={styles.inputField}
       />
       <Input
         isLocked
-        label="Geographic Finess No."
+        label={t(STRING.geographicFinessNo)}
         value={state.finess_number}
         style={styles.inputField}
       />

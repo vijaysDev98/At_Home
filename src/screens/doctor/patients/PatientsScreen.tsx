@@ -28,11 +28,13 @@ import { SCREENS } from '../../../navigation/routes';
 import NavigationService from '../../../navigation/NavigationService';
 import { RootState } from '../../../redux/store';
 import { PATIENT_FILTERS } from '../../../constant/constantData';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const PatientsScreen: React.FC = () => {
   const dispatch = useDispatch<any>();
+  const { t } = useTranslation();
   const { patients, pagination } = useSelector(
     (state: RootState) => state.patient,
   );
@@ -182,14 +184,14 @@ const PatientsScreen: React.FC = () => {
             color={COLORS._1A1D1F}
             style={styles.headerTitle}
           >
-            {STRING.patients}
+            {t(STRING.patients)}
           </AppText>
 
           {/* Search */}
           <View style={styles.searchWrapper}>
             <Image source={IMAGES.search} style={styles.searchIcon} />
             <TextInput
-              placeholder={STRING.searchPatients}
+              placeholder={t(STRING.searchPatients)}
               placeholderTextColor="#6F767E"
               style={styles.searchInput}
               value={search}
@@ -224,7 +226,7 @@ const PatientsScreen: React.FC = () => {
                       : FONTS.Inter.Regular
                   }
                 >
-                  {chip}
+                  {t(chip)}
                 </AppText>
               </TouchableOpacity>
             ))}
@@ -255,7 +257,7 @@ const PatientsScreen: React.FC = () => {
                 color={COLORS._6F767E}
                 align="center"
               >
-                {STRING.noPatientsFound}
+                {t(STRING.noPatientsFound)}
               </AppText>
             </View>
           )}
@@ -279,7 +281,7 @@ const PatientsScreen: React.FC = () => {
         />
         <View style={styles.footer}>
           <PrimaryButton
-            title={STRING.addPatient}
+            title={t(STRING.addPatient)}
             onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
           />
         </View>

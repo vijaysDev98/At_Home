@@ -14,6 +14,19 @@ import store from './src/redux/store';
 import Toast from 'react-native-toast-message';
 import { I18nextProvider } from 'react-i18next';
 import { i18nLocale } from './src/localization/translatation';
+import { useLanguageSync } from './src/hooks/useLanguageSync';
+const AppContent = () => {
+  // Sync language between Redux and i18n
+  useLanguageSync();
+
+  return (
+    <>
+      <RootNavigation />
+      <Toast />
+    </>
+  );
+};
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -25,8 +38,7 @@ function App() {
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         />
         <Provider store={store}>
-          <RootNavigation />
-          <Toast />
+          <AppContent />
         </Provider>
       </SafeAreaProvider>
     </I18nextProvider>

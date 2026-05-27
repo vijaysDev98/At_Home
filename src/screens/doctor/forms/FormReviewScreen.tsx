@@ -30,12 +30,12 @@ import {
 import FormRequestHeader from '../../../components/FormRequestHeader';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { SCREENS } from '../../../navigation/routes';
-import { handleEditForm } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../../../constant';
 
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
-  const dispatch = useDispatch();
-
+  const { t } = useTranslation();
   const request: ServiceRequest = (route.params as any)?.request;
 
   const requestId = request?.id;
@@ -45,6 +45,7 @@ const FormReviewScreen: React.FC = () => {
   );
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const profileData = useSelector((state: RootState) => state.profile.profileData);
   const formRef = useRef<any>(null);
@@ -120,19 +121,27 @@ const FormReviewScreen: React.FC = () => {
       setIsFetched(true);
     }
   };
+  const handleSigningStart = () => {
+    setIsSigning(true);
+  };
+
+  const handleSigningEnd = () => {
+    setIsSigning(false);
+  };
+
   return (
     <AppSafeAreaView edges={true}>
-      <AppLoader visible={isLoading} />
+      <AppLoader visible={isLoading} signing={isSigning} />
       {isFetched && hasError ? (
         <View
           style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
         >
-          <AppText color={COLORS.primary}>Something went wrong</AppText>
+          <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
         </View>
       ) : (
         <>
           <View style={styles.container}>
-            <Header title="Review & Sign" isBack={true} style={styles.header} />
+            <Header title={t(STRING.reviewAndSign)} isBack={true} style={styles.header} />
 
             <View style={styles.content}>
               <ScrollView
@@ -166,6 +175,8 @@ const FormReviewScreen: React.FC = () => {
                     readOnly={isReadOnly}
                     requestData={requestData}
                     onSignatureCompleted={fetchServiceRequestDetails}
+                    onSigningStart={handleSigningStart}
+                    onSigningEnd={handleSigningEnd}
                   />
                 </View>
               </ScrollView>
@@ -182,14 +193,14 @@ const FormReviewScreen: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
                 >
-                  Edit Form
+                  {t(STRING.editForm)}
                 </AppText>
               </TouchableOpacity>
             </View>
           </View>
         </>
       )}
-      <AppLoader visible={isLoading} />
+      <AppLoader visible={isLoading} signing={isSigning} />
     </AppSafeAreaView>
   );
 };

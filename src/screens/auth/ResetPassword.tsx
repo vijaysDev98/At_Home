@@ -25,6 +25,7 @@ import { AppDispatch, RootState } from '../../redux/store';
 import { resetPassword, changePassword } from '../../actions/auth/authAction';
 import { AppLoader } from '../../components';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useTranslation } from 'react-i18next';
 
 export type ResetPasswordProps = NativeStackScreenProps<
   RootStackParamList,
@@ -34,7 +35,7 @@ export type ResetPasswordProps = NativeStackScreenProps<
 const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   const resetToken = route.params?.resetToken ?? '';
   const isChangePassword = route.params?.isChangePassword ?? false;
-
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading } = useSelector((state: RootState) => state.common);
 
@@ -52,11 +53,6 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
     const hasSpecial = /[^A-Za-z0-9]/.test(password);
     return { hasLength, hasUpper, hasNumber, hasSpecial };
   }, [password]);
-
-  const oldPasswordReqs = useMemo(() => {
-    const hasLength = oldPassword.length >= 1;
-    return { hasLength };
-  }, [oldPassword]);
 
   const strengthLevel = useMemo(() => {
     const count = Object.values(reqs).filter(Boolean).length;
@@ -118,7 +114,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               font={FONTS.Inter.Bold}
               align="center"
             >
-              {isChangePassword ? 'Change Password' : STRING.resetPassword}
+              {isChangePassword ? t(STRING.changePassword) : t(STRING.resetPassword)}
             </AppText>
             <AppText
               size={getScaleSize(15)}
@@ -127,15 +123,15 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               align="center"
               style={{ marginTop: getScaleSize(10) }}
             >
-              {isChangePassword ? 'Enter your current password and create a new password for your account.' : STRING.resetPasswordMessage}
+              {isChangePassword ? t(STRING.changePasswordMessage) : t(STRING.resetPasswordMessage)}
             </AppText>
           </View>
 
           <View style={styles.form}>
             {isChangePassword && (
               <Input
-                label="Current Password"
-                placeholder="Enter current password"
+                label={t(STRING.currentPassword)}
+                placeholder={t(STRING.enterCurrentPassword)}
                 value={oldPassword}
                 onChangeText={setOldPassword}
                 leftIcon={IMAGES.lock}
@@ -148,8 +144,8 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             )}
 
             <Input
-              label={isChangePassword ? 'New Password' : STRING.newPassword}
-              placeholder={STRING.enterNewPassword}
+              label={isChangePassword ? t(STRING.newPassword) : t(STRING.newPassword)}
+              placeholder={isChangePassword ? t(STRING.enterNewPassword) : t(STRING.enterNewPassword)}
               // secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
@@ -181,7 +177,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
                 color={COLORS.primaryMuted}
                 font={FONTS.Inter.SemiBold}
               >
-                {STRING.passwordStrength}
+                {t(STRING.passwordStrength)}
               </AppText>
             </View>
 
@@ -201,15 +197,15 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
                     font={item.met ? FONTS.Inter.SemiBold : FONTS.Inter.Regular}
                     color={item.met ? COLORS._1E293B : COLORS._64748B}
                   >
-                    {item.text}
+                    {t(item.text)}
                   </AppText>
                 </View>
               ))}
             </View>
 
             <Input
-              label={STRING.confirmPassword}
-              placeholder={STRING.enterConfirmPassword}
+              label={t(STRING.confirmPassword)}
+              placeholder={t(STRING.enterConfirmPassword)}
               secureTextEntry={true}
               value={confirm}
               onChangeText={setConfirm}
@@ -220,7 +216,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               style={styles.inputField}
               error={
                 !isMatch && confirm.length > 0
-                  ? STRING.passwordsDoNotMatch
+                  ? t(STRING.passwordsDoNotMatch)
                   : undefined
               }
             />
@@ -228,7 +224,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
 
           <View style={styles.ctaBar}>
             <PrimaryButton
-              title={isChangePassword ? 'Change Password' : STRING.resetPassword}
+              title={isChangePassword ? t(STRING.changePassword) : t(STRING.resetPassword)}
               onPress={onSubmit}
               disabled={!canSubmit || isLoading}
               style={{ marginTop: getScaleSize(40) }}

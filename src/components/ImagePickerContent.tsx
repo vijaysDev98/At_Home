@@ -4,6 +4,8 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 interface ImagePickerContentProps {
   onCameraPress: () => void;
@@ -16,6 +18,7 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
   onGalleryPress,
   onHide,
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <AppText
@@ -25,7 +28,7 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
         align={'center'}
         style={styles.title}
       >
-        Select Image
+        {t(STRING.selectImage)}
       </AppText>
 
       <TouchableOpacity
@@ -36,16 +39,16 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
         }}
         activeOpacity={0.8}
       >
-        <Image 
-          source={IMAGES.ic_camera} 
-          style={styles.optionIcon} 
+        <Image
+          source={IMAGES.ic_camera}
+          style={styles.optionIcon}
         />
         <AppText
           size={getScaleSize(16)}
           font={FONTS.Inter.Medium}
           color={COLORS._1A1D1F}
         >
-          Camera
+          {t(STRING.camera)}
         </AppText>
       </TouchableOpacity>
 
@@ -57,16 +60,16 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
         }}
         activeOpacity={0.8}
       >
-        <Image 
-          source={IMAGES.ic_gallery} 
-          style={styles.optionIcon} 
+        <Image
+          source={IMAGES.ic_gallery}
+          style={styles.optionIcon}
         />
         <AppText
           size={getScaleSize(16)}
           font={FONTS.Inter.Medium}
           color={COLORS._1A1D1F}
         >
-          Gallery
+          {t(STRING.gallery)}
         </AppText>
       </TouchableOpacity>
 
@@ -80,7 +83,7 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
           font={FONTS.Inter.Medium}
           color={COLORS._6B7280}
         >
-          Cancel
+          {t(STRING.cancel)}
         </AppText>
       </TouchableOpacity>
     </View>

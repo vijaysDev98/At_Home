@@ -19,6 +19,8 @@ import { COLORS, FONTS } from '../utils';
 import { AppText } from '../components';
 import { DOCTOR_TAB_SCREENS } from './routes';
 import DoctorRequest from '../screens/doctor/Request/DoctorRequest';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 export type BottomTabParamList = {
   Home: undefined;
@@ -83,6 +85,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <SafeAreaView edges={['bottom']} style={styles.barContainer}>
       <View style={styles.bar}>
@@ -102,7 +105,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
           const label =
             route.name === DOCTOR_TAB_SCREENS.DOCTOR_REQUEST
-              ? 'Request'
+              ? t(STRING.request)
               : descriptors[route.key]?.options?.tabBarLabel ?? route.name;
           const icon = iconForRoute(route.name as keyof BottomTabParamList);
 
@@ -162,7 +165,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
                 font={isFocused ? FONTS.Inter.Bold : FONTS.Inter.Medium}
                 color={isFocused ? COLORS._526674 : COLORS._6F767E}
               >
-                {label as string}
+                {t(label as string)}
               </AppText>
             </Pressable>
           );

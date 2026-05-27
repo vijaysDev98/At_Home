@@ -27,16 +27,17 @@ import { fetchPatientDetails } from '../../../actions/patient/patientAction';
 import { getButtonConfig, REQUEST_STATUS, STRING } from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import { useTranslation } from 'react-i18next';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
+  const { t } = useTranslation();
   const dispatch = useDispatch<any>();
   const route = useRoute<any>();
   const { id } = route.params || {};
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
-  console.log('patient', patient);
 
   const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
     .filter(item => item && item !== 'null')
@@ -77,7 +78,7 @@ const PatientDetail: React.FC = () => {
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
-        title={STRING.patientDetail}
+        title={t(STRING.patientDetail)}
         style={styles.headerStyle}
       />
       <View style={styles.container}>
@@ -129,7 +130,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._6F767E}
                   font={FONTS.Inter.Regular}
                 >
-                  {STRING.dob}{' '}
+                  {t(STRING.dob)}{' '}
                   {patient?.dateOfBirth
                     ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
                     : '---'}{' '}
@@ -142,7 +143,7 @@ const PatientDetail: React.FC = () => {
                     color={COLORS._2ECA7F}
                     font={FONTS.Inter.Medium}
                   >
-                    {STRING.activePatient}
+                    {t(STRING.activePatient)}
                   </AppText>
                 </View>
               </View>
@@ -159,7 +160,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
                   >
-                    {STRING.primaryContact}
+                    {t(STRING.primaryContact)}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
@@ -178,7 +179,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Regular}
                     color={COLORS._6F767E}
                   >
-                    {STRING.emailAddress}
+                    {t(STRING.emailAddress)}
                   </AppText>
                   <AppText
                     size={getScaleSize(14)}
@@ -198,7 +199,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
                     >
-                      {STRING.homeAddress}
+                      {t(STRING.homeAddress)}
                     </AppText>
                     <AppText
                       size={getScaleSize(14)}
@@ -219,7 +220,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
                     >
-                      {STRING.gender}
+                      {t(STRING.gender)}
                     </AppText>
                     <AppText
                       size={getScaleSize(14)}
@@ -240,7 +241,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
                     >
-                      {STRING.socialInsuranceNumber}
+                      {t(STRING.socialInsuranceNumber)}
                     </AppText>
                     <AppText
                       size={getScaleSize(14)}
@@ -261,7 +262,7 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
                     >
-                      {STRING.weight}
+                      {t(STRING.weight)}
                     </AppText>
                     <AppText
                       size={getScaleSize(14)}
@@ -283,7 +284,7 @@ const PatientDetail: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.black}
             >
-              {STRING.medicalNotes}
+              {t(STRING.medicalNotes)}
             </AppText>
             <TouchableOpacity
               onPress={() =>
@@ -296,7 +297,7 @@ const PatientDetail: React.FC = () => {
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
               >
-                {STRING.edit}
+                {t(STRING.edit)}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -312,7 +313,7 @@ const PatientDetail: React.FC = () => {
                 font={FONTS.Inter.SemiBold}
                 color={COLORS._1A1A1A}
               >
-                {STRING.medicalDescription}:
+                {t(STRING.medicalDescription)}:
               </AppText>{' '}
               {patient?.medicalDescription}
             </AppText>
@@ -325,7 +326,7 @@ const PatientDetail: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.black}
             >
-              {STRING.linkedRequests}
+              {t(STRING.linkedRequests)}
             </AppText>
             <TouchableOpacity
               onPress={() => {
@@ -351,7 +352,7 @@ const PatientDetail: React.FC = () => {
                   color={COLORS._6F767E}
                   align="center"
                 >
-                  No linked requests found
+                  {t(STRING.noLinkedRequestsFound)}
                 </AppText>
               </View>
             )}
@@ -369,7 +370,7 @@ const PatientDetail: React.FC = () => {
                     formStatus={item?.formStatus}
                     buttonText={
                       buttonConfig.show
-                        ? buttonConfig.label || undefined
+                        ? t(buttonConfig.label || '') || undefined
                         : undefined
                     }
                     onPress={() => {

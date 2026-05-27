@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Alert,
   Linking,
 } from 'react-native';
 import { InAppBrowser } from 'react-native-inappbrowser-reborn';
@@ -16,18 +15,20 @@ import { getScaleSize } from '../utils/scaleSize';
 import { setLoading } from '../actions/common/commonSlice';
 import signatureApi from '../services/signature';
 import { serviceRequestApi } from '../services/serviceRequestApi';
-import { SHOW_TOAST } from '../constant';
-import { API_BASE_URL } from '../api/apiRoutes';
+import { FORM_STATUS, SHOW_TOAST, STRING } from '../constant';
 import NavigationService from '../navigation/NavigationService';
 import { IMAGES } from '../assets/images';
 import moment from 'moment';
 import { capitalizeFirstLetter } from '../constant/smallFunctions';
+import { useTranslation } from 'react-i18next';
 
 export interface FormSignatureProps {
   title?: string;
   readOnly?: boolean;
   requestData: any;
   onSignatureCompleted?: () => void;
+  onSigningStart?: () => void;
+  onSigningEnd?: () => void;
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
@@ -35,9 +36,10 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   readOnly = false,
   requestData,
   onSignatureCompleted,
+  onSigningStart,
+  onSigningEnd,
 }) => {
-  console.log('requestData', requestData);
-
+  const { t } = useTranslation();
   const requestId = requestData?._id || requestData?.id;
   const dispatch = useDispatch();
 
@@ -45,21 +47,22 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     return null;
   }
 
-  let isSigned = !!requestData?.digitalSignature?.signatureData;
+  const isSigned = !!requestData?.digitalSignature?.signatureData;
 
   /**
-   * Poll signature status until document is signed
-   * Checks every 2 seconds with a maximum timeout
+   * Poll signature status until document is signed or an error occurs.
+   * Loader stays ON for the entire duration of this function.
+   * Returns true only when signing is confirmed complete.
    */
   const pollSignatureStatus = async (
-    requestId: string,
+    id: string,
     maxAttempts: number = 60,
   ): Promise<boolean> => {
     let attempts = 0;
 
     while (attempts < maxAttempts) {
       try {
-        const response = await signatureApi.getSignatureStatus(requestId);
+        const response = await signatureApi.getSignatureStatus(id);
 
         if (!response?.success) {
           SHOW_TOAST(
@@ -70,22 +73,14 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         }
 
         const data = response?.data;
-        const envelopeStatus = data?.envelopeStatus;
-        const signatureStatus = data?.signatureMetadata?.signatureStatus;
-        const signedPdfUrl = data?.signedPdfUrl;
-
-        // Check multiple completion indicators
         const isCompleted =
-          envelopeStatus === 'completed' ||
-          signatureStatus === 'completed' ||
-          !!signedPdfUrl;
+          data?.formStatus === FORM_STATUS.SIGNED;
 
         if (isCompleted) {
           return true;
         }
 
-        // Wait 2 seconds before next check
-        await new Promise<void>(resolve => setTimeout(() => resolve(), 2000));
+        await new Promise<void>(resolve => setTimeout(resolve, 2000));
         attempts++;
       } catch (error: any) {
         SHOW_TOAST(
@@ -102,94 +97,108 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     return false;
   };
 
-  const openSigningUrl = async (url: string, requestId: string) => {
-    try {
-      const redirectUrl = 'athome://docusign/callback';
-      const isBrowserAvailable = await InAppBrowser.isAvailable();
+  const openSigningUrl = async (url: string, id: string) => {
+    onSigningStart?.();
 
-      // Fallback if browser not available
-      if (!isBrowserAvailable) {
-        await Linking.openURL(url);
-        return;
+    const isBrowserAvailable = await InAppBrowser.isAvailable();
+
+    // Fallback if browser not available — open externally and stop,
+    // we can't poll reliably after handing off to an external browser
+    if (!isBrowserAvailable) {
+      await Linking.openURL(url);
+      onSigningEnd?.();
+      return;
+    }
+
+    const redirectUrl = 'athome://docusign/callback';
+
+    // Open DocuSign — loader is already ON (set by handleSignature)
+    // InAppBrowser.openAuth resolves only when the browser is closed/redirected
+    const authResult = await InAppBrowser.openAuth(url, redirectUrl, {
+      dismissButtonStyle: 'close',
+      preferredBarTintColor: COLORS.primary,
+      preferredControlTintColor: COLORS.white,
+      readerMode: false,
+      animated: true,
+      modalPresentationStyle: 'fullScreen',
+      modalTransitionStyle: 'coverVertical',
+      enableBarCollapsing: false,
+      ephemeralWebSession: false,
+      showTitle: true,
+      toolbarColor: COLORS.primary,
+      secondaryToolbarColor: COLORS.black,
+      navigationBarColor: COLORS.black,
+      navigationBarDividerColor: COLORS.white,
+      enableUrlBarHiding: true,
+      enableDefaultShare: false,
+      forceCloseOnRedirection: true,
+    });
+
+    // type === 'cancel'  → user manually closed the browser before completing
+    // type === 'dismiss' → browser dismissed without a redirect (treat same as cancel)
+    // type === 'success' → DocuSign redirected back to athome://docusign/callback,
+    //                      meaning the user finished the DocuSign flow (signed or declined).
+    //                      The webhook may not have fired yet — poll until server confirms.
+
+    if (authResult?.type === 'cancel') {
+      onSigningEnd?.();
+      dispatch(setLoading(false));
+      SHOW_TOAST('Signing cancelled', 'info');
+      return;
+    }
+
+    // Redirect landed (type === 'success') — loader stays ON while we wait
+    // for the webhook to mark the request as signed on the server
+    const isCompleted = await pollSignatureStatus(id);
+
+    if (isCompleted) {
+      try {
+        await serviceRequestApi.releaseFormLock(id);
+      } catch {
+        // Non-fatal — proceed with navigation even if lock release fails
       }
-
-      // Open DocuSign signing flow
-      const authResult = await InAppBrowser.openAuth(url, redirectUrl, {
-        dismissButtonStyle: 'close',
-        preferredBarTintColor: COLORS.primary,
-        preferredControlTintColor: COLORS.white,
-        readerMode: false,
-        animated: true,
-        modalPresentationStyle: 'fullScreen',
-        modalTransitionStyle: 'coverVertical',
-        enableBarCollapsing: false,
-        ephemeralWebSession: false,
-        showTitle: true,
-        toolbarColor: COLORS.primary,
-        secondaryToolbarColor: COLORS.black,
-        navigationBarColor: COLORS.black,
-        navigationBarDividerColor: COLORS.white,
-        enableUrlBarHiding: true,
-        enableDefaultShare: false,
-        forceCloseOnRedirection: true,
-      });
-
-      // Handle browser closure or cancellation
-      if (authResult?.type === 'cancel') {
-        SHOW_TOAST('Signing cancelled', 'info');
-        return;
-      }
-
-      dispatch(setLoading(true));
-
-      // Poll for signature completion
-      const isCompleted = await pollSignatureStatus(requestId);
-
-      if (isCompleted) {
-        isSigned = true;
-        await serviceRequestApi.releaseFormLock(requestId);
-        SHOW_TOAST('Document signed successfully', 'success');
-
-        setTimeout(() => {
-          NavigationService.goBack();
-        }, 2000);
-
-        onSignatureCompleted?.();
-      } else {
-        SHOW_TOAST('Signature not completed', 'error');
-      }
-    } catch (error: any) {
-      SHOW_TOAST(
-        error?.response?.data?.message ||
-        error?.message ||
-        'Unable to open signing page',
-        'error',
-      );
-    } finally {
+      SHOW_TOAST('Document signed successfully', 'success');
+      onSignatureCompleted?.();
+      // Navigate back first, then turn off the loader so it doesn't
+      // flash off before the screen transition completes
+      NavigationService.goBack();
+      setTimeout(() => {
+        onSigningEnd?.();
+        dispatch(setLoading(false));
+      }, 500);
+    } else {
+      // Polling failed or timed out — just close the loader, stay on screen
+      onSigningEnd?.();
       dispatch(setLoading(false));
     }
   };
 
   const handleSignature = async () => {
+    // Turn loader ON once here — it stays on until openSigningUrl explicitly turns it off
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
-
       const response = await signatureApi.initiateSignature(requestId);
 
-      if (response?.success) {
-        const signingUrl = response?.data?.signingUrl;
-
-        if (signingUrl) {
-          await openSigningUrl(signingUrl, requestId);
-        } else {
-          SHOW_TOAST('Signing URL not found', 'error');
-        }
-      } else {
+      if (!response?.success) {
         SHOW_TOAST(
           response?.message || 'Failed to initiate signature',
           'error',
         );
+        onSigningEnd?.();
+        dispatch(setLoading(false));
+        return;
       }
+
+      const signingUrl = response?.data?.signingUrl;
+      if (!signingUrl) {
+        SHOW_TOAST('Signing URL not found', 'error');
+        onSigningEnd?.();
+        dispatch(setLoading(false));
+        return;
+      }
+
+      // openSigningUrl owns the loader from this point forward
+      await openSigningUrl(signingUrl, requestId);
     } catch (error: any) {
       SHOW_TOAST(
         error?.response?.data?.message ||
@@ -197,7 +206,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         'Something went wrong',
         'error',
       );
-    } finally {
+      onSigningEnd?.();
       dispatch(setLoading(false));
     }
   };
@@ -209,7 +218,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         font={FONTS.Inter.SemiBold}
         style={styles.title}
       >
-        {title}
+        {t(title)}
       </AppText>
 
       <View style={styles.card}>
@@ -227,7 +236,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 style={{ marginTop: getScaleSize(10) }}
                 font={FONTS.Inter.SemiBold}
               >
-                Signed
+                {t(STRING.signed)}
               </AppText>
             </>
           ) : (
@@ -241,7 +250,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 color={COLORS.primary}
                 font={FONTS.Inter.SemiBold}
               >
-                Sign Now
+                {t(STRING.signNow)}
               </AppText>
             </TouchableOpacity>
           )}
@@ -275,7 +284,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
             >
               {moment(requestData?.digitalSignature?.signedAt).format(
                 'DD MMM YYYY, h:mm A',
-              ) || 'Pending'}
+              )}
             </AppText>
           )}
         </View>
@@ -293,10 +302,10 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: COLORS._F8F8F8,
     borderRadius: getScaleSize(22),
     borderWidth: 1,
-    borderColor: '#E7E7E7',
+    borderColor: COLORS._E7E7E7,
     paddingVertical: getScaleSize(24),
     paddingHorizontal: getScaleSize(18),
   },
@@ -323,7 +332,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#E4E4E7',
+    backgroundColor: COLORS._E4E4E7,
     marginTop: getScaleSize(18),
     marginBottom: getScaleSize(16),
   },

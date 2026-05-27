@@ -20,6 +20,8 @@ import {
 } from '../constant/RequestStatus';
 import AppButton from './AppButton';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 export const openPdfInBrowser = async (pdfUrl: string) => {
   try {
@@ -80,6 +82,7 @@ const HeaderProvider = ({
   isViewForm?: boolean;
   onViewFormPress?: () => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={[styles.header, style]}>
       <View style={styles.content}>
@@ -113,8 +116,8 @@ const HeaderProvider = ({
               <AppButton
                 style={styles.viewFormBtn}
                 textSize={getScaleSize(10)}
-                onPress={onViewFormPress || (() => {})}
-                title="View Form"
+                onPress={onViewFormPress || (() => { })}
+                title={t(STRING.viewForm)}
               />
             )}
           </View>
@@ -138,7 +141,7 @@ const HeaderProvider = ({
                     color={COLORS._526674}
                     font={FONTS.Inter.Regular}
                   >
-                    Request Status:
+                    {t(STRING.requestStatus)}:
                   </AppText>
 
                   <AppText
@@ -146,7 +149,7 @@ const HeaderProvider = ({
                     color={getStatusBadgeColor(requestStatus || status || '')}
                     font={FONTS.Inter.SemiBold}
                   >
-                    {requestStatus || DISPLAY_FORM_STATUS[status || ''] || ''}
+                    {t(requestStatus || '') || t(DISPLAY_FORM_STATUS[status || '']) || ''}
                   </AppText>
                 </View>
               )}
@@ -158,7 +161,7 @@ const HeaderProvider = ({
                     color={COLORS._526674}
                     font={FONTS.Inter.Regular}
                   >
-                    Form Status:
+                    {t(STRING.formStatus)}:
                   </AppText>
 
                   <AppText
@@ -166,7 +169,7 @@ const HeaderProvider = ({
                     color={getStatusBadgeColor(formStatus)}
                     font={FONTS.Inter.SemiBold}
                   >
-                    {DISPLAY_FORM_STATUS[formStatus]}
+                    {t(DISPLAY_FORM_STATUS[formStatus])}
                   </AppText>
                 </View>
               )}
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
 
   statusRow: {
     flexDirection: 'row',
-    gap: getScaleSize(12),
+    gap: getScaleSize(8),
     marginTop: getScaleSize(4),
     flexWrap: 'wrap',
   },

@@ -30,6 +30,7 @@ import {
   PATIENT_FILTERS,
   PatientFilterType,
 } from '../../../constant/constantData';
+import { useTranslation } from 'react-i18next';
 
 export type CreateRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -107,8 +108,8 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
 );
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
-  const isFocused = useIsFocused();
   const dispatch = useDispatch<any>();
+  const { t } = useTranslation();
 
   const { patients } = useSelector((state: RootState) => state.patient);
 
@@ -237,7 +238,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              {STRING.createRequest}
+              {t(STRING.createRequest)}
             </AppText>
 
             <AppText
@@ -245,7 +246,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              {STRING.step1Of3}
+              {t(STRING.step1Of3)}
             </AppText>
           </View>
 
@@ -275,13 +276,13 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                {STRING.selectPatient}
+                {t(STRING.selectPatient)}
               </AppText>
 
               <Input
                 leftIcon={IMAGES.search}
                 style={styles.searchInput}
-                placeholder={STRING.searchByNameOrId}
+                placeholder={t(STRING.searchByNameOrId)}
                 value={search}
                 onChangeText={setSearch}
               />
@@ -333,7 +334,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 {filteredPatients.length === 0 && (
                   <View style={styles.emptyContainer}>
                     <AppText color={COLORS._6F767E}>
-                      {STRING.noPatientsFound}
+                      {t(STRING.noPatientsFound)}
                     </AppText>
                   </View>
                 )}
@@ -359,7 +360,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 color={COLORS._526674}
                 font={FONTS.Inter.Bold}
               >
-                {STRING.createNewPatient}
+                {t(STRING.createNewPatient)}
               </AppText>
             </TouchableOpacity>
 
@@ -377,7 +378,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                 color={COLORS.white}
                 font={FONTS.Inter.Bold}
               >
-                {STRING.continue}
+                {t(STRING.continue)}
               </AppText>
             </TouchableOpacity>
           </View>

@@ -14,7 +14,6 @@ import OtpVerification from '../screens/auth/OtpVerification';
 import ResetPassword from '../screens/auth/ResetPassword';
 import SplashScreen from '../screens/SplashScreen';
 import BottomTabs, { BottomTabParamList } from './DoctorBottomTabs';
-import SignatureForm from '../screens/doctor/forms/SignatureForm';
 import DoctorNotification from '../screens/doctor/notifications/DoctorNotification';
 import CreateRequest from '../screens/doctor/createRequest/createRequest';
 import CreateRequestStep2 from '../screens/doctor/createRequest/createRequestStep2';
@@ -25,7 +24,6 @@ import ProviderBottomTabs, {
   ProviderBottomTabParamList,
 } from './ProviderBottomTabs';
 import ProviderAvailableRequests from '../screens/provider/request/AvailableRequest';
-import ServiceScreen from '../screens/provider/forms/Service';
 import ServiceCompletedScreen from '../screens/provider/forms/ServiceCompleted';
 import NavigationService from './NavigationService';
 import { SCREENS } from './routes';
@@ -60,14 +58,6 @@ export type RootStackParamList = {
   ProviderAvailableRequests: undefined;
   AddPatient: undefined;
   PatientDetail: undefined;
-  SignatureForm: undefined;
-  ServiceScreen: {
-    requestStatus?: string;
-    formStatus?: string;
-    patientName?: string;
-    service?: string;
-    requestId?: string;
-  };
   ServiceCompleted: {
     patientName?: string;
     requestId?: string;
@@ -191,16 +181,6 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.PATIENT_DETAIL}
           component={PatientDetail}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name={SCREENS.SIGNATURE_FORM}
-          component={SignatureForm}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ServiceScreen"
-          component={ServiceScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

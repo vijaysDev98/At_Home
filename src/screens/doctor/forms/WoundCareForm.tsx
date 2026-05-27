@@ -49,6 +49,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface WoundCareFormProps {
   serviceId?: string;
@@ -93,7 +95,7 @@ export interface WoundCareFormRef {
 const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
   ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
-
+    const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -102,7 +104,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const scrollRef = useRef<ScrollView>(null);
 
     const [open, setOpen] = useState(false);
     const [date, setDate] = useState(new Date());
@@ -231,15 +232,15 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
       // Required: patient info
       if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-        newErrors.patientLastName = STRING.lNameRequired;
+        newErrors.patientLastName = t(STRING.lNameRequired);
       }
       if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-        newErrors.patientFirstName = STRING.fNameRequired;
+        newErrors.patientFirstName = t(STRING.fNameRequired);
       }
 
       // Required: prescription date
       if (!state?.date) {
-        newErrors.date = STRING.dateRequired;
+        newErrors.date = t(STRING.dateRequired);
       }
 
       setErrors(newErrors);
@@ -256,7 +257,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         serviceId: serviceId || '',
         selectedPatient,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -271,7 +271,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         serviceId: serviceId || '',
         selectedPatient,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -287,7 +286,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         state,
         initialData,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -303,7 +301,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         state,
         initialData,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -319,7 +316,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         state,
         initialData,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -335,7 +331,6 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         state,
         initialData,
         validateForm: () => validateForm().ok,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -367,11 +362,13 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
     return (
       <View style={styles.container}>
-        <ScrollView
-          ref={scrollRef}
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -379,7 +376,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {STRING.woundDressingPrescriptionSupportForm}
+              {t(STRING.woundDressingPrescriptionSupportForm)}
             </AppText>
           </View>
 
@@ -392,7 +389,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
           <FormPrescriberSection
             state={state}
             setState={setFormState}
-            title={STRING.physicianInformation}
+            title={t(STRING.physicianInformation)}
             showFiness={true}
           />
 
@@ -410,7 +407,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* CONDITION */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.condition)}
+            {renderSectionHeader(t(STRING.condition))}
 
             <View style={styles.checkboxGroup}>
               <AppCheckBox
@@ -419,7 +416,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 onValueChange={value =>
                   setFormState({ condition_type: value ? 'ald_related' : '' })
                 }
-                label={STRING.careRelatedToLongTermConditionAld}
+                label={t(STRING.careRelatedToLongTermConditionAld)}
               />
               <AppCheckBox
                 disabled={readOnly}
@@ -429,7 +426,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     condition_type: value ? 'ald_not_related' : '',
                   })
                 }
-                label={STRING.notRelatedToLongTermConditionAld}
+                label={t(STRING.notRelatedToLongTermConditionAld)}
               />
             </View>
 
@@ -441,7 +438,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 setOpen(true);
               }}
               editable={false}
-              label={STRING.date}
+              label={t(STRING.date)}
               placeholder="DD/MM/YYYY"
               value={state.date}
               style={styles.inputField}
@@ -451,12 +448,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* TYPE OF WOUND */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.typeOfWound)}
+            {renderSectionHeader(t(STRING.typeOfWound))}
 
             <Input
               isLocked={readOnly}
-              label={STRING.woundSize}
-              placeholder={STRING.example5x5cm}
+              label={t(STRING.woundSize)}
+              placeholder={t(STRING.example5x5cm)}
               value={state.wound_size}
               onChangeText={value => setFormState({ wound_size: value })}
               style={styles.inputField}
@@ -486,7 +483,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* DESIRED DRESSING TYPE */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.desiredDressingType)}
+            {renderSectionHeader(t(STRING.desiredDressingType))}
 
             <View style={styles.checkboxGroup}>
               {DRESSING_TYPE_OPTIONS.map(item => (
@@ -512,7 +509,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* WOUND DETAILS */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.woundDetails)}
+            {renderSectionHeader(t(STRING.woundDetails))}
 
             {WOUND_DETAILS_OPTIONS.map(item => (
               <View key={item.key} style={styles.statusRow}>
@@ -541,12 +538,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
           {/* REQUIRED MATERIALS AND PROTOCOL */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.requiredMaterialsAndProtocol)}
+            {renderSectionHeader(t(STRING.requiredMaterialsAndProtocol))}
 
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label={STRING.dressingKitsPerDay}
+                label={t(STRING.dressingKitsPerDay)}
                 value={state.dressing_kits_per_day}
                 onChangeText={value =>
                   setFormState({ dressing_kits_per_day: value })
@@ -558,7 +555,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
               <Input
                 isLocked={readOnly}
-                label={STRING.bandagePerDay}
+                label={t(STRING.bandagePerDay)}
                 value={state.bandage_per_day}
                 onChangeText={value => setFormState({ bandage_per_day: value })}
                 placeholder="0"
@@ -570,7 +567,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label={STRING.cleaningWith}
+                label={t(STRING.cleaningWith)}
                 value={state.cleaning_with}
                 onChangeText={value => setFormState({ cleaning_with: value })}
                 placeholder="Enter product"
@@ -579,12 +576,12 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
               <Input
                 isLocked={readOnly}
-                label={STRING.disinfectionWith}
+                label={t(STRING.disinfectionWith)}
                 value={state.disinfection_with}
                 onChangeText={value =>
                   setFormState({ disinfection_with: value })
                 }
-                placeholder={STRING.enterProduct}
+                placeholder={t(STRING.enterProduct)}
                 style={styles.halfWidthInput}
               />
             </View>
@@ -592,7 +589,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             <View style={styles.inputRow}>
               <Input
                 isLocked={readOnly}
-                label={STRING.layer1}
+                label={t(STRING.layer1)}
                 value={state.first_layer}
                 onChangeText={value => setFormState({ first_layer: value })}
                 placeholder=""
@@ -601,7 +598,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
               <Input
                 isLocked={readOnly}
-                label={STRING.layer2}
+                label={t(STRING.layer2)}
                 value={state.second_layer}
                 onChangeText={value => setFormState({ second_layer: value })}
                 placeholder=""
@@ -611,7 +608,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
             <Input
               isLocked={readOnly}
-              label={STRING.treatmentDuration}
+              label={t(STRING.treatmentDuration)}
               value={state.treatment_duration}
               onChangeText={value =>
                 setFormState({
@@ -619,7 +616,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                   until_healed: false,
                 })
               }
-              placeholder={STRING.eg15days}
+              placeholder={t(STRING.eg15days)}
               style={styles.inputField}
             />
 
@@ -632,7 +629,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                   treatment_duration: value ? '' : state.treatment_duration,
                 })
               }
-              label={STRING.untilHealed}
+              label={t(STRING.untilHealed)}
             />
           </View>
 
@@ -643,7 +640,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
               setFormState({ physician_signature: val })
             }
           /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <DatePicker
           modal

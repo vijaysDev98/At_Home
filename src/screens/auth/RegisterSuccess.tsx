@@ -10,6 +10,7 @@ import { IMAGES } from '../../assets/images';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { STRING } from '../../constant';
+import { useTranslation } from 'react-i18next';
 
 export type RegisterSuccessProps = NativeStackScreenProps<
   RootStackParamList,
@@ -17,10 +18,11 @@ export type RegisterSuccessProps = NativeStackScreenProps<
 >;
 
 const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
+  const { t } = useTranslation();
   return (
     <AppSafeAreaView
       style={styles.safe}
-      edges={['top', 'left', 'right', 'bottom']}
+      edges={true}
     >
       <View style={styles.container}>
         {/* Hero */}
@@ -38,7 +40,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
             color={COLORS.slate900}
             align="center"
           >
-            {STRING.registrationSuccessful}
+            {t(STRING.registrationSuccessful)}
           </AppText>
 
           <AppText
@@ -48,15 +50,15 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
             align="center"
             style={{ maxWidth: getScaleSize(320) }}
           >
-            {STRING.yourAccountHasBeenCreatedAndIsCurrently}{' '}
+            {t(STRING.yourAccountHasBeenCreatedAndIsCurrently)}{' '}
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
               color={COLORS.primary}
             >
-              {STRING.pendingAdminApproval}
+              {t(STRING.pendingAdminApproval)}
             </AppText>
-            . {STRING.weWillNotifyYouViaEmailOnceYourAccountIsActivated}
+            . {t(STRING.weWillNotifyYouViaEmailOnceYourAccountIsActivated)}
           </AppText>
 
           {/* Info Card */}
@@ -71,7 +73,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.slate900}
               >
-                {STRING.whatHappensNext}
+                {t(STRING.whatHappensNext)}
               </AppText>
               <AppText
                 size={getScaleSize(14)}
@@ -79,7 +81,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
                 color={COLORS.slate700}
                 style={{ marginTop: getScaleSize(4) }}
               >
-                {STRING.yourRegDes}
+                {t(STRING.yourRegDes)}
               </AppText>
             </View>
           </View>
@@ -88,7 +90,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
         {/* CTA */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
-            title={STRING.backToLogin}
+            title={t(STRING.backToLogin)}
             onPress={() => NavigationService.reset(SCREENS.LOGIN)}
           />
         </View>

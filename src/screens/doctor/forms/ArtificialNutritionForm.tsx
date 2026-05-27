@@ -52,6 +52,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface ArtificialNutritionFormProps {
   serviceId: string;
@@ -60,14 +62,12 @@ export interface ArtificialNutritionFormProps {
   readOnly?: boolean;
 }
 
-const FEEDING_MODE = [
-  { label: 'Gravity (Package 1)', value: 'gravity' },
-  { label: 'Pump (Package 2)', value: 'pump' },
-];
+
 
 const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
   ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
+    const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -76,9 +76,10 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    console.log('profileData', profileData);
-
-    const scrollRef = useRef<ScrollView>(null);
+    const FEEDING_MODE = [
+      { label: t(STRING.gravityPackage1), value: 'gravity' },
+      { label: t(STRING.pumpPackage2), value: 'pump' },
+    ];
     const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -158,7 +159,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     // Load initial data if editing an existing draft
     useEffect(() => {
       if (initialData?.formData) {
-        console.log('initialData?.formData', initialData.formData);
         setState(initialData.formData as any);
       }
     }, [initialData]);
@@ -265,13 +265,13 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
       // Required (schema): prescription_date, patient_last_name, patient_first_name
       if (!state?.prescription_date) {
-        newErrors.prescription_date = STRING.prescriptionDateRequired;
+        newErrors.prescription_date = t(STRING.prescriptionDateRequired);
       }
       if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-        newErrors.patientLastName = STRING.lNameRequired;
+        newErrors.patientLastName = t(STRING.lNameRequired);
       }
       if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-        newErrors.patientFirstName = STRING.fNameRequired;
+        newErrors.patientFirstName = t(STRING.fNameRequired);
       }
 
       // Nutrients validation - at least 1 nutrient must be filled
@@ -280,7 +280,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         .filter(i => i !== -1);
 
       if (filledNutrientIndices.length === 0) {
-        newErrors['nutrients[0].nutrient_name'] = STRING.nutrientsRequired;
+        newErrors['nutrients[0].nutrient_name'] = t(STRING.nutrientsRequired);
       }
 
       // Validate numeric fields for filled nutrients
@@ -291,8 +291,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             key: keyof typeof nutrient;
             label: string;
           }> = [
-              { key: 'volume_ml', label: 'Volume (ml)' },
-              { key: 'times_per_day', label: 'Times per Day' },
+              { key: 'volume_ml', label: t(STRING.volumeMl) },
+              { key: 'times_per_day', label: t(STRING.timesPerDay) },
             ];
           numericFields.forEach(f => {
             const val = (nutrient as any)[f.key];
@@ -304,7 +304,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             ) {
               newErrors[
                 `nutrients[${index}].${String(f.key)}`
-              ] = `${f.label} must be a number`;
+              ] = t(STRING.mustBeNumber);
             }
           });
         }
@@ -313,24 +313,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       setErrors(newErrors);
       lastFirstErrorKey.current = Object.keys(newErrors)[0] || null;
       return Object.keys(newErrors).length === 0;
-    };
-
-    const scrollToFirstError = (firstErrorKey: string) => {
-      const match = firstErrorKey.match(/nutrients\[(\d+)\]/);
-      if (match) {
-        const idx = Number(match[1]);
-        const y = nutrientPositions[idx] ?? 0;
-        setTimeout(() => {
-          scrollRef.current?.scrollTo({
-            y: Math.max(y - 20, 0),
-            animated: true,
-          });
-        }, 50);
-      } else {
-        setTimeout(() => {
-          scrollRef.current?.scrollTo({ y: 0, animated: true });
-        }, 50);
-      }
     };
 
     // Handle form submission (using centralized handler)
@@ -342,7 +324,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -357,7 +338,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -373,7 +353,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -389,7 +368,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -405,7 +383,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -421,7 +398,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -440,11 +416,13 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
     return (
       <View style={styles.container}>
-        <ScrollView
-          ref={scrollRef}
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -452,7 +430,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {STRING.artificialNutritionForm}
+              {t(STRING.artificialNutritionForm)}
             </AppText>
           </View>
 
@@ -483,7 +461,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
           />
 
           <View style={styles.card}>
-            {renderSectionHeader(STRING.prescriptionPlan)}
+            {renderSectionHeader(t(STRING.prescriptionPlan))}
             <Input
               isLocked={readOnly}
               onPress={() => {
@@ -492,7 +470,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 setOpen(true);
               }}
               editable={false}
-              label={STRING.from}
+              label={t(STRING.from)}
               placeholder="DD/MM/YYYY"
               value={state.from_date}
               style={styles.inputField}
@@ -502,21 +480,21 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             <View style={styles.row}>
               <Input
                 isLocked={readOnly}
-                label={STRING.prescriptionDurationWeeks}
+                label={t(STRING.prescriptionDurationWeeks)}
                 value={state.prescription_duration_weeks}
                 onChangeText={value =>
                   setFormState({ prescription_duration_weeks: value })
                 }
-                placeholder={STRING.weeks}
+                placeholder={t(STRING.weeks)}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
               <Input
                 isLocked={readOnly}
-                label={STRING.renewalTimes}
+                label={t(STRING.renewalTimes)}
                 value={state.renewal_times}
                 onChangeText={value => setFormState({ renewal_times: value })}
-                placeholder={STRING.number}
+                placeholder={t(STRING.number)}
                 style={styles.rowInput}
                 keyboardType="numeric"
               />
@@ -525,22 +503,22 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
           {/* TREATMENT PLAN */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.treatmentPlan)}
+            {renderSectionHeader(t(STRING.treatmentPlan))}
 
             <Input
               isLocked={readOnly}
-              label={STRING.nutritionDurationWeeks}
+              label={t(STRING.nutritionDurationWeeks)}
               value={state.nutrition_duration_weeks}
               onChangeText={value =>
                 setFormState({ nutrition_duration_weeks: value })
               }
-              placeholder={STRING.weeks}
+              placeholder={t(STRING.weeks)}
               keyboardType="numeric"
               style={styles.inputField}
             />
 
             <AppText size={getScaleSize(14)} font={FONTS.Inter.SemiBold}>
-              {STRING.feedingMode}
+              {t(STRING.feedingMode)}
             </AppText>
             <View style={styles.checkboxGroup}>
               {FEEDING_MODE.map(mode => (
@@ -561,54 +539,54 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
           {/* EQUIPMENT & PACKAGES */}
           <View style={styles.card}>
-            {renderSectionHeader(STRING.equipmentAndPackages)}
+            {renderSectionHeader(t(STRING.equipmentAndPackages))}
 
             <AppCheckBox
               disabled={readOnly}
               value={state.initial_setup}
               onValueChange={value => setFormState({ initial_setup: value })}
-              label={STRING.initialSetupPackage}
+              label={t(STRING.initialSetupPackage)}
             />
 
             <AppCheckBox
               disabled={readOnly}
               value={state.weekly_package}
               onValueChange={value => setFormState({ weekly_package: value })}
-              label={STRING.weeklyPackage}
+              label={t(STRING.weeklyPackage)}
               containerStyle={{ marginBottom: getScaleSize(5) }}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.nasogastricTubeCh}
+              label={t(STRING.nasogastricTubeCh)}
               value={state.nasogastric_tube_ch}
               onChangeText={value =>
                 setFormState({ nasogastric_tube_ch: value })
               }
-              placeholder={STRING.enterTubeDetails}
+              placeholder={t(STRING.enterTubeDetails)}
               style={styles.inputField}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.nasogastricRatePerMonth}
+              label={t(STRING.nasogastricRatePerMonth)}
               value={state.nasogastric_rate_per_month}
               onChangeText={value =>
                 setFormState({ nasogastric_rate_per_month: value })
               }
-              placeholder={STRING.enterRate}
+              placeholder={t(STRING.enterRate)}
               keyboardType="numeric"
               style={styles.inputField}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.jejunostomyTubeCh}
+              label={t(STRING.jejunostomyTubeCh)}
               value={state.jejunostomy_tube_ch}
               onChangeText={value =>
                 setFormState({ jejunostomy_tube_ch: value })
               }
-              placeholder={STRING.enterTubeDetails}
+              placeholder={t(STRING.enterTubeDetails)}
               style={styles.inputField}
             />
 
@@ -617,17 +595,17 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               containerStyle={{ marginBottom: getScaleSize(5) }}
               value={state.iv_pole_rental}
               onValueChange={value => setFormState({ iv_pole_rental: value })}
-              label={STRING.ivPoleRental}
+              label={t(STRING.ivPoleRental)}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.nasogastricCareFrequencyDays}
+              label={t(STRING.nasogastricCareFrequencyDays)}
               value={state.nasogastric_care_frequency_days}
               onChangeText={value =>
                 setFormState({ nasogastric_care_frequency_days: value })
               }
-              placeholder={STRING.enterFrequency}
+              placeholder={t(STRING.enterFrequency)}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -639,17 +617,17 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 setFormState({ gastrostomy_care_equipment: value })
               }
               containerStyle={{ marginBottom: getScaleSize(5) }}
-              label={STRING.gastrostomyCareEquipment}
+              label={t(STRING.gastrostomyCareEquipment)}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.jejunostomyCareFrequencyDays}
+              label={t(STRING.jejunostomyCareFrequencyDays)}
               value={state.jejunostomy_care_frequency_days}
               onChangeText={value =>
                 setFormState({ jejunostomy_care_frequency_days: value })
               }
-              placeholder={STRING.enterFrequency}
+              placeholder={t(STRING.enterFrequency)}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -660,7 +638,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               onValueChange={value =>
                 setFormState({ gastrostomy_replacement_equipment: value })
               }
-              label={STRING.gastrostomyReplacementEquipment}
+              label={t(STRING.gastrostomyReplacementEquipment)}
             />
 
             <AppCheckBox
@@ -669,12 +647,12 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               onValueChange={value =>
                 setFormState({ button_extension_set: value })
               }
-              label={STRING.buttonExtensionSet}
+              label={t(STRING.buttonExtensionSet)}
             />
           </View>
 
           <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
-            {STRING.nutrients}
+            {t(STRING.nutrients)}
           </AppText>
           {errors.nutrients && (
             <View style={styles.nutrientErrorRow}>
@@ -684,7 +662,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               />
               <AppText
                 size={getScaleSize(12)}
-                color="#ef4444"
+                color={COLORS.error}
                 style={styles.nutrientErrorText}
               >
                 {errors.nutrients}
@@ -716,7 +694,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                   }
                   style={styles.nutrientInputRoot}
                   inputWrapperStyle={styles.nutrientNameBox}
-                  placeholder={STRING.nutrientName}
+                  placeholder={t(STRING.nutrientName)}
                   placeholderTextColor={COLORS._6F767E}
                   error={errors[`nutrients[${index}].nutrient_name`]}
                 />
@@ -731,7 +709,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                     style={styles.nutrientSmallInputRoot}
                     inputWrapperStyle={styles.nutrientSmallBox}
                     inputStyle={styles.nutrientSmallText}
-                    placeholder={STRING.ml}
+                    placeholder={t(STRING.ml)}
                     placeholderTextColor={COLORS._6F767E}
                     error={errors[`nutrients[${index}].volume_ml`]}
                   />
@@ -745,12 +723,12 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                     style={styles.nutrientSmallInputRoot}
                     inputWrapperStyle={styles.nutrientSmallBox}
                     inputStyle={styles.nutrientSmallText}
-                    placeholder={STRING.qty}
+                    placeholder={t(STRING.qty)}
                     placeholderTextColor={COLORS._6F767E}
                     error={errors[`nutrients[${index}].times_per_day`]}
                   />
                   <AppText size={getScaleSize(13)} color={COLORS._1A1D1F}>
-                    {STRING.perDay}
+                    {t(STRING.perDay)}
                   </AppText>
                 </View>
               </View>
@@ -764,7 +742,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 color={COLORS._1A1D1F}
                 font={FONTS.Inter.SemiBold}
               >
-                {STRING.numberOfBoxesChecked}
+                {t(STRING.numberOfBoxesChecked)}
               </AppText>
               <TextInput
                 value={String(checkedBoxesCount)}
@@ -776,7 +754,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
           </View>
 
           {/* <FormSignature readOnly={readOnly} requestData={initialData} /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <DatePicker
           modal

@@ -12,6 +12,8 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import moment from 'moment';
 import ProfileAvatar from './ProfileAvatar';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 interface RequestSummaryCardProps {
   patient?: any;
@@ -36,8 +38,8 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   style,
   rightContent,
 }) => {
+  const { t } = useTranslation();
   const name = patient?.fName + ' ' + patient?.lName || 'N/A';
-  const avatar = patient?.avatar;
   const age =
     'ID: PT-' +
     (patient?.id?.slice(-4).toUpperCase() || '0000') +
@@ -49,18 +51,6 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
     <View style={[styles.summaryCard, style]}>
       <View style={styles.summaryRow}>
         <View style={styles.summaryLeft}>
-          {/* <View style={styles.avatarWrap}>
-            <Image
-              source={
-                avatar
-                  ? { uri: avatar }
-                  : {
-                      uri: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-                    }
-              }
-              style={styles.avatar}
-            />
-          </View> */}
           <ProfileAvatar name={name} size="small" />
           <View style={styles.summaryTextBlock}>
             <AppText
@@ -82,16 +72,16 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
         {rightContent
           ? rightContent
           : showEdit && (
-              <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._526674}
-                >
-                  Edit
-                </AppText>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._526674}
+              >
+                {t(STRING.edit)}
+              </AppText>
+            </TouchableOpacity>
+          )}
       </View>
 
       <View style={styles.summaryRowDivider} />
@@ -125,7 +115,7 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
               font={FONTS.Inter.Medium}
               color={COLORS._526674}
             >
-              Edit
+              {t(STRING.edit)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -162,7 +152,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(40),
     height: getScaleSize(40),
     borderRadius: getScaleSize(20),
-    backgroundColor: '#e8edf1',
+    backgroundColor: COLORS._E8EDF1,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -172,7 +162,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(40),
   },
   serviceIconWrap: {
-    backgroundColor: '#e7eef3',
+    backgroundColor: COLORS._E7EEF3,
   },
   summaryTextBlock: {
     gap: getScaleSize(2),

@@ -5,6 +5,9 @@ import Input from './Input';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+import { STRING } from '../constant';
+import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 export interface PrescriberSectionProps {
   state: any;
@@ -21,6 +24,7 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
   showFiness = false,
   children,
 }) => {
+  const { t } = useTranslation();
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
       {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
@@ -40,13 +44,13 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
       <View style={styles.row}>
         <Input
           isLocked
-          label="First name"
+          label={t(STRING.firstName)}
           value={state.prescriber_first_name}
           style={[styles.inputField, { flex: 1 }]}
         />
         <Input
           isLocked
-          label="Last name"
+          label={t(STRING.lastName)}
           value={state.prescriber_last_name}
           style={[styles.inputField, { flex: 1 }]}
         />
@@ -55,21 +59,21 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         {showFiness ? (
           <Input
             isLocked
-            label="FINESS"
+            label={t(STRING.finess)}
             value={state.prescriber_finess}
             style={[styles.inputField, { flex: 1 }]}
           />
         ) : (
           <Input
             isLocked
-            label="Phone"
+            label={t(STRING.phone)}
             value={state.prescriber_phone || state.prescriber_emergency_phone}
             style={[styles.inputField, { flex: 1 }]}
           />
         )}
         <Input
           isLocked
-          label="RPPS ID"
+          label={t(STRING.rppsId)}
           value={state.rpps_id}
           style={[styles.inputField, { flex: 1 }]}
         />
@@ -79,7 +83,7 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         color={COLORS._6F767E}
         style={{ marginTop: getScaleSize(-4), marginBottom: getScaleSize(8) }}
       >
-        *Shared directory of healthcare professionals
+        *{t(STRING.sharedDirectory)}
       </AppText>
       {children}
     </View>

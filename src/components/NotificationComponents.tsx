@@ -42,7 +42,7 @@ export const NotificationItem = ({
   <TouchableOpacity
     style={[
       styles.notificationRow,
-      unread ? { backgroundColor: '#EFF6FF4D' } : { backgroundColor: COLORS.white },
+      unread ? { backgroundColor: COLORS._EFF6FF4D } : { backgroundColor: COLORS.white },
     ]}
     activeOpacity={onPress ? 0.7 : 1}
     onPress={onPress}
@@ -83,7 +83,7 @@ export const NotificationItem = ({
         <View style={styles.actionWrap}>
           <AppButton
             title={action}
-            onPress={onActionPress || (() => {})}
+            onPress={onActionPress || (() => { })}
             style={styles.actionBtn}
             textSize={getScaleSize(12)}
             textFont={FONTS.Inter.SemiBold}
@@ -96,7 +96,7 @@ export const NotificationItem = ({
 
 const styles = StyleSheet.create({
   sectionHeaderContainer: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS._F9FAFB,
     paddingVertical: 12,
     paddingHorizontal: 20,
   },
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#3B82F6',
+    backgroundColor: COLORS._3B82F6,
   },
   actionWrap: {
     marginTop: 12,

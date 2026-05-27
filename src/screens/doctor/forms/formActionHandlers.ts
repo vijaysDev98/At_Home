@@ -15,7 +15,6 @@ export interface FormActionParams {
   serviceId: string;
   selectedPatient: any;
   validateForm: () => boolean;
-  scrollRef?: any;
   lastFirstErrorKey?: any;
   errors?: any;
 }
@@ -32,7 +31,6 @@ export const handleFormSubmit = async (params: FormActionParams) => {
     serviceId,
     selectedPatient,
     validateForm,
-    scrollRef,
     lastFirstErrorKey,
     errors = {},
   } = params;
@@ -45,11 +43,6 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       errors[firstErrorKey] || 'Please fill all required fields';
     SHOW_TOAST(firstErrorMessage, 'error');
 
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return;
   }
 
@@ -141,7 +134,6 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
     serviceId,
     selectedPatient,
     validateForm,
-    scrollRef,
     lastFirstErrorKey,
     errors = {},
   } = params;
@@ -154,11 +146,6 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       errors[firstErrorKey] || 'Please fill all required fields';
     SHOW_TOAST(firstErrorMessage, 'error');
 
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return;
   }
 
@@ -202,8 +189,6 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
         formData: state,
       };
 
-      console.log('payload', payload);
-
       const response = await serviceRequestApi.createServiceRequest(payload);
       dispatch(setLoading(false));
 
@@ -236,7 +221,6 @@ export const handleUpdateAndSign = async (
     state,
     initialData,
     validateForm,
-    scrollRef,
     errors = {},
   } = params;
 
@@ -245,11 +229,6 @@ export const handleUpdateAndSign = async (
     const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
     const firstErrorMessage = errors[firstErrorKey];
     SHOW_TOAST(firstErrorMessage, 'error');
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return { success: false, error: firstErrorMessage };
   }
 
@@ -288,7 +267,6 @@ export const handleSaveProgress = async (
     state,
     initialData,
     validateForm,
-    scrollRef,
     errors = {},
   } = params;
 
@@ -297,11 +275,6 @@ export const handleSaveProgress = async (
     const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
     const firstErrorMessage = errors[firstErrorKey];
     SHOW_TOAST(firstErrorMessage, 'error');
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return { success: false, error: firstErrorMessage };
   }
 
@@ -328,11 +301,11 @@ export const handleSaveProgress = async (
     }
     dispatch(setLoading(false));
     if (response.success) {
-      SHOW_SUCCESS_TOAST(response.message || 'Progress saved successfully');
+      SHOW_SUCCESS_TOAST(response.message);
       NavigationService.goBack();
       return { success: true };
     } else {
-      SHOW_TOAST(response.error || 'Failed to save progress', 'error');
+      SHOW_TOAST(response.error, 'error');
       return { success: false, error: response.error };
     }
   } catch (error: any) {
@@ -356,7 +329,6 @@ export const handleEditForm = async (
     state,
     initialData,
     validateForm,
-    scrollRef,
     errors = {},
   } = params;
 
@@ -365,11 +337,6 @@ export const handleEditForm = async (
     const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
     const firstErrorMessage = errors[firstErrorKey];
     SHOW_TOAST(firstErrorMessage, 'error');
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return { success: false, error: firstErrorMessage };
   }
 
@@ -414,7 +381,6 @@ export const handleSubmitForReview = async (
     state,
     initialData,
     validateForm,
-    scrollRef,
     errors = {},
   } = params;
 
@@ -423,11 +389,6 @@ export const handleSubmitForReview = async (
     const firstErrorKey = (params as any).lastFirstErrorKey?.current || '';
     const firstErrorMessage = errors[firstErrorKey];
     SHOW_TOAST(firstErrorMessage, 'error');
-    if (scrollRef?.current) {
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 50);
-    }
     return { success: false, error: firstErrorMessage };
   }
 
@@ -446,7 +407,7 @@ export const handleSubmitForReview = async (
 
     if (!saveResponse.success) {
       dispatch(setLoading(false));
-      SHOW_TOAST(saveResponse.error || 'Failed to save progress', 'error');
+      SHOW_TOAST(saveResponse.error, 'error');
       return { success: false, error: saveResponse.error };
     }
 
@@ -457,11 +418,11 @@ export const handleSubmitForReview = async (
     if (response.success) {
       // Release form lock on successful submit-for-review
       await serviceRequestApi.releaseFormLock(requestId);
-      SHOW_SUCCESS_TOAST(response.message || 'Form submitted for review');
+      SHOW_SUCCESS_TOAST(response.message);
       NavigationService.goBack();
       return { success: true };
     } else {
-      SHOW_TOAST(response.error || 'Failed to submit for review', 'error');
+      SHOW_TOAST(response.error, 'error');
       return { success: false, error: response.error };
     }
   } catch (error: any) {

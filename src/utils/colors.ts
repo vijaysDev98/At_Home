@@ -52,6 +52,12 @@ const COLORS = {
   _F1F5F9: '#F1F5F9',
   _E3E9EE: '#E3E9EE',
   _D1D5DB: '#D1D5DB',
+  _F8F8F8: '#F8F8F8',
+  _E7E7E7: '#E7E7E7',
+  _E4E4E7: '#E4E4E7',
+  _C4C8CC: '#C4C8CC',
+  _EFF6FF4D: '#EFF6FF4D',
+  _E7EEF3: '#E7EEF3',
 
   // states
   error: '#ef4444',

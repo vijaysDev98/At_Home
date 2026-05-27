@@ -57,7 +57,6 @@ export const useFormLockRefresh = ({
         }
       } catch (error) {
         hasAttemptedAcquireRef.current = false;
-        console.log('Acquire lock error:', error);
       }
     };
 
@@ -107,7 +106,6 @@ export const useFormLockRefresh = ({
       try {
         await serviceRequestApi.refreshFormLock(requestId);
       } catch (error) {
-        console.log('Refresh lock error:', error);
       }
     };
 

@@ -37,6 +37,7 @@ import {
   resendForgotPasswordOtp,
   resendLoginOtp,
 } from '../../actions/auth/authAction';
+import { useTranslation } from 'react-i18next';
 
 export type OtpVerificationProps = NativeStackScreenProps<
   RootStackParamList,
@@ -44,9 +45,9 @@ export type OtpVerificationProps = NativeStackScreenProps<
 >;
 
 const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
-  const email = route.params?.email ?? 'dr.smith@example.com';
+  const email = route.params?.email || '';
   const isForgotPassword = route.params?.isForgotPassword ?? false;
-
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
 
   const { isLoading } = useSelector((state: RootState) => state.common);
@@ -172,7 +173,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
                   font={FONTS.Inter.Bold}
                   align="center"
                 >
-                  {STRING.verifyEmail}
+                  {t(STRING.verifyEmail)}
                 </AppText>
 
                 <AppText
@@ -184,7 +185,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
                     marginTop: getScaleSize(5),
                   }}
                 >
-                  {STRING.varifyEmailMessage}
+                  {t(STRING.varifyEmailMessage)}
                 </AppText>
 
                 <AppText
@@ -222,7 +223,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
                 </View>
 
                 {otpError ? (
-                  <Text style={styles.errorText}>{STRING.invalidCode}</Text>
+                  <Text style={styles.errorText}>{t(STRING.invalidCode)}</Text>
                 ) : null}
               </View>
 
@@ -233,7 +234,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
                   color={COLORS.primaryMuted}
                   font={FONTS.Inter.Regular}
                 >
-                  {STRING.codeExpiresIn + ' '}
+                  {t(STRING.codeExpiresIn) + ' '}
 
                   <AppText
                     size={getScaleSize(14)}
@@ -277,7 +278,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
                       timer !== 0 && styles.resendDisabled,
                     ]}
                   >
-                    {STRING.resendCode}
+                    {t(STRING.resendCode)}
                   </AppText>
                 </TouchableOpacity>
               </View>
@@ -286,7 +287,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
             {/* Bottom CTA */}
             <View style={styles.ctaBar}>
               <PrimaryButton
-                title={STRING.verify}
+                title={t(STRING.verify)}
                 disabled={!isComplete || isLoading}
                 onPress={async () => {
                   if (!isComplete) {

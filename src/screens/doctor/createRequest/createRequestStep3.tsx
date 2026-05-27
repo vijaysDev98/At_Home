@@ -34,19 +34,9 @@ import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
 
 // Import all form components
-import AntibiotherapyInfusionForm from '../forms/AntibiotherapyInfusionForm';
-import ArtificialNutritionForm from '../forms/ArtificialNutritionForm';
-import CNOForm from '../forms/CNOForm';
-import FreePrescriptionForm from '../forms/FreePrescriptionForm';
-import GenericForm from '../forms/FreePrescriptionForm';
-import HydrationInfusionForm from '../forms/HydrationInfusion';
-import MedicalOxygen from '../forms/MedicalOxygen';
-import PcaForm from '../forms/PcaForm';
-import PersonalHygieneCare from '../forms/PersonalHygieneCare';
-import PregnancyCareForm from '../forms/PregnancyCareForm';
-import WoundCareForm from '../forms/WoundCareForm';
 import { getServiceIcon } from './createRequestStep2';
 import ServiceFormRenderer from '../forms/ServiceFormRenderer';
+import { useTranslation } from 'react-i18next';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -54,6 +44,8 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 >;
 
 const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
+  const { t } = useTranslation();
+
   const service = route?.params?.selected || {};
   const patientId = route?.params?.patientId;
   const initialData = (route?.params as any)?.initialData; // Existing request data if editing
@@ -77,22 +69,15 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
 
-  const [state, setState] = useState({
-    primaryDiagnosis: '',
-    secondaryDiagnosis: '',
-    currentCondition: '',
-  });
-
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
   // Determine button labels based on request status
   const isNewRequest = !initialData && !requestStatus;
-  const isDraft = requestStatus === REQUEST_STATUS.DRAFT;
   const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
 
-  const leftButtonLabel = isNewRequest ? 'Save as Draft' : 'Save Progress';
-  const rightButtonLabel = isSubmitted ? 'Update & Sign' : 'Submit Request';
+  const leftButtonLabel = isNewRequest ? t(STRING.saveAsDraft) : t(STRING.saveProgress);
+  const rightButtonLabel = isSubmitted ? t(STRING.updateAndSign) : t(STRING.submitRequest);
 
   // Button handlers - call the form's methods via ref
   const handleLeftButtonPress = async () => {
@@ -127,14 +112,15 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              {STRING.createRequest}
+              {t(STRING.createRequest)}
             </AppText>
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(14)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
+              align='center'
             >
-              {STRING.step3Of3}
+              {t(STRING.step3Of3)}
             </AppText>
           </View>
           <View style={{ flex: 0.5 }} />
@@ -168,7 +154,6 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             <View>
               <View
                 style={{
-                  // paddingHorizontal: getScaleSize(16),
                   backgroundColor: COLORS._F9FAFB,
                 }}
               >
@@ -179,103 +164,6 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                   initialData={initialData}
                   patient={patient}
                 />
-                {/* {serviceId == '69ef3589d1c1c4252d4b8d45' ? (
-                  <CNOForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId === '69ef359fd1c1c4252d4b8d4f' ? (
-                  <AntibiotherapyInfusionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId === '69ef359fd1c1c4252d4b8d4d' ? (
-                  <CNOForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId === '69ef3557d1c1c4252d4b8d2c' ? (
-                  <ArtificialNutritionForm
-                    serviceId={serviceId}
-                    ref={formRef}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId === '69eb112a056b86c571c1a44f' ? (
-                  <FreePrescriptionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef3592d1c1c4252d4b8d4a' ? (
-                  <HydrationInfusionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef353fd1c1c4252d4b8d22' ? (
-                  <HydrationInfusionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                    title={'IV Therapy Prescription Form'}
-                  />
-                ) : serviceId == '69ef354cd1c1c4252d4b8d27' ? (
-                  <MedicalOxygen
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef356cd1c1c4252d4b8d36' ? (
-                  <PcaForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef357cd1c1c4252d4b8d40' ? (
-                  <HydrationInfusionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                    title="Parenteral Nutrition (Central Line) Prescription Form"
-                  />
-                ) : serviceId == '69ef3563d1c1c4252d4b8d31' ? (
-                  <PersonalHygieneCare
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef3534d1c1c4252d4b8d1d' ? (
-                  <WoundCareForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                  />
-                ) : serviceId == '69ef3575d1c1c4252d4b8d3b' ? (
-                  <HydrationInfusionForm
-                    ref={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={initialData}
-                    patient={patient}
-                    title={'Pregnancy-Related Care Prescription Form'}
-                  />
-                ) : (
-                  <></>
-                )} */}
               </View>
             </View>
           </ScrollView>
@@ -292,6 +180,8 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
+              numberOfLines={1}
+              align='center'
             >
               {leftButtonLabel}
             </AppText>

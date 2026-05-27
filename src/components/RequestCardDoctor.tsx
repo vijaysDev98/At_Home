@@ -12,6 +12,8 @@ import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
 import { DISPLAY_FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
 import ProfileAvatar from './ProfileAvatar';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 interface RequestCardProps {
   name?: string;
@@ -32,9 +34,10 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   requestId,
   formStatus,
   buttonText,
-  onButtonPress = () => {},
+  onButtonPress = () => { },
   onPress,
 }) => {
+  const { t } = useTranslation();
   let initials = '';
   if (name) {
     initials = name
@@ -84,7 +87,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             font={FONTS.Inter.Regular}
             color={COLORS[status]}
           >
-            {DISPLAY_FORM_STATUS[status]}
+            {t(DISPLAY_FORM_STATUS[status])}
           </AppText>
         </View>
       </View>
@@ -99,7 +102,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             color={COLORS._6F767E}
             align={'left'}
           >
-            {'Request ID'}
+            {t(STRING.requestId)}
           </AppText>
           <AppText
             size={getScaleSize(13)}
@@ -117,7 +120,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             color={COLORS._6F767E}
             align={'right'}
           >
-            {'Form Status'}
+            {t(STRING.formStatus)}
           </AppText>
           <AppText
             size={getScaleSize(13)}
@@ -125,7 +128,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'right'}
           >
-            {DISPLAY_FORM_STATUS[formStatus]}
+            {t(DISPLAY_FORM_STATUS[formStatus])}
           </AppText>
         </View>
       </View>

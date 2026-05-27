@@ -38,6 +38,7 @@ import {
 } from '../../../constant/RequestStatus';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { handleClaimService } from '../../doctor/forms/formActionHandlers';
+import { useTranslation } from 'react-i18next';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -74,6 +75,7 @@ interface DashboardData {
 
 const ProviderHome: React.FC = () => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const reviewSheetRef = useRef<ActionSheetRef>(null);
@@ -106,7 +108,6 @@ const ProviderHome: React.FC = () => {
       }
       setUnreadCount(count);
     } catch (error) {
-      console.log('Error fetching provider dashboard data:', error);
     } finally {
       dispatch(setGlobalLoading(false));
     }
@@ -126,7 +127,7 @@ const ProviderHome: React.FC = () => {
     requestId: string,
   ) => {
     if (!selectedRequest?.id) {
-      SHOW_TOAST('Missing Request ID', 'error');
+      SHOW_TOAST(t(STRING.missingID), 'error');
       return;
     }
     dispatch(setGlobalLoading(true));
@@ -143,16 +144,16 @@ const ProviderHome: React.FC = () => {
       if (response.success) {
         await serviceRequestApi.releaseFormLock(requestId);
         SHOW_TOAST(
-          response.message || 'Request returned successfully',
+          response.message,
           'success',
         );
         reviewSheetRef?.current?.hide();
         await fetchDashboardData();
       } else {
-        SHOW_TOAST(response.error || 'Failed to return request', 'error');
+        SHOW_TOAST(response.error, 'error');
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to return request', 'error');
+      SHOW_TOAST(error?.message, 'error');
     } finally {
       dispatch(setGlobalLoading(false));
     }
@@ -183,7 +184,7 @@ const ProviderHome: React.FC = () => {
                 font={FONTS.Inter.Regular}
                 color={COLORS._1A1D1F}
               >
-                {STRING.welcomeBack}
+                {t(STRING.welcome)}
               </AppText>
               <AppText
                 size={getScaleSize(18)}
@@ -240,7 +241,7 @@ const ProviderHome: React.FC = () => {
               font={FONTS.Inter.SemiBold}
               color="#374151"
             >
-              Overview
+              {t(STRING.overview)}
             </AppText>
           </View>
 
@@ -258,7 +259,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
                 >
-                  Submitted
+                  {t(STRING.submitted)}
                 </AppText>
                 <Image source={IMAGES.ic_submitted} style={styles.kpiIcon} />
               </View>
@@ -285,7 +286,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
                 >
-                  In Progress
+                  {t(STRING.inProgress)}
                 </AppText>
                 <Image source={IMAGES.ic_inprogress} style={styles.kpiIcon} />
               </View>
@@ -303,7 +304,7 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-            // onPress={() => NavigationService.navigate('Forms' as never)}
+          // onPress={() => NavigationService.navigate('Forms' as never)}
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -316,7 +317,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
                 >
-                  Completed Today
+                  {t(STRING.completedToday)}
                 </AppText>
                 <AppText
                   size={getScaleSize(18)}
@@ -337,7 +338,7 @@ const ProviderHome: React.FC = () => {
               font={FONTS.Inter.SemiBold}
               color="#374151"
             >
-              Recent Queue
+              {t(STRING.recentQueue)}
             </AppText>
             <TouchableOpacity
               onPress={() => {
@@ -349,7 +350,7 @@ const ProviderHome: React.FC = () => {
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
               >
-                See All
+                {t(STRING.seeAll)}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -375,8 +376,8 @@ const ProviderHome: React.FC = () => {
                     formStatus={item?.formStatus}
                     status={item?.status}
                     buttonText={
-                      buttonConfig.show
-                        ? buttonConfig.label || undefined
+                      buttonConfig.show && buttonConfig.label
+                        ? t(buttonConfig.label)
                         : undefined
                     }
                     onPress={() => {
@@ -426,7 +427,7 @@ const ProviderHome: React.FC = () => {
                 font={FONTS.Inter.Regular}
                 color={COLORS._6F767E}
               >
-                No recent requests
+                {t(STRING.noRecentRequests)}
               </AppText>
             </View>
           )}
@@ -644,7 +645,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -7,
     right: -5,
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.error,
     borderRadius: getScaleSize(8),
     minWidth: getScaleSize(16),
     height: getScaleSize(16),

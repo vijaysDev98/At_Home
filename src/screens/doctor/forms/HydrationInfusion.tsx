@@ -52,6 +52,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface HydrationInfusionFormProps {
   title?: string;
@@ -70,18 +72,18 @@ export interface HydrationInfusionFormRef {
 }
 
 const ROUTE_OF_ACCESS = [
-  'Implanted Port',
-  'Central Catheter',
-  'PICC',
-  'Perineural',
-  'Peripheral Venous',
-  'Subcutaneous',
+  STRING.implantedPort,
+  STRING.centralCatheter,
+  STRING.picc,
+  STRING.perineural,
+  STRING.peripheralVenous,
+  STRING.subcutaneous,
 ];
 
 const MODE_OF_ADMINISTRATION = [
-  'Gravity',
-  'Elastomeric Diffuser',
-  'Electric Infusion Pump',
+  STRING.gravity,
+  STRING.elastomericDiffuser,
+  STRING.electricInfusionPump,
 ];
 
 const HydrationInfusionForm = forwardRef<
@@ -90,7 +92,7 @@ const HydrationInfusionForm = forwardRef<
 >(
   (
     {
-      title = 'Hydration Infusion Form',
+      title = STRING.hydrationInfusionForm,
       serviceId = '',
       initialData,
       patient,
@@ -99,7 +101,7 @@ const HydrationInfusionForm = forwardRef<
     ref,
   ) => {
     const dispatch = useDispatch();
-
+    const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -109,7 +111,6 @@ const HydrationInfusionForm = forwardRef<
       (state: RootState) => state.profile.profileData,
     );
 
-    const scrollRef = useRef<ScrollView>(null);
     const lastFirstErrorKey = useRef<string | null>(null);
 
     const [open, setOpen] = useState(false);
@@ -191,7 +192,7 @@ const HydrationInfusionForm = forwardRef<
 
     const addProduct = () => {
       if (state.infusion_products.length >= 10) {
-        SHOW_TOAST(STRING.youCanOnlyAddUpto10Products, 'info');
+        SHOW_TOAST(t(STRING.youCanOnlyAddUpto10Products), 'info');
         return;
       }
       setState(prev => ({
@@ -363,15 +364,15 @@ const HydrationInfusionForm = forwardRef<
 
       // Prescription Details - Required fields
       if (!state?.prescription_date) {
-        newErrors.prescription_date = STRING.prescriptionDateRequired;
+        newErrors.prescription_date = t(STRING.prescriptionDateRequired);
       }
 
       // Patient Information - Required fields
       if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-        newErrors.patientLastName = STRING.lNameRequired;
+        newErrors.patientLastName = t(STRING.lNameRequired);
       }
       if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-        newErrors.patientFirstName = STRING.fNameRequired;
+        newErrors.patientFirstName = t(STRING.fNameRequired);
       }
 
       // Infusion Products validation - at least 1 product must be filled
@@ -381,7 +382,7 @@ const HydrationInfusionForm = forwardRef<
 
       if (filledProductIndices.length === 0) {
         newErrors['infusion_products[0].product_name'] =
-          STRING.atLeastOneProductRequired;
+          t(STRING.atLeastOneProductRequired);
       }
 
       setErrors(newErrors);
@@ -398,7 +399,6 @@ const HydrationInfusionForm = forwardRef<
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -413,7 +413,6 @@ const HydrationInfusionForm = forwardRef<
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -429,7 +428,6 @@ const HydrationInfusionForm = forwardRef<
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -446,7 +444,6 @@ const HydrationInfusionForm = forwardRef<
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -462,7 +459,6 @@ const HydrationInfusionForm = forwardRef<
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -478,7 +474,6 @@ const HydrationInfusionForm = forwardRef<
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -496,10 +491,13 @@ const HydrationInfusionForm = forwardRef<
 
     return (
       <View style={styles.container}>
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -541,7 +539,7 @@ const HydrationInfusionForm = forwardRef<
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {STRING.infusionProducts}
+            {t(STRING.infusionProducts)}
           </AppText>
 
           {state.infusion_products.map((product: any, index: number) => (
@@ -560,7 +558,7 @@ const HydrationInfusionForm = forwardRef<
                   font={FONTS.Inter.SemiBold}
                   color={COLORS._1A1D1F}
                 >
-                  {STRING.product} {index + 1}
+                  {t(STRING.product)} {index + 1}
                 </AppText>
 
                 {!readOnly && state.infusion_products.length > 1 && (
@@ -570,7 +568,7 @@ const HydrationInfusionForm = forwardRef<
                         color: COLORS.error,
                       }}
                     >
-                      {STRING.remove}
+                      {t(STRING.remove)}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -578,23 +576,23 @@ const HydrationInfusionForm = forwardRef<
 
               <Input
                 isLocked={readOnly}
-                label={STRING.productName}
+                label={t(STRING.productName)}
                 value={product.product_name}
                 onChangeText={value =>
                   updateProduct(index, 'product_name', value)
                 }
                 isMandatory
-                placeholder={STRING.enterProductName}
+                placeholder={t(STRING.enterProductName)}
                 style={styles.inputField}
                 error={errors[`infusion_products[${index}].product_name`]}
               />
 
               <Input
                 isLocked={readOnly}
-                label={STRING.strength}
+                label={t(STRING.strength)}
                 value={product.strength}
                 onChangeText={value => updateProduct(index, 'strength', value)}
-                placeholder={STRING.enterStrength}
+                placeholder={t(STRING.enterStrength)}
                 style={styles.inputField}
               />
 
@@ -605,7 +603,7 @@ const HydrationInfusionForm = forwardRef<
                   onValueChange={value => {
                     updateProduct(index, 'diluent_type', value ? 'with' : '');
                   }}
-                  label={STRING.diluent}
+                  label={t(STRING.diluent)}
                 />
 
                 <AppCheckBox
@@ -621,7 +619,7 @@ const HydrationInfusionForm = forwardRef<
                       updateProduct(index, 'diluent_volume_ml', '');
                     }
                   }}
-                  label={STRING.withoutDiluent}
+                  label={t(STRING.withoutDiluent)}
                 />
               </View>
 
@@ -629,23 +627,23 @@ const HydrationInfusionForm = forwardRef<
                 <>
                   <Input
                     isLocked={readOnly}
-                    label={STRING.diluent}
+                    label={t(STRING.diluent)}
                     value={product.diluent}
                     onChangeText={value =>
                       updateProduct(index, 'diluent', value)
                     }
-                    placeholder={STRING.enterDiluent}
+                    placeholder={t(STRING.enterDiluent)}
                     style={styles.inputField}
                   />
 
                   <Input
                     isLocked={readOnly}
-                    label={STRING.diluentVolumeMl}
+                    label={t(STRING.diluentVolumeMl)}
                     value={product.diluent_volume_ml}
                     onChangeText={value =>
                       updateProduct(index, 'diluent_volume_ml', value)
                     }
-                    placeholder={STRING.enterVolume}
+                    placeholder={t(STRING.enterVolume)}
                     keyboardType="numeric"
                     style={styles.inputField}
                   />
@@ -654,36 +652,36 @@ const HydrationInfusionForm = forwardRef<
 
               <Input
                 isLocked={readOnly}
-                label={STRING.durationHours}
+                label={t(STRING.durationHours)}
                 value={product.duration_hours}
                 onChangeText={value =>
                   updateProduct(index, 'duration_hours', value)
                 }
-                placeholder={STRING.hours}
+                placeholder={t(STRING.hours)}
                 keyboardType="numeric"
                 style={styles.inputField}
               />
 
               <Input
                 isLocked={readOnly}
-                label={STRING.durationMinutes}
+                label={t(STRING.durationMinutes)}
                 value={product.duration_minutes}
                 onChangeText={value =>
                   updateProduct(index, 'duration_minutes', value)
                 }
-                placeholder={STRING.minutes}
+                placeholder={t(STRING.minutes)}
                 keyboardType="numeric"
                 style={styles.inputField}
               />
 
               <Input
                 isLocked={readOnly}
-                label={STRING.frequencyPerDay}
+                label={t(STRING.frequencyPerDay)}
                 value={product.frequency_per_day}
                 onChangeText={value =>
                   updateProduct(index, 'frequency_per_day', value)
                 }
-                placeholder={STRING.enterFrequency}
+                placeholder={t(STRING.enterFrequency)}
                 keyboardType="numeric"
                 style={styles.inputField}
               />
@@ -694,7 +692,7 @@ const HydrationInfusionForm = forwardRef<
                 color={COLORS._1A1D1F}
                 style={styles.sectionLabel}
               >
-                {STRING.routeOfAccess}
+                {t(STRING.routeOfAccess)}
               </AppText>
 
               <View style={styles.checkboxGroup}>
@@ -702,7 +700,7 @@ const HydrationInfusionForm = forwardRef<
                   <AppCheckBox
                     disabled={readOnly}
                     key={route}
-                    label={route}
+                    label={(route)}
                     value={product.route_of_access === route}
                     onValueChange={() =>
                       updateProduct(
@@ -721,7 +719,7 @@ const HydrationInfusionForm = forwardRef<
                 color={COLORS._1A1D1F}
                 style={styles.sectionLabel}
               >
-                {STRING.modeOfAdministration}
+                {t(STRING.modeOfAdministration)}
               </AppText>
 
               <View style={styles.checkboxGroup}>
@@ -748,7 +746,7 @@ const HydrationInfusionForm = forwardRef<
                 color={COLORS._1A1D1F}
                 style={styles.sectionLabel}
               >
-                {STRING.patientMustRemainAmbulatory}
+                {t(STRING.patientMustRemainAmbulatory)}
               </AppText>
 
               <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
@@ -758,7 +756,7 @@ const HydrationInfusionForm = forwardRef<
                   onValueChange={value =>
                     updateProduct(index, 'ambulatory_required', value)
                   }
-                  label={STRING.yes}
+                  label={t(STRING.yes)}
                 />
 
                 <AppCheckBox
@@ -767,7 +765,7 @@ const HydrationInfusionForm = forwardRef<
                   onValueChange={value =>
                     updateProduct(index, 'ambulatory_required', !value)
                   }
-                  label={STRING.no}
+                  label={t(STRING.no)}
                 />
               </View>
 
@@ -777,13 +775,13 @@ const HydrationInfusionForm = forwardRef<
                 onValueChange={value =>
                   updateProduct(index, 'prepared_in_facility', value)
                 }
-                label={STRING.preparedUnderHealthcareFacilitySupervision}
+                label={t(STRING.preparedUnderHealthcareFacilitySupervision)}
               />
 
               <View style={styles.dateInputsRow}>
                 <Input
                   isLocked={readOnly}
-                  label={STRING.startDate}
+                  label={t(STRING.startDate)}
                   value={product.start_date}
                   onPress={() => {
                     if (readOnly) return;
@@ -802,7 +800,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <Input
                   isLocked={readOnly || !product.start_date}
-                  label={STRING.endDate}
+                  label={t(STRING.endDate)}
                   value={product.end_date}
                   onPress={() => {
                     if (readOnly || !product.start_date) {
@@ -829,18 +827,18 @@ const HydrationInfusionForm = forwardRef<
 
               <Input
                 isLocked={readOnly}
-                label={STRING.treatmentDurationDays}
+                label={t(STRING.treatmentDurationDays)}
                 value={product.treatment_duration_days}
                 onChangeText={value =>
                   updateProduct(index, 'treatment_duration_days', value)
                 }
-                placeholder={STRING.enterDuration}
+                placeholder={t(STRING.enterDuration)}
                 keyboardType="numeric"
                 style={styles.inputField}
               />
 
               <Input
-                label={STRING.totalNumberOfInfusions}
+                label={t(STRING.totalNumberOfInfusions)}
                 value={product.tni}
                 onChangeText={value => updateProduct(index, 'tni', value)}
                 placeholder="0"
@@ -854,7 +852,7 @@ const HydrationInfusionForm = forwardRef<
                 onValueChange={value =>
                   updateProduct(index, 'infuse_alone', value)
                 }
-                label={STRING.ifThisTreatmentMustBeInfusedAlone}
+                label={t(STRING.ifThisTreatmentMustBeInfusedAlone)}
               />
             </View>
           ))}
@@ -868,13 +866,13 @@ const HydrationInfusionForm = forwardRef<
                 font={FONTS.Inter.Medium}
                 color={COLORS._526674}
               >
-                {STRING.addAntibioticProduct}
+                {t(STRING.addAntibioticProduct)}
               </AppText>
             </TouchableOpacity>
           )}
 
           {/* <FormSignature readOnly={readOnly} /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <DatePicker
           modal
@@ -898,7 +896,7 @@ const HydrationInfusionForm = forwardRef<
                   const endDate = moment(selectedDate);
 
                   if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
-                    SHOW_TOAST('End date must be after start date', 'error');
+                    SHOW_TOAST(t(STRING.endDateMustBeAfterStartDate), 'error');
                     return;
                   }
                 }

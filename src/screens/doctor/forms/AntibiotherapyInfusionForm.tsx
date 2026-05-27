@@ -50,6 +50,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface AntibiotherapyInfusionFormProps {
   serviceId: string;
@@ -85,20 +87,15 @@ const AntibiotherapyInfusionForm = forwardRef<
   AntibiotherapyInfusionFormRef,
   AntibiotherapyInfusionFormProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
-  console.log('initialData patient', patient);
-
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
-  const requestId = initialData?._id;
   const selectedPatient = initialData ? patient : reduxPatient;
-  console.log('selectedPatient', selectedPatient);
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
-  console.log('profileData', profileData);
-
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [pickerType, setPickerType] = useState<{
@@ -107,7 +104,6 @@ const AntibiotherapyInfusionForm = forwardRef<
   } | null>(null);
 
   // Scroll helpers to focus first error in infusion products
-  const scrollRef = useRef<ScrollView>(null);
   const productPositions = useRef<{ [index: number]: number }>({}).current;
   const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -181,7 +177,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       serviceId,
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -196,7 +191,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       serviceId,
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -212,7 +206,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -228,7 +221,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -244,7 +236,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -260,7 +251,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -333,7 +323,7 @@ const AntibiotherapyInfusionForm = forwardRef<
 
   const addProduct = () => {
     if (state.infusion_products.length >= 10) {
-      SHOW_TOAST(STRING.youCanOnlyAddUpto10Products, 'info');
+      SHOW_TOAST(t(STRING.youCanOnlyAddUpto10Products), 'info');
       return;
     }
     setState(prev => ({
@@ -448,16 +438,16 @@ const AntibiotherapyInfusionForm = forwardRef<
     // Validate only required fields from schema
     // Required: prescription_date
     if (!state?.prescription_date) {
-      newErrors.prescription_date = STRING.prescriptionDateRequired;
+      newErrors.prescription_date = t(STRING.prescriptionDateRequired);
     }
 
     // Required: patient_last_name, patient_first_name
     // Note: FormPatientSection uses camelCase keys internally
     if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-      newErrors.patientLastName = STRING.lastNameRequired;
+      newErrors.patientLastName = t(STRING.lastNameRequired);
     }
     if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-      newErrors.patientFirstName = STRING.firstNameRequired;
+      newErrors.patientFirstName = t(STRING.firstNameRequired);
     }
 
     // Infusion Products validation - at least 1 product must be filled
@@ -468,7 +458,7 @@ const AntibiotherapyInfusionForm = forwardRef<
 
     if (filledProductIndices.length === 0) {
       newErrors['infusion_products[0].product_name'] =
-        STRING.atLeastOneProductRequired;
+        t(STRING.atLeastOneProductRequired);
     }
 
     setErrors(newErrors);
@@ -478,11 +468,13 @@ const AntibiotherapyInfusionForm = forwardRef<
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
+      <KeyboardAwareScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
       >
         <View style={styles.headerTextContainer}>
           <AppText
@@ -490,7 +482,7 @@ const AntibiotherapyInfusionForm = forwardRef<
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {STRING.antibiotherapyInfusionForm}
+            {t(STRING.antibiotherapyInfusionForm)}
           </AppText>
         </View>
 
@@ -526,7 +518,7 @@ const AntibiotherapyInfusionForm = forwardRef<
           font={FONTS.Inter.SemiBold}
           color={COLORS._1A1D1F}
         >
-          {STRING.infusionProducts}
+          {t(STRING.infusionProducts)}
         </AppText>
         {state.infusion_products.map((product: any, index: number) => (
           <View
@@ -542,7 +534,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 font={FONTS.Inter.SemiBold}
                 color={COLORS._1A1D1F}
               >
-                {STRING.product}
+                {t(STRING.product)}
                 {index + 1}
               </AppText>
               {state.infusion_products.length > 1 && !readOnly && (
@@ -554,22 +546,22 @@ const AntibiotherapyInfusionForm = forwardRef<
 
             <Input
               isLocked={readOnly}
-              label={STRING.productName}
+              label={t(STRING.productName)}
               value={product.product_name}
               onChangeText={value =>
                 updateProduct(index, 'product_name', value)
               }
               isMandatory
-              placeholder={STRING.enterProductName}
+              placeholder={t(STRING.enterProductName)}
               style={styles.inputField}
               error={errors[`infusion_products[${index}].product_name`]}
             />
             <Input
               isLocked={readOnly}
-              label={STRING.strength}
+              label={t(STRING.strength)}
               value={product.strength}
               onChangeText={value => updateProduct(index, 'strength', value)}
-              placeholder={STRING.concentration}
+              placeholder={t(STRING.concentration)}
               style={styles.inputField}
             />
 
@@ -580,7 +572,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 onValueChange={value => {
                   updateProduct(index, 'diluent_type', value ? 'with' : '');
                 }}
-                label={STRING.withDiluent}
+                label={t(STRING.withDiluent)}
               />
               <AppCheckBox
                 disabled={readOnly}
@@ -588,7 +580,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 onValueChange={value => {
                   updateProduct(index, 'diluent_type', value ? 'without' : '');
                 }}
-                label={STRING.withoutDiluent}
+                label={t(STRING.withoutDiluent)}
               />
             </View>
             {errors[`infusion_products[${index}].diluent_type`] ? (
@@ -604,48 +596,48 @@ const AntibiotherapyInfusionForm = forwardRef<
 
             <Input
               isLocked={readOnly}
-              label={STRING.diluentVolume}
+              label={t(STRING.diluentVolume)}
               value={product.diluent_volume_ml}
               onChangeText={value =>
                 updateProduct(index, 'diluent_volume_ml', value)
               }
-              placeholder={STRING.volumePerDay}
+              placeholder={t(STRING.volumePerDay)}
               style={styles.inputField}
               keyboardType="numeric"
               error={errors[`infusion_products[${index}].diluent_volume_ml`]}
             />
             <Input
               isLocked={readOnly}
-              label={STRING.duration}
+              label={t(STRING.duration)}
               value={product.duration_hours}
               onChangeText={value =>
                 updateProduct(index, 'duration_hours', value)
               }
-              placeholder={STRING.hours}
+              placeholder={t(STRING.hours)}
               style={styles.inputField}
               keyboardType="numeric"
               error={errors[`infusion_products[${index}].duration_hours`]}
             />
             <Input
               isLocked={readOnly}
-              label={STRING.durationMin}
+              label={t(STRING.durationMin)}
               value={product.duration_minutes}
               onChangeText={value =>
                 updateProduct(index, 'duration_minutes', value)
               }
-              placeholder={STRING.minutes}
+              placeholder={t(STRING.minutes)}
               style={styles.inputField}
               keyboardType="numeric"
               error={errors[`infusion_products[${index}].duration_minutes`]}
             />
             <Input
               isLocked={readOnly}
-              label={STRING.frequency}
+              label={t(STRING.frequency)}
               value={product.frequency_per_day}
               onChangeText={value =>
                 updateProduct(index, 'frequency_per_day', value)
               }
-              placeholder={STRING.freqPerDay}
+              placeholder={t(STRING.freqPerDay)}
               style={styles.inputField}
               keyboardType="numeric"
               error={errors[`infusion_products[${index}].frequency_per_day`]}
@@ -657,7 +649,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               color={COLORS._1A1D1F}
               style={styles.sectionLabel}
             >
-              {STRING.routeOfAccess}
+              {t(STRING.routeOfAccess)}
             </AppText>
             <View style={styles.checkboxGroup}>
               {ROUTE_OF_ACCESS.map(route => (
@@ -692,7 +684,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               color={COLORS._1A1D1F}
               style={[styles.sectionLabel, { marginTop: getScaleSize(16) }]}
             >
-              {STRING.modeOfAdministration}
+              {t(STRING.modeOfAdministration)}
             </AppText>
             <View style={styles.checkboxGroup}>
               {MODE_OF_ADMINISTRATION.map(mode => (
@@ -727,7 +719,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               color={COLORS._1A1D1F}
               style={styles.sectionLabel}
             >
-              {STRING.thePatientMustRemainAmbulatoryDuringTreatment}
+              {t(STRING.thePatientMustRemainAmbulatoryDuringTreatment)}
             </AppText>
             <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
               <AppCheckBox
@@ -736,7 +728,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 onValueChange={value =>
                   updateProduct(index, 'ambulatory_required', value)
                 }
-                label={STRING.yes}
+                label={t(STRING.yes)}
               />
 
               <AppCheckBox
@@ -745,7 +737,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 onValueChange={value =>
                   updateProduct(index, 'ambulatory_required', !value)
                 }
-                label={STRING.no}
+                label={t(STRING.no)}
               />
             </View>
 
@@ -756,14 +748,14 @@ const AntibiotherapyInfusionForm = forwardRef<
                 onValueChange={value =>
                   updateProduct(index, 'prepared_in_facility', value)
                 }
-                label={STRING.preparedInFacility}
+                label={t(STRING.preparedInFacility)}
               />
             </View>
 
             <View style={styles.dateInputsRow}>
               <Input
                 isLocked={readOnly}
-                label={STRING.startDate}
+                label={t(STRING.startDate)}
                 value={product.start_date}
                 onPress={() => {
                   if (!readOnly) {
@@ -779,7 +771,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               />
               <Input
                 isLocked={readOnly || !product.start_date}
-                label={STRING.endDate}
+                label={t(STRING.endDate)}
                 value={product.end_date}
                 onPress={() => {
                   if (!readOnly && product.start_date) {
@@ -800,12 +792,12 @@ const AntibiotherapyInfusionForm = forwardRef<
             </View>
             <Input
               isLocked={readOnly}
-              label={STRING.treatmentDurationDays}
+              label={t(STRING.treatmentDurationDays)}
               value={product.treatment_duration_days}
               onChangeText={value =>
                 updateProduct(index, 'treatment_duration_days', value)
               }
-              placeholder={STRING.treatmentDurationDays}
+              placeholder={t(STRING.treatmentDurationDays)}
               style={styles.inputField}
               keyboardType="numeric"
               error={
@@ -813,7 +805,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               }
             />
             <Input
-              label={STRING.totalNumberOfInfusions}
+              label={t(STRING.totalNumberOfInfusions)}
               value={product.tni}
               onChangeText={value => updateProduct(index, 'tni', value)}
               placeholder={'0'}
@@ -828,7 +820,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onValueChange={value =>
                 updateProduct(index, 'infuse_alone', value)
               }
-              label={STRING.ifThisTreatmentMustBeInfused}
+              label={t(STRING.ifThisTreatmentMustBeInfused)}
             />
           </View>
         ))}
@@ -841,7 +833,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               font={FONTS.Inter.Medium}
               color={COLORS._526674}
             >
-              {STRING.addAntibioticProduct}
+              {t(STRING.addAntibioticProduct)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -854,7 +846,7 @@ const AntibiotherapyInfusionForm = forwardRef<
           onPress={handleSubmit}
           style={{ marginTop: getScaleSize(20), marginBottom: getScaleSize(20) }}
         /> */}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <DatePicker
         modal
@@ -876,7 +868,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                 const endDate = moment(selectedDate);
 
                 if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
-                  SHOW_TOAST('End date must be after start date', 'error');
+                  SHOW_TOAST(t(STRING.endDateMustBeAfterStartDate), 'error');
                   return;
                 }
               }

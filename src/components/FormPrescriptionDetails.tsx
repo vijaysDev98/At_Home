@@ -10,6 +10,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
 import { STRING } from '../constant';
+import { useTranslation } from 'react-i18next';
 
 export interface FormPrescriptionDetailsProps {
   state: any;
@@ -24,7 +25,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
   errors = {},
   readOnly = false,
 }) => {
-  console.log('readOnly re', readOnly);
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(() => {
     if (state.prescription_date) {
@@ -67,10 +68,9 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
             setOpen(true);
           }
         }}
-        // editable={!readOnly}
-        label="Prescription Date"
+        label={t(STRING.prescriptionDate)}
         isMandatory
-        placeholder="DD/MM/YYYY"
+        placeholder={t(STRING.ddmmyyyy)}
         value={state.prescription_date}
         style={styles.inputField}
         pointerEvents="none"
@@ -100,7 +100,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
               setState({ therapy_type: value ? 'start' : '' })
             }
             disabled={readOnly}
-            label="Start of home infusion therapy"
+            label={t(STRING.startOfHomeInfusionTherapy)}
           />
         </View>
 
@@ -111,7 +111,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
               setState({ therapy_type: value ? 'renewal' : '' })
             }
             disabled={readOnly}
-            label="Renewal or modification"
+            label={t(STRING.renewalOrModification)}
           />
         </View>
       </View>

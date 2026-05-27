@@ -65,6 +65,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
+import { useTranslation } from 'react-i18next';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -74,6 +75,7 @@ export type CreateRequestStep3Props = NativeStackScreenProps<
 const FormsScreen: React.FC = () => {
   const route = useRoute();
   const isFocused = useIsFocused();
+  const { t } = useTranslation();
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
@@ -183,12 +185,12 @@ const FormsScreen: React.FC = () => {
           });
         } else {
           SHOW_TOAST(
-            reviewResponse.error || 'Failed to get review data',
+            reviewResponse.error,
             'error',
           );
         }
       } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Error re-signing', 'error');
+        SHOW_TOAST(error?.message, 'error');
       } finally {
         dispatch(setLoading(false));
       }
@@ -207,19 +209,8 @@ const FormsScreen: React.FC = () => {
     },
 
     // Unused provider handlers (kept for type safety)
-    submitForReview: async () => {},
-    claimService: async () => {},
-  };
-
-  const acquireFormLock = async () => {
-    try {
-      const response = await serviceRequestApi.acquireFormLock(requestId || '');
-      if (response.success) {
-        console.log('Form lock acquired successfully');
-      }
-    } catch (error) {
-      console.log('Error acquiring form lock:', error);
-    }
+    submitForReview: async () => { },
+    claimService: async () => { },
   };
 
   // Fetch service request details when in view mode
@@ -228,22 +219,6 @@ const FormsScreen: React.FC = () => {
       fetchServiceRequestDetails();
     }
   }, [isFocused, requestId]);
-
-  // useEffect(() => {
-  //   if (readOnly) {
-  //     return;
-  //   }
-
-  //   if (requestData && requestData?.isLocked) {
-  //     let lockedBy = requestData?.formLock?.lockedBy;
-  //     if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
-  //       const timer = setTimeout(() => {
-  //         warningSheetRef.current?.show();
-  //       }, 500);
-  //       return () => clearTimeout(timer);
-  //     }
-  //   }
-  // }, [requestData]);
 
   const fetchServiceRequestDetails = async () => {
     try {
@@ -254,15 +229,6 @@ const FormsScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
-        // Acquire lock if both statuses are submitted
-        // if (
-        //   !readOnly &&
-        //   !data?.isLocked &&
-        //   data.status === REQUEST_STATUS.SUBMITTED &&
-        //   data.formStatus === FORM_STATUS.SUBMITTED
-        // ) {
-        //   await acquireFormLock();
-        // }
       } else {
         setHasError(true);
       }
@@ -295,8 +261,9 @@ const FormsScreen: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
+              align='center'
             >
-              {left.label}
+              {t(left.label)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -310,8 +277,9 @@ const FormsScreen: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS.white}
+              align='center'
             >
-              {right.label}
+              {t(right.label)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -323,12 +291,12 @@ const FormsScreen: React.FC = () => {
     <AppSafeAreaView edges={true}>
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <Header title="Medical Form" isBack={true} style={styles.header} />
+        <Header title={t(STRING.medicalForm)} isBack={true} style={styles.header} />
         {isFetched && hasError ? (
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>Something went wrong</AppText>
+            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
           </View>
         ) : !isFetched ? (
           <View

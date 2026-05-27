@@ -33,6 +33,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface PersonalHygieneCareProps {
   serviceId?: string;
@@ -67,6 +69,7 @@ const PersonalHygieneCare = forwardRef<
   PersonalHygieneCareProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
@@ -76,7 +79,6 @@ const PersonalHygieneCare = forwardRef<
     (state: RootState) => state.profile.profileData,
   );
 
-  const scrollRef = useRef<ScrollView>(null);
 
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
@@ -193,12 +195,12 @@ const PersonalHygieneCare = forwardRef<
 
     // Required: patient_name
     if (!state?.patient_name || !state.patient_name.trim()) {
-      newErrors.patientName = STRING.patientNameIsRequired;
+      newErrors.patientName = t(STRING.patientNameIsRequired);
     }
 
     // Required: prescription_date
     if (!state?.prescription_date) {
-      newErrors.prescriptionDate = STRING.prescriptionDateIsRequired;
+      newErrors.prescriptionDate = t(STRING.prescriptionDateIsRequired);
     }
 
     setErrors(newErrors);
@@ -215,7 +217,6 @@ const PersonalHygieneCare = forwardRef<
       serviceId: serviceId || '',
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -230,7 +231,6 @@ const PersonalHygieneCare = forwardRef<
       serviceId: serviceId || '',
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -246,7 +246,6 @@ const PersonalHygieneCare = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -262,7 +261,6 @@ const PersonalHygieneCare = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -278,7 +276,6 @@ const PersonalHygieneCare = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -294,7 +291,6 @@ const PersonalHygieneCare = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -326,11 +322,13 @@ const PersonalHygieneCare = forwardRef<
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
+      <KeyboardAwareScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
       >
         <View style={styles.headerTextContainer}>
           <AppText
@@ -338,21 +336,21 @@ const PersonalHygieneCare = forwardRef<
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {STRING.personalHygieneCare}
+            {t(STRING.personalHygieneCare)}
           </AppText>
         </View>
 
         {/* BASIC INFORMATION */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.basicInformation)}
+          {renderSectionHeader(t(STRING.basicInformation))}
 
           <Input
             isLocked={readOnly}
-            label={STRING.patientName}
+            label={t(STRING.patientName)}
             value={state.patient_name}
             isMandatory
             onChangeText={value => setFormState({ patient_name: value })}
-            placeholder={STRING.enterPatientName}
+            placeholder={t(STRING.enterPatientName)}
             style={styles.inputField}
             error={errors.patientName}
           />
@@ -364,7 +362,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label={STRING.dateOfBirth}
+            label={t(STRING.dateOfBirth)}
             placeholder="DD/MM/YYYY"
             value={state.dob}
             style={styles.inputField}
@@ -373,10 +371,10 @@ const PersonalHygieneCare = forwardRef<
 
           <Input
             isLocked={readOnly}
-            label={STRING.prescriberIdentification}
+            label={t(STRING.prescriberIdentification)}
             value={state.prescriber_name}
             onChangeText={value => setFormState({ prescriber_name: value })}
-            placeholder={STRING.enterPrescriberIdentification}
+            placeholder={t(STRING.enterPrescriberIdentification)}
             style={styles.inputField}
           />
 
@@ -387,7 +385,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label={STRING.date}
+            label={t(STRING.date)}
             placeholder="DD/MM/YYYY"
             value={state.prescription_date}
             style={styles.inputField}
@@ -398,7 +396,7 @@ const PersonalHygieneCare = forwardRef<
 
         {/* DAILY CARE */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.dailyCareHomeNurse)}
+          {renderSectionHeader(t(STRING.dailyCareHomeNurse))}
 
           <View style={styles.checkboxGroup}>
             {hygieneCareOptions.map(care => (
@@ -420,7 +418,7 @@ const PersonalHygieneCare = forwardRef<
 
         {/* VITAL SIGNS MONITORING */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.vitalSignsMonitoring)}
+          {renderSectionHeader(t(STRING.vitalSignsMonitoring))}
 
           <View
             style={[styles.checkboxGroup, { marginLeft: getScaleSize(12) }]}
@@ -447,13 +445,13 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ weekly_weight_monitoring: value })
             }
-            label={STRING.weeklyMonitoringOfBodyWeight}
+            label={t(STRING.weeklyMonitoringOfBodyWeight)}
           />
         </View>
 
         {/* TREATMENT ADMINISTRATION */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.treatmentAdministration)}
+          {renderSectionHeader(t(STRING.treatmentAdministration))}
 
           <AppCheckBox
             disabled={readOnly}
@@ -464,14 +462,14 @@ const PersonalHygieneCare = forwardRef<
                 glucose_frequency: value ? state.glucose_frequency : '',
               })
             }
-            label={STRING.capillaryBloodGlucoseMonitoringAndInsulinInjection}
+            label={t(STRING.capillaryBloodGlucoseMonitoringAndInsulinInjection)}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.glucose_monitoring && (
             <Input
               isLocked={readOnly}
-              label={STRING.timesPerDay}
+              label={t(STRING.timesPerDay)}
               value={state.glucose_frequency}
               onChangeText={value => setFormState({ glucose_frequency: value })}
               placeholder="0"
@@ -483,19 +481,19 @@ const PersonalHygieneCare = forwardRef<
 
         {/* DRESSING CARE */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.dressingCare)}
+          {renderSectionHeader(t(STRING.dressingCare))}
 
           <Input
             isLocked={readOnly}
-            label={STRING.location}
-            placeholder={STRING.enterLocation}
+            label={t(STRING.location)}
+            placeholder={t(STRING.enterLocation)}
             value={state.dressing_location}
             onChangeText={value => setFormState({ dressing_location: value })}
             style={styles.inputField}
           />
 
           <View style={styles.checkboxGroup}>
-            <AppText size={getScaleSize(13)}>{STRING.dressingType}</AppText>
+            <AppText size={getScaleSize(13)}>{t(STRING.dressingType)}</AppText>
             {dressingType.map(type => (
               <AppCheckBox
                 disabled={readOnly}
@@ -511,24 +509,24 @@ const PersonalHygieneCare = forwardRef<
 
           <Input
             isLocked={readOnly}
-            label={STRING.timesPerDay}
+            label={t(STRING.timesPerDay)}
             value={state.dressing_frequency_per_day}
             onChangeText={value =>
               setFormState({ dressing_frequency_per_day: value })
             }
-            placeholder={STRING.enterFrequency}
+            placeholder={t(STRING.enterFrequency)}
             keyboardType="numeric"
             style={styles.inputField}
           />
 
           <Input
             isLocked={readOnly}
-            label={STRING.everyXDays}
+            label={t(STRING.everyXDays)}
             value={state.dressing_frequency_days}
             onChangeText={value =>
               setFormState({ dressing_frequency_days: value })
             }
-            placeholder={STRING.enterDays}
+            placeholder={t(STRING.enterDays)}
             keyboardType="numeric"
             style={styles.inputField}
           />
@@ -536,7 +534,7 @@ const PersonalHygieneCare = forwardRef<
 
         {/* PROCEDURES */}
         <View style={styles.card}>
-          {renderSectionHeader('Procedures')}
+          {renderSectionHeader(t(STRING.procedures))}
 
           <AppCheckBox
             disabled={readOnly}
@@ -547,14 +545,14 @@ const PersonalHygieneCare = forwardRef<
                 suture_removal_days: value ? state.suture_removal_days : '',
               })
             }
-            label={STRING.RemovalOfSuturesStaples}
+            label={t(STRING.RemovalOfSuturesStaples)}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.suture_removal && (
             <Input
               isLocked={readOnly}
-              label={STRING.inXdays}
+              label={t(STRING.inXdays)}
               value={state.suture_removal_days}
               onChangeText={value =>
                 setFormState({ suture_removal_days: value })
@@ -574,14 +572,14 @@ const PersonalHygieneCare = forwardRef<
                 catheter_frequency: value ? state.catheter_frequency : '',
               })
             }
-            label={STRING.urinaryCatheterCare}
+            label={t(STRING.urinaryCatheterCare)}
             containerStyle={{ marginBottom: getScaleSize(12) }}
           />
 
           {state.urinary_catheter_care && (
             <Input
               isLocked={readOnly}
-              label={STRING.timesPerDay}
+              label={t(STRING.timesPerDay)}
               value={state.catheter_frequency}
               onChangeText={value =>
                 setFormState({ catheter_frequency: value })
@@ -600,7 +598,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label={STRING.catheterRemovalDate}
+            label={t(STRING.catheterRemovalDate)}
             placeholder="DD/MM/YYYY"
             value={state.catheter_removal_date}
             style={styles.inputField}
@@ -613,13 +611,13 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ urine_output_monitoring: value })
             }
-            label={STRING.monitoringOfUrineOutput}
+            label={t(STRING.monitoringOfUrineOutput)}
           />
         </View>
 
         {/* CONDITION CLASSIFICATION */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.conditionClassification)}
+          {renderSectionHeader(t(STRING.conditionClassification))}
 
           <AppCheckBox
             disabled={readOnly}
@@ -627,38 +625,38 @@ const PersonalHygieneCare = forwardRef<
             onValueChange={value =>
               setFormState({ non_ald_prescriptions: value })
             }
-            label={STRING.notRelatedToLongTermCondition}
+            label={t(STRING.notRelatedToLongTermCondition)}
           />
 
           <AppCheckBox
             disabled={readOnly}
             value={state.ald_prescriptions}
             onValueChange={value => setFormState({ ald_prescriptions: value })}
-            label={STRING.relatedToLongTermCondition}
+            label={t(STRING.relatedToLongTermCondition)}
           />
         </View>
 
         {/* MEDICAL CERTIFICATION */}
         <View style={styles.card}>
-          {renderSectionHeader(STRING.medicalCertification)}
+          {renderSectionHeader(t(STRING.medicalCertification))}
 
           <Input
             isLocked={readOnly}
-            label={STRING.doctorName}
+            label={t(STRING.doctorName)}
             value={state.doctor_name}
             onChangeText={value => setFormState({ doctor_name: value })}
-            placeholder={STRING.enterDoctorName}
+            placeholder={t(STRING.enterDoctorName)}
             style={styles.inputField}
           />
 
           <Input
             isLocked={readOnly}
-            label={STRING.patientName}
+            label={t(STRING.patientName)}
             value={state.certified_patient_name}
             onChangeText={value =>
               setFormState({ certified_patient_name: value })
             }
-            placeholder={STRING.enterPatientName}
+            placeholder={t(STRING.enterPatientName)}
             style={styles.inputField}
           />
 
@@ -666,17 +664,17 @@ const PersonalHygieneCare = forwardRef<
             disabled={readOnly}
             value={state.care_required}
             onValueChange={value => setFormState({ care_required: value })}
-            label={STRING.requiresNursingCareAtHome}
+            label={t(STRING.requiresNursingCareAtHome)}
           />
 
           <Input
             isLocked={readOnly}
-            label={STRING.prescriptionDurationDays}
+            label={t(STRING.prescriptionDurationDays)}
             value={state.prescription_duration_days}
             onChangeText={value =>
               setFormState({ prescription_duration_days: value })
             }
-            placeholder={STRING.enterDuration}
+            placeholder={t(STRING.enterDuration)}
             keyboardType="numeric"
             style={[styles.inputField, { marginTop: getScaleSize(5) }]}
           />
@@ -685,13 +683,13 @@ const PersonalHygieneCare = forwardRef<
             disabled={readOnly}
             value={state.renewable}
             onValueChange={value => setFormState({ renewable: value })}
-            label={STRING.renewable}
+            label={t(STRING.renewable)}
           />
         </View>
 
         {/* SIGNATURE */}
         {/* <FormSignature readOnly={readOnly} state={state} setState={setFormState} /> */}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <DatePicker
         modal

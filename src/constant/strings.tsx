@@ -71,6 +71,15 @@ export const STRING = {
     'We will notify you via email once your account is activated',
   whatHappensNext: 'What happens next?',
   yourRegDes: `Your registration will be reviewed by the admin. You will be notified once your account is approved. You cannot log in until your account is approved.`,
+  hospital: 'Hospital',
+  office: 'Office',
+  generalPractitioner: 'General Practitioner',
+  cardiology: 'Cardiology',
+  pediatrician: 'Pediatrician',
+  dermatologist: 'Dermatologist',
+  ophthalmologist: 'Ophthalmologist',
+  neurology: 'Neurology',
+  other: 'Other',
 
   // ─── Auth: Login ─────────────────────────────────────────────
   welcomeBack: 'Welcome Back',
@@ -86,6 +95,8 @@ export const STRING = {
   incorrectPassword: 'Incorrect password. Please try again.',
   forgotPassword: 'Forgot Password',
   forgotPasswordQuestion: 'Forgot Password?',
+  languageChanged: 'Language changed to',
+  failedToChangeLanguage: 'Failed to change language',
 
   // ─── Auth: Forgot Password ───────────────────────────────────
   sendOTP: 'Send OTP / Reset Link',
@@ -117,6 +128,8 @@ export const STRING = {
 
   // ─── Home Screen ─────────────────────────────────────────────
   goodMorning: 'Good morning,',
+  noRecentRequests: 'No recent requests',
+  save: 'Save',
   requestsOverview: 'Requests Overview',
   active: 'Active',
   inprogress: 'Inprogress',
@@ -202,6 +215,10 @@ export const STRING = {
   searchByNameOrId: 'Search by name or ID...',
   noPatientsFound: 'No patients found',
   createNewPatient: 'Create New Patient',
+  noServiceSelected: 'No service is selected!',
+  saveAsDraft: 'Save as Draft',
+  saveProgress: 'Save Progress',
+  submitRequest: 'Submit Request',
 
   // ─── Validation / Errors ─────────────────────────────────────
   fNameRequired: 'First name is required.',
@@ -220,6 +237,9 @@ export const STRING = {
   // ─── Forms ─────────────────────────────────────
   antibiotherapyInfusionForm: 'Antibiotherapy Infusion Prescription Form',
   artificialNutritionForm: 'Enteral Artificial Nutrition Prescription Form',
+  gravityPackage1: 'Gravity (Package 1)',
+  pumpPackage2: 'Pump (Package 2)',
+  volumeMl: 'Volume (ml)',
   prescriptionDetails: 'Prescription Details',
   prescriptionDate: 'Prescription Date',
   startOfHomeInfusionTherapy: 'Start of home infusion therapy',
@@ -293,6 +313,9 @@ export const STRING = {
   followUp: 'Follow-up',
   weightMonitoringFrequency: 'Weight Monitoring Frequency',
   signature: 'Signature',
+  pathologyProgression: 'Pathology progression',
+  oralIntakeLevel: 'Oral intake level',
+  onsTolerance: 'ONS tolerance',
 
   //ANTI-Biotherpy
   youCanOnlyAddUpto10Products: 'You can only add up to 10 products',
@@ -531,4 +554,161 @@ export const STRING = {
   recentlyUpdated: 'Recently Updated',
   all: 'All',
   dob: 'DOB:',
+
+
+  //Actionsheets
+  warning: 'Warning',
+  formTemporarilyUnavailable: 'Form Temporarily Unavailable. This form is currently being updated by another user. Please try again shortly.',
+  back: 'Back',
+  pleaseSelectAReasonAndEnterDetails: 'Please select a reason and enter details',
+  requestReview: 'Request Review',
+  describeIssueWithThisService: 'Describe issue with this service',
+  quickSelect: 'Quick Select',
+  details: 'Details',
+  enterDetails: 'Enter details',
+  sendForReview: 'Send for Review',
+  completeService: 'Complete Service',
+  completeServiceConfirmation: 'Please confirm that the service has been successfully completed. Once completed, this action cannot be undone.',
+  markAsCompleted: 'Mark as Completed',
+  logout: 'Logout',
+  logoutConfirmation: 'Are you sure you want to log out of your account?',
+  selectLanguage: 'Select Language',
+  choosePreferredLanguage: 'Choose your preferred language',
+
+  //facility section
+  prescribersPracticeFacility: "Prescriber's Practice / Facility",
+  hospitalName: 'Hospital name',
+  enterHospitalName: 'Enter hospital name',
+  enterAddress: 'Enter address',
+  geographicFinessNo: 'Geographic Finess No.',
+
+  //patient section
+  patientInformation: 'Patient Information',
+  firstName: 'First name',
+  enterFirstName: 'Enter first name',
+  lastName: 'Last name',
+  enterLastName: 'Enter last name',
+  ddmmyyyy: 'DD/MM/YYYY',
+  socialInsuranceNumberNIR: 'Social Insurance number (NIR)',
+  enterNIR: 'Enter NIR',
+  careRelatedToALD: 'Care related to a long-term condition (ALD)',
+  careNotRelatedToALD: 'Care not related to long-term condition (ALD)',
+
+  //prescriber section
+  finess: 'FINESS',
+  phone: 'Phone',
+  rppsId: 'RPPS ID',
+  sharedDirectory: 'Shared directory of healthcare professionals',
+
+  //formrequestheader
+  patient: 'Patient',
+  requestStatus: 'Request Status',
+
+  //signature
+  doctorSignature: 'Doctor Signature',
+  signed: 'Signed',
+  signNow: 'Sign Now',
+
+  //image picker
+  selectImage: 'Select Image',
+  camera: 'Camera',
+  gallery: 'Gallery',
+
+  //requestcardprovider
+  returnRequest: 'Return Request',
+
+  //btnstxt
+  updateAndReSign: 'Update & Re-sign',
+  submitForReview: 'Submit for Review',
+  claimService: 'Claim Service',
+
+  //toast
+  downloadFailed: 'Download failed',
+
+  //bottomtabname
+  home: 'Home',
+  request: 'Request',
+  alerts: 'Alerts',
+
+  //changepassword
+  changePassword: 'Change Password',
+  changePasswordMessage: 'Enter your current password and create a new password for your account.',
+  currentPassword: 'Current Password',
+  enterCurrentPassword: 'Enter current password',
+
+  //other
+  somethingWentWrong: 'Something went wrong',
+  reviewAndSign: 'Review & Sign',
+  editForm: 'Edit Form',
+
+  enterAdditionalNotes: 'Enter additional notes',
+
+  //hydrationinfusion
+  implantedPort: 'Implanted Port',
+  centralCatheter: 'Central Catheter',
+  picc: 'PICC',
+  perineural: 'Perineural',
+  peripheralVenous: 'Peripheral Venous',
+  subcutaneous: 'Subcutaneous',
+  gravity: 'Gravity',
+  elastomericDiffuser: 'Elastomeric Diffuser',
+  electricInfusionPump: 'Electric Infusion Pump',
+  hydrationInfusionForm: 'Hydration Infusion Form',
+  endDateMustBeAfterStartDate: 'End date must be after start date',
+  discardChanges: 'Discard changes?',
+  noLinkedRequestsFound: 'No linked requests found',
+  language: 'Language',
+  noRequestsFound: 'No requests found',
+
+  serviceRequest: 'Service Request',
+  manageYourServiceRequests: 'Manage your service requests',
+  searchPatientsServices: 'Search patients, services...',
+  form: 'Form',
+  found: 'Found',
+  Draft: 'Draft',
+  Submitted: 'Submitted',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  InProgress: 'In Progress',
+  AwaitingSignature: 'Awaiting\nSignature',
+  Signed: 'Signed',
+  Returned: 'Returned',
+  Completed: 'Completed',
+  missingID: 'Missing Request ID',
+  requestClaimedSuccessfully: 'Request claimed successfully',
+  failedToClaimRequest: 'Failed to claim request',
+  serviceCompletedSuccessfully: 'Service completed successfully',
+  viewForm: 'View Form',
+  service: 'Service',
+  updateForm: 'Update Form',
+  serviceCompleted: 'Service Completed',
+  serviceCompletedDescription: 'This service has been completed and the record is now locked.',
+  completedOn: 'Completed on',
+  doctor: 'Doctor',
+  serviceSummary: 'Service Summary',
+  serviceType: 'Service Type',
+  priority: 'Priority',
+  provider: 'Provider',
+  patientDetails: 'Patient Details',
+  downloadPdf: 'Download PDF',
+  overview: 'Overview',
+  inProgress: 'In Progress',
+  completedToday: 'Completed Today',
+  contactInformation: 'Contact Information',
+  eligibleServices: 'Eligible Services',
+  providerNameRequired: 'Provider name is required',
+  updateProviderProfileDetails: 'Update your provider profile details',
+  tapToChangeProfilePhoto: 'Tap to change profile photo',
+  providerName: 'Provider Name',
+  enterProviderName: 'Enter provider name',
+  requests: 'Requests',
+  procedures: 'Procedures',
+  continueForm: 'Continue Form',
+  continueSign: 'Continue Sign',
+  updateAndResign: 'Update & Re-sign',
+  openForm: 'Open Form',
+  viewService: 'View Service',
+
+  medicalForm: 'Medical Form',
+  signing: 'Signing...',
 };

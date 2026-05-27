@@ -18,15 +18,12 @@ export const useSimpleImagePicker = (options: UseSimpleImagePickerOptions = {}) 
 
     openGallery(pickerOptions, (res: ImagePickerResponse) => {
       if (res.didCancel) {
-        console.log('User cancelled');
       } else if (res.errorCode) {
-        console.log('ImagePickerError: ', res.errorMessage);
         options.onError?.(res.errorMessage || 'Gallery error');
       } else {
-        console.log('response from image' ,res );
         const asset = res.assets?.[0];
         if (asset?.base64 && asset.type) {
-          options.onImageSelected?.(asset.uri , asset.type, asset.fileName);
+          options.onImageSelected?.(asset.uri, asset.type, asset.fileName);
         }
       }
     });
@@ -38,12 +35,10 @@ export const useSimpleImagePicker = (options: UseSimpleImagePickerOptions = {}) 
       mediaType: 'photo' as const,
       includeBase64: true,
     };
-    
+
     openCamera(pickerOptions, (res: ImagePickerResponse) => {
       if (res.didCancel) {
-        console.log('User cancelled image picker');
       } else if (res.errorCode) {
-        console.log('ImagePicker Error: ', res.errorMessage);
         options.onError?.(res.errorMessage || 'Camera error');
       } else {
         const asset = res.assets?.[0];

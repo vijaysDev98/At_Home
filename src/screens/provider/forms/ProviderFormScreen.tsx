@@ -47,6 +47,8 @@ import HeaderProvider, {
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { SCREENS } from '../../../navigation/routes';
 import { API_BASE_URL } from '../../../api/apiRoutes';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../../../constant';
 
 export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -55,6 +57,7 @@ export type ProviderFormScreenProps = NativeStackScreenProps<
 
 const ProviderFormScreen: React.FC = () => {
   const route = useRoute();
+  const { t } = useTranslation();
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
@@ -132,7 +135,7 @@ const ProviderFormScreen: React.FC = () => {
     // Provider: claim a signed service
     claimService: async () => {
       if (!requestId) {
-        SHOW_TOAST('Missing Request ID', 'error');
+        SHOW_TOAST(t(STRING.missingID), 'error');
         return;
       }
       dispatch(setLoading(true));
@@ -140,26 +143,26 @@ const ProviderFormScreen: React.FC = () => {
         const response = await serviceRequestApi.claimRequest(requestId);
         if (response.success) {
           SHOW_TOAST(
-            response.message || 'Request claimed successfully',
+            response.message || t(STRING.requestClaimedSuccessfully),
             'success',
           );
           NavigationService.goBack();
         } else {
-          SHOW_TOAST(response.error || 'Failed to claim request', 'error');
+          SHOW_TOAST(response.error || t(STRING.failedToClaimRequest), 'error');
         }
       } catch (error: any) {
-        SHOW_TOAST(error?.message || 'Failed to claim request', 'error');
+        SHOW_TOAST(error?.message, 'error');
       } finally {
         dispatch(setLoading(false));
       }
     },
 
     // Unused doctor handlers (kept for type safety)
-    updateFormData: async () => {},
-    saveAsDraft: async () => {},
-    submitRequest: async () => {},
-    updateAndSign: async () => {},
-    updateAndResign: async () => {},
+    updateFormData: async () => { },
+    saveAsDraft: async () => { },
+    submitRequest: async () => { },
+    updateAndSign: async () => { },
+    updateAndResign: async () => { },
   };
 
   // Fetch service request details when in view mode
@@ -170,32 +173,6 @@ const ProviderFormScreen: React.FC = () => {
     }
   }, [requestId]);
 
-  const acquireFormLock = async () => {
-    try {
-      const response = await serviceRequestApi.acquireFormLock(requestId || '');
-      if (response.success) {
-        console.log('Form lock acquired successfully');
-      }
-    } catch (error) {
-      console.log('Error acquiring form lock:', error);
-    }
-  };
-
-  // useEffect(() => {
-  //   if (readOnly) {
-  //     return;
-  //   }
-  //   if (requestData && requestData?.isLocked) {
-  //     let lockedBy = requestData?.formLock?.lockedBy;
-  //     if (lockedBy && lockedBy !== (profileData?._id || profileData?.id)) {
-  //       const timer = setTimeout(() => {
-  //         warningSheetRef.current?.show();
-  //       }, 500);
-  //       return () => clearTimeout(timer);
-  //     }
-  //   }
-  // }, [requestData]);
-
   const fetchServiceRequestDetails = async (isInProgress: boolean) => {
     try {
       setHasError(false);
@@ -205,17 +182,6 @@ const ProviderFormScreen: React.FC = () => {
 
       if (data) {
         setRequestData(data);
-        console.log('provider side', data);
-
-        // Acquire lock if request and form are both submitted and unlocked
-        // if (
-        //   !readOnly &&
-        //   !data?.isLocked &&
-        //   data.status === REQUEST_STATUS.SUBMITTED &&
-        //   data.formStatus === FORM_STATUS.SUBMITTED
-        // ) {
-        //   acquireFormLock();
-        // }
       } else {
         setHasError(true);
       }
@@ -228,7 +194,7 @@ const ProviderFormScreen: React.FC = () => {
 
   const handleCompleteRequest = async () => {
     if (!requestId) {
-      SHOW_TOAST('Missing Request ID', 'error');
+      SHOW_TOAST(t(STRING.missingID), 'error');
       return;
     }
     dispatch(setLoading(true));
@@ -236,7 +202,7 @@ const ProviderFormScreen: React.FC = () => {
       const response = await serviceRequestApi.completeRequest(requestId);
       if (response.success) {
         SHOW_TOAST(
-          response.message || 'Service completed successfully',
+          response.message || t(STRING.serviceCompletedSuccessfully),
           'success',
         );
         completeSheetRef?.current?.hide();
@@ -244,10 +210,10 @@ const ProviderFormScreen: React.FC = () => {
           requestId: requestId,
         });
       } else {
-        SHOW_TOAST(response.error || 'Failed to complete service', 'error');
+        SHOW_TOAST(response.error, 'error');
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to complete service', 'error');
+      SHOW_TOAST(error?.message, 'error');
     } finally {
       dispatch(setLoading(false));
     }
@@ -255,14 +221,14 @@ const ProviderFormScreen: React.FC = () => {
 
   const handleViewRequest = async () => {
     if (!requestId) {
-      SHOW_TOAST('Missing Request ID', 'error');
+      SHOW_TOAST(t(STRING.missingID), 'error');
       return;
     }
     dispatch(setLoading(true));
     try {
       await serviceRequestApi.providerViewRequest(requestId);
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to view service', 'error');
+      SHOW_TOAST(error?.message, 'error');
     } finally {
       dispatch(setLoading(false));
     }
@@ -291,7 +257,7 @@ const ProviderFormScreen: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {left.label}
+              {t(left.label)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -306,7 +272,7 @@ const ProviderFormScreen: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              {right.label}
+              {t(right.label)}
             </AppText>
           </TouchableOpacity>
         )}
@@ -319,7 +285,7 @@ const ProviderFormScreen: React.FC = () => {
       <View style={styles.container}>
         <HeaderProvider
           title={
-            readOnly ? 'View Form' : isInProgress ? 'Service' : 'Update Form'
+            readOnly ? t(STRING.viewForm) : isInProgress ? t(STRING.service) : t(STRING.updateForm)
           }
           onViewFormPress={() => {
             console.log(API_BASE_URL + requestData?.signedPdfUrl || '');
@@ -341,7 +307,7 @@ const ProviderFormScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>Something went wrong</AppText>
+            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
           </View>
         ) : (
           <>
@@ -378,7 +344,7 @@ const ProviderFormScreen: React.FC = () => {
             {renderBottomBar()}
             {isInProgress && isComplete && (
               <AppButton
-                title={'Mark as Completed'}
+                title={t(STRING.markAsCompleted)}
                 onPress={() => {
                   completeSheetRef?.current?.show();
                 }}

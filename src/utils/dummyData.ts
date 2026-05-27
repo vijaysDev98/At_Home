@@ -1,13 +1,5 @@
 import { IMAGES } from '../assets/images';
-export const doctorSpecialities = [
-  { label: 'General Practitioner', value: 'generalPractice' },
-  { label: 'Cardiology', value: 'cardiology' },
-  { label: 'Pediatrician', value: 'pediatrics' },
-  { label: 'Dermatologist', value: 'dermatology' },
-  { label: 'Ophthalmologist', value: 'orthopedics' },
-  { label: 'Neurology', value: 'neurology' },
-  { label: 'Other', value: 'other' },
-];
+import { STRING } from '../constant/strings';
 
 export interface PatientListProps {
   id: string;

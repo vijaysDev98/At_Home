@@ -18,6 +18,8 @@ import { IMAGES } from '../assets/images';
 import { AppText } from '../components';
 import { getScaleSize } from '../utils/scaleSize';
 import AvailableRequest from '../screens/provider/request/AvailableRequest';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
@@ -33,7 +35,7 @@ const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
     case PROVIDER_TAB_SCREENS.HOME:
       return IMAGES.tab_home;
     case PROVIDER_TAB_SCREENS.REQUESTS:
-      return IMAGES.tab_request;
+      return IMAGES.tab_requests2;
     case PROVIDER_TAB_SCREENS.ALERTS:
       return IMAGES.notification_icon;
     case PROVIDER_TAB_SCREENS.PROFILE:
@@ -71,7 +73,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
   descriptors,
   navigation,
 }) => {
-  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <SafeAreaView edges={['bottom']} style={styles.barContainer}>
       <View style={styles.bar}>
@@ -123,7 +125,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
                 font={isFocused ? FONTS.Inter.Bold : FONTS.Inter.Medium}
                 color={isFocused ? COLORS._526674 : COLORS._6F767E}
               >
-                {label as string}
+                {t(label as string)}
               </AppText>
             </Pressable>
           );

@@ -52,6 +52,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface MedicalOxygenProps {
   serviceId?: string;
@@ -71,7 +73,7 @@ export interface MedicalOxygenRef {
 const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
   ({ serviceId = '', initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
-
+    const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -81,7 +83,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const scrollRef = useRef<ScrollView>(null);
     const lastFirstErrorKey = useRef<string | null>(null);
 
     const [open, setOpen] = useState(false);
@@ -220,10 +221,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
       // Patient Information - Required fields
       if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-        newErrors.patientLastName = STRING.lNameRequired;
+        newErrors.patientLastName = t(STRING.lNameRequired);
       }
       if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-        newErrors.patientFirstName = STRING.fNameRequired;
+        newErrors.patientFirstName = t(STRING.fNameRequired);
       }
 
       setErrors(newErrors);
@@ -240,7 +241,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -255,7 +255,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         serviceId,
         selectedPatient,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -271,7 +270,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -288,7 +286,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -304,7 +301,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -320,7 +316,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         state,
         initialData,
         validateForm,
-        scrollRef,
         lastFirstErrorKey,
         errors,
       });
@@ -338,10 +333,13 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
     return (
       <View style={styles.container}>
-        <ScrollView
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -385,7 +383,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               color={COLORS._1A1D1F}
               style={styles.sectionTitle}
             >
-              {STRING.oxygenPrescriptionDetails}
+              {t(STRING.oxygenPrescriptionDetails)}
             </AppText>
 
             <View style={styles.checkboxGroup}>
@@ -394,7 +392,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 color={COLORS._1A1D1F}
                 font={FONTS.Inter.Medium}
               >
-                {STRING.primaryOxygenSource}
+                {t(STRING.primaryOxygenSource)}
               </AppText>
               <AppCheckBox
                 disabled={readOnly}
@@ -447,7 +445,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                   marginTop: getScaleSize(12),
                 }}
               >
-                {STRING.deliveryMethod}
+                {t(STRING.deliveryMethod)}
               </AppText>
               <AppCheckBox
                 disabled={readOnly}
@@ -457,7 +455,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                     delivery_method: value ? STRING.nasalCannula : '',
                   })
                 }
-                label={STRING.nasalCannula}
+                label={t(STRING.nasalCannula)}
               />
               <AppCheckBox
                 disabled={readOnly}
@@ -467,19 +465,19 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                     delivery_method: value ? STRING.oxygenMask : '',
                   })
                 }
-                label={STRING.oxygenMask}
+                label={t(STRING.oxygenMask)}
               />
             </View>
 
             {/* Duration input */}
             <Input
               isLocked={readOnly}
-              label={STRING.durationHoursPerDay}
+              label={t(STRING.durationHoursPerDay)}
               value={state.duration_hours_per_day}
               onChangeText={value =>
                 setFormState({ duration_hours_per_day: value })
               }
-              placeholder={STRING.enterDuration}
+              placeholder={t(STRING.enterDuration)}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -487,22 +485,22 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             {/* Flow rate inputs */}
             <Input
               isLocked={readOnly}
-              label={STRING.flowRateAtRest}
+              label={t(STRING.flowRateAtRest)}
               value={state.flow_rate_rest}
               onChangeText={value => setFormState({ flow_rate_rest: value })}
-              placeholder={STRING.enterFlowRate}
+              placeholder={t(STRING.enterFlowRate)}
               keyboardType="numeric"
               style={styles.inputField}
             />
 
             <Input
               isLocked={readOnly}
-              label={STRING.flowRateDuringExertion}
+              label={t(STRING.flowRateDuringExertion)}
               value={state.flow_rate_exertion}
               onChangeText={value =>
                 setFormState({ flow_rate_exertion: value })
               }
-              placeholder={STRING.enterFlowRate}
+              placeholder={t(STRING.enterFlowRate)}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -514,7 +512,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ humidifier_required: value })
               }
-              label={STRING.humidifierRequired}
+              label={t(STRING.humidifierRequired)}
             />
 
             {/* Backup and mobility checkboxes */}
@@ -522,14 +520,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               disabled={readOnly}
               value={state.backup_source}
               onValueChange={value => setFormState({ backup_source: value })}
-              label={STRING.backupOxygenCylinder}
+              label={t(STRING.backupOxygenCylinder)}
             />
 
             <AppCheckBox
               disabled={readOnly}
               value={state.mobility_source}
               onValueChange={value => setFormState({ mobility_source: value })}
-              label={STRING.mobilityOxygenCylinder}
+              label={t(STRING.mobilityOxygenCylinder)}
             />
 
             {/* Pulse oximeter and tubing checkboxes */}
@@ -539,7 +537,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ pulse_oximeter_provided: value })
               }
-              label={STRING.pulseOximeterProvided}
+              label={t(STRING.pulseOximeterProvided)}
             />
 
             <AppCheckBox
@@ -548,17 +546,17 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ non_kinking_tubing: value })
               }
-              label={STRING.nonKinking}
+              label={t(STRING.nonKinking)}
               containerStyle={{ marginBottom: getScaleSize(10) }}
             />
 
             {/* Target SpO2 input */}
             <Input
               isLocked={readOnly}
-              label={STRING.targetSpO2}
+              label={t(STRING.targetSpO2)}
               value={state.target_spo2}
               onChangeText={value => setFormState({ target_spo2: value })}
-              placeholder={STRING.enterTargetSpO2}
+              placeholder={t(STRING.enterTargetSpO2)}
               keyboardType="numeric"
               style={styles.inputField}
             />
@@ -566,10 +564,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             {/* Emergency contact phone */}
             <Input
               isLocked={readOnly}
-              label={STRING.emergencyContactPhone}
+              label={t(STRING.emergencyContactPhone)}
               value={state.contact_phone}
               onChangeText={value => setFormState({ contact_phone: value })}
-              placeholder={STRING.enterPhoneNumber}
+              placeholder={t(STRING.enterPhoneNumber)}
               keyboardType="phone-pad"
               style={styles.inputField}
             />
@@ -582,47 +580,47 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               color={COLORS._1A1D1F}
               style={styles.sectionTitle}
             >
-              {STRING.patientInstructions}
+              {t(STRING.patientInstructions)}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              {STRING.ItIsEssentialToFollowTheInstructionsCarefully}
+              {t(STRING.ItIsEssentialToFollowTheInstructionsCarefully)}
             </AppText>
 
             <AppText style={styles.instructionText}>
-              {STRING.UseYourOxygenDailyForAtLeastTheDurationIndicatedOnYour}
-            </AppText>
-
-            <AppText style={styles.instructionText}>
-              {
-                STRING.IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns
-              }
-            </AppText>
-
-            <AppText style={styles.instructionText}>
-              {STRING.NEVERSmokeOrVapeWhileUsingOxygen}
-            </AppText>
-
-            <AppText style={styles.instructionText}>
-              {STRING.NEVERSmokeInTheRoomWhereYourOxygenIsInstalled}
-            </AppText>
-
-            <AppText style={styles.instructionText}>
-              {STRING.NEVERcookWhileUsingOxygen}
-            </AppText>
-
-            <AppText style={styles.instructionText}>
-              {STRING.NEVERuseAerosolSpraysOrFlammableSolventsNearOxygen}
+              {t(STRING.UseYourOxygenDailyForAtLeastTheDurationIndicatedOnYour)}
             </AppText>
 
             <AppText style={styles.instructionText}>
               {
-                STRING.NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands
+                t(STRING.IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns)
               }
             </AppText>
 
             <AppText style={styles.instructionText}>
-              {STRING.NEVERkeepTheEquipmentNearHeatSources}
+              {t(STRING.NEVERSmokeOrVapeWhileUsingOxygen)}
+            </AppText>
+
+            <AppText style={styles.instructionText}>
+              {t(STRING.NEVERSmokeInTheRoomWhereYourOxygenIsInstalled)}
+            </AppText>
+
+            <AppText style={styles.instructionText}>
+              {t(STRING.NEVERcookWhileUsingOxygen)}
+            </AppText>
+
+            <AppText style={styles.instructionText}>
+              {t(STRING.NEVERuseAerosolSpraysOrFlammableSolventsNearOxygen)}
+            </AppText>
+
+            <AppText style={styles.instructionText}>
+              {
+                t(STRING.NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands)
+              }
+            </AppText>
+
+            <AppText style={styles.instructionText}>
+              {t(STRING.NEVERkeepTheEquipmentNearHeatSources)}
             </AppText>
             <AppCheckBox
               disabled={readOnly}
@@ -630,7 +628,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               onValueChange={value =>
                 setFormState({ instructions_acknowledged: value })
               }
-              label={STRING.patientacknowledgesinstructions}
+              label={t(STRING.patientacknowledgesinstructions)}
             />
           </View>
 
@@ -639,14 +637,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             disabled={readOnly}
             value={state.palliative_care}
             onValueChange={value => setFormState({ palliative_care: value })}
-            label={STRING.partOfPalliativeCare}
+            label={t(STRING.partOfPalliativeCare)}
           />
 
           {/* Instructions Acknowledged */}
 
 
           {/* <FormSignature readOnly={readOnly} /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <DatePicker
           modal

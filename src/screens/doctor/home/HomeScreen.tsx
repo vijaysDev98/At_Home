@@ -23,7 +23,7 @@ import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
-import { useLocalization } from '../../../localization/useLocalization';
+import { useTranslation } from 'react-i18next';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
@@ -74,6 +74,7 @@ interface DashboardData {
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
@@ -104,7 +105,6 @@ const HomeScreen: React.FC = () => {
       }
       setUnreadCount(count);
     } catch (error) {
-      console.log('Error fetching dashboard data:', error);
     } finally {
       dispatch(setLoading(false));
     }
@@ -142,7 +142,7 @@ const HomeScreen: React.FC = () => {
   const actionRequired = [
     {
       id: 'signature',
-      title: STRING.formAwaitingSignature,
+      title: t(STRING.formAwaitingSignature),
       value:
         dashboardData?.actionRequired?.awaitingSignatureCount?.toString() ||
         '0',
@@ -153,7 +153,7 @@ const HomeScreen: React.FC = () => {
   const patientMetrics = [
     {
       id: 'patients',
-      title: STRING.totalPatients,
+      title: t(STRING.totalPatients),
       value: dashboardData?.patients?.totalPatients?.toString() || '0',
       icon: IMAGES.patients_icon,
     },
@@ -175,8 +175,6 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  const t = useLocalization();
-
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
@@ -195,9 +193,8 @@ const HomeScreen: React.FC = () => {
             ) : (
               <ProfileAvatar
                 size="medium"
-                name={`${profileData?.fName || ''} ${
-                  profileData?.lName || ''
-                }`.trim()}
+                name={`${profileData?.fName || ''} ${profileData?.lName || ''
+                  }`.trim()}
               />
             )}
             <View>
@@ -206,7 +203,7 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Regular}
                 color={COLORS._1A1D1F}
               >
-                {t.welcome}
+                {t(STRING.welcome)}
               </AppText>
               <AppText
                 size={getScaleSize(18)}
@@ -266,7 +263,7 @@ const HomeScreen: React.FC = () => {
               color={COLORS._1A1D1F}
               style={styles.sectionTitle}
             >
-              {STRING.requestsOverview}
+              {t(STRING.requestsOverview)}
             </AppText>
             <View style={styles.activeContainer}>
               <AppText
@@ -275,7 +272,7 @@ const HomeScreen: React.FC = () => {
                 color={COLORS._1A1D1F}
                 style={styles.tabLabel}
               >
-                {STRING.active}
+                {t(STRING.active)}
               </AppText>
 
               <View style={styles.metricsList}>
@@ -311,7 +308,7 @@ const HomeScreen: React.FC = () => {
                   color={COLORS._1A1D1F}
                   style={styles.tabLabel}
                 >
-                  {STRING.actionRequired}
+                  {t(STRING.actionRequired)}
                 </AppText>
 
                 <View style={styles.actionList}>
@@ -356,7 +353,7 @@ const HomeScreen: React.FC = () => {
                         font={FONTS.Inter.SemiBold}
                         color={COLORS._526674}
                       >
-                        {STRING.viewAll} {'>'}
+                        {t(STRING.viewAll)} {'>'}
                       </AppText>
                     </TouchableOpacity>
                   ))}
@@ -369,7 +366,7 @@ const HomeScreen: React.FC = () => {
                   color={COLORS._1A1D1F}
                   style={[styles.tabLabel]}
                 >
-                  {STRING.patients}
+                  {t(STRING.patients)}
                 </AppText>
 
                 <View style={styles.actionList}>
@@ -407,7 +404,7 @@ const HomeScreen: React.FC = () => {
                         font={FONTS.Inter.SemiBold}
                         color={COLORS._526674}
                       >
-                        {STRING.viewAll} {'>'}
+                        {t(STRING.viewAll)} {'>'}
                       </AppText>
                     </TouchableOpacity>
                   ))}
@@ -424,7 +421,7 @@ const HomeScreen: React.FC = () => {
               color={COLORS._1A1D1F}
               style={[styles.sectionTitle, { marginTop: getScaleSize(24) }]}
             >
-              {STRING.quickActions}
+              {t(STRING.quickActions)}
             </AppText>
 
             <View style={styles.quickGrid}>
@@ -444,7 +441,7 @@ const HomeScreen: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS.white}
                 >
-                  {STRING.newRequest}
+                  {t(STRING.newRequest)}
                 </AppText>
               </TouchableOpacity>
 
@@ -462,7 +459,7 @@ const HomeScreen: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color={COLORS.primary}
                 >
-                  {STRING.addPatient}
+                  {t(STRING.addPatient)}
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -476,7 +473,7 @@ const HomeScreen: React.FC = () => {
               color={COLORS._1A1A1A}
               style={[styles.sectionTitle]}
             >
-              {STRING.recentQueue}
+              {t(STRING.recentQueue)}
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
@@ -498,7 +495,7 @@ const HomeScreen: React.FC = () => {
                       status={item.status}
                       buttonText={
                         buttonConfig.show
-                          ? buttonConfig.label || undefined
+                          ? t(buttonConfig.label || '') || undefined
                           : undefined
                       }
                       onPress={() => {
@@ -554,7 +551,7 @@ const HomeScreen: React.FC = () => {
                   font={FONTS.Inter.Regular}
                   color={COLORS._6F767E}
                 >
-                  No recent requests
+                  {t(STRING.noRecentRequests)}
                 </AppText>
               </View>
             )}
@@ -640,7 +637,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -7,
     right: -5,
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.error,
     borderRadius: getScaleSize(8),
     minWidth: getScaleSize(16),
     height: getScaleSize(16),

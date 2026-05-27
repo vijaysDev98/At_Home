@@ -1,4 +1,5 @@
 import { COLORS } from '../utils';
+import { STRING } from './strings';
 
 export const REQUEST_STATUS = {
   DRAFT: 'draft',
@@ -25,15 +26,15 @@ export const FORM_STATUS = {
 } as const;
 
 export const DISPLAY_FORM_STATUS = {
-  [FORM_STATUS.DRAFT]: 'Draft',
-  [FORM_STATUS.SUBMITTED]: 'Submitted',
-  [FORM_STATUS.APPROVED]: 'Approved',
-  [FORM_STATUS.REJECTED]: 'Rejected',
-  [FORM_STATUS.IN_PROGRESS]: 'In Progress',
-  [FORM_STATUS.AWAITING_SIGNATURE]: 'Awaiting\nSignature',
-  [FORM_STATUS.SIGNED]: 'Signed',
-  [FORM_STATUS.RETURNED]: 'Returned',
-  [FORM_STATUS.COMPLETED]: 'Completed',
+  [FORM_STATUS.DRAFT]: STRING.Draft,
+  [FORM_STATUS.SUBMITTED]: STRING.Submitted,
+  [FORM_STATUS.APPROVED]: STRING.Approved,
+  [FORM_STATUS.REJECTED]: STRING.Rejected,
+  [FORM_STATUS.IN_PROGRESS]: STRING.InProgress,
+  [FORM_STATUS.AWAITING_SIGNATURE]: STRING.AwaitingSignature,
+  [FORM_STATUS.SIGNED]: STRING.Signed,
+  [FORM_STATUS.RETURNED]: STRING.Returned,
+  [FORM_STATUS.COMPLETED]: STRING.Completed,
 };
 
 export const getButtonConfig = (formStatus: string, status: string) => {
@@ -41,14 +42,14 @@ export const getButtonConfig = (formStatus: string, status: string) => {
     case REQUEST_STATUS.DRAFT:
       return {
         show: true,
-        label: 'Continue Form',
+        label: STRING.continueForm,
         action: 'edit',
       };
     case REQUEST_STATUS.SUBMITTED:
       if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
         return {
           show: true,
-          label: 'Continue Sign',
+          label: STRING.continueSign,
           action: 'sign',
         };
       } else if (formStatus == FORM_STATUS.SIGNED) {
@@ -60,14 +61,14 @@ export const getButtonConfig = (formStatus: string, status: string) => {
       } else {
         return {
           show: true,
-          label: 'Update & Sign',
+          label: STRING.updateAndSign,
           action: 'edit',
         };
       }
     case REQUEST_STATUS.RETURNED:
       return {
         show: true,
-        label: 'Update & Re-sign',
+        label: STRING.updateAndResign,
         action: 'edit',
       };
     case FORM_STATUS.COMPLETED:
@@ -91,7 +92,7 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
       if (formStatus == FORM_STATUS.SIGNED) {
         return {
           show: true,
-          label: 'Claim Service',
+          label: STRING.claimService,
           action: 'claim',
         };
       } else if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
@@ -103,7 +104,7 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
       } else {
         return {
           show: true,
-          label: 'Open Form',
+          label: STRING.openForm,
           action: 'edit',
         };
       }
@@ -118,7 +119,7 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
       return {
         show: true,
         isComplete: true,
-        label: 'View Service',
+        label: STRING.viewService,
         action: 'view',
       };
     case REQUEST_STATUS.COMPLETED:
@@ -180,12 +181,12 @@ export const getFormScreenButtons = (
     if (from == "review") {
       return {
         left: {
-          label: 'Save Progress',
+          label: STRING.saveProgress,
           variant: 'outline',
           handler: 'updateFormData',
         },
         right: {
-          label: 'Update & Sign',
+          label: STRING.updateAndSign,
           variant: 'primary',
           handler: 'updateAndSign',
         },
@@ -195,12 +196,12 @@ export const getFormScreenButtons = (
     if (status === REQUEST_STATUS.DRAFT && formStatus === FORM_STATUS.DRAFT) {
       return {
         left: {
-          label: 'Save Progress',
+          label: STRING.saveProgress,
           variant: 'outline',
           handler: 'saveAsDraft',
         },
         right: {
-          label: 'Submit Request',
+          label: STRING.submitRequest,
           variant: 'primary',
           handler: 'submitRequest',
         },
@@ -214,12 +215,12 @@ export const getFormScreenButtons = (
     ) {
       return {
         left: {
-          label: 'Save Progress',
+          label: STRING.saveProgress,
           variant: 'outline',
           handler: 'updateFormData',
         },
         right: {
-          label: 'Update & Sign',
+          label: STRING.updateAndSign,
           variant: 'primary',
           handler: 'updateAndSign',
         },
@@ -233,12 +234,12 @@ export const getFormScreenButtons = (
     ) {
       return {
         left: {
-          label: 'Save Progress',
+          label: STRING.saveProgress,
           variant: 'outline',
           handler: 'saveProgress',
         },
         right: {
-          label: 'Update & Re-sign',
+          label: STRING.updateAndReSign,
           variant: 'primary',
           handler: 'updateAndResign',
         },
@@ -258,12 +259,12 @@ export const getFormScreenButtons = (
     ) {
       return {
         left: {
-          label: 'Submit for Review',
+          label: STRING.submitForReview,
           variant: 'outline',
           handler: 'submitForReview',
         },
         right: {
-          label: 'Save Progress',
+          label: STRING.saveProgress,
           variant: 'primary',
           handler: 'saveProgress',
         },
@@ -277,7 +278,7 @@ export const getFormScreenButtons = (
     ) {
       return {
         right: {
-          label: 'Claim Service',
+          label: STRING.claimService,
           variant: 'primary',
           handler: 'claimService',
           fullWidth: true,

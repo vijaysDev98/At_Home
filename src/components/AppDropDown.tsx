@@ -17,10 +17,10 @@ interface AppDropdownProps {
   placeholder?: string;
   onChange: (value: string | number) => void;
   isMandatory?: boolean;
-  labelSize?:number;
-  labelColor?:String;
-  labelFont?:String;
-  style?:ViewStyle;
+  labelSize?: number;
+  labelColor?: String;
+  labelFont?: String;
+  style?: ViewStyle;
   error?: string;
   disabled?: boolean;
 }
@@ -40,13 +40,13 @@ const AppDropdown: React.FC<AppDropdownProps> = ({
   disabled = false,
 }) => {
   return (
-    <View style={[styles.container,style]}>
+    <View style={[styles.container, style]}>
       {label && (
-        <AppText 
-     size={labelSize ? labelSize : getScaleSize(13)}
-                 color={labelColor ? labelColor : COLORS._1E293B}
-                 font={labelFont ? labelFont : FONTS.Inter.Medium}
-                 style={styles.label}
+        <AppText
+          size={labelSize ? labelSize : getScaleSize(13)}
+          color={labelColor ? labelColor : COLORS._1E293B}
+          font={labelFont ? labelFont : FONTS.Inter.Medium}
+          style={styles.label}
         >
           {label}
           {isMandatory && <AppText color={COLORS.error}>*</AppText>}
@@ -59,7 +59,9 @@ const AppDropdown: React.FC<AppDropdownProps> = ({
           error && styles.dropdownError,
           disabled && styles.dropdownDisabled,
         ]}
+        fontFamily={FONTS.Inter.Regular}
         placeholderStyle={styles.placeholder}
+        searchPlaceholderTextColor={COLORS._1E293B}
         selectedTextStyle={styles.selectedText}
         data={data}
         labelField="label"

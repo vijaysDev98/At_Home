@@ -37,11 +37,14 @@ import { setLoading } from '../../../actions/common/commonSlice';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { handleClaimService } from '../../doctor/forms/formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../../../constant';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
 const AvailableRequest: React.FC = () => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const isGlobalLoading = useSelector(
     (state: RootState) => state.common.isLoading,
   );
@@ -84,21 +87,9 @@ const AvailableRequest: React.FC = () => {
         else if (currentTab === 'Completed') mappedStatus = 'completed';
 
         // Check if we should call listAvailableRequestsForProvider
-        const shouldCallAvailable = false;
         const shouldCallAssigned = page === 1;
 
         const promises: Promise<any>[] = [];
-
-        // if (shouldCallAvailable) {
-        //   promises.push(
-        //     serviceRequestListApi.listAvailableRequestsForProvider({
-        //       page,
-        //       size: PAGE_SIZE,
-        //     }),
-        //   );
-        // } else {
-        //   promises.push(Promise.resolve(null));
-        // }
         promises.push(Promise.resolve(null));
 
         if (shouldCallAssigned) {
@@ -277,7 +268,7 @@ const AvailableRequest: React.FC = () => {
 
   const onReturnRequest = async (reason: string, details: string, requestId: string) => {
     if (!selectedRequest?.id) {
-      SHOW_TOAST('Missing Request ID', 'error');
+      SHOW_TOAST(t(STRING.missingID), 'error');
       return;
     }
     dispatch(setLoading(true));
@@ -295,16 +286,16 @@ const AvailableRequest: React.FC = () => {
         await serviceRequestApi.releaseFormLock(requestId);
 
         SHOW_TOAST(
-          response.message || 'Request returned successfully',
+          response.message,
           'success',
         );
         reviewSheetRef?.current?.hide();
         await fetchAvailableRequests(1, true);
       } else {
-        SHOW_TOAST(response.error || 'Failed to return request', 'error');
+        SHOW_TOAST(response.error, 'error');
       }
     } catch (error: any) {
-      SHOW_TOAST(error?.message || 'Failed to return request', 'error');
+      SHOW_TOAST(error?.message, 'error');
     } finally {
       dispatch(setLoading(false));
     }
@@ -320,7 +311,7 @@ const AvailableRequest: React.FC = () => {
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            Requests
+            {t(STRING.requests)}
           </AppText>
         </View>
 
@@ -350,7 +341,7 @@ const AvailableRequest: React.FC = () => {
                   }
                   color={activeTab === tab ? COLORS.primary : COLORS._6F767E}
                 >
-                  {tab}
+                  {t(tab)}
                 </AppText>
               </TouchableOpacity>
             ))}
@@ -390,7 +381,7 @@ const AvailableRequest: React.FC = () => {
                       font={FONTS.Inter.Medium}
                       color={COLORS._6F767E}
                     >
-                      No requests found in this category.
+                      {t(STRING.noRequestsFound)}
                     </AppText>
                   </View>
                 ) : null

@@ -145,7 +145,7 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       await persistAuthInStorage(innerData);
       dispatch(setUserData(getUserDataForRedux(innerData)));
       dispatch(fetchProfile());
-      SHOW_TOAST('Login successful!', 'success');
+      // SHOW_TOAST(response?.message, 'success');
       dispatch(setLoading(false));
 
       // Role-based navigation
@@ -166,8 +166,7 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       }
     }
   } catch (e) {
-    console.log('Verify OTP Error', e);
-    SHOW_TOAST(undefined, 'error');
+    // SHOW_TOAST(undefined, 'error');
     dispatch(setLoading(false));
   }
 };
@@ -183,13 +182,13 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
       params: data,
     });
     if (response?.status) {
-      SHOW_TOAST(response?.message || 'Logged out successfully', 'success');
+      SHOW_TOAST(response?.message, 'success');
     } else {
       // Show error toast if API logout fails, but proceed with local logout
       SHOW_TOAST(response?.message, 'error');
     }
   } catch (e: any) {
-    SHOW_TOAST(undefined, 'error');
+    // SHOW_TOAST(undefined, 'error');
   } finally {
     await Storage.clear();
     dispatch({ type: 'USER_LOGOUT' });
@@ -209,7 +208,7 @@ export const forgotPassword =
       );
 
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.message || 'OTP sent to your email', 'success');
+        SHOW_TOAST(response?.message, 'success');
         dispatch(setLoading(false));
         NavigationService.navigate(SCREENS.OTP_VERIFICATION, {
           email,
@@ -220,8 +219,6 @@ export const forgotPassword =
         SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
-      console.log('Forgot Password Error', e);
-      SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
   };
@@ -236,7 +233,7 @@ export const verifyForgotPasswordOtp =
       );
 
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST('OTP verified successfully', 'success');
+        SHOW_TOAST(response?.message, 'success');
         dispatch(setLoading(false));
         const resetToken = response?.data?.data?.resetToken || '';
         NavigationService.navigate(SCREENS.RESET_PASSWORD, {
@@ -255,8 +252,6 @@ export const verifyForgotPasswordOtp =
         }
       }
     } catch (e) {
-      console.log('Verify Forgot Password OTP Error', e);
-      SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
   };
@@ -275,13 +270,9 @@ export const resetPassword =
           API.API_ROUTES.resetPassword,
           data,
         );
-        console.log('reset password response', JSON.stringify(response));
 
         if (response?.status && response?.code === 200) {
-          SHOW_TOAST(
-            response?.message || 'Password changed successfully',
-            'success',
-          );
+          SHOW_TOAST(response?.message, 'success');
           dispatch(setLoading(false));
           NavigationService.reset(SCREENS.LOGIN);
         } else {
@@ -289,7 +280,6 @@ export const resetPassword =
           SHOW_TOAST(response?.message, 'error');
         }
       } catch (e) {
-        console.log('Reset Password Error', e);
         SHOW_TOAST(undefined, 'error');
         dispatch(setLoading(false));
       }
@@ -304,14 +294,13 @@ export const resendLoginOtp =
         { email },
       );
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
+        SHOW_TOAST(response?.message, 'success');
         dispatch(setLoading(false));
       } else {
         dispatch(setLoading(false));
         SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
-      console.log('Resend OTP Error', e);
       SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
@@ -327,16 +316,15 @@ export const changePassword =
       );
 
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.message || 'Password changed successfully', 'success');
+        SHOW_TOAST(response?.message, 'success');
         dispatch(setLoading(false));
         NavigationService.goBack();
       } else {
         dispatch(setLoading(false));
-        SHOW_TOAST(response?.message || 'Failed to change password', 'error');
+        SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
-      console.log('Change Password Error', e);
-      SHOW_TOAST('Failed to change password', 'error');
+      SHOW_TOAST('error');
       dispatch(setLoading(false));
     }
   };
@@ -350,14 +338,13 @@ export const resendForgotPasswordOtp =
         { email },
       );
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.message || 'OTP resent successfully', 'success');
+        SHOW_TOAST(response?.message, 'success');
         dispatch(setLoading(false));
       } else {
         dispatch(setLoading(false));
         SHOW_TOAST(response?.message, 'error');
       }
     } catch (e) {
-      console.log('Resend OTP Error', e);
       SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }

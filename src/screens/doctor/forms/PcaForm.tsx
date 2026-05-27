@@ -5,8 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { ActionSheetRef } from 'react-native-actions-sheet';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
@@ -21,20 +20,15 @@ import {
 } from '../../../components';
 
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
-import FormSignature from '../../../components/FormSignature';
 
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { RootState } from '../../../redux/store';
-import { setLoading } from '../../../actions/common/commonSlice';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
-import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { STRING } from '../../../constant';
 import {
   PatientInfo,
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
-import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
 import {
   handleFormSubmit,
   handleSaveAsDraft,
@@ -43,6 +37,8 @@ import {
   handleSubmitForReview,
   handleEditForm,
 } from './formActionHandlers';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface PcaFormProps {
   serviceId?: string;
@@ -62,6 +58,7 @@ export interface PcaFormRef {
 const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
   const { serviceId, initialData, patient, readOnly = false } = props;
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
@@ -143,7 +140,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
   // Validation errors state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const lastFirstErrorKey = useRef<string | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
 
   // Wrapper setter that clears errors for changed top-level keys
   const setFormState = (updaterOrPartial: any) => {
@@ -201,15 +197,15 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     // Validate only required fields from schema
     // Required: prescription_date
     if (!state?.prescription_date) {
-      newErrors.prescriptionDate = STRING.prescriptionDateRequired;
+      newErrors.prescriptionDate = t(STRING.prescriptionDateRequired);
     }
 
     // Required: patient_last_name, patient_first_name
     if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-      newErrors.patientLastName = STRING.lastNameRequired;
+      newErrors.patientLastName = t(STRING.lastNameRequired);
     }
     if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-      newErrors.patientFirstName = STRING.firstNameRequired;
+      newErrors.patientFirstName = t(STRING.firstNameRequired);
     }
 
     setErrors(newErrors);
@@ -226,7 +222,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       serviceId: serviceId || '',
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -241,7 +236,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       serviceId: serviceId || '',
       selectedPatient,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -257,7 +251,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -273,7 +266,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -289,7 +281,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -305,7 +296,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       state,
       initialData,
       validateForm,
-      scrollRef,
       lastFirstErrorKey,
       errors,
     });
@@ -337,11 +327,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
+      <KeyboardAwareScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
       >
         <View style={styles.headerTextContainer}>
           <AppText
@@ -349,7 +341,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {STRING.pcaInfusionPrescriptionForm}
+            {t(STRING.pcaInfusionPrescriptionForm)}
           </AppText>
         </View>
 
@@ -379,7 +371,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         />
 
         <View style={styles.card}>
-          {renderSectionHeader(STRING.prescriptionPlan)}
+          {renderSectionHeader(t(STRING.prescriptionPlan))}
           {/* NURSING CARE */}
           <View style={styles.descriptionBlock}>
             <AppText
@@ -387,7 +379,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               font={FONTS.Inter.SemiBold}
               color={COLORS._1A1D1F}
             >
-              {STRING.nursingCareTasks}
+              {t(STRING.nursingCareTasks)}
             </AppText>
 
             <View style={styles.checkboxGroup}>
@@ -408,7 +400,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.preparationAndProgrammingOfPortablePump}
+                label={t(STRING.preparationAndProgrammingOfPortablePump)}
               />
 
               <AppCheckBox
@@ -426,7 +418,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.fillingAndSetupOfPump}
+                label={t(STRING.fillingAndSetupOfPump)}
               />
 
               <AppCheckBox
@@ -446,7 +438,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.connectingInfusionAndStartingDevice}
+                label={t(STRING.connectingInfusionAndStartingDevice)}
               />
 
               <AppCheckBox
@@ -462,7 +454,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.reservoirChange}
+                label={t(STRING.reservoirChange)}
               />
 
               <AppCheckBox
@@ -482,7 +474,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.stoppingAndRemovingDevice}
+                label={t(STRING.stoppingAndRemovingDevice)}
               />
 
               <AppCheckBox
@@ -498,7 +490,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.flushHeparinization}
+                label={t(STRING.flushHeparinization)}
               />
 
               <AppCheckBox
@@ -520,7 +512,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.weeklyDressingChangeHuberNeedleReplacement}
+                label={t(STRING.weeklyDressingChangeHuberNeedleReplacement)}
               />
 
               <AppCheckBox
@@ -540,7 +532,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
                   }
                   setFormState({ nursing_tasks: tasks });
                 }}
-                label={STRING.monitoringAndCoordinationOfCare}
+                label={t(STRING.monitoringAndCoordinationOfCare)}
               />
             </View>
           </View>
@@ -554,7 +546,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={`${STRING.concentration} (mg/hr)`}
+              label={`${t(STRING.concentration)} (mg/hr)`}
               value={state.morphine_concentration_mg_per_hr}
               onChangeText={value =>
                 setFormState({ morphine_concentration_mg_per_hr: value })
@@ -566,7 +558,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={STRING.totalMorphine}
+              label={t(STRING.totalMorphine)}
               value={state.morphine_total_mg}
               onChangeText={value => setFormState({ morphine_total_mg: value })}
               placeholder="0"
@@ -578,7 +570,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={STRING.volume}
+              label={t(STRING.volume)}
               value={state.solution_volume_ml}
               onChangeText={value =>
                 setFormState({ solution_volume_ml: value })
@@ -590,7 +582,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={`${STRING.bagCapacity}`}
+              label={`${t(STRING.bagCapacity)}`}
               value={state.bag_capacity_ml}
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
               placeholder="50"
@@ -608,7 +600,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={STRING.basalRate}
+              label={t(STRING.basalRate)}
               value={state.basal_rate_mg_per_hr}
               onChangeText={value =>
                 setFormState({ basal_rate_mg_per_hr: value })
@@ -620,7 +612,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={STRING.bolusDose}
+              label={t(STRING.bolusDose)}
               value={state.bolus_dose_mg}
               onChangeText={value => setFormState({ bolus_dose_mg: value })}
               placeholder="0"
@@ -632,7 +624,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={STRING.lockoutMin}
+              label={t(STRING.lockoutMin)}
               value={state.lockout_minutes}
               onChangeText={value => setFormState({ lockout_minutes: value })}
               placeholder="0"
@@ -642,7 +634,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={STRING.maxBolusPerHour}
+              label={t(STRING.maxBolusPerHour)}
               value={state.max_bolus_per_hour}
               onChangeText={value =>
                 setFormState({ max_bolus_per_hour: value })
@@ -662,7 +654,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={STRING.connectionsPerWeek}
+              label={t(STRING.connectionsPerWeek)}
               value={state.connections_per_week}
               onChangeText={value =>
                 setFormState({ connections_per_week: value })
@@ -674,7 +666,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={`${STRING.treatmentDurationDays}`}
+              label={`${t(STRING.treatmentDurationDays)}`}
               value={state.treatment_duration_days}
               onChangeText={value =>
                 setFormState({ treatment_duration_days: value })
@@ -700,7 +692,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         </View>
 
         {/* <FormSignature state={state} setState={setFormState} /> */}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <DatePicker
         modal

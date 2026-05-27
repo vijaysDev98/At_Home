@@ -8,25 +8,28 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText, Input, LogoutConfirmationSheet } from '../../../components';
+import { AppText, Input, LogoutConfirmationSheet, LanguagePickerSheet } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
 import { userLogout } from '../../../actions/auth/authAction';
+import { updateLanguage, fetchLanguage } from '../../../actions/language/languageAction';
 import { countryCodes } from 'react-native-country-codes-picker';
 
 const ProviderProfile: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
-  console.log('profile data ', profileData);
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -36,15 +39,35 @@ const ProviderProfile: React.FC = () => {
     }
   }, [profileData?.profileImg]);
 
+  // Fetch stored language on component mount
+  useEffect(() => {
+    dispatch(fetchLanguage());
+  }, [dispatch]);
+
   const providerName = profileData?.providerName;
   const providerEmail = profileData?.email;
   const providerPhone = profileData?.phoneNumber;
   const providerAssignedServices = profileData?.assignedServices || [];
 
   const logoutSheetRef = useRef<ActionSheetRef>(null);
+  const languageSheetRef = useRef<ActionSheetRef>(null);
 
   const handleLogout = () => {
     logoutSheetRef.current?.show();
+  };
+
+  const handleLanguagePicker = () => {
+    languageSheetRef.current?.show();
+  };
+
+  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+    const { SHOW_TOAST } = require('../../../constant');
+    const success = await dispatch(updateLanguage(language.key));
+    if (success) {
+      SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
+    } else {
+      SHOW_TOAST(t(STRING.failedToChangeLanguage), 'error');
+    }
   };
 
   const confirmLogout = () => {
@@ -61,7 +84,7 @@ const ProviderProfile: React.FC = () => {
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            Profile
+            {t(STRING.profile)}
           </AppText>
           <TouchableOpacity
             onPress={() => {
@@ -74,7 +97,7 @@ const ProviderProfile: React.FC = () => {
               font={FONTS.Inter.Medium}
               color={COLORS._6F767E}
             >
-              Edit
+              {t(STRING.edit)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -137,13 +160,13 @@ const ProviderProfile: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                Contact Information
+                {t(STRING.contactInformation)}
               </AppText>
             </View>
             <View style={styles.divider} />
             <View style={styles.fieldGroup}>
               <Input
-                label="Email Address"
+                label={t(STRING.emailAddress)}
                 value={providerEmail}
                 isLocked={false}
                 editable={false}
@@ -153,7 +176,7 @@ const ProviderProfile: React.FC = () => {
             </View>
             <View style={styles.fieldGroup}>
               <Input
-                label="Phone Number"
+                label={t(STRING.phoneNumber)}
                 value={providerPhone}
                 isCountryCode
                 countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
@@ -178,7 +201,7 @@ const ProviderProfile: React.FC = () => {
                     font={FONTS.Inter.Bold}
                     color={COLORS._1A1D1F}
                   >
-                    Eligible Services
+                    {t(STRING.eligibleServices)}
                   </AppText>
                 </View>
                 <View style={styles.activeBadge}>
@@ -187,7 +210,7 @@ const ProviderProfile: React.FC = () => {
                     font={FONTS.Inter.Medium}
                     color={COLORS._6B7280}
                   >
-                    {providerAssignedServices?.length} Active
+                    {providerAssignedServices?.length} {t(STRING.active)}
                   </AppText>
                 </View>
               </View>
@@ -215,7 +238,20 @@ const ProviderProfile: React.FC = () => {
               ))}
             </View>
           )}
-
+          <TouchableOpacity
+            style={styles.languageBtn}
+            activeOpacity={0.85}
+            onPress={handleLanguagePicker}
+          >
+            <Image source={IMAGES.language} style={styles.languageIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._526674}
+            >
+              {t(STRING.language)}
+            </AppText>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.changePasswordBtn}
             activeOpacity={0.85}
@@ -227,9 +263,11 @@ const ProviderProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._526674}
             >
-              Change Password
+              {t(STRING.changePassword)}
             </AppText>
           </TouchableOpacity>
+
+
 
           <TouchableOpacity
             style={styles.logoutBtn}
@@ -242,13 +280,18 @@ const ProviderProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.error}
             >
-              {STRING.logOut}
+              {t(STRING.logOut)}
             </AppText>
           </TouchableOpacity>
         </ScrollView>
         <LogoutConfirmationSheet
           ref={logoutSheetRef}
           onLogout={confirmLogout}
+        />
+        <LanguagePickerSheet
+          ref={languageSheetRef}
+          onLanguageSelect={handleLanguageSelect}
+          currentLanguage={currentLanguage}
         />
       </View>
     </SafeAreaView>
@@ -416,6 +459,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   changePasswordIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain'
+  },
+  languageBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._526674,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  languageIcon: {
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,

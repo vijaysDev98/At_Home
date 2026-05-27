@@ -12,7 +12,8 @@ import { IMAGES } from '../assets/images';
 import { COLORS, FONTS } from '../utils';
 import React from 'react';
 import NavigationService from '../navigation/NavigationService';
-import { SHOW_TOAST } from '../constant';
+import { SHOW_TOAST, STRING } from '../constant';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Constants
@@ -48,6 +49,9 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
       } as ActionSheetRef),
     );
 
+    const { t } = useTranslation();
+
+
     return (
       <ActionSheet
         ref={sheetRef}
@@ -68,7 +72,7 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Warning
+              {t(STRING.warning)}
             </AppText>
           </View>
 
@@ -79,8 +83,7 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
             align="center"
             style={styles.warningText}
           >
-            Form Temporarily Unavailable. This form is currently being updated
-            by another user. Please try again shortly.
+            {t(STRING.formTemporarilyUnavailable)}
           </AppText>
 
           <TouchableOpacity
@@ -98,7 +101,7 @@ export const WarningSheet = React.forwardRef<ActionSheetRef, WarningSheetProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Back
+              {t(STRING.back)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -118,6 +121,7 @@ export const ReviewRequestSheet = React.forwardRef<
   ActionSheetRef,
   ReviewRequestSheetProps
 >(({ onSend }, ref) => {
+  const { t } = useTranslation();
   const sheetRef = React.useRef<ActionSheetRef>(null);
   const [selectedReason, setSelectedReason] = React.useState<string | null>(
     null,
@@ -142,7 +146,7 @@ export const ReviewRequestSheet = React.forwardRef<
       // handleCancel();
       // sheetRef.current?.hide();
     } else {
-      SHOW_TOAST('Please select a reason and enter details');
+      SHOW_TOAST(t(STRING.pleaseSelectAReasonAndEnterDetails), 'error');
     }
   };
 
@@ -170,14 +174,14 @@ export const ReviewRequestSheet = React.forwardRef<
             color={COLORS._1A1D1F}
             style={{ marginBottom: getScaleSize(4) }}
           >
-            Request Review
+            {t(STRING.requestReview)}
           </AppText>
           <AppText
             size={getScaleSize(13)}
             color={COLORS._6B7280}
             style={{ marginBottom: getScaleSize(20) }}
           >
-            Describe issue with this service.
+            {t(STRING.describeIssueWithThisService)}
           </AppText>
         </View>
         {/* Quick Select */}
@@ -188,7 +192,7 @@ export const ReviewRequestSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Quick Select
+              {t(STRING.quickSelect)}
             </AppText>
             <AppText
               size={getScaleSize(13)}
@@ -229,7 +233,7 @@ export const ReviewRequestSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Details
+              {t(STRING.details)}
             </AppText>
             <AppText
               size={getScaleSize(13)}
@@ -245,7 +249,7 @@ export const ReviewRequestSheet = React.forwardRef<
               onChangeText={text =>
                 text.length <= DETAILS_MAX && setReviewDetails(text)
               }
-              placeholder="Details"
+              placeholder={t(STRING.enterDetails)}
               placeholderTextColor={COLORS._6F767E}
               multiline
               numberOfLines={4}
@@ -277,7 +281,7 @@ export const ReviewRequestSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Cancel
+              {t(STRING.cancel)}
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -285,7 +289,7 @@ export const ReviewRequestSheet = React.forwardRef<
               styles.sendBtn,
               {
                 flex: 2,
-                backgroundColor: '#EF4444',
+                backgroundColor: COLORS.error,
                 flexDirection: 'row',
                 gap: 8,
               },
@@ -302,7 +306,7 @@ export const ReviewRequestSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              Send for Review
+              {t(STRING.sendForReview)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -323,7 +327,7 @@ export const CompleteServiceSheet = React.forwardRef<
   CompleteServiceSheetProps
 >(({ onComplete }, ref) => {
   const sheetRef = React.useRef<ActionSheetRef>(null);
-
+  const { t } = useTranslation();
   React.useImperativeHandle(
     ref,
     () =>
@@ -354,7 +358,7 @@ export const CompleteServiceSheet = React.forwardRef<
           align={'center'}
           style={{ marginBottom: getScaleSize(12) }}
         >
-          Complete Service?
+          {t(STRING.completeService)}
         </AppText>
 
         <AppText
@@ -367,8 +371,7 @@ export const CompleteServiceSheet = React.forwardRef<
             marginHorizontal: getScaleSize(20),
           }}
         >
-          Please confirm that the service has been successfully completed. Once
-          completed, this action cannot be undone.
+          {t(STRING.completeServiceConfirmation)}
         </AppText>
 
         <View style={styles.actions}>
@@ -382,7 +385,7 @@ export const CompleteServiceSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Cancel
+              {t(STRING.cancel)}
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -398,7 +401,7 @@ export const CompleteServiceSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              Mark as Completed
+              {t(STRING.markAsCompleted)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -418,6 +421,7 @@ export const LogoutConfirmationSheet = React.forwardRef<
   ActionSheetRef,
   LogoutConfirmationSheetProps
 >((({ onLogout }, ref) => {
+  const { t } = useTranslation();
   const sheetRef = React.useRef<ActionSheetRef>(null);
 
   React.useImperativeHandle(
@@ -450,7 +454,7 @@ export const LogoutConfirmationSheet = React.forwardRef<
           align={'center'}
           style={{ marginBottom: getScaleSize(12) }}
         >
-          Logout?
+          {t(STRING.logout)}
         </AppText>
 
         <AppText
@@ -463,7 +467,7 @@ export const LogoutConfirmationSheet = React.forwardRef<
             marginHorizontal: getScaleSize(20),
           }}
         >
-          Are you sure you want to log out of your account?
+          {t(STRING.logoutConfirmation)}
         </AppText>
 
         <View style={styles.actions}>
@@ -477,11 +481,11 @@ export const LogoutConfirmationSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              Cancel
+              {t(STRING.cancel)}
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.sendBtn, { backgroundColor: '#EF4444', flex: 1 }]}
+            style={[styles.sendBtn, { backgroundColor: COLORS.error, flex: 1 }]}
             activeOpacity={0.8}
             onPress={() => {
               sheetRef.current?.hide();
@@ -493,7 +497,7 @@ export const LogoutConfirmationSheet = React.forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              Log Out
+              {t(STRING.logout)}
             </AppText>
           </TouchableOpacity>
         </View>
@@ -501,6 +505,147 @@ export const LogoutConfirmationSheet = React.forwardRef<
     </ActionSheet>
   );
 }));
+
+/**
+ * Language Picker Bottom Sheet
+ */
+export const LANGUAGES = [
+  { key: 'en', value: 'English', flag: '🇺🇸' },
+  { key: 'fr', value: 'Français', flag: '🇫🇷' },
+];
+
+interface LanguagePickerSheetProps {
+  onLanguageSelect: (language: { key: string; value: string; flag: string }) => void;
+  currentLanguage?: string;
+}
+
+export const LanguagePickerSheet = React.forwardRef<
+  ActionSheetRef,
+  LanguagePickerSheetProps
+>(({ onLanguageSelect, currentLanguage = 'en' }, ref) => {
+  const { t } = useTranslation();
+  const sheetRef = React.useRef<ActionSheetRef>(null);
+
+  React.useImperativeHandle(
+    ref,
+    () =>
+    ({
+      show: () => sheetRef.current?.show(),
+      hide: () => sheetRef.current?.hide(),
+      snapToOffset: (offset: number) =>
+        sheetRef.current?.snapToOffset(offset),
+      snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+    } as ActionSheetRef),
+  );
+
+  const handleLanguageSelect = (language: typeof LANGUAGES[0]) => {
+    onLanguageSelect(language);
+    sheetRef.current?.hide();
+  };
+
+  return (
+    <ActionSheet
+      ref={sheetRef}
+      gestureEnabled
+      containerStyle={[
+        styles.sheetContainer,
+        { backgroundColor: COLORS.white },
+      ]}
+      indicatorStyle={styles.indicator}
+    >
+      <View style={styles.sheetContent}>
+        <AppText
+          size={getScaleSize(18)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+          align={'center'}
+          style={{ marginBottom: getScaleSize(12) }}
+        >
+          {t(STRING.selectLanguage)}
+        </AppText>
+
+        <AppText
+          size={getScaleSize(15)}
+          color={COLORS._6F767E}
+          align={'center'}
+          style={{
+            lineHeight: getScaleSize(22),
+            marginBottom: getScaleSize(20),
+            marginHorizontal: getScaleSize(20),
+          }}
+        >
+          {t(STRING.choosePreferredLanguage)}
+        </AppText>
+
+        <View style={styles.languageList}>
+          {LANGUAGES.map(language => {
+            const isSelected = language.key === currentLanguage;
+            return (
+              <TouchableOpacity
+                key={language.key}
+                onPress={() => handleLanguageSelect(language)}
+                activeOpacity={0.7}
+                style={[
+                  styles.languageItem,
+                  isSelected && styles.languageItemSelected,
+                ]}
+              >
+                <View style={styles.languageLeft}>
+                  <AppText
+                    size={getScaleSize(24)}
+                    style={styles.languageFlag}
+                  >
+                    {language.flag}
+                  </AppText>
+                  <View style={styles.languageInfo}>
+                    <AppText
+                      size={getScaleSize(16)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {language.value}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(13)}
+                      color={COLORS._6F767E}
+                      style={styles.languageCode}
+                    >
+                      {language.key.toUpperCase()}
+                    </AppText>
+                  </View>
+                </View>
+                {/* {isSelected && (
+                  <View style={styles.languageCheck}>
+                    <Image
+                      source={IMAGES.ic_doubleTick}
+                      style={styles.checkIcon}
+                    />
+                  </View>
+                )} */}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.cancelBtn, { flex: 1 }]}
+            onPress={() => sheetRef.current?.hide()}
+            activeOpacity={0.7}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t(STRING.cancel)}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ActionSheet>
+  );
+});
 
 
 const styles = StyleSheet.create({
@@ -615,5 +760,52 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  languageList: {
+    gap: getScaleSize(8),
+    marginBottom: getScaleSize(20),
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(12),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    backgroundColor: COLORS.white,
+  },
+  languageItemSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '10',
+  },
+  languageLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
+  },
+  languageFlag: {
+    fontSize: getScaleSize(24),
+  },
+  languageInfo: {
+    flex: 1,
+  },
+  languageCode: {
+    marginTop: getScaleSize(2),
+  },
+  languageCheck: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    borderRadius: getScaleSize(10),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
   },
 });

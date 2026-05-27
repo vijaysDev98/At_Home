@@ -23,6 +23,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { getServicesService } from '../../../services/patientService';
 import { SHOW_TOAST, STRING } from '../../../constant';
+import { useTranslation } from 'react-i18next';
 
 export const getServiceIcon = (id: string) => {
   switch (id) {
@@ -64,6 +65,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   navigation,
   route,
 }) => {
+  const { t } = useTranslation();
   const patientId = route?.params?.patientId;
   const [apiServices, setApiServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,14 +112,14 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               color={COLORS._1A1D1F}
               font={FONTS.Inter.Bold}
             >
-              {STRING.createRequest}
+              {t(STRING.createRequest)}
             </AppText>
             <AppText
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              {STRING.step2Of3}
+              {t(STRING.step2Of3)}
             </AppText>
           </View>
           <View style={styles.headerLeft} />
@@ -135,14 +137,14 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                {STRING.selectService} ({apiServices.length})
+                {t(STRING.selectService)} ({apiServices.length})
               </AppText>
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Regular}
                 color={COLORS._6F767E}
               >
-                {STRING.selectServiceDescription}
+                {t(STRING.selectServiceDescription)}
               </AppText>
             </View>
 
@@ -192,7 +194,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                         size={getScaleSize(12)}
                         font={FONTS.Inter.Regular}
                         color={COLORS._6F767E}
-                        // numberOfLines={3}
+                      // numberOfLines={3}
                       >
                         {service.description}
                       </AppText>
@@ -204,10 +206,10 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
           </ScrollView>
           <View style={styles.bottomButtonContainer}>
             <AppButton
-              title={STRING.continue}
+              title={t(STRING.continue)}
               onPress={() => {
                 if (!selected) {
-                  SHOW_TOAST('No service is selected!');
+                  SHOW_TOAST(t(STRING.noServiceSelected), 'error');
                   return;
                 }
                 NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {

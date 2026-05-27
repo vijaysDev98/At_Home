@@ -11,6 +11,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface CustomDropdownProps {
   labelStyle?: TextStyle;
@@ -42,7 +43,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   zIndex = 1000,
 }) => {
   const [isFocus, setIsFocus] = useState(false);
-
+  const { t } = useTranslation();
   return (
     <View style={[styles.fieldWrapper, { zIndex }, style]}>
       <Text style={[styles.label, labelStyle]}>

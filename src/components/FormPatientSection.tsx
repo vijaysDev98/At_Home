@@ -9,6 +9,8 @@ import Input from './Input';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 export interface PatientSectionProps {
   state: any;
@@ -35,7 +37,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
-
+  const { t } = useTranslation();
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
       {/* {icon && <Image source={icon} style={styles.sectionIcon} />} */}
@@ -48,16 +50,15 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </AppText>
     </View>
   );
-  console.log('statestate', state);
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader('Patient Information', IMAGES.person)}
+      {renderSectionHeader(t(STRING.patientInformation), IMAGES.person)}
       <View style={styles.row}>
         <Input
           isLocked={readOnly}
-          label="First name"
-          placeholder="Enter first name"
+          label={t(STRING.firstName)}
+          placeholder={t(STRING.enterFirstName)}
           isMandatory
           value={state.patient_first_name || ''}
           onChangeText={text => setState({ patient_first_name: text })}
@@ -66,9 +67,9 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         />
         <Input
           isLocked={readOnly}
-          label="Last name"
+          label={t(STRING.lastName)}
           isMandatory
-          placeholder="Enter last name"
+          placeholder={t(STRING.enterLastName)}
           value={state.patient_last_name || ''}
           onChangeText={text => setState({ patient_last_name: text })}
           style={[styles.inputField, { flex: 1 }]}
@@ -79,8 +80,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         <Input
           isLocked={readOnly}
           onPress={() => !readOnly && setOpenDob(true)}
-          label="Date of birth"
-          placeholder="DD/MM/YYYY"
+          label={t(STRING.dateOfBirth)}
+          placeholder={t(STRING.ddmmyyyy)}
           value={state.dob || ''}
           style={[styles.inputField, { flex: 1 }]}
           pointerEvents="none"
@@ -89,8 +90,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           <Input
             isLocked={readOnly}
             onPress={() => !readOnly && setOpenDob(true)}
-            label="Date"
-            placeholder="DD/MM/YYYY"
+            label={t(STRING.date)}
+            placeholder={t(STRING.ddmmyyyy)}
             value={state.dob || ''}
             style={[styles.inputField, { flex: 1 }]}
             pointerEvents="none"
@@ -99,7 +100,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         {showWeight && (
           <Input
             isLocked={readOnly}
-            label="Weight (kg)"
+            label={t(STRING.weightKg)}
             placeholder="e.g. 70"
             value={state.weight || ''}
             onChangeText={text => setState({ weight: text })}
@@ -126,8 +127,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       {showNIR && (
         <Input
           isLocked={readOnly}
-          label="Social Insurance number (NIR)"
-          placeholder="Enter NIR"
+          label={t(STRING.socialInsuranceNumberNIR)}
+          placeholder={t(STRING.enterNIR)}
           value={state.nir || ''}
           onChangeText={text => setState({ nir: text })}
           style={[styles.inputField, { marginBottom: 0 }]}
@@ -147,7 +148,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
                 : val;
             setState({ ald_condition: newVal });
           }}
-          label="Care related to a long-term condition (ALD)"
+          label={t(STRING.careRelatedToALD)}
           containerStyle={{ marginTop: getScaleSize(12) }}
         />
       )}
@@ -168,7 +169,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
                 : val;
             setState({ careNotRelatedToALD: newVal });
           }}
-          label="Care not related to long-term condition (ALD)"
+          label={t(STRING.careNotRelatedToALD)}
           containerStyle={{ marginTop: getScaleSize(12) }}
         />
       )}

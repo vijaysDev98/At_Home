@@ -50,6 +50,8 @@ import {
   PatientInfo,
   ServiceRequestDetail,
 } from '../../../services/serviceRequestListApi';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export interface FreePrescriptionFormProps {
   serviceId: string;
@@ -71,7 +73,7 @@ const FreePrescriptionForm = forwardRef<
   FreePrescriptionFormProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
   const dispatch = useDispatch();
-
+  const { t } = useTranslation();
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
@@ -79,7 +81,6 @@ const FreePrescriptionForm = forwardRef<
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
-  const scrollViewRef = useRef<ScrollView>(null);
   const lastFirstErrorKey = useRef<string | null>(null);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -185,15 +186,15 @@ const FreePrescriptionForm = forwardRef<
 
     // Prescription Details - Required fields
     if (!state?.prescription_date) {
-      newErrors.prescription_date = STRING.prescriptionDateRequired;
+      newErrors.prescription_date = t(STRING.prescriptionDateRequired);
     }
 
     // Patient Information - Required fields
     if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-      newErrors.patientLastName = STRING.lNameRequired;
+      newErrors.patientLastName = t(STRING.lNameRequired);
     }
     if (!state?.patient_first_name || !state.patient_first_name.trim()) {
-      newErrors.patientFirstName = STRING.fNameRequired;
+      newErrors.patientFirstName = t(STRING.fNameRequired);
     }
 
     setErrors(newErrors);
@@ -210,7 +211,6 @@ const FreePrescriptionForm = forwardRef<
       serviceId,
       selectedPatient,
       validateForm,
-      scrollRef: scrollViewRef,
       lastFirstErrorKey,
       errors,
     });
@@ -225,7 +225,6 @@ const FreePrescriptionForm = forwardRef<
       serviceId,
       selectedPatient,
       validateForm,
-      scrollRef: scrollViewRef,
       lastFirstErrorKey,
       errors,
     });
@@ -241,7 +240,6 @@ const FreePrescriptionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef: scrollViewRef,
       lastFirstErrorKey,
       errors,
     });
@@ -254,7 +252,6 @@ const FreePrescriptionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef: scrollViewRef,
       lastFirstErrorKey,
       errors,
     });
@@ -267,7 +264,6 @@ const FreePrescriptionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef: scrollViewRef,
       lastFirstErrorKey,
       errors,
     });
@@ -283,7 +279,6 @@ const FreePrescriptionForm = forwardRef<
       state,
       initialData,
       validateForm,
-      scrollRef: scrollViewRef || null,
       lastFirstErrorKey,
       errors,
     });
@@ -316,11 +311,13 @@ const FreePrescriptionForm = forwardRef<
   return (
     <>
       <View style={styles.container}>
-        <ScrollView
-          ref={scrollViewRef}
+        <KeyboardAwareScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
         >
           <View style={styles.headerTextContainer}>
             <AppText
@@ -328,7 +325,7 @@ const FreePrescriptionForm = forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {STRING.freePrescription}
+              {t(STRING.freePrescription)}
             </AppText>
           </View>
 
@@ -362,7 +359,7 @@ const FreePrescriptionForm = forwardRef<
             <Input
               isLocked={readOnly}
               multiline
-              placeholder="Enter Additional Notes"
+              placeholder={t(STRING.enterAdditionalNotes)}
               value={state.free_text}
               onChangeText={text => setFormState({ free_text: text })}
               maxLength={1000}
@@ -371,7 +368,7 @@ const FreePrescriptionForm = forwardRef<
           </View>
 
           {/* <FormSignature readOnly={readOnly} /> */}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Image,
   ScrollView,
@@ -15,6 +15,7 @@ import {
   Input,
   PrimaryButton,
   AppLoader,
+  LanguagePickerSheet,
 } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { COLORS, FONTS, REGEX } from '../../utils';
@@ -25,6 +26,10 @@ import { SCREENS } from '../../navigation/routes';
 import { AppDispatch, RootState } from '../../redux/store';
 import { userLogin } from '../../actions/auth/authAction';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { updateLanguage, fetchLanguage } from '../../actions/language/languageAction';
+import { SHOW_TOAST } from '../../constant';
+import { useTranslation } from 'react-i18next';
 
 export type LoginScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -34,7 +39,9 @@ export type LoginScreenProps = NativeStackScreenProps<
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading } = useSelector((state: RootState) => state.common);
-
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
+  const languageSheetRef = useRef<ActionSheetRef>(null);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState({
@@ -42,6 +49,24 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     password: '',
   });
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  // Fetch stored language on component mount
+  useEffect(() => {
+    dispatch(fetchLanguage() as any);
+  }, [dispatch]);
+
+  const handleLanguagePicker = () => {
+    languageSheetRef.current?.show();
+  };
+
+  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+    const success = await dispatch(updateLanguage(language.key) as any);
+    if (success) {
+      SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
+    } else {
+      SHOW_TOAST(t(STRING.failedToChangeLanguage), 'error');
+    }
+  };
 
   const isDisabled = useMemo(
     () => email.trim() === '' || password.trim() === '',
@@ -96,7 +121,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         {/* HEADER */}
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={handleLanguagePicker}
+          activeOpacity={0.8}
+        >
+          <Image source={IMAGES.language} style={styles.languageIcon} />
+        </TouchableOpacity>
         <View style={styles.hero}>
+
           <Image
             source={IMAGES.logo}
             style={styles.logo}
@@ -109,7 +142,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             color={COLORS.primary}
             align="center"
           >
-            {STRING.welcomeBack}
+            {t(STRING.welcomeBack)}
           </AppText>
 
           <AppText
@@ -119,7 +152,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             style={{ marginTop: getScaleSize(12) }}
             align="center"
           >
-            {STRING.welcomeBackMessage}{' '}
+            {t(STRING.welcomeBackMessage)}{' '}
           </AppText>
         </View>
 
@@ -132,11 +165,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               setEmail(text);
               setError(prev => ({ ...prev, email: '' }));
             }}
-            placeholder={STRING.enterEmailAddress}
+            placeholder={t(STRING.enterEmailAddress)}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            label={STRING.emailAddress}
+            label={t(STRING.emailAddress)}
             error={error?.email || ''}
             style={styles.field}
             containerBackgroundColor={COLORS._F8F9FA}
@@ -149,8 +182,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               setPassword(text);
               setError(prev => ({ ...prev, password: '' }));
             }}
-            placeholder={STRING.enterPassword}
-            label={STRING.password}
+            placeholder={t(STRING.enterPassword)}
+            label={t(STRING.password)}
             containerBackgroundColor={COLORS._F8F9FA}
             error={error?.password || ''}
             secureTextEntry={true}
@@ -173,13 +206,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               color={COLORS.primary}
               font={FONTS.Inter.SemiBold}
             >
-              {STRING.forgotPasswordQuestion}
+              {t(STRING.forgotPasswordQuestion)}
             </AppText>
           </TouchableOpacity>
 
           {/* LOGIN BUTTON */}
           <PrimaryButton
-            title={STRING.login}
+            title={t(STRING.login)}
             onPress={onSubmit}
             disabled={isDisabled || isLoading}
             style={{ marginTop: getScaleSize(12) }}
@@ -196,7 +229,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               color={COLORS.primaryMuted}
               font={FONTS.Inter.Medium}
             >
-              {STRING.secureEncryptedConnection}
+              {t(STRING.secureEncryptedConnection)}
             </AppText>
           </View>
         </View>
@@ -209,7 +242,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               font={FONTS.Inter.Regular}
               color={COLORS.primaryMuted}
             >
-              {STRING.dontHaveAnAccount}{' '}
+              {t(STRING.dontHaveAnAccount)}{' '}
             </AppText>
 
             <TouchableOpacity
@@ -221,7 +254,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 color={COLORS.primary}
                 font={FONTS.Inter.SemiBold}
               >
-                {STRING.registerHere}
+                {t(STRING.registerHere)}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -233,9 +266,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             align="center"
             style={styles.adminNote}
           >
-            {STRING.logInMessage}
+            {t(STRING.logInMessage)}
           </AppText>
         </View>
+        <LanguagePickerSheet
+          ref={languageSheetRef}
+          onLanguageSelect={handleLanguageSelect}
+          currentLanguage={currentLanguage}
+        />
       </KeyboardAwareScrollView>
       {/* </ScrollView> */}
     </AppSafeAreaView>
@@ -300,5 +338,24 @@ const styles = StyleSheet.create({
   adminNote: {
     lineHeight: 20,
     width: '80%',
+  },
+  languageButton: {
+    position: 'absolute',
+    top: getScaleSize(20),
+    right: getScaleSize(20),
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: COLORS._F8F9FA,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  languageIcon: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    tintColor: COLORS._526674,
+    resizeMode: 'contain',
   },
 });
