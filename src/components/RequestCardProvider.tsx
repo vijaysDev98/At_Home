@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   // Update button style
   updateButtonStyle: {
     marginTop: getScaleSize(12),
-    height: getScaleSize(40),
+    height: getScaleSize(48),
     borderRadius: getScaleSize(8),
   },
 });

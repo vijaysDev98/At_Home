@@ -77,6 +77,7 @@ const AppButton: React.FC<AppButtonProps> = ({
             size={textSize ? textSize : getScaleSize(16)}
             font={textFont ? textFont : FONTS.Inter.SemiBold}
             style={textStyle}
+            align='center'
             color={textColor ? textColor : COLORS.white}
             {...textProps}
           >

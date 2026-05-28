@@ -122,19 +122,19 @@ const HomeScreen: React.FC = () => {
     {
       id: REQUEST_STATUS.SUBMITTED,
       value: dashboardData?.requestsOverview?.submittedCount?.toString() || '0',
-      label: STRING.submitted,
+      label: t(STRING.submitted),
       icon: IMAGES.document_icon,
     },
     {
       id: REQUEST_STATUS.RETURNED,
       value: dashboardData?.requestsOverview?.returnedCount?.toString() || '0',
-      label: STRING.returned,
+      label: t(STRING.returned),
       icon: IMAGES.document_icon,
     },
     {
       id: REQUEST_STATUS.COMPLETED,
       value: dashboardData?.requestsOverview?.completedCount?.toString() || '0',
-      label: STRING.completed,
+      label: t(STRING.completed),
       icon: IMAGES.clipboard,
     },
   ];
