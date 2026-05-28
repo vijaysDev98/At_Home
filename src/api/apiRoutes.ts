@@ -2,6 +2,9 @@ const API_BASE_URL = 'http://163.227.92.122:3047/';
 
 export const IMAGE_BASE_URL = 'http://163.227.92.122:3047/';
 
+export const PRIVACY_POLICY_URL = 'https://stirring-griffin-0c1a24.netlify.app/';
+export const TERMS_OF_SERVICE_URL = 'https://stirring-griffin-0c1a24.netlify.app/';
+
 const DISABLE_API_LOGS = false;
 
 const API_ROUTES = {

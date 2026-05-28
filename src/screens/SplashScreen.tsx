@@ -10,11 +10,12 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDispatch } from 'react-redux';
 import { RootStackParamList } from '../navigation';
-import { Storage } from '../constant';
+import { Storage, STRING } from '../constant';
 import { SCREENS } from '../navigation/routes';
 import NavigationService from '../navigation/NavigationService';
 import { AppDispatch } from '../redux/store';
 import { fetchProfile } from '../actions/profile/profileAction';
+import { useTranslation } from 'react-i18next';
 
 const LOGO_URI =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png';
@@ -28,6 +29,7 @@ export type SplashScreenProps = NativeStackScreenProps<
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const pulse = useRef(new Animated.Value(0.6)).current;
   const fade = useRef(new Animated.Value(0.8)).current;
 
@@ -76,7 +78,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
       } else {
         NavigationService.replace(SCREENS.WELCOME as any);
       }
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [dispatch, fade, NavigationService, pulse]);
@@ -89,11 +91,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         <Animated.View
           style={[styles.logoWrapper, { transform: [{ scale: pulse }] }]}
         >
-          <Animated.Image
+          {/* <Animated.Image
             source={{ uri: LOGO_URI }}
             resizeMode="contain"
             style={[styles.logo, { opacity: fade }]}
-          />
+          /> */}
           <Image
             source={{ uri: LOGO_BG_URI }}
             resizeMode="cover"
@@ -102,10 +104,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         </Animated.View>
 
         <Animated.Text style={[styles.title, { opacity: fade }]}>
-          At-Home
+          {t(STRING.atHome)}
         </Animated.Text>
         <Animated.Text style={[styles.tagline, { opacity: fade }]}>
-          Healthcare Evolved
+          {t(STRING.healthcareEvolved)}
         </Animated.Text>
       </View>
 

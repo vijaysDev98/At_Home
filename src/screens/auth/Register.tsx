@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
@@ -37,11 +38,12 @@ import { AppDispatch } from '../../redux/store';
 import { useRoute } from '@react-navigation/native';
 import { useSimpleImagePicker } from '../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../services/uploadService';
-import { IMAGE_BASE_URL } from '../../api/apiRoutes';
+import { IMAGE_BASE_URL, PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../../api/apiRoutes';
 import { SHOW_TOAST } from '../../constant';
 import { CustomDropdown } from '../../components/CustomDropDown';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTranslation } from 'react-i18next';
+import { openInBrowser } from '../../hooks/openBrowser';
 
 // --- Sub-components ---
 
@@ -540,9 +542,19 @@ const Register: React.FC = () => {
                 label={
                   <Text>
                     {t(STRING.iAgreeToThe)}{' '}
-                    <Text style={styles.link}>{t(STRING.privacyPolicy)}</Text>{' '}
+                    <Text
+                      style={styles.link}
+                      onPress={() => openInBrowser(PRIVACY_POLICY_URL)}
+                    >
+                      {t(STRING.privacyPolicy)}
+                    </Text>{' '}
                     {t(STRING.and)}{' '}
-                    <Text style={styles.link}>{t(STRING.termsOfService)}</Text>
+                    <Text
+                      style={styles.link}
+                      onPress={() => openInBrowser(TERMS_OF_SERVICE_URL)}
+                    >
+                      {t(STRING.termsOfService)}
+                    </Text>
                   </Text>
                 }
               />

@@ -39,7 +39,7 @@ export const serviceRequestApi = {
       if (response?.status) {
         return response.data.data;
       } else {
-        SHOW_TOAST(response?.data?.message, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
         return null;
       }
     } catch (error: any) {

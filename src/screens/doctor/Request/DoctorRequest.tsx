@@ -76,7 +76,7 @@ const FilterChip: React.FC<FilterChipProps> = React.memo(
   ),
 );
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 25;
 
 const FILTER_OPTIONS: { key: FilterType; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -109,15 +109,16 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     }
   }, [initialFilter]);
 
-  // Debounce timer for search
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Each fetch gets an incrementing ID; stale responses are discarded
   const fetchIdRef = useRef(0);
+  const searchInputRef = useRef<any>(null);
+  const searchTextRef = useRef('');
+  const currentPageRef = useRef(1);
 
-  // ─── Core fetch — always fetches all, no status param ────────────────────
   const fetchServiceRequests = useCallback(
     async (
       page: number = 1,
+      search: string = '',
       opts: { isRefresh?: boolean; isLoadMore?: boolean } = {},
     ) => {
       const { isRefresh = false, isLoadMore = false } = opts;
@@ -131,142 +132,169 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
       }
 
       try {
-        // No status param — filtering is done locally after fetch
-        const params: Record<string, unknown> = { page, size: PAGE_SIZE };
+        const params: Record<string, unknown> = {
+          page,
+          size: PAGE_SIZE,
+          search: search || "",
+        };
+        console.log("params", search);
 
-        const response = await serviceRequestListApi.listServiceRequests(
-          params,
-        );
+        const response =
+          await serviceRequestListApi.listServiceRequests(params);
+        console.log("searched res", response);
 
         if (thisFetchId !== fetchIdRef.current) return;
 
-        if (response) {
-          console.log("responseresponse", response.data.requests);
-
+        if (response?.data) {
           setRequests(prev =>
             page === 1
               ? response.data.requests
               : [...prev, ...response.data.requests],
           );
+
           setPagination(response.data.pagination);
           setCurrentPage(page);
+          currentPageRef.current = page;
         }
       } catch (error) {
         if (thisFetchId !== fetchIdRef.current) return;
         console.error('Error fetching service requests:', error);
       } finally {
-        if (thisFetchId !== fetchIdRef.current) return;
-        setIsLoading(false);
-        setIsLoadingMore(false);
-        if (isRefresh) setRefreshing(false);
+        if (thisFetchId === fetchIdRef.current) {
+          setIsLoading(false);
+          setIsLoadingMore(false);
+
+          if (isRefresh) {
+            setRefreshing(false);
+          }
+        }
       }
     },
     [],
   );
 
-  // ─── Initial load ─────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchServiceRequests(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchServiceRequests(1, '');
+  }, [fetchServiceRequests]);
 
-  // ─── Refresh on focus (skip very first mount) ─────────────────────────────
   const isFirstFocus = useRef(true);
+
   useEffect(() => {
     if (isFirstFocus.current) {
       isFirstFocus.current = false;
       return;
     }
+
     if (isFocused) {
-      fetchServiceRequests(1);
+      setSearchText('');
+      searchTextRef.current = '';
+      searchInputRef.current?.clear();
+      fetchServiceRequests(1, '');
     }
   }, [isFocused, fetchServiceRequests]);
 
-  // ─── Pull-to-refresh ──────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchServiceRequests(1, { isRefresh: true });
+    fetchServiceRequests(1, searchTextRef.current, { isRefresh: true });
   }, [fetchServiceRequests]);
 
-  // ─── Filter change — local only, no API call ──────────────────────────────
   const handleFilterChange = useCallback((newFilter: FilterType) => {
     setFilter(newFilter);
   }, []);
 
-  // ─── Search (debounced) ───────────────────────────────────────────────────
-  const handleSearchChange = useCallback((text: string) => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    searchDebounceRef.current = setTimeout(() => setSearchText(text), 300);
-  }, []);
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      setSearchText(text);
+      searchTextRef.current = text;
 
-  // ─── Load more ────────────────────────────────────────────────────────────
-  const handleLoadMore = useCallback(() => {
-    if (pagination?.hasNextPage && !isLoadingMore) {
-      fetchServiceRequests(currentPage + 1, { isLoadMore: true });
-    }
-  }, [pagination, currentPage, isLoadingMore, fetchServiceRequests]);
-
-  // ─── Local filter + search ────────────────────────────────────────────────
-  const filteredRequests = useMemo(() => {
-    return requests.filter(request => {
-      // Search
-      if (searchText) {
-        const lc = searchText.toLowerCase();
-        const name = request.patient.fullName.toLowerCase();
-        const service = request.service.serviceName.toLowerCase();
-        if (!name.includes(lc) && !service.includes(lc)) return false;
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
       }
 
-      // Status filter
+      searchDebounceRef.current = setTimeout(() => {
+        currentPageRef.current = 1;
+        setCurrentPage(1);
+
+        fetchServiceRequests(1, text);
+      }, 300);
+    },
+    [fetchServiceRequests],
+  );
+
+  const handleLoadMore = useCallback(() => {
+    if (pagination?.hasNextPage && !isLoadingMore) {
+      fetchServiceRequests(currentPageRef.current + 1, searchTextRef.current, {
+        isLoadMore: true,
+      });
+    }
+  }, [pagination, isLoadingMore, fetchServiceRequests]);
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter(request => {
       if (filter === 'all') return true;
 
-      // SIGNED matches against formStatus; all others match against status
       if (filter === FORM_STATUS.SIGNED) {
         return request.formStatus === filter;
       }
+
       return request.status === filter;
     });
-  }, [requests, searchText, filter]);
+  }, [requests, filter]);
 
-  // ─── Render helpers ───────────────────────────────────────────────────────
-  const renderItem = useCallback(({ item }: { item: ServiceRequest }) => {
-    const formStatus = item?.formStatus;
-    const buttonConfig = getButtonConfig(formStatus || '', item?.status);
-    return (
-      <RequestCardDoctor
-        name={item?.patient?.fullName || ''}
-        requestId={item.id}
-        requestType={item.service.serviceName}
-        formStatus={formStatus}
-        status={item.status}
-        buttonText={
-          buttonConfig.show ? t(buttonConfig.label || '') || undefined : undefined
-        }
-        onPress={() => {
-          if (item.status === REQUEST_STATUS.COMPLETED) {
-            NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
-              request: item,
-            });
-            return;
+  const renderItem = useCallback(
+    ({ item }: { item: ServiceRequest }) => {
+      const formStatus = item?.formStatus;
+      const buttonConfig = getButtonConfig(formStatus || '', item?.status);
+
+      return (
+        <RequestCardDoctor
+          name={item?.patient?.fullName || ''}
+          requestId={item.id}
+          requestType={item.service.serviceName}
+          formStatus={formStatus}
+          status={item.status}
+          buttonText={
+            buttonConfig.show
+              ? t(buttonConfig.label || '') || undefined
+              : undefined
           }
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: item,
-            action: 'view',
-          });
-        }}
-        onButtonPress={() => {
-          const targetScreen =
-            buttonConfig.action === 'sign'
-              ? SCREENS.FORM_REVIEW_SCREEN
-              : SCREENS.FORMS_SCREEN;
-          NavigationService.navigate(targetScreen, {
-            request: item,
-            action: buttonConfig.action,
-          });
-        }}
-      />
-    );
-  }, [t]);
+          onPress={() => {
+            if (item.status === REQUEST_STATUS.COMPLETED) {
+              NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+                request: item,
+              });
+              return;
+            }
+
+            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+              request: item,
+              action: 'view',
+            });
+          }}
+          onButtonPress={() => {
+            const targetScreen =
+              buttonConfig.action === 'sign'
+                ? SCREENS.FORM_REVIEW_SCREEN
+                : SCREENS.FORMS_SCREEN;
+
+            NavigationService.navigate(targetScreen, {
+              request: item,
+              action: buttonConfig.action,
+            });
+          }}
+        />
+      );
+    },
+    [t],
+  );
 
   const renderFooter = useCallback(
     () =>
@@ -291,12 +319,11 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           </AppText>
         </View>
       ) : null,
-    [isLoading],
+    [isLoading, t],
   );
 
   const keyExtractor = useCallback((item: ServiceRequest) => item.id, []);
 
-  // ─── UI ───────────────────────────────────────────────────────────────────
   return (
     <AppSafeAreaView style={styles.safeArea}>
       <Header
@@ -307,6 +334,8 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
       <View style={styles.container}>
         <Input
+          ref={searchInputRef}
+          value={searchText}
           leftIcon={IMAGES.search}
           style={styles.searchInput}
           inputWrapperStyle={{ backgroundColor: COLORS._F8F9FA }}
@@ -379,6 +408,7 @@ export default DoctorRequest;
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: COLORS.white,
+    flex: 1,
   },
   container: {
     paddingTop: getScaleSize(10),

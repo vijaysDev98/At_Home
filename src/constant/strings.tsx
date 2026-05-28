@@ -723,4 +723,6 @@ export const STRING = {
   missingInformation: 'Missing Information',
   incorrectPatientDetails: 'Incorrect Patient Details',
   incompleteForm: 'Incomplete Form',
+  healthcareEvolved: 'Healthcare Evolved',
+  atHome: 'At-Home',
 };
