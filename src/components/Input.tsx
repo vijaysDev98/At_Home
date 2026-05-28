@@ -17,6 +17,8 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
+import { STRING } from '../constant';
+import { useTranslation } from 'react-i18next';
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -82,6 +84,7 @@ const Input: React.FC<InputProps> = ({
   ...rest
 }) => {
   const [showPicker, setShowPicker] = useState(false);
+  const { t } = useTranslation();
   const { multiline } = rest;
   // When locked: gray bg, no border colour, force non-editable
   const lockedBg = '#F3F4F6';
@@ -249,6 +252,7 @@ const Input: React.FC<InputProps> = ({
               flex: 0.5,
             },
           }}
+          inputPlaceholder={t(STRING.searchYourCountry)}
           onRequestClose={() => setShowPicker(false)}
           onBackdropPress={() => setShowPicker(false)}
           lang={'en'}

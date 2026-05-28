@@ -320,13 +320,13 @@ const FormsScreen: React.FC = () => {
                         font={FONTS.Inter.SemiBold}
                         color={COLORS.returned}
                       >
-                        {REVIEW_REASONS.find(
+                        {t(REVIEW_REASONS.find(
                           reason =>
                             reason.key ===
                             requestData.returnReasons[
                               requestData.returnReasons.length - 1
                             ].reason,
-                        )?.value || ''}
+                        )?.value || '')}
                       </AppText>
                       <AppText
                         font={FONTS.Inter.Regular}

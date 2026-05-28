@@ -66,6 +66,7 @@ const COLORS = {
 
   //status
   returned: '#ef4444',
+  cancelled: '#ef4444',
   submitted: '#2563EB',
   inProgress: '#FFB800',
   completed: '#10B981',

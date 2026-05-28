@@ -11,6 +11,7 @@ import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import { useSelector } from 'react-redux';
 
 export interface PatientSectionProps {
   state: any;
@@ -37,6 +38,8 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 }) => {
   const [openDob, setOpenDob] = useState(false);
   const [dobDate, setDobDate] = useState(new Date());
+  const locale = useSelector((state: any) => state.language.currentLanguage);
+
   const { t } = useTranslation();
   const renderSectionHeader = (title: string, icon?: any) => (
     <View style={styles.sectionHeader}>
@@ -111,6 +114,10 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </View>
 
       <DatePicker
+        locale={locale}
+        title={t(STRING.selectDate)}
+        cancelText={t(STRING.cancel)}
+        confirmText={t(STRING.confirm)}
         modal
         mode="date"
         open={openDob}

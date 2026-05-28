@@ -12,14 +12,18 @@ import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { AppText, AppLoader } from '../../../components';
+import Header from '../../../components/HeaderDoctor';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { NotificationItem } from '../../../components/NotificationComponents';
 import {
   getNotificationsService,
   markNotificationAsReadService,
+  markAllAsReadService,
+  getUnreadCountService,
   Notification,
   PaginationInfo,
 } from '../../../services/notificationService';
+import { SHOW_TOAST } from '../../../constant';
 
 const ProviderNotification: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
@@ -29,6 +33,8 @@ const ProviderNotification: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const fetchNotificationsData = async (
     p: number = 1,
@@ -59,6 +65,10 @@ const ProviderNotification: React.FC = () => {
           setNotifications(prev => [...prev, ...fetchedNotifications]);
         }
         setPagination(pag);
+
+        // Fetch unread count separately
+        const count = await getUnreadCountService();
+        setUnreadCount(count);
       }
     } catch (error) {
       console.log('Error fetching notifications:', error);
@@ -104,7 +114,10 @@ const ProviderNotification: React.FC = () => {
       );
 
       const success = await markNotificationAsReadService(item.id);
-      if (!success) {
+      if (success) {
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } else {
         // Rollback state if the API failed
         setNotifications(prev =>
           prev.map(n =>
@@ -114,6 +127,28 @@ const ProviderNotification: React.FC = () => {
       }
     }
   };
+
+  const handleMarkAllAsRead = async () => {
+    setIsMarkingAllRead(true);
+    try {
+      const success = await markAllAsReadService();
+      if (success) {
+        // Optimistically update all notifications to 'read'
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, status: 'read' as const })),
+        );
+        // Update unread count to 0
+        setUnreadCount(0);
+        // SHOW_TOAST('All notifications marked as read', 'success');
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
+  const hasUnreadNotifications = unreadCount > 0;
 
   const getNotificationIcon = (type: string, title: string = '') => {
     const normalizedType = type?.toLowerCase() || '';
@@ -181,18 +216,14 @@ const ProviderNotification: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <AppLoader visible={initialLoading && !isRefreshing} />
+      <AppLoader visible={(initialLoading && !isRefreshing) || isMarkingAllRead} />
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <AppText
-            size={getScaleSize(18)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            Notifications
-          </AppText>
-        </View>
+        <Header
+          style={styles.headerStyle}
+          title="Notifications"
+          isNotification={true}
+          onNotificationPress={handleMarkAllAsRead}
+        />
 
         {/* Tabs */}
         <View style={styles.tabs}>
@@ -283,11 +314,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  header: {
+  headerStyle: {
+    paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
   },
   tabs: {
     flexDirection: 'row',

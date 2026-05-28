@@ -74,14 +74,14 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
   );
 };
 
-const practiceOptions = [
-  { label: 'Hospital', value: 'hospital' },
-  { label: 'Office', value: 'office' },
-];
+
 
 // --- Main Screen ---
 
 const Register: React.FC = () => {
+
+
+
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
   const route = useRoute<any>();
@@ -118,6 +118,21 @@ const Register: React.FC = () => {
   const [hasImageChanged, setHasImageChanged] = useState(false);
 
   const imagePickerSheetRef = useRef<any>(null);
+
+  const doctorSpecialities = [
+    { label: t(STRING.generalPractitioner), value: 'generalPractice' },
+    { label: t(STRING.cardiology), value: 'cardiology' },
+    { label: t(STRING.pediatrician), value: 'pediatrics' },
+    { label: t(STRING.dermatologist), value: 'dermatology' },
+    { label: t(STRING.ophthalmologist), value: 'orthopedics' },
+    { label: t(STRING.neurology), value: 'neurology' },
+    { label: t(STRING.other), value: 'other' },
+  ];
+
+  const practiceOptions = [
+    { label: t(STRING.hospital), value: 'hospital' },
+    { label: t(STRING.office), value: 'office' },
+  ];
 
   const { onImageGalleryClick, onCameraPress } = useSimpleImagePicker({
     onImageSelected: async (uri: string, type: string, fileName: string) => {
@@ -409,7 +424,7 @@ const Register: React.FC = () => {
                 }}
                 keyboardType="numeric"
                 error={errors.rpps}
-                helper={errors.rpps ? undefined : STRING.rppsNumber}
+                helper={errors.rpps ? undefined : t(STRING.rppsNumber)}
                 style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
                 helperStyle={{ marginTop: getScaleSize(8) }}
               />
@@ -448,7 +463,7 @@ const Register: React.FC = () => {
                 helper={
                   errors.finess
                     ? undefined
-                    : STRING.facilityIdentificationNumber
+                    : t(STRING.facilityIdentificationNumber)
                 }
                 style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
                 helperStyle={{ marginTop: getScaleSize(8) }}
@@ -466,7 +481,7 @@ const Register: React.FC = () => {
               setSpecialty(val);
               setErrors(e => ({ ...e, specialty: '' }));
             }}
-            placeholder={STRING.selectYourSpecialty}
+            placeholder={t(STRING.selectYourSpecialty)}
             leftIcon={IMAGES.stethoscope}
             error={errors.specialty}
             zIndex={1000}
@@ -474,7 +489,7 @@ const Register: React.FC = () => {
 
           {/* Place of Practice Dropdown */}
           <CustomDropdown
-            label={STRING.placeOfPractice}
+            label={t(STRING.placeOfPractice)}
             isMandatory
             data={practiceOptions}
             value={placeOfPractice}
@@ -482,15 +497,15 @@ const Register: React.FC = () => {
               setPlaceOfPractice(val);
               setErrors(e => ({ ...e, placeOfPractice: '' }));
             }}
-            placeholder={STRING.placeOfPractice}
+            placeholder={t(STRING.placeOfPractice)}
             leftIcon={IMAGES.hospital}
             error={errors.placeOfPractice}
             zIndex={900}
           />
 
           <Input
-            label={STRING.facilityName}
-            placeholder={STRING.enterFacilityName}
+            label={t(STRING.facilityName)}
+            placeholder={t(STRING.enterFacilityName)}
             leftIcon={IMAGES.hospital}
             isMandatory
             value={facilityName}
@@ -503,9 +518,9 @@ const Register: React.FC = () => {
           />
 
           <Input
-            label={STRING.businessAddress}
+            label={t(STRING.businessAddress)}
             isMandatory
-            placeholder={STRING.streetAddressCityPostalCode}
+            placeholder={t(STRING.streetAddressCityPostalCode)}
             leftIcon={IMAGES.location_pin}
             value={address}
             onChangeText={t => {
@@ -524,10 +539,10 @@ const Register: React.FC = () => {
                 onToggle={() => setAgreed(!agreed)}
                 label={
                   <Text>
-                    {STRING.iAgreeToThe}{' '}
-                    <Text style={styles.link}>{STRING.privacyPolicy}</Text>{' '}
-                    {STRING.and}{' '}
-                    <Text style={styles.link}>{STRING.termsOfService}</Text>
+                    {t(STRING.iAgreeToThe)}{' '}
+                    <Text style={styles.link}>{t(STRING.privacyPolicy)}</Text>{' '}
+                    {t(STRING.and)}{' '}
+                    <Text style={styles.link}>{t(STRING.termsOfService)}</Text>
                   </Text>
                 }
               />
@@ -557,10 +572,10 @@ const Register: React.FC = () => {
                 activeOpacity={0.7}
                 onPress={() => navigation.goBack()}
               >
-                <Text style={styles.cancelActionText}>{STRING.cancel}</Text>
+                <Text style={styles.cancelActionText}>{t(STRING.cancel)}</Text>
               </TouchableOpacity>
               <PrimaryButton
-                title={STRING.saveChanges}
+                title={t(STRING.saveChanges)}
                 onPress={() => handleSubmit()}
                 disabled={!isFormValid()}
                 style={styles.saveAction}
@@ -569,7 +584,7 @@ const Register: React.FC = () => {
           ) : (
             <>
               <PrimaryButton
-                title={STRING.submitRegistration}
+                title={t(STRING.submitRegistration)}
                 icon={IMAGES.arrowRight}
                 onPress={() => handleSubmit()}
                 disabled={!isFormValid()}
@@ -580,8 +595,8 @@ const Register: React.FC = () => {
                 onPress={() => NavigationService.navigate('Login')}
               >
                 <Text style={styles.signInText}>
-                  {STRING.alreadyHaveAnAccount}{' '}
-                  <Text style={styles.signInLink}>{STRING.signIn}</Text>
+                  {t(STRING.alreadyHaveAnAccount)}{' '}
+                  <Text style={styles.signInLink}>{t(STRING.signIn)}</Text>
                 </Text>
               </TouchableOpacity>
             </>

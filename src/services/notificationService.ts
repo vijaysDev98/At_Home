@@ -81,6 +81,19 @@ export const markNotificationAsReadService = async (
   }
 };
 
+export const markAllAsReadService = async (): Promise<boolean> => {
+  try {
+    const response: any = await API.Instance.patch('/notifications/mark-all-read');
+    if (response.status === 200 || response.status === true) {
+      SHOW_TOAST(response?.data?.message, 'success');
+    }
+    return response.status === 200 || response.status === true;
+  } catch (error: any) {
+    SHOW_TOAST(error.message, 'error');
+    return false;
+  }
+};
+
 export const getUnreadCountService = async (): Promise<number> => {
   try {
     const response: any = await API.Instance.get('/notifications/unread-count');

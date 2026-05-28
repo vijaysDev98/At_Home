@@ -37,7 +37,7 @@ const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
     case PROVIDER_TAB_SCREENS.REQUESTS:
       return IMAGES.tab_requests2;
     case PROVIDER_TAB_SCREENS.ALERTS:
-      return IMAGES.notification_icon;
+      return IMAGES.ic_notification_filled;
     case PROVIDER_TAB_SCREENS.PROFILE:
       return IMAGES.tab_profile;
     default:

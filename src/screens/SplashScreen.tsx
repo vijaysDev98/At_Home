@@ -26,7 +26,7 @@ export type SplashScreenProps = NativeStackScreenProps<
   'Splash'
 >;
 
-const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
   const dispatch = useDispatch<AppDispatch>();
   const pulse = useRef(new Animated.Value(0.6)).current;
   const fade = useRef(new Animated.Value(0.8)).current;
@@ -65,7 +65,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({}) => {
     const timer = setTimeout(async () => {
       const token = await Storage.get(Storage.USER_TOKEN);
       const role = await Storage.get(Storage.USER_ROLE);
-      console.log('Access token', token);
 
       if (token) {
         await dispatch(fetchProfile());

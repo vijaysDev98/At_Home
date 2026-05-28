@@ -152,8 +152,7 @@ const errorValidator = (error: any) => {
     code: error?.response?.status,
     message:
       error?.response?.data?.message ??
-      error?.message ??
-      'Something went wrong',
+      error?.message,
     data: error?.response?.data ?? {},
     status: false,
   };

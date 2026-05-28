@@ -29,6 +29,7 @@ const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
+  console.log('requestId', route?.params?.request);
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
@@ -72,7 +73,7 @@ const ServiceCompletedScreen: React.FC = () => {
     : '-';
 
   const completedDate = requestData?.updatedAt
-    ? moment(requestData?.updatedAt).format('MMM DD, YYYY [at] hh:mm A')
+    ? moment(requestData?.updatedAt).format('MMM DD, YYYY')
     : '-';
 
   const serviceType = requestData?.serviceId?.serviceName || '-';

@@ -52,6 +52,16 @@ const DoctorProfile: React.FC = () => {
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
+  const doctorSpecialities = [
+    { label: t(STRING.generalPractitioner), value: 'generalPractice' },
+    { label: t(STRING.cardiology), value: 'cardiology' },
+    { label: t(STRING.pediatrician), value: 'pediatrics' },
+    { label: t(STRING.dermatologist), value: 'dermatology' },
+    { label: t(STRING.ophthalmologist), value: 'orthopedics' },
+    { label: t(STRING.neurology), value: 'neurology' },
+    { label: t(STRING.other), value: 'other' },
+  ];
+
   // Update userAvatar when profileData changes
   useEffect(() => {
     if (profileData?.profileImg) {
@@ -113,7 +123,7 @@ const DoctorProfile: React.FC = () => {
   const fullName = `${fName} ${lName}`.trim();
   const userEmail = profileData?.email;
   const userPhone = profileData?.phoneNumber;
-  const userSpecialty = profileData?.specialty;
+  const userSpecialty = doctorSpecialities.find((spec) => spec.value === profileData?.specialty)?.label || profileData?.specialty;
   const userRpps = profileData?.rppsNumber;
   const userFiness = profileData?.finessNumber;
   const userAddress = profileData?.businessAddress;
@@ -371,7 +381,7 @@ const DoctorProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS.error}
             >
-              {STRING.logOut}
+              {t(STRING.logOut)}
             </AppText>
           </TouchableOpacity>
         </ScrollView>

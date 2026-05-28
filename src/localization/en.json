@@ -584,5 +584,20 @@
   "Open Form": "Open Form",
   "View Service": "View Service",
   "Medical Form": "Medical Form",
-  "Signing...": "Signing..."
+  "Signing...": "Signing...",
+  "Search your country": "Search your country",
+  "Prescriber's Practice / Facility": "Prescriber's Practice / Facility",
+  "We'll send verification to this email": "We'll send verification to this email",
+  "Don't have an account?": "Don't have an account?",
+  "Enter your registered email address and we'll send you an OTP to reset your password.": "Enter your registered email address and we'll send you an OTP to reset your password.",
+  "Cancelled": "Cancelled",
+  "Select Date": "Select Date",
+  "Confirm": "Confirm",
+  "Prescription Validity": "Prescription Validity",
+  "This form must be accompanied by a handwritten secure prescription": "This form must be accompanied by a handwritten secure prescription",
+  "Effective From": "Effective From",
+  "Awaiting\nSignature": "Awaiting\nSignature",
+  "Missing Information": "Missing Information",
+  "Incorrect Patient Details": "Incorrect Patient Details",
+  "Incomplete Form": "Incomplete Form"
 }

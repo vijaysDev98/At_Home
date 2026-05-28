@@ -11,6 +11,7 @@ import { COLORS, FONTS } from '../utils';
 import { IMAGES } from '../assets/images';
 import { STRING } from '../constant';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 
 export interface FormPrescriptionDetailsProps {
   state: any;
@@ -26,6 +27,8 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
   readOnly = false,
 }) => {
   const { t } = useTranslation();
+  const locale = useSelector((state: any) => state.language.currentLanguage);
+
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(() => {
     if (state.prescription_date) {
@@ -56,7 +59,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader(STRING.prescriptionDetails)}
+      {renderSectionHeader(t(STRING.prescriptionDetails))}
 
       <Input
         isLocked={readOnly}
@@ -78,6 +81,10 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
       />
 
       <DatePicker
+        locale={locale}
+        title={t(STRING.selectDate)}
+        cancelText={t(STRING.cancel)}
+        confirmText={t(STRING.confirm)}
         modal
         mode="date"
         open={open}

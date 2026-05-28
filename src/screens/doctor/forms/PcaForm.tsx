@@ -59,7 +59,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
   const { serviceId, initialData, patient, readOnly = false } = props;
   const dispatch = useDispatch();
   const { t } = useTranslation();
-
+  const locale = useSelector((state: any) => state.language.currentLanguage);
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
@@ -371,6 +371,70 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         />
 
         <View style={styles.card}>
+          {renderSectionHeader(t(STRING.prescriptionValidity))}
+
+          <AppText
+            size={getScaleSize(13)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._1A1D1F}
+            style={styles.inputField}
+          >
+            {t(
+              STRING.thisFormMustBeAccompaniedByAHandwrittenSecurePrescription,
+            )}
+          </AppText>
+
+          <Input
+            isLocked={readOnly}
+            label={t(STRING.effectiveFrom)}
+            value={state.effective_from}
+            onPress={() => {
+              if (readOnly) return;
+
+              setPickerType({
+                type: 'effective_from',
+              });
+
+              if (state.effective_from) {
+                setDate(moment(state.effective_from, 'DD/MM/YYYY').toDate());
+              }
+
+              setOpen(true);
+            }}
+            placeholder="DD/MM/YYYY"
+            style={styles.inputField}
+          />
+
+          <Input
+            isLocked={readOnly}
+            label={t(STRING.prescriptionDurationWeeks)}
+            value={state.duration_weeks}
+            onChangeText={value =>
+              setFormState({
+                duration_weeks: value,
+              })
+            }
+            placeholder="0"
+            keyboardType="numeric"
+            style={styles.inputField}
+          />
+
+          <Input
+            isLocked={readOnly}
+            label={t(STRING.renewalTimes)}
+            value={state.renewal_times}
+            onChangeText={value =>
+              setFormState({
+                renewal_times: value,
+              })
+            }
+            placeholder="0"
+            keyboardType="numeric"
+            style={styles.inputField}
+          />
+        </View>
+
+        <View style={styles.card}>
           {renderSectionHeader(t(STRING.prescriptionPlan))}
           {/* NURSING CARE */}
           <View style={styles.descriptionBlock}>
@@ -581,11 +645,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              isLocked={readOnly}
+              isLocked={true}
               label={`${t(STRING.bagCapacity)}`}
               value={state.bag_capacity_ml}
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
               placeholder="50"
+              editable={false}
+
               keyboardType="numeric"
               style={styles.halfWidthInput}
             />
@@ -665,12 +731,13 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              isLocked={readOnly}
+              isLocked={true}
               label={`${t(STRING.treatmentDurationDays)}`}
               value={state.treatment_duration_days}
               onChangeText={value =>
                 setFormState({ treatment_duration_days: value })
               }
+              editable={false}
               placeholder="28"
               keyboardType="numeric"
               style={styles.halfWidthInput}
@@ -695,6 +762,10 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       </KeyboardAwareScrollView>
 
       <DatePicker
+        locale={locale}
+        title={t(STRING.selectDate)}
+        cancelText={t(STRING.cancel)}
+        confirmText={t(STRING.confirm)}
         modal
         open={open}
         date={date}

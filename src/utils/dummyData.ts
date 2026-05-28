@@ -12,6 +12,16 @@ export interface PatientListProps {
   initials?: string;
 }
 
+export const doctorSpecialities = [
+  { label: 'General Practitioner', value: 'generalPractice' },
+  { label: 'Cardiology', value: 'cardiology' },
+  { label: 'Pediatrician', value: 'pediatrics' },
+  { label: 'Dermatologist', value: 'dermatology' },
+  { label: 'Ophthalmologist', value: 'orthopedics' },
+  { label: 'Neurology', value: 'neurology' },
+  { label: 'Other', value: 'other' },
+];
+
 export const patientsList: PatientListProps[] = [
   {
     id: '1',

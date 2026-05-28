@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   TextStyle,
+  ActivityIndicator,
 } from 'react-native';
 import { IMAGES } from '../assets/images';
 import NavigationService from '../navigation/NavigationService';
@@ -23,6 +24,8 @@ const Header = ({
   subTitle,
   titleStyle,
   titleContainerStyle,
+  isNotification = false,
+  onNotificationPress,
 }: {
   isBack?: boolean;
   title?: String;
@@ -32,6 +35,8 @@ const Header = ({
   subTitle?: String;
   titleStyle?: TextStyle;
   titleContainerStyle?: ViewStyle;
+  isNotification?: boolean;
+  onNotificationPress?: () => void;
 }) => {
   return (
     <View style={[styles.header, style]}>
@@ -71,6 +76,15 @@ const Header = ({
         </View>
       </View>
       {leftContent && leftContent()}
+      {isNotification && (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.notificationBtn}
+          onPress={onNotificationPress}
+        >
+          <Text style={styles.notificationText}>Mark all as read</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -104,5 +118,21 @@ const styles = StyleSheet.create({
     width: getScaleSize(17),
     height: getScaleSize(15),
     resizeMode: 'contain',
+  },
+  notificationBtn: {
+    width: 'auto',
+    height: 32,
+    borderRadius: 16,
+    // borderWidth: 1,
+    // borderColor: COLORS.slate200,
+    // backgroundColor: COLORS.backgroundAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  notificationText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontFamily: FONTS.Inter.Medium,
   },
 });

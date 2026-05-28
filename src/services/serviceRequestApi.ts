@@ -36,11 +36,10 @@ export const serviceRequestApi = {
       const response: any = await API.Instance.get(
         `/service-requests/${requestId}`,
       );
-
-      if (response?.data?.status) {
+      if (response?.status) {
         return response.data.data;
       } else {
-        SHOW_TOAST('Failed to fetch service request details', 'error');
+        SHOW_TOAST(response?.data?.message, 'error');
         return null;
       }
     } catch (error: any) {

@@ -19,10 +19,10 @@ import { useTranslation } from 'react-i18next';
  * Constants
  */
 export const REVIEW_REASONS = [
-  { key: 'missinginfo', value: 'Missing Information' },
-  { key: 'incorrectpatientdetails', value: 'Incorrect Patient Details' },
-  { key: 'incompleteform', value: 'Incomplete Form' },
-  { key: 'other', value: 'Other' },
+  { key: 'missinginfo', value: STRING.missingInformation },
+  { key: 'incorrectpatientdetails', value: STRING.incorrectPatientDetails },
+  { key: 'incompleteform', value: STRING.incompleteForm },
+  { key: 'other', value: STRING.other },
 ];
 const DETAILS_MAX = 500;
 
@@ -217,7 +217,7 @@ export const ReviewRequestSheet = React.forwardRef<
                     font={FONTS.Inter.Medium}
                     color={active ? COLORS._526674 : COLORS._1A1A1A}
                   >
-                    {reason.value}
+                    {t(reason.value)}
                   </AppText>
                 </TouchableOpacity>
               );

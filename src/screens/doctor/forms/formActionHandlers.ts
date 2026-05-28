@@ -88,7 +88,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
-        SHOW_SUCCESS_TOAST(response?.message);
+        SHOW_SUCCESS_TOAST(response?.data?.message || response?.messageage);
 
         // Submit for review to lock the request
         const newRequestId = response.data?.data?.id;
@@ -193,7 +193,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
-        SHOW_SUCCESS_TOAST(response?.message);
+        SHOW_SUCCESS_TOAST(response?.data?.message || response?.messageage);
         setTimeout(() => {
           NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
             screen: SCREENS.DOCTOR_REQUEST,

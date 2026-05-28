@@ -11,6 +11,7 @@ export const REQUEST_STATUS = {
   SIGNED: 'signed',
   RETURNED: 'returned',
   COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export const FORM_STATUS = {
@@ -23,6 +24,7 @@ export const FORM_STATUS = {
   SIGNED: 'signed',
   RETURNED: 'returned',
   COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
 } as const;
 
 export const DISPLAY_FORM_STATUS = {
@@ -35,6 +37,7 @@ export const DISPLAY_FORM_STATUS = {
   [FORM_STATUS.SIGNED]: STRING.Signed,
   [FORM_STATUS.RETURNED]: STRING.Returned,
   [FORM_STATUS.COMPLETED]: STRING.Completed,
+  [FORM_STATUS.CANCELLED]: STRING.cancelled,
 };
 
 export const getButtonConfig = (formStatus: string, status: string) => {
@@ -72,6 +75,7 @@ export const getButtonConfig = (formStatus: string, status: string) => {
         action: 'edit',
       };
     case FORM_STATUS.COMPLETED:
+    case FORM_STATUS.CANCELLED:
       return {
         show: false,
         label: null,
@@ -123,6 +127,7 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
         action: 'view',
       };
     case REQUEST_STATUS.COMPLETED:
+    case REQUEST_STATUS.CANCELLED:
       return {
         show: false,
         label: null,

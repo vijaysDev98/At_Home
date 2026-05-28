@@ -141,6 +141,8 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         if (thisFetchId !== fetchIdRef.current) return;
 
         if (response) {
+          console.log("responseresponse", response.data.requests);
+
           setRequests(prev =>
             page === 1
               ? response.data.requests

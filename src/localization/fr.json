@@ -584,5 +584,20 @@
   "Open Form": "Ouvrir le formulaire",
   "View Service": "Voir le service",
   "Medical Form": "Formulaire médical",
-  "Signing...": "Signature..."
+  "Signing...": "Signature...",
+  "Search your country": "Rechercher votre pays",
+  "Prescriber's Practice / Facility": "Établissement du prescripteur",
+  "We'll send verification to this email": "Nous enverrons la vérification à cette adresse e-mail",
+  "Don't have an account?": "Vous n'avez pas de compte ?",
+  "Enter your registered email address and we'll send you an OTP to reset your password.": "Saisissez votre adresse e-mail enregistrée et nous vous enverrons un OTP pour réinitialiser votre mot de passe.",
+  "Cancelled": "Annulé",
+  "Select Date": "Sélectionner la date",
+  "Confirm": "Confirmer",
+  "Prescription Validity": "Validité de la prescription",
+  "This form must be accompanied by a handwritten secure prescription": "Ce formulaire doit être accompagné d'une prescription sécurisée manuscrite",
+  "Effective From": "Valable à partir du",
+  "Awaiting\nSignature": "En attente\nde signature",
+  "Missing Information": "Informations manquantes",
+  "Incorrect Patient Details": "Détails du patient incorrects",
+  "Incomplete Form": "Formulaire incomplet"
 }

@@ -161,7 +161,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           )}
         {buttonText && (
           <AppButton
-            title={buttonText}
+            title={t(buttonText)}
             onPress={() => {
               onButtonPress();
             }}

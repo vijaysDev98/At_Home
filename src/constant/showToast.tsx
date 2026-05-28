@@ -6,7 +6,7 @@ export function SHOW_TOAST(
 ) {
   Toast.show({
     type,
-    text1: message ?? 'Something went wrong',
+    text1: message ?? '',
     position: 'top',
     visibilityTime: 4000,
     autoHide: true,

@@ -40,7 +40,7 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
 
   return (
     <View style={styles.card}>
-      {renderSectionHeader(title, IMAGES.stethoscopeIcon)}
+      {renderSectionHeader(t(title), IMAGES.stethoscopeIcon)}
       <View style={styles.row}>
         <Input
           isLocked

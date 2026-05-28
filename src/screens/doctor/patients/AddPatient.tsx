@@ -65,6 +65,7 @@ const AppDatePicker = ({
 const AddPatient: React.FC = () => {
   const dispatch = useDispatch<any>();
   const { t } = useTranslation();
+  const locale = useSelector((state: any) => state.language.currentLanguage);
   const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [fName, setFName] = useState('');
@@ -578,7 +579,7 @@ const AddPatient: React.FC = () => {
                 color={COLORS._6B7280}
                 style={styles.sectionTitle}
               >
-                {STRING.address}
+                {t(STRING.address)}
               </AppText>
               <View style={styles.card}>
                 <View style={styles.fieldGroup}>
@@ -661,7 +662,7 @@ const AddPatient: React.FC = () => {
                 color={COLORS._6B7280}
                 style={styles.sectionTitle}
               >
-                {STRING.medicalInformation}
+                {t(STRING.medicalInformation)}
               </AppText>
               <View style={styles.card}>
                 <View style={styles.fieldGroup}>
@@ -733,7 +734,7 @@ const AddPatient: React.FC = () => {
               </View>
             ) : (
               <PrimaryButton
-                title={STRING.savePatient}
+                title={t(STRING.savePatient)}
                 onPress={handleSave}
                 style={{ marginHorizontal: getScaleSize(20) }}
               />
@@ -784,7 +785,13 @@ const AddPatient: React.FC = () => {
         </View>
       </AppBottomSheet>
 
-      <AppDatePicker
+      <DatePicker
+        locale={locale}
+        title={t(STRING.selectDate)}
+        cancelText={t(STRING.cancel)}
+        confirmText={t(STRING.confirm)}
+        modal
+        mode='date'
         open={datePickerOpen}
         date={selectedDate}
         onConfirm={date => {
@@ -797,6 +804,20 @@ const AddPatient: React.FC = () => {
           setDatePickerOpen(false);
         }}
       />
+
+      {/* <AppDatePicker
+        open={datePickerOpen}
+        date={selectedDate}
+        onConfirm={date => {
+          setDatePickerOpen(false);
+          setSelectedDate(date);
+          setDob(moment(date).format('YYYY-MM-DD'));
+          setErrors(prev => ({ ...prev, dob: '' }));
+        }}
+        onCancel={() => {
+          setDatePickerOpen(false);
+        }}
+      /> */}
     </>
   );
 };

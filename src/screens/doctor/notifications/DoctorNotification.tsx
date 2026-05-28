@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
+import { SHOW_TOAST } from '../../../constant';
 import {
   AppSafeAreaView,
   AppText,
@@ -21,9 +22,13 @@ import { NotificationItem } from '../../../components/NotificationComponents';
 import {
   getNotificationsService,
   markNotificationAsReadService,
+  markAllAsReadService,
+  getUnreadCountService,
   Notification,
   PaginationInfo,
 } from '../../../services/notificationService';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 
 const DoctorNotification: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
@@ -33,6 +38,8 @@ const DoctorNotification: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const fetchNotificationsData = async (
     p: number = 1,
@@ -64,6 +71,10 @@ const DoctorNotification: React.FC = () => {
           setNotifications(prev => [...prev, ...fetchedNotifications]);
         }
         setPagination(pag);
+
+        // Fetch unread count separately
+        const count = await getUnreadCountService();
+        setUnreadCount(count);
       }
     } catch (error) {
       console.log('Error fetching notifications:', error);
@@ -99,76 +110,118 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    setIsMarkingAllRead(true);
+    try {
+      const success = await markAllAsReadService();
+      if (success) {
+        // Optimistically update all notifications to 'read'
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, status: 'read' as const })),
+        );
+        // Update unread count to 0
+        setUnreadCount(0);
+        // SHOW_TOAST(success?.data?.message, 'success');
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
+  const hasUnreadNotifications = unreadCount > 0;
+
   const handleNotificationPress = async (item: Notification) => {
-    console.log('NOTIFICATION ITEM', item);
+    console.log("NOTIFICATION ITEM", item);
 
-    // if (item.status === 'unread') {
-    //   // Optimistically update the UI notification's status to 'read'
-    //   setNotifications(prev =>
-    //     prev.map(n =>
-    //       n.id === item.id ? { ...n, status: 'read' as const } : n,
-    //     ),
-    //   );
+    const action = getNotificationAction(item);
+    if (typeof action === 'object' && action?.onPress) {
+      action.onPress();
+    }
+    if (item.status === 'unread') {
+      // Optimistically update the UI notification's status to 'read'
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === item.id ? { ...n, status: 'read' as const } : n,
+        ),
+      );
 
-    //   const success = await markNotificationAsReadService(item.id);
-    //   if (!success) {
-    //     // Rollback state if the API failed
-    //     setNotifications(prev =>
-    //       prev.map(n =>
-    //         n.id === item.id ? { ...n, status: 'unread' as const } : n,
-    //       ),
-    //     );
-    //   }
-    // }
+      const success = await markNotificationAsReadService(item.id);
+      if (success) {
+        // Update unread count
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } else {
+        // Rollback state if the API failed
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === item.id ? { ...n, status: 'unread' as const } : n,
+          ),
+        );
+      }
+    }
   };
 
-  const getNotificationIcon = (type: string, title: string = '') => {
-    const normalizedType = type?.toLowerCase() || '';
-    const normalizedTitle = title?.toLowerCase() || '';
-
-    if (
-      normalizedType.includes('patient') ||
-      normalizedTitle.includes('patient') ||
-      normalizedTitle.includes('assignment')
-    ) {
-      return IMAGES.alert_newPatient;
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'formSubmission':
+        return IMAGES.ic_submitted;
+      case 'formUpdate':
+        return IMAGES.alert_formUpdate;
+      case 'formReturned':
+        return IMAGES.ic_reload;
+      case 'requestCompleted':
+        return IMAGES.alert_serviceCompleted;
+      case 'doctorRegistration':
+        return IMAGES.ic_register_done;
+      case 'serviceProviderAssignment':
+        return IMAGES.alert_newPatient;
+      case 'adminManual':
+        return IMAGES.ic_warning;
+      case 'systemMaintenance':
+        return IMAGES.ic_announcement;
+      case 'securityAlert':
+        return IMAGES.securityIcon;
+      default:
+        return IMAGES.ic_announcement;
     }
-    if (
-      normalizedType.includes('form') ||
-      normalizedTitle.includes('form') ||
-      normalizedTitle.includes('update')
-    ) {
-      return IMAGES.alert_formUpdate;
-    }
-    if (
-      normalizedType.includes('progress') ||
-      normalizedTitle.includes('progress') ||
-      normalizedType.includes('inprogress')
-    ) {
-      return IMAGES.alert_serviceInProgress;
-    }
-    if (
-      normalizedType.includes('complete') ||
-      normalizedTitle.includes('complete')
-    ) {
-      return IMAGES.alert_serviceCompleted;
-    }
-    return IMAGES.ic_announcement;
   };
 
-  const getNotificationAction = (type: string, actionUrl?: string) => {
-    if (!actionUrl) return undefined;
-    const normalizedType = type?.toLowerCase() || '';
-    if (
-      normalizedType.includes('submit') ||
-      normalizedType.includes('submission')
-    ) {
-      return 'View Request';
+  const getNotificationAction = (item: any) => {
+    let label = {
+      txt: '',
+      onPress: null as (() => void) | null,
     }
-    if (normalizedType.includes('assign')) {
-      return 'Open Form';
+    switch (item.type) {
+      case 'formSubmission':
+        label.txt = 'View Request';
+        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: item });
+        return label;
+      case 'formUpdate':
+        label.txt = 'View Form';
+        label.onPress = () => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item, action: 'view' });
+        return label;
+      case 'formReturned':
+        label.txt = 'Review Form';
+        return label;
+      case 'requestCompleted': //DONE
+        label.txt = 'View Details';
+        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: item });
+        return label;
+      case 'doctorRegistration':
+        // label.txt = 'View Profile';
+        return label;
+      case 'serviceProviderAssignment':
+        return label;
+      case 'adminManual':
+        return label;
+      case 'systemMaintenance':
+        return label;
+      case 'securityAlert':
+        return label;
+      default:
+        return label;
     }
-    return 'View';
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
@@ -178,19 +231,26 @@ const DoctorNotification: React.FC = () => {
         title={item.title}
         subtitle={item.message}
         time={moment(item.createdAt).fromNow()}
-        iconSource={getNotificationIcon(item.type, item.title)}
+        iconSource={getNotificationIcon(item.type)}
         unread={isUnread}
-        action={getNotificationAction(item.type, item.actionUrl)}
+        action={getNotificationAction(item).txt}
         onPress={() => handleNotificationPress(item)}
+        onActionPress={() => handleNotificationPress(item)}
       />
     );
   };
 
   return (
     <AppSafeAreaView edges style={{ backgroundColor: COLORS.white }}>
-      <AppLoader visible={initialLoading && !isRefreshing} />
+      <AppLoader visible={(initialLoading && !isRefreshing) || isMarkingAllRead} />
       <View style={styles.container}>
-        <Header style={styles.headerStyle} title="Notifications" />
+        <Header
+          style={styles.headerStyle}
+          title="Notifications"
+          isBack
+          isNotification={true}
+          onNotificationPress={handleMarkAllAsRead}
+        />
 
         {/* Tabs */}
         <View style={styles.tabs}>
@@ -326,5 +386,19 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  headerActions: {
+    paddingHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(12),
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  markAllReadButton: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(8),
+    backgroundColor: 'transparent',
   },
 });

@@ -1,3 +1,4 @@
+import moment, { lang } from 'moment';
 import store from '../redux/store';
 
 /**
@@ -8,6 +9,10 @@ export const getCurrentLanguage = (): string => {
   const state = store.getState();
   const currentLanguage = (state as any)?.language?.currentLanguage || 'en';
   return currentLanguage;
+};
+
+export const syncMomentLocale = (language: string) => {
+  moment.locale(language === 'fr' ? 'fr' : 'en');
 };
 
 /**

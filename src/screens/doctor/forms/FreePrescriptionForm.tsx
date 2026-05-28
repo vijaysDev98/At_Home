@@ -355,7 +355,7 @@ const FreePrescriptionForm = forwardRef<
           />
 
           <View style={[styles.card, { elevation: 4 }]}>
-            {renderSectionHeader(STRING.additionalNotes)}
+            {renderSectionHeader(t(STRING.additionalNotes))}
             <Input
               isLocked={readOnly}
               multiline

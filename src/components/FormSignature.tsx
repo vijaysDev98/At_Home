@@ -66,7 +66,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
         if (!response?.success) {
           SHOW_TOAST(
-            response?.message || 'Failed to fetch signature status',
+            response?.data?.message || response?.messageage || 'Failed to fetch signature status',
             'error',
           );
           return false;
@@ -181,7 +181,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
       if (!response?.success) {
         SHOW_TOAST(
-          response?.message || 'Failed to initiate signature',
+          response?.data?.message || response?.messageage || 'Failed to initiate signature',
           'error',
         );
         onSigningEnd?.();
@@ -283,7 +283,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
               font={FONTS.Inter.Medium}
             >
               {moment(requestData?.digitalSignature?.signedAt).format(
-                'DD MMM YYYY, h:mm A',
+                'DD MMM YYYY',
               )}
             </AppText>
           )}

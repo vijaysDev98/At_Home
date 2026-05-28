@@ -311,8 +311,8 @@ const styles = StyleSheet.create({
   },
   logoutBtn: {
     marginHorizontal: getScaleSize(20),
-    marginTop: getScaleSize(20),
-    paddingVertical: getScaleSize(14),
+    marginTop: getScaleSize(10),
+    paddingVertical: getScaleSize(10),
     borderRadius: getScaleSize(14),
     borderWidth: 1,
     borderColor: COLORS.error,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   changePasswordBtn: {
     marginHorizontal: getScaleSize(20),
-    marginTop: getScaleSize(20),
+    marginTop: getScaleSize(10),
     paddingVertical: getScaleSize(14),
     borderRadius: getScaleSize(14),
     borderWidth: 1,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   languageBtn: {
     marginHorizontal: getScaleSize(20),
-    marginTop: getScaleSize(20),
+    marginTop: getScaleSize(10),
     paddingVertical: getScaleSize(14),
     borderRadius: getScaleSize(14),
     borderWidth: 1,

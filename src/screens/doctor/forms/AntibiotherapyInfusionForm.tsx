@@ -88,6 +88,8 @@ const AntibiotherapyInfusionForm = forwardRef<
   AntibiotherapyInfusionFormProps
 >(({ serviceId, initialData, patient, readOnly = false }, ref) => {
   const { t } = useTranslation();
+  const locale = useSelector((state: any) => state.language.currentLanguage);
+
   const dispatch = useDispatch();
   const reduxPatient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
@@ -849,6 +851,10 @@ const AntibiotherapyInfusionForm = forwardRef<
       </KeyboardAwareScrollView>
 
       <DatePicker
+        locale={locale}
+        title={t(STRING.selectDate)}
+        cancelText={t(STRING.cancel)}
+        confirmText={t(STRING.confirm)}
         modal
         open={open}
         date={date}

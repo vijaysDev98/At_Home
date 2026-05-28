@@ -315,7 +315,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                           : FONTS.Inter.Regular
                       }
                     >
-                      {chip}
+                      {t(chip)}
                     </AppText>
                   </TouchableOpacity>
                 ))}

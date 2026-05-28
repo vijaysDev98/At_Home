@@ -71,13 +71,10 @@ export interface HydrationInfusionFormRef {
   getFormData: () => any;
 }
 
-const ROUTE_OF_ACCESS = [
+const CENTRAL_VENOUS_OPTIONS = [
   STRING.implantedPort,
   STRING.centralCatheter,
   STRING.picc,
-  STRING.perineural,
-  STRING.peripheralVenous,
-  STRING.subcutaneous,
 ];
 
 const MODE_OF_ADMINISTRATION = [
@@ -101,6 +98,7 @@ const HydrationInfusionForm = forwardRef<
     ref,
   ) => {
     const dispatch = useDispatch();
+    const locale = useSelector((state: any) => state.language.currentLanguage);
     const { t } = useTranslation();
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
@@ -158,8 +156,11 @@ const HydrationInfusionForm = forwardRef<
           duration_hours: '',
           duration_minutes: '',
           frequency_per_day: '',
-          route_of_access: '',
-          mode_of_administration: '',
+          central_venous: false,
+          central_venous_options: [],
+          perineural_access: false,
+          peripheral_venous_access: false,
+          subcutaneous_access: false, mode_of_administration: '',
           ambulatory_required: false,
           prepared_in_facility: false,
           start_date: '',
@@ -207,7 +208,11 @@ const HydrationInfusionForm = forwardRef<
             duration_hours: '',
             duration_minutes: '',
             frequency_per_day: '',
-            route_of_access: '',
+            central_venous: false,
+            central_venous_options: [],
+            perineural_access: false,
+            peripheral_venous_access: false,
+            subcutaneous_access: false,
             mode_of_administration: '',
             ambulatory_required: false,
             prepared_in_facility: false,
@@ -267,7 +272,6 @@ const HydrationInfusionForm = forwardRef<
         setErrors(prev => {
           const ne = { ...prev } as any;
           const val = (state.infusion_products[index] as any)[field];
-          const allowedRoutes = ROUTE_OF_ACCESS;
           const allowedModes = MODE_OF_ADMINISTRATION;
 
           let isValid = false;
@@ -284,8 +288,6 @@ const HydrationInfusionForm = forwardRef<
           ) {
             // Optional numerics: valid if empty or numeric
             isValid = val === '' || !isNaN(Number(val));
-          } else if (field === 'route_of_access') {
-            isValid = !val || allowedRoutes.includes(val);
           } else if (field === 'mode_of_administration') {
             isValid = !val || allowedModes.includes(val);
           } else if (field === 'diluent_type') {
@@ -696,21 +698,74 @@ const HydrationInfusionForm = forwardRef<
               </AppText>
 
               <View style={styles.checkboxGroup}>
-                {ROUTE_OF_ACCESS.map(route => (
-                  <AppCheckBox
-                    disabled={readOnly}
-                    key={route}
-                    label={(route)}
-                    value={product.route_of_access === route}
-                    onValueChange={() =>
-                      updateProduct(
-                        index,
-                        'route_of_access',
-                        product.route_of_access === route ? '' : route,
-                      )
+                <AppCheckBox
+                  disabled={readOnly}
+                  label={(STRING.centralVenous)}
+                  value={product.central_venous}
+                  onValueChange={value => {
+                    updateProduct(index, 'central_venous', value);
+
+                    if (!value) {
+                      updateProduct(index, 'central_venous_options', []);
                     }
-                  />
-                ))}
+                  }}
+                />
+
+                {product.central_venous && (
+                  <View
+                    style={{
+                      marginLeft: getScaleSize(20),
+                      gap: getScaleSize(12),
+                    }}
+                  >
+                    {CENTRAL_VENOUS_OPTIONS.map(option => (
+                      <AppCheckBox
+                        disabled={readOnly}
+                        key={option}
+                        label={option}
+                        value={product.central_venous_options?.includes(option)}
+                        onValueChange={value => {
+                          const current = product.central_venous_options || [];
+
+                          updateProduct(
+                            index,
+                            'central_venous_options',
+                            value
+                              ? [...current, option]
+                              : current.filter((item: string) => item !== option),
+                          );
+                        }}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                <AppCheckBox
+                  disabled={readOnly}
+                  label={(STRING.perineural)}
+                  value={product.perineural_access}
+                  onValueChange={value =>
+                    updateProduct(index, 'perineural_access', value)
+                  }
+                />
+
+                <AppCheckBox
+                  disabled={readOnly}
+                  label={(STRING.peripheralVenous)}
+                  value={product.peripheral_venous_access}
+                  onValueChange={value =>
+                    updateProduct(index, 'peripheral_venous_access', value)
+                  }
+                />
+
+                <AppCheckBox
+                  disabled={readOnly}
+                  label={(STRING.subcutaneous)}
+                  value={product.subcutaneous_access}
+                  onValueChange={value =>
+                    updateProduct(index, 'subcutaneous_access', value)
+                  }
+                />
               </View>
 
               <AppText
@@ -875,6 +930,10 @@ const HydrationInfusionForm = forwardRef<
         </KeyboardAwareScrollView>
 
         <DatePicker
+          locale={locale}
+          title={t(STRING.selectDate)}
+          cancelText={t(STRING.cancel)}
+          confirmText={t(STRING.confirm)}
           modal
           open={open}
           date={date}
