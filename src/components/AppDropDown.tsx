@@ -98,9 +98,12 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: '#6F767E',
+    fontSize: getScaleSize(13)
   },
   selectedText: {
     color: '#1A1D1F',
+    fontSize: getScaleSize(13)
+
   },
   dropdownError: {
     borderColor: COLORS.error,
