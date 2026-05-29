@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   FlatList,
   ScrollView,
@@ -45,6 +45,8 @@ const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 const AvailableRequest: React.FC = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const route = useRoute<any>();
+
   const isGlobalLoading = useSelector(
     (state: RootState) => state.common.isLoading,
   );
@@ -53,7 +55,9 @@ const AvailableRequest: React.FC = () => {
     null,
   );
 
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState(
+    route?.params?.status || 'All',
+  );
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -173,6 +177,12 @@ const AvailableRequest: React.FC = () => {
     setRequests([]);
     fetchAvailableRequests(1, false, activeTab);
   }, [activeTab, fetchAvailableRequests]);
+
+  useEffect(() => {
+    if (route?.params?.status) {
+      setActiveTab(route.params.status);
+    }
+  }, [route?.params?.refreshKey]);
 
   // Fetch data every time screen comes into focus
   useFocusEffect(

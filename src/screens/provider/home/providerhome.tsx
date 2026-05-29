@@ -25,7 +25,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { PROVIDER_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
-import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import { DISABLE_API_LOGS, IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { FORM_STATUS, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { dashboardApi } from '../../../services/dashboard';
@@ -33,6 +33,7 @@ import { getUnreadCountService } from '../../../services/notificationService';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import RequestCardProvider from '../../../components/RequestCardProvider';
 import {
+  DISPLAY_FORM_STATUS,
   getButtonConfigProvider,
   REQUEST_STATUS,
 } from '../../../constant/RequestStatus';
@@ -304,7 +305,12 @@ const ProviderHome: React.FC = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.kpiWide}
-          // onPress={() => NavigationService.navigate('Forms' as never)}
+            onPress={() =>
+              NavigationService.navigate(PROVIDER_TAB_SCREENS.REQUESTS, {
+                status: 'Completed',
+                refreshKey: Date.now(),
+              })
+            }
           >
             <View style={styles.kpiWideLeft}>
               <Image
@@ -324,7 +330,7 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color="#111827"
                 >
-                  {dashboardData?.overview?.completedTodayCount || '0'} Services
+                  {dashboardData?.overview?.completedTodayCount || '0'} {t(STRING.services)}
                 </AppText>
               </View>
             </View>

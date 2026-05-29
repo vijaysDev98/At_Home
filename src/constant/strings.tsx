@@ -719,10 +719,11 @@ export const STRING = {
   prescriptionValidity: 'Prescription Validity',
   thisFormMustBeAccompaniedByAHandwrittenSecurePrescription: 'This form must be accompanied by a handwritten secure prescription',
   effectiveFrom: 'Effective From',
-
   missingInformation: 'Missing Information',
   incorrectPatientDetails: 'Incorrect Patient Details',
   incompleteForm: 'Incomplete Form',
   healthcareEvolved: 'Healthcare Evolved',
   atHome: 'At-Home',
+
+  services: 'Services'
 };
