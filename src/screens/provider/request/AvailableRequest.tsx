@@ -220,7 +220,7 @@ const AvailableRequest: React.FC = () => {
       <View style={{ marginBottom: getScaleSize(16) }}>
         <RequestCardProvider
           name={item.patient.fullName}
-          requestId={item.id}
+          requestId={item.requestId}
           requestType={item.service.serviceName}
           formStatus={formStatus}
           status={item.status}
@@ -394,10 +394,14 @@ const AvailableRequest: React.FC = () => {
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
             await handleClaimService({
-              requestId: selectedRequest?.id,
+              requestId: selectedRequest?.id || '',
               dispatch,
               onSuccess: async () => {
-                await onReturnRequest(reason, details, selectedRequest?.id);
+                await onReturnRequest(
+                  reason,
+                  details,
+                  selectedRequest?.id || '',
+                );
               },
             });
             // onReturnRequest(reason, details);

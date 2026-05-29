@@ -117,7 +117,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'left'}
           >
-            #{requestId?.slice(-4).toUpperCase()}
+            {requestId}
           </AppText>
         </View>
         <View>

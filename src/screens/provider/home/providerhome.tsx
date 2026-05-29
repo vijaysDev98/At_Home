@@ -371,7 +371,7 @@ const ProviderHome: React.FC = () => {
                 >
                   <RequestCardProvider
                     name={item?.patient?.fullName || ''}
-                    requestId={item?.id}
+                    requestId={item?.requestId}
                     requestType={item?.service?.serviceName || ''}
                     formStatus={item?.formStatus}
                     status={item?.status}

@@ -489,7 +489,7 @@ const HomeScreen: React.FC = () => {
                   >
                     <RequestCardDoctor
                       name={item.patient?.fullName || ''}
-                      requestId={item.id}
+                      requestId={item.requestId}
                       requestType={item.service?.serviceName || ''}
                       formStatus={formStatus}
                       status={item.status}

@@ -16,12 +16,12 @@ const AppLoader: React.FC<AppLoaderProps> = ({ visible, signing = false }) => {
   const { t } = useTranslation();
   return (
     <Modal transparent animationType="fade" visible={visible}>
-      <AppSafeAreaView edges={false} style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loaderWrapper}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           {signing && <AppText style={{ marginTop: getScaleSize(10) }} font={FONTS.Inter.SemiBold} color={COLORS.primary}>{t(STRING.signing)}</AppText>}
         </View>
-      </AppSafeAreaView>
+      </View>
     </Modal>
   );
 };

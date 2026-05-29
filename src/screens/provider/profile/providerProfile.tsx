@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: COLORS._EFEFEF,
-    borderWidth: 1,
+    // borderWidth: 1,
     borderColor: COLORS._F3F4F6,
   },
   scroll: {

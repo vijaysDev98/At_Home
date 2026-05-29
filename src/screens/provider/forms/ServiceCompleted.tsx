@@ -29,7 +29,6 @@ const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
-  console.log('requestId', route?.params?.request);
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
@@ -202,8 +201,9 @@ const ServiceCompletedScreen: React.FC = () => {
                   color={COLORS._1A1D1F}
                   numberOfLines={1}
                   allowFontScaling
-                  adjustsFontSizeToFit                >
-                  #{requestId?.slice(-4).toUpperCase() || '-'}
+                  adjustsFontSizeToFit
+                >
+                  {requestData?.requestId || '-'}
                 </AppText>
               </View>
             </View>

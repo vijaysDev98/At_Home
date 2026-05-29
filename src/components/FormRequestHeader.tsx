@@ -104,7 +104,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             numberOfLines={1}
           >
             {serviceName} • ID #
-            {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() || ''}
+            {(requestData?.requestId) || ''}
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>

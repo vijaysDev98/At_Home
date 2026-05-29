@@ -364,7 +364,7 @@ const PatientDetail: React.FC = () => {
                 <View style={{ marginBottom: getScaleSize(12) }}>
                   <RequestCardDoctor
                     name={patient?.fullName}
-                    requestId={item?.id}
+                    requestId={item?.requestId}
                     requestType={item?.service?.serviceName}
                     status={item?.status}
                     formStatus={item?.formStatus}
