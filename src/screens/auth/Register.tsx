@@ -24,6 +24,7 @@ import {
   AppLoader,
   AppBottomSheet,
   AppSafeAreaView,
+  Header,
 } from '../../components';
 import { ImagePickerContent } from '../../components/ImagePickerContent';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -303,16 +304,14 @@ const Register: React.FC = () => {
         {/* Frame Container (Matching Screenshot Border) */}
         <View>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {isEdit ? t(STRING.updateYourProfile) : t(STRING.createYourAccount)}
-            </Text>
-            <Text style={styles.subtitle}>
-              {isEdit
-                ? t(STRING.updateYourProfessionalDetails)
-                : t(STRING.createAccountSubtitle)}
-            </Text>
-          </View>
+          <Header
+            style={{ marginHorizontal: getScaleSize(16), marginBottom: getScaleSize(10) }}
+            isBack={true}
+            title={isEdit ? t(STRING.updateYourProfile) : t(STRING.createYourAccount)}
+            subTitle={isEdit
+              ? t(STRING.updateYourProfessionalDetails)
+              : t(STRING.createAccountSubtitle)}
+          />
           {/* Profile Image Section (Only in Edit mode) */}
           {isEdit && (
             <View style={styles.avatarSection}>
@@ -642,29 +641,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: getScaleSize(20),
   },
-  backBtn: {
-    width: getScaleSize(24),
-    height: getScaleSize(24),
-    tintColor: COLORS.primary,
-  },
-  headerLogo: {
-    width: getScaleSize(100),
-    height: getScaleSize(40),
-  },
-  header: {
-    marginBottom: getScaleSize(24),
-    paddingHorizontal: getScaleSize(24),
-  },
   title: {
     fontSize: getScaleSize(20),
     fontFamily: FONTS.Inter.Bold,
-    color: COLORS.slate900,
-    marginTop: getScaleSize(8),
+    color: COLORS._1E293B,
   },
   subtitle: {
     fontSize: getScaleSize(14),
     fontFamily: FONTS.Inter.Regular,
-    color: COLORS.slate700,
+    color: COLORS._64748B,
+    lineHeight: 20,
   },
   nameRow: {
     // flexDirection: 'row',

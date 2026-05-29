@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     fontSize: getScaleSize(16),
     fontFamily: FONTS.Inter.Bold,
     color: COLORS.white,
+    textAlign: 'center'
   },
   buttonIcon: {
     marginLeft: getScaleSize(8),

@@ -136,7 +136,7 @@ const DoctorProfile: React.FC = () => {
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
-          title={STRING.profile}
+          title={t(STRING.profile)}
           leftContent={() => (
             <View style={styles.headerAvatar}>
               <Image source={IMAGES.person} style={styles.headerAvatarImage} />

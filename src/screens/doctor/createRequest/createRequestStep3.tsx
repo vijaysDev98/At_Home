@@ -180,7 +180,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-              numberOfLines={1}
+              // numberOfLines={1}
               align='center'
             >
               {leftButtonLabel}

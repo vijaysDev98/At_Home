@@ -401,7 +401,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
               setOpen(true);
             }}
-            placeholder="DD/MM/YYYY"
+            placeholder={t(STRING.ddmmyyyy)}
             style={styles.inputField}
           />
 
@@ -651,7 +651,6 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
               placeholder="50"
               editable={false}
-
               keyboardType="numeric"
               style={styles.halfWidthInput}
             />
@@ -659,7 +658,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {STRING.pumpSettings}
+              {t(STRING.pumpSettings)}
             </AppText>
           </View>
 
@@ -713,7 +712,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
           <View style={styles.sectionSpacing}>
             <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {STRING.treatmentPlan}
+              {t(STRING.treatmentPlan)}
             </AppText>
           </View>
 

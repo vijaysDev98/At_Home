@@ -1,4 +1,4 @@
-package com.helathcare
+package com.athome.healthcare
 
 import android.app.Application
 import com.facebook.react.PackageList
