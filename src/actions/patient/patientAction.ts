@@ -36,7 +36,7 @@ export const fetchPatients =
             dispatch(appendPatients({ patients, pagination }));
           }
         } else {
-          SHOW_TOAST(response?.data?.message || response?.messageage, 'error');
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
         }
       } catch (e: any) {
         dispatch(setLoading(false));
@@ -59,7 +59,7 @@ export const fetchPatientDetails =
       if (response?.status && response?.code === 200) {
         dispatch(setSelectedPatient(response.data.data));
       } else {
-        SHOW_TOAST(response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     } catch (e: any) {
       dispatch(setLoading(false));
@@ -89,9 +89,9 @@ export const addPatient = (data: any) => async (dispatch: AppDispatch) => {
     } else if (response?.code === 400 || response?.code === 409) {
       console.log('add patient response error', response);
 
-      SHOW_TOAST(response?.data?.message || response?.messageage || response?.data?.message, 'error');
+      SHOW_TOAST(response?.data?.message || response?.message || response?.data?.message, 'error');
     } else {
-      SHOW_TOAST(response?.data?.message || response?.messageage || response?.data?.message, 'error');
+      SHOW_TOAST(response?.data?.message || response?.message || response?.data?.message, 'error');
     }
   } catch (e: any) {
     dispatch(setLoading(false));
@@ -131,9 +131,9 @@ export const updatePatient =
 
         NavigationService.goBack();
       } else if (response?.code === 400 || response?.code === 409) {
-        SHOW_TOAST(response?.data?.message || response?.messageage || response?.data?.message, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message || response?.data?.message, 'error');
       } else {
-        SHOW_TOAST(response?.data?.message || response?.messageage || response?.data?.message, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message || response?.data?.message, 'error');
       }
     } catch (e: any) {
       dispatch(setLoading(false));

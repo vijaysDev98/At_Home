@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -9,19 +9,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { RootStackParamList } from '../../../navigation';
 import { fetchPatients } from '../../../actions/patient/patientAction';
 import {
   AppLoader,
   AppSafeAreaView,
   AppText,
+  Header,
   PrimaryButton,
+  ProfileAvatar,
 } from '../../../components';
 import { STRING } from '../../../constant/strings';
 import { SCREENS } from '../../../navigation/routes';
@@ -29,26 +28,26 @@ import NavigationService from '../../../navigation/NavigationService';
 import { RootState } from '../../../redux/store';
 import { PATIENT_FILTERS } from '../../../constant/constantData';
 import { useTranslation } from 'react-i18next';
-
-type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+import App from '../../../../App';
 
 const PatientsScreen: React.FC = () => {
   const dispatch = useDispatch<any>();
   const { t } = useTranslation();
+
   const { patients, pagination } = useSelector(
     (state: RootState) => state.patient,
   );
+
   const { isLoading: globalLoading } = useSelector(
     (state: RootState) => state.common,
   );
 
-  const [selectedChip, setSelectedChip] = useState('All');
+  const [selectedChip, setSelectedChip] = useState(STRING.all);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Map chip selection to filter parameter
   const getFilterValue = (chip: string): string | undefined => {
     switch (chip) {
       case STRING.all:
@@ -68,58 +67,59 @@ const PatientsScreen: React.FC = () => {
     refresh: boolean = false,
     f?: string,
   ) => {
-    if (p > 1) setIsFetchingNextPage(true);
-    await dispatch(fetchPatients(p, s, f));
-    setIsFetchingNextPage(false);
-    setIsRefreshing(false);
+    if (globalLoading && !refresh && p === 1) return;
+
+    if (p > 1) {
+      setIsFetchingNextPage(true);
+    }
+
+    try {
+      await dispatch(fetchPatients(p, s, f));
+    } finally {
+      setIsFetchingNextPage(false);
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    // Fetch only on initial mount if the list is empty.
-    // Navigating back from Edit/Add screens will not trigger a re-fetch,
-    // as those actions already update the Redux state directly.
-    if (patients.length === 0) {
-      setPage(1);
-      const filter = getFilterValue(selectedChip);
-      fetchPatientsData(1, search, false, filter);
-    }
+    const filter = getFilterValue(selectedChip);
+    fetchPatientsData(1, '', false, filter);
   }, []);
 
-  // Handle filter changes
   useEffect(() => {
     setPage(1);
     const filter = getFilterValue(selectedChip);
     fetchPatientsData(1, search, false, filter);
   }, [selectedChip]);
 
-  // Debounced search
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
+    const timer = setTimeout(() => {
       const filter = getFilterValue(selectedChip);
-      if (search !== '') {
-        setPage(1);
-        fetchPatientsData(1, search, false, filter);
-      } else {
-        // If search is cleared, fetch all with current filter
-        setPage(1);
-        fetchPatientsData(1, '', false, filter);
-      }
+
+      setPage(1);
+      fetchPatientsData(1, search, false, filter);
     }, 500);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [search, selectedChip]);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
     setPage(1);
+
     const filter = getFilterValue(selectedChip);
     fetchPatientsData(1, search, true, filter);
   };
 
   const onLoadMore = () => {
-    if (pagination?.hasNextPage && !isFetchingNextPage) {
+    if (
+      pagination?.hasNextPage &&
+      !isFetchingNextPage &&
+      !globalLoading
+    ) {
       const nextPage = page + 1;
       setPage(nextPage);
+
       const filter = getFilterValue(selectedChip);
       fetchPatientsData(nextPage, search, false, filter);
     }
@@ -127,10 +127,13 @@ const PatientsScreen: React.FC = () => {
 
   const getInitials = (name: string) => {
     if (!name) return '??';
+
     const parts = name.split(' ');
+
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
+
     return name.slice(0, 2).toUpperCase();
   };
 
@@ -142,22 +145,33 @@ const PatientsScreen: React.FC = () => {
         onPress={onPress}
       >
         <View style={styles.cardLeft}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.initialsWrap}>
-              <Text style={styles.initials}>
-                {getInitials(item.fName + ' ' + item.lName)}
+          <ProfileAvatar
+            name={`${item.fName} ${item.lName}`}
+            size='medium'
+          />
+
+          <View>
+            <AppText font={FONTS.Inter.Bold} style={styles.name}>
+              {item.fName} {item.lName}
+            </AppText>
+
+            <View style={styles.phoneRow}>
+              <Image
+                source={IMAGES.phone}
+                style={styles.phoneIcon}
+              />
+
+              <Text style={styles.phone}>
+                {item.phoneNumber}
               </Text>
             </View>
           </View>
-          <View>
-            <Text style={styles.name}>{item.fName + ' ' + item.lName}</Text>
-            <View style={styles.phoneRow}>
-              <Image source={IMAGES.phone} style={styles.phoneIcon} />
-              <Text style={styles.phone}>{item.phoneNumber}</Text>
-            </View>
-          </View>
         </View>
-        <Image source={IMAGES.forwardIcon} style={styles.rightIcon} />
+
+        <Image
+          source={IMAGES.forwardIcon}
+          style={styles.rightIcon}
+        />
       </TouchableOpacity>
     ),
   );
@@ -166,30 +180,37 @@ const PatientsScreen: React.FC = () => {
     <PatientItem
       item={item}
       onPress={() =>
-        NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
-          id: item.id,
-        } as any)
+        NavigationService.navigate(
+          SCREENS.PATIENT_DETAIL,
+          {
+            id: item.id,
+          } as never,
+        )
       }
     />
   );
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView
+      edges={['top']}
+      style={{ backgroundColor: COLORS.white }}
+    >
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <AppText
-            size={getScaleSize(20)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-            style={styles.headerTitle}
-          >
-            {t(STRING.patients)}
-          </AppText>
+        <Header
+          title={t(STRING.patients)}
+          style={{
+            paddingHorizontal: getScaleSize(20),
+            backgroundColor: COLORS.white,
+          }}
+        />
 
-          {/* Search */}
+        <View style={styles.header}>
           <View style={styles.searchWrapper}>
-            <Image source={IMAGES.search} style={styles.searchIcon} />
+            <Image
+              source={IMAGES.search}
+              style={styles.searchIcon}
+            />
+
             <TextInput
               placeholder={t(STRING.searchPatients)}
               placeholderTextColor="#6F767E"
@@ -199,13 +220,12 @@ const PatientsScreen: React.FC = () => {
             />
           </View>
 
-          {/* Filter Chips */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.chipsRow}
           >
-            {PATIENT_FILTERS.map((chip, idx) => (
+            {PATIENT_FILTERS.map(chip => (
               <TouchableOpacity
                 key={chip}
                 activeOpacity={0.8}
@@ -218,7 +238,11 @@ const PatientsScreen: React.FC = () => {
                 onPress={() => setSelectedChip(chip)}
               >
                 <AppText
-                  color={selectedChip === chip ? COLORS.white : COLORS._6F767E}
+                  color={
+                    selectedChip === chip
+                      ? COLORS.white
+                      : COLORS._6F767E
+                  }
                   size={getScaleSize(12)}
                   font={
                     selectedChip === chip
@@ -232,8 +256,6 @@ const PatientsScreen: React.FC = () => {
             ))}
           </ScrollView>
         </View>
-
-        {/* Patient list */}
 
         <FlatList
           data={patients}
@@ -264,68 +286,48 @@ const PatientsScreen: React.FC = () => {
           ListFooterComponent={() =>
             isFetchingNextPage ? (
               <View style={{ paddingVertical: 20 }}>
-                <AppLoader visible={true} />
+                <AppLoader visible />
               </View>
             ) : null
           }
-          removeClippedSubviews={true}
+          removeClippedSubviews
           maxToRenderPerBatch={10}
           updateCellsBatchingPeriod={50}
           initialNumToRender={10}
           windowSize={10}
-          getItemLayout={(data, index) => ({
-            length: getScaleSize(80), // Approximate item height
-            offset: getScaleSize(80) * index,
-            index,
-          })}
         />
+
         <View style={styles.footer}>
           <PrimaryButton
             title={t(STRING.addPatient)}
-            onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
+            onPress={() =>
+              NavigationService.navigate(SCREENS.ADD_PATIENT)
+            }
           />
         </View>
       </View>
-      <AppLoader visible={globalLoading && page === 1 && !isRefreshing} />
+
+      <AppLoader
+        visible={
+          globalLoading &&
+          page === 1 &&
+          !isRefreshing
+        }
+      />
     </AppSafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS._F8F9FA,
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS._F8F9FA,
   },
   header: {
-    // paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(14),
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  headerTitle: {
-    paddingLeft: getScaleSize(20),
-    marginTop: getScaleSize(25),
-  },
-  sortButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F0F2F4',
-  },
-  sortIcon: {
-    fontSize: 16,
-    color: '#1A1D1F',
   },
   searchWrapper: {
     marginTop: 12,
@@ -352,7 +354,6 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   chipsRow: {
-    // gap: getScaleSize(8),
     alignItems: 'center',
     marginTop: getScaleSize(12),
     paddingHorizontal: getScaleSize(20),
@@ -362,9 +363,7 @@ const styles = StyleSheet.create({
     paddingVertical: getScaleSize(8),
     borderRadius: getScaleSize(18),
     marginRight: getScaleSize(5),
-    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
   },
   chipActive: {
     backgroundColor: '#526674',
@@ -374,23 +373,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderColor: '#EFEFEF',
   },
-  chipTextActive: {
-    color: COLORS.white,
-    fontSize: getScaleSize(13),
-    fontFamily: FONTS.Inter.Medium,
-  },
-  chipText: {
-    color: COLORS._6F767E,
-    fontSize: getScaleSize(13),
-    fontFamily: FONTS.Inter.Medium,
+  flatListContainer: {
+    paddingTop: getScaleSize(16),
   },
   listContent: {
     paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(120),
     gap: getScaleSize(12),
-  },
-  flatListContainer: {
-    paddingTop: getScaleSize(16),
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -401,10 +390,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   cardLeft: {
     flexDirection: 'row',
@@ -416,17 +401,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    overflow: 'hidden',
     backgroundColor: '#E8EDF1',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: {
-    width: '100%',
-    height: '100%',
-  },
   initialsWrap: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -451,35 +430,16 @@ const styles = StyleSheet.create({
     width: getScaleSize(10),
     resizeMode: 'contain',
   },
-  rightIcon: {
-    height: getScaleSize(18),
-    width: getScaleSize(8),
-    resizeMode: 'contain',
-    tintColor: COLORS._6F767E,
-    // transform: [{ rotate: '270deg' }],
-  },
   phone: {
     fontFamily: FONTS.Inter.Regular,
     fontSize: getScaleSize(13),
     color: COLORS._6F767E,
   },
-  cardRight: {
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  badge: {
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  chevron: {
-    fontSize: 18,
-    color: '#6F767E',
+  rightIcon: {
+    height: getScaleSize(18),
+    width: getScaleSize(8),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
   },
   footer: {
     paddingHorizontal: getScaleSize(20),

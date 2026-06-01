@@ -325,7 +325,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const keyExtractor = useCallback((item: ServiceRequest) => item.id, []);
 
   return (
-    <AppSafeAreaView style={styles.safeArea}>
+    <AppSafeAreaView edges={['top']} style={styles.safeArea}>
       <Header
         title={t(STRING.serviceRequest)}
         subTitle={t(STRING.manageYourServiceRequests)}

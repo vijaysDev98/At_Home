@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,7 +8,6 @@ import {
   FlatList,
 } from 'react-native';
 import {
-  AppButton,
   AppSafeAreaView,
   AppText,
   Header,
@@ -35,6 +34,7 @@ const PatientDetail: React.FC = () => {
   const dispatch = useDispatch<any>();
   const route = useRoute<any>();
   const { id } = route.params || {};
+
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
@@ -67,26 +67,34 @@ const PatientDetail: React.FC = () => {
 
   const getInitials = (name: string) => {
     if (!name) return '??';
+
     const parts = name.split(' ');
+
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
+
     return name.slice(0, 2).toUpperCase();
   };
+
   return (
-    <AppSafeAreaView edges>
+    <AppSafeAreaView
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: COLORS.white }}
+    >
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
         title={t(STRING.patientDetail)}
         style={styles.headerStyle}
       />
+
       <View style={styles.container}>
         <ScrollView
+          nestedScrollEnabled={true}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* Personal Info Card */}
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.editBtn}
@@ -117,6 +125,7 @@ const PatientDetail: React.FC = () => {
                   </AppText>
                 </View>
               </View>
+
               <View style={styles.profileMeta}>
                 <AppText
                   size={getScaleSize(18)}
@@ -125,6 +134,7 @@ const PatientDetail: React.FC = () => {
                 >
                   {patient?.fullName || '---'}
                 </AppText>
+
                 <AppText
                   size={getScaleSize(13)}
                   color={COLORS._6F767E}
@@ -136,6 +146,7 @@ const PatientDetail: React.FC = () => {
                     : '---'}{' '}
                   ({patient?.age || 0}yo)
                 </AppText>
+
                 <View style={styles.statusRow}>
                   <View style={styles.statusDot} />
                   <AppText
@@ -171,6 +182,7 @@ const PatientDetail: React.FC = () => {
                   </AppText>
                 </View>
               </View>
+
               <View style={styles.infoRow}>
                 <Image source={IMAGES.mail} style={styles.infoIcon} />
                 <View style={styles.infoContent}>
@@ -190,6 +202,7 @@ const PatientDetail: React.FC = () => {
                   </AppText>
                 </View>
               </View>
+
               {homeAddress && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.location_pin} style={styles.infoIcon} />
@@ -206,11 +219,12 @@ const PatientDetail: React.FC = () => {
                       font={FONTS.Inter.Medium}
                       color={COLORS._1A1D1F}
                     >
-                      {homeAddress || '---'}
+                      {homeAddress}
                     </AppText>
                   </View>
                 </View>
               )}
+
               {patient?.gender && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
@@ -232,6 +246,7 @@ const PatientDetail: React.FC = () => {
                   </View>
                 </View>
               )}
+
               {patient?.socialInsuranceNumber && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
@@ -253,6 +268,7 @@ const PatientDetail: React.FC = () => {
                   </View>
                 </View>
               )}
+
               {patient?.weight && (
                 <View style={styles.infoRow}>
                   <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
@@ -277,7 +293,6 @@ const PatientDetail: React.FC = () => {
             </View>
           </View>
 
-          {/* Medical Notes */}
           <View style={styles.sectionHeader}>
             <AppText
               size={getScaleSize(16)}
@@ -286,6 +301,7 @@ const PatientDetail: React.FC = () => {
             >
               {t(STRING.medicalNotes)}
             </AppText>
+
             <TouchableOpacity
               onPress={() =>
                 NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
@@ -319,7 +335,6 @@ const PatientDetail: React.FC = () => {
             </AppText>
           </View>
 
-          {/* Linked Requests */}
           <View style={styles.sectionHeader}>
             <AppText
               size={getScaleSize(16)}
@@ -328,6 +343,7 @@ const PatientDetail: React.FC = () => {
             >
               {t(STRING.linkedRequests)}
             </AppText>
+
             <TouchableOpacity
               onPress={() => {
                 NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
@@ -343,7 +359,9 @@ const PatientDetail: React.FC = () => {
           </View>
 
           <FlatList
-            data={patient?.linkedRequests || [] as any[]}
+            data={(patient?.linkedRequests || []) as any[]}
+            nestedScrollEnabled={true}
+            scrollEnabled={false}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
                 <AppText
@@ -374,12 +392,13 @@ const PatientDetail: React.FC = () => {
                         : undefined
                     }
                     onPress={() => {
-                      if (item.status == REQUEST_STATUS.COMPLETED) {
+                      if (item.status === REQUEST_STATUS.COMPLETED) {
                         NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
                           request: item,
                         });
                         return;
                       }
+
                       NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                         request: item,
                         action: 'view',
@@ -411,7 +430,8 @@ const PatientDetail: React.FC = () => {
           />
         </ScrollView>
       </View>
-      <AppLoader visible={globalLoading} />
+
+      <AppLoader visible={globalLoading && !patient?.id} />
     </AppSafeAreaView>
   );
 };
@@ -424,6 +444,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS._F8F9FA,
+    overflow: 'hidden',
   },
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
@@ -477,10 +498,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#FFFFFF',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
   },
   profileMeta: {
     flex: 1,

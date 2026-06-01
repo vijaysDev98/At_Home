@@ -288,7 +288,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges style={styles.container}>
+    <AppSafeAreaView style={styles.container}>
       <AppLoader visible={isLoading} />
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}

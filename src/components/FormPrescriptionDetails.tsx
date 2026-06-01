@@ -86,6 +86,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
+        theme='light'
         mode="date"
         open={open}
         date={date}

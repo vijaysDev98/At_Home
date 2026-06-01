@@ -88,7 +88,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   };
 
   return (
-    <AppSafeAreaView edges style={styles.safe}>
+    <AppSafeAreaView style={styles.safe}>
       <AppLoader visible={isLoading} />
       <Header isBack style={{ paddingHorizontal: getScaleSize(16) }} />
       <KeyboardAwareScrollView

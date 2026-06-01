@@ -33,8 +33,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "HelathCareTests.xctest"
-               BlueprintName = "HelathCareTests"
+               BuildableName = "HealthCareTests.xctest"
+               BlueprintName = "HealthCareTests"
                ReferencedContainer = "container:HealthCare.xcodeproj">
             </BuildableReference>
          </TestableReference>

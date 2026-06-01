@@ -21,7 +21,7 @@ export const fetchProfile = () => async (dispatch: AppDispatch) => {
     if (response?.status && response?.code === 200) {
       dispatch(setProfileData(response?.data?.data ?? null));
     } else {
-      SHOW_TOAST(response?.data?.message || response?.messageage, 'error');
+      SHOW_TOAST(response?.data?.message || response?.message, 'error');
     }
   } catch (e: any) {
     console.log('Fetch Profile Error', e);
@@ -87,7 +87,7 @@ export const updateProfile =
           return true;
         }
 
-        SHOW_TOAST(response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
         return false;
       } catch (e: any) {
         console.log('Update Profile Error', e);

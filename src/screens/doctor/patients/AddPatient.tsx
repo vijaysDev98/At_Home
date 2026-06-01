@@ -291,7 +291,7 @@ const AddPatient: React.FC = () => {
   return (
     <>
       <AppLoader visible={isLoading} />
-      <AppSafeAreaView edges={true}>
+      <AppSafeAreaView style={{ backgroundColor: COLORS.white }} edges={['top', 'bottom']}>
         <Header
           isBack
           title={isEdit ? t(STRING.editPatient) : t(STRING.addPatientTitle)}
@@ -790,7 +790,9 @@ const AddPatient: React.FC = () => {
         title={t(STRING.selectDate)}
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
+        maximumDate={new Date()}
         modal
+        theme='light'
         mode='date'
         open={datePickerOpen}
         date={selectedDate}

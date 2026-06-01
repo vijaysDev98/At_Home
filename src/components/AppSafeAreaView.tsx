@@ -19,7 +19,7 @@ interface AppSafeAreaViewProps {
   isBottomMargin?: boolean;
   isLight?: boolean;
   isFullScreen?: boolean;
-  edges?:any
+  edges?: any
 }
 
 const AppSafeAreaView = ({
@@ -35,17 +35,19 @@ const AppSafeAreaView = ({
 
   return Platform.OS === "ios" ? (
     <SafeAreaView
-      edges={["right", "left", "bottom"]}
+      edges={edges || ["top", "right", "left", "bottom"]}
       style={[
         {
           flex: 1,
+          backgroundColor: COLORS.white
           // paddingTop: 40,
           //   paddingTop: 10,
         },
         style,
       ]}
     >
-      <StatusBar translucent={false} />
+      <StatusBar translucent={false} barStyle={"dark-content"}
+      />
       {children}
     </SafeAreaView>
   ) : (
@@ -68,12 +70,12 @@ const AppSafeAreaView = ({
           },
           style,
         ]}
-        edges={edges? ["top", "right", "left","bottom"] :["top", "right", "left"]}
+        edges={edges ? ["top", "right", "left", "bottom"] : ["top", "right", "left"]}
       >
         <StatusBar
           translucent
           backgroundColor={COLORS.white}
-          barStyle={isLight ? "light-content" : "dark-content"}
+          barStyle={"dark-content"}
         />
         {children}
       </SafeAreaView>

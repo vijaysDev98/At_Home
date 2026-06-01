@@ -17,6 +17,7 @@ import {
   ReviewRequestSheet,
   AppLoader,
   ProfileAvatar,
+  AppSafeAreaView,
 } from '../../../components';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
@@ -161,7 +162,7 @@ const ProviderHome: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView edges={['top']} style={styles.safe}>
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
         {/* Header */}
@@ -456,7 +457,7 @@ const ProviderHome: React.FC = () => {
           }}
         />
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
@@ -465,10 +466,11 @@ export default ProviderHome;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   container: {
     flex: 1,
+    backgroundColor: '#F8FAFC',
+
   },
   header: {
     flexDirection: 'row',

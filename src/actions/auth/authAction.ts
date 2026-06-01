@@ -6,6 +6,7 @@ import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { fetchProfile } from '../profile/profileAction';
+import { Alert } from 'react-native';
 
 const getUserDataForRedux = (user: any) => {
   if (!user) {
@@ -49,7 +50,6 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
 
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(API.API_ROUTES.login, data);
-    console.log('logindata', response);
 
     if (response?.status) {
       const responseData = response?.data;
@@ -83,17 +83,18 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
         NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
       }
     } else {
+      console.log('Login failed:', response);
       if (response?.code === 401) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
       } else if (response?.code === 403) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
       } else {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
       }
     }
   } catch (e) {
     console.log('login Error', e);
-    SHOW_TOAST(undefined, 'error');
+    SHOW_TOAST(e?.message || 'Something went wrong', 'error');
   } finally {
     dispatch(setLoading(false));
   }
@@ -117,9 +118,9 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
       );
       NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
     } else if (response?.code === 400 || response?.code === 409) {
-      SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+      SHOW_TOAST(response?.data?.message || response?.message, 'error');
     } else {
-      SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+      SHOW_TOAST(response?.data?.message || response?.message, 'error');
     }
   } catch (e) {
     dispatch(setLoading(false));
@@ -143,7 +144,7 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       await persistAuthInStorage(innerData);
       dispatch(setUserData(getUserDataForRedux(innerData)));
       dispatch(fetchProfile());
-      // SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+      // SHOW_TOAST(response?.data?.message || response?.message, 'success');
       dispatch(setLoading(false));
 
       // Role-based navigation
@@ -156,11 +157,11 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
     } else {
       dispatch(setLoading(false));
       if (response?.code === 400) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       } else if (response?.code === 401) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       } else {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     }
   } catch (e) {
@@ -185,7 +186,7 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
       SHOW_TOAST(response?.data?.message, 'success');
     } else {
       // Show error toast if API logout fails, but proceed with local logout
-      // SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+      // SHOW_TOAST(response?.data?.message || response?.message, 'error');
     }
   } catch (e: any) {
     // SHOW_TOAST(undefined, 'error');
@@ -208,7 +209,7 @@ export const forgotPassword =
       );
 
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+        SHOW_TOAST(response?.data?.message || response?.message, 'success');
         dispatch(setLoading(false));
         NavigationService.navigate(SCREENS.OTP_VERIFICATION, {
           email,
@@ -233,7 +234,7 @@ export const verifyForgotPasswordOtp =
       );
 
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+        SHOW_TOAST(response?.data?.message || response?.message, 'success');
         dispatch(setLoading(false));
         const resetToken = response?.data?.data?.resetToken || '';
         NavigationService.navigate(SCREENS.RESET_PASSWORD, {
@@ -244,11 +245,11 @@ export const verifyForgotPasswordOtp =
       } else {
         dispatch(setLoading(false));
         if (response?.code === 400) {
-          SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
         } else if (response?.code === 401) {
-          SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
         } else {
-          SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
         }
       }
     } catch (e) {
@@ -272,12 +273,12 @@ export const resetPassword =
         );
 
         if (response?.status && response?.code === 200) {
-          SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+          SHOW_TOAST(response?.data?.message || response?.message, 'success');
           dispatch(setLoading(false));
           NavigationService.reset(SCREENS.LOGIN);
         } else {
           dispatch(setLoading(false));
-          SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
         }
       } catch (e) {
         SHOW_TOAST(undefined, 'error');
@@ -294,11 +295,11 @@ export const resendLoginOtp =
         { email },
       );
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+        SHOW_TOAST(response?.data?.message || response?.message, 'success');
         dispatch(setLoading(false));
       } else {
         dispatch(setLoading(false));
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     } catch (e) {
       SHOW_TOAST(undefined, 'error');
@@ -338,14 +339,15 @@ export const resendForgotPasswordOtp =
         { email },
       );
       if (response?.status && response?.code === 200) {
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'success');
+        SHOW_TOAST(response?.data?.message || response?.message, 'success');
         dispatch(setLoading(false));
       } else {
         dispatch(setLoading(false));
-        SHOW_TOAST(response?.data?.message || response?.data?.message || response?.messageage, 'error');
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     } catch (e) {
       SHOW_TOAST(undefined, 'error');
       dispatch(setLoading(false));
     }
   };
+

@@ -142,12 +142,12 @@ const EditProviderProfile: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges style={styles.container}>
+    <AppSafeAreaView style={styles.container}>
       <AppLoader visible={isLoading} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? undefined : 'height'}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}

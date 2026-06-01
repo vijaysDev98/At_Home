@@ -108,7 +108,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <AppSafeAreaView edges>
+    <AppSafeAreaView edges={['top']}>
       <AppLoader visible={isLoading} />
       {/* <ScrollView
         contentContainerStyle={styles.scrollContent}

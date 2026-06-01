@@ -66,7 +66,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
         if (!response?.success) {
           SHOW_TOAST(
-            response?.data?.message || response?.messageage || 'Failed to fetch signature status',
+            response?.data?.message || response?.message || 'Failed to fetch signature status',
             'error',
           );
           return false;
@@ -181,7 +181,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
       if (!response?.success) {
         SHOW_TOAST(
-          response?.data?.message || response?.messageage || 'Failed to initiate signature',
+          response?.data?.message || response?.message,
           'error',
         );
         onSigningEnd?.();
@@ -191,7 +191,6 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 
       const signingUrl = response?.data?.signingUrl;
       if (!signingUrl) {
-        SHOW_TOAST('Signing URL not found', 'error');
         onSigningEnd?.();
         dispatch(setLoading(false));
         return;

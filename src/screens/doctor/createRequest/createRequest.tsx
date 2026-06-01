@@ -13,6 +13,7 @@ import {
   AppSafeAreaView,
   AppText,
   Input,
+  ProfileAvatar,
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -61,21 +62,12 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
         style={[styles.patientCard, isSelected && styles.patientCardActive]}
         onPress={() => onSelect(patient.id)}
       >
-        <View style={styles.avatarWrap}>
-          {patient.avatar ? (
-            <Image source={{ uri: patient.avatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.initialsWrap}>
-              <AppText
-                size={getScaleSize(16)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {getInitials(`${patient.fName} ${patient.lName}`)}
-              </AppText>
-            </View>
-          )}
-        </View>
+        {/* <View style={styles.avatarWrap}> */}
+        <ProfileAvatar
+          name={`${patient.fName} ${patient.lName}`}
+          size='medium'
+        />
+        {/* </View> */}
 
         <View style={styles.patientInfo}>
           <AppText
@@ -219,8 +211,10 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   }, []);
 
   return (
-    <AppSafeAreaView style={styles.safe}>
+    <AppSafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.container}>
+
+        {/* HEADER (fixed) */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
@@ -253,135 +247,145 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
           <View style={styles.headerLeft} />
         </View>
 
+        {/* BODY */}
         <View style={styles.content}>
+
           {globalLoading && patients.length === 0 ? (
             <View style={styles.loaderContainer}>
-              <AppLoader visible={true} />
+              <AppLoader visible />
             </View>
           ) : (
-            <ScrollView
-              style={styles.scroll}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={onRefresh}
-                  colors={[COLORS.primary]}
+            <>
+              <View style={{ marginHorizontal: getScaleSize(16), marginTop: getScaleSize(10) }}>
+                <AppText
+                  size={getScaleSize(18)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  style={{ marginBottom: getScaleSize(10) }}
+                >
+                  {t(STRING.selectPatient)}
+                </AppText>
+
+                <Input
+                  leftIcon={IMAGES.search}
+                  style={styles.searchInput}
+                  placeholder={t(STRING.searchByNameOrId)}
+                  value={search}
+                  onChangeText={setSearch}
                 />
-              }
-            >
-              <AppText
-                size={getScaleSize(18)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.selectPatient)}
-              </AppText>
-
-              <Input
-                leftIcon={IMAGES.search}
-                style={styles.searchInput}
-                placeholder={t(STRING.searchByNameOrId)}
-                value={search}
-                onChangeText={setSearch}
-              />
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filters}
-              >
-                {PATIENT_FILTERS.map(chip => (
-                  <TouchableOpacity
-                    key={chip}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.chip,
-                      selectedChip === chip
-                        ? styles.chipActive
-                        : styles.chipInactive,
-                    ]}
-                    onPress={() => setSelectedChip(chip)}
+                <View style={{ paddingBottom: getScaleSize(10) }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filters}
                   >
-                    <AppText
-                      color={
-                        selectedChip === chip ? COLORS.white : COLORS._6F767E
-                      }
-                      size={getScaleSize(12)}
-                      font={
-                        selectedChip === chip
-                          ? FONTS.Inter.SemiBold
-                          : FONTS.Inter.Regular
-                      }
-                    >
-                      {t(chip)}
-                    </AppText>
-                  </TouchableOpacity>
-                ))}
+                    {PATIENT_FILTERS.map(chip => (
+                      <TouchableOpacity
+                        key={chip}
+                        activeOpacity={0.8}
+                        style={[
+                          styles.chip,
+                          selectedChip === chip
+                            ? styles.chipActive
+                            : styles.chipInactive,
+                        ]}
+                        onPress={() => setSelectedChip(chip)}
+                      >
+                        <AppText
+                          color={
+                            selectedChip === chip ? COLORS.white : COLORS._6F767E
+                          }
+                          size={getScaleSize(12)}
+                          font={
+                            selectedChip === chip
+                              ? FONTS.Inter.SemiBold
+                              : FONTS.Inter.Regular
+                          }
+                        >
+                          {t(chip)}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+              {/* SCROLLABLE AREA ONLY */}
+              <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={onRefresh}
+                    colors={[COLORS.primary]}
+                  />
+                }
+              >
+
+                <View style={styles.list}>
+                  {filteredPatients.map(patient => (
+                    <PatientItem
+                      key={patient.id}
+                      patient={patient}
+                      isSelected={selectedId === patient.id}
+                      onSelect={handlePatientSelect}
+                    />
+                  ))}
+
+                  {filteredPatients.length === 0 && (
+                    <View style={styles.emptyContainer}>
+                      <AppText color={COLORS._6F767E}>
+                        {t(STRING.noPatientsFound)}
+                      </AppText>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.spacer} />
               </ScrollView>
 
-              <View style={styles.list}>
-                {filteredPatients.map(patient => (
-                  <PatientItem
-                    key={patient.id}
-                    patient={patient}
-                    isSelected={selectedId === patient.id}
-                    onSelect={handlePatientSelect}
+              {/* FIXED BOTTOM ACTIONS (OUTSIDE SCROLL) */}
+              <View style={styles.bottomSheet}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.createPatientBtn}
+                  onPress={handleCreateNewPatient}
+                >
+                  <Image
+                    source={IMAGES.new_request}
+                    style={styles.newRequestIcon}
                   />
-                ))}
 
-                {filteredPatients.length === 0 && (
-                  <View style={styles.emptyContainer}>
-                    <AppText color={COLORS._6F767E}>
-                      {t(STRING.noPatientsFound)}
-                    </AppText>
-                  </View>
-                )}
+                  <AppText
+                    size={getScaleSize(15)}
+                    color={COLORS._526674}
+                    font={FONTS.Inter.Bold}
+                  >
+                    {t(STRING.createNewPatient)}
+                  </AppText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={[
+                    styles.continueBtn,
+                    !canContinue && styles.continueDisabled,
+                  ]}
+                  disabled={!canContinue}
+                  onPress={handleContinue}
+                >
+                  <AppText
+                    size={getScaleSize(15)}
+                    color={COLORS.white}
+                    font={FONTS.Inter.Bold}
+                  >
+                    {t(STRING.continue)}
+                  </AppText>
+                </TouchableOpacity>
               </View>
-
-              <View style={styles.spacer} />
-            </ScrollView>
+            </>
           )}
-
-          <View style={styles.bottomSheet}>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={styles.createPatientBtn}
-              onPress={handleCreateNewPatient}
-            >
-              <Image
-                source={IMAGES.new_request}
-                style={styles.newRequestIcon}
-              />
-
-              <AppText
-                size={getScaleSize(15)}
-                color={COLORS._526674}
-                font={FONTS.Inter.Bold}
-              >
-                {t(STRING.createNewPatient)}
-              </AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[
-                styles.continueBtn,
-                !canContinue && styles.continueDisabled,
-              ]}
-              disabled={!canContinue}
-              onPress={handleContinue}
-            >
-              <AppText
-                size={getScaleSize(15)}
-                color={COLORS.white}
-                font={FONTS.Inter.Bold}
-              >
-                {t(STRING.continue)}
-              </AppText>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </AppSafeAreaView>
@@ -432,10 +436,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    // shadowColor: '#000',
+    // shadowOpacity: 0.04,
+    // shadowRadius: 4,
+    // elevation: 1,
   },
 
   headerLeft: {
@@ -474,7 +478,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: getScaleSize(20),
     paddingBottom: getScaleSize(160),
-    paddingTop: getScaleSize(20),
+    // paddingTop: getScaleSize(20),
   },
 
   searchInput: {

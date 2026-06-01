@@ -6,6 +6,7 @@ import { useRoute } from '@react-navigation/native';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import {
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -106,7 +107,15 @@ const ProviderFormScreen: React.FC = () => {
     readOnly,
     enabled: isFetched && !!requestData && !hasError,
     onLockConflict: () => {
-      warningSheetRef.current?.show();
+      if (Platform.OS === 'ios') {
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            warningSheetRef.current?.show();
+          });
+        }, 1000);
+      } else {
+        warningSheetRef.current?.show();
+      }
     },
   });
 
@@ -281,15 +290,13 @@ const ProviderFormScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={true}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         <HeaderProvider
           title={
             readOnly ? t(STRING.viewForm) : isInProgress ? t(STRING.service) : t(STRING.updateForm)
           }
           onViewFormPress={() => {
-            console.log(API_BASE_URL + requestData?.signedPdfUrl || '');
-
             openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');
           }}
           isBack
@@ -384,10 +391,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    // shadowColor: COLORS.black,
+    // shadowOpacity: 0.04,
+    // shadowRadius: 4,
+    // elevation: 1,
   },
   circleBtn: {
     width: 40,

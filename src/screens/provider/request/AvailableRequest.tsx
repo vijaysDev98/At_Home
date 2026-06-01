@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { AppText, AppLoader, ReviewRequestSheet } from '../../../components';
+import { AppText, AppLoader, ReviewRequestSheet, AppSafeAreaView } from '../../../components';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -204,8 +204,6 @@ const AvailableRequest: React.FC = () => {
   }, [pagination, currentPage, fetchAvailableRequests, activeTab]);
 
   const filteredRequests = useMemo(() => {
-    console.log('requests', requests);
-
     return requests.filter(item => {
       if (activeTab === 'All') return true;
       const formStatus = item.status;
@@ -312,7 +310,7 @@ const AvailableRequest: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView style={styles.safe} edges={['top']}>
       <AppLoader visible={isGlobalLoading} />
       <View style={styles.container}>
         <View style={styles.header}>
@@ -418,7 +416,7 @@ const AvailableRequest: React.FC = () => {
           }}
         />
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
@@ -427,10 +425,12 @@ export default AvailableRequest;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
+    backgroundColor: COLORS._F9FAFB,
+
   },
   header: {
     backgroundColor: COLORS.white,

@@ -241,7 +241,7 @@ const DoctorNotification: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <AppLoader visible={(initialLoading && !isRefreshing) || isMarkingAllRead} />
       <View style={styles.container}>
         <Header

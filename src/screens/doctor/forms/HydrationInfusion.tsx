@@ -935,6 +935,7 @@ const HydrationInfusionForm = forwardRef<
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}
           modal
+          theme='light'
           open={open}
           date={date}
           mode="date"

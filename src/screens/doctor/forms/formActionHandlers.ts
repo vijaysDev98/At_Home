@@ -7,6 +7,8 @@ import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant/showToast';
 import moment from 'moment';
 import store from '../../../redux/store';
 import { Alert } from 'react-native';
+import { STRING } from '../../../constant';
+import { useTranslation } from 'react-i18next';
 
 export interface FormActionParams {
   dispatch: Dispatch<any>;
@@ -37,10 +39,11 @@ export const handleFormSubmit = async (params: FormActionParams) => {
 
   // Always validate first
   const ok = validateForm();
+  // const { t } = useTranslation();
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || 'Please fill all required fields';
+      errors[firstErrorKey] || (STRING.pleaseFillAllRequiredFields);
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;
@@ -88,7 +91,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
-        SHOW_SUCCESS_TOAST(response?.data?.message || response?.messageage);
+        SHOW_SUCCESS_TOAST(response?.data?.message || response?.message);
 
         // Submit for review to lock the request
         const newRequestId = response.data?.data?.id;
@@ -140,10 +143,12 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
 
   // Always validate first
   const ok = validateForm();
+  // const { t } = useTranslation();
+
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || 'Please fill all required fields';
+      errors[firstErrorKey] || (STRING.pleaseFillAllRequiredFields);
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;
@@ -193,7 +198,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
-        SHOW_SUCCESS_TOAST(response?.data?.message || response?.messageage);
+        SHOW_SUCCESS_TOAST(response?.data?.message || response?.message);
         setTimeout(() => {
           NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
             screen: SCREENS.DOCTOR_REQUEST,

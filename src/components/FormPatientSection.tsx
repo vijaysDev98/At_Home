@@ -119,6 +119,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
+        theme='light'
         mode="date"
         open={openDob}
         date={dobDate}

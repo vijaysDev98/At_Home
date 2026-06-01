@@ -65,7 +65,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
   const showError = touched && email.length > 0 && !isValidEmail;
 
   return (
-    <AppSafeAreaView edges style={styles.safe}>
+    <AppSafeAreaView style={styles.safe}>
       <AppLoader visible={isLoading} />
 
       <KeyboardAwareScrollView

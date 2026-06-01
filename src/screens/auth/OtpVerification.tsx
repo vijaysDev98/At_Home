@@ -145,7 +145,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={undefined}
       >
         <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}

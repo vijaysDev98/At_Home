@@ -131,7 +131,7 @@ const DoctorProfile: React.FC = () => {
   const userFacilityName = profileData?.facilityName;
 
   return (
-    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }} edges={['top']}>
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <Header

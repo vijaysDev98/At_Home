@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText, Input, LogoutConfirmationSheet, LanguagePickerSheet } from '../../../components';
+import { AppText, Input, LogoutConfirmationSheet, LanguagePickerSheet, AppSafeAreaView } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -75,7 +75,7 @@ const ProviderProfile: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -294,7 +294,7 @@ const ProviderProfile: React.FC = () => {
           currentLanguage={currentLanguage}
         />
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
@@ -303,7 +303,7 @@ export default ProviderProfile;
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS.backgroundAlt,
+    backgroundColor: COLORS.white,
   },
   container: {
     flex: 1,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   logoutBtn: {
     marginHorizontal: getScaleSize(20),
     marginTop: getScaleSize(10),
-    paddingVertical: getScaleSize(10),
+    paddingVertical: getScaleSize(15),
     borderRadius: getScaleSize(14),
     borderWidth: 1,
     borderColor: COLORS.error,

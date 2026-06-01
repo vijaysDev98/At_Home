@@ -130,7 +130,7 @@ const FormReviewScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={true}>
+    <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
       <AppLoader visible={isLoading} signing={isSigning} />
       {isFetched && hasError ? (
         <View
@@ -225,10 +225,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
 
   content: {

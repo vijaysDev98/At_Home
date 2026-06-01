@@ -653,6 +653,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}
           modal
+          theme='light'
           open={open}
           date={date}
           mode="date"

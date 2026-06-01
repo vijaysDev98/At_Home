@@ -94,7 +94,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   }, []);
 
   return (
-    <AppSafeAreaView edges={true}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -243,10 +243,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
   },
   headerLeft: {
     flex: 0.5,

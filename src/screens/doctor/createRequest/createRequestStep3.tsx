@@ -93,7 +93,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   return (
-    <AppSafeAreaView edges={true}>
+    <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         <AppLoader visible={isLoading} />
         <View style={styles.header}>
@@ -223,10 +223,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS._EFEFEF,
-    shadowColor: COLORS.black,
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    // shadowColor: COLORS.black,
+    // shadowOpacity: 0.04,
+    // shadowRadius: 4,
+    // elevation: 1,
   },
   circleBtn: {
     width: 40,

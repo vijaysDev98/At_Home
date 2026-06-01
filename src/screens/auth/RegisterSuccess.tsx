@@ -22,7 +22,6 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
   return (
     <AppSafeAreaView
       style={styles.safe}
-      edges={true}
     >
       <View style={styles.container}>
         {/* Hero */}

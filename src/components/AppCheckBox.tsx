@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TextStyle,
   ViewStyle,
+  Platform,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
@@ -33,13 +34,25 @@ const AppCheckBox: React.FC<AppCheckBoxProps> = ({
   return (
     <View style={[styles.container, containerStyle]}>
       <CheckBox
+        boxType="square"
+        style={{
+          marginVertical: 5,
+          marginRight: Platform.OS === 'ios' ? 5 : 10,
+          height: 20,
+          width: 20,
+        }}
         disabled={disabled}
         value={value}
         onValueChange={onValueChange}
         tintColors={{
-          true: disabled ? COLORS._D0D5DD : COLORS.primary,
+          true: COLORS.primary,
           false: disabled ? COLORS._D0D5DD : COLORS._6F767E,
         }}
+        onCheckColor={COLORS.primary}
+        onTintColor={COLORS.primary}
+        tintColor={disabled ? COLORS._D0D5DD : COLORS._6F767E}
+        animationDuration={0.1}
+        lineWidth={1.5}
       />
 
       <AppText
