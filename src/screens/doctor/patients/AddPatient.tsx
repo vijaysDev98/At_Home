@@ -792,6 +792,7 @@ const AddPatient: React.FC = () => {
         confirmText={t(STRING.confirm)}
         modal
         mode='date'
+        maximumDate={new Date()}
         open={datePickerOpen}
         date={selectedDate}
         onConfirm={date => {

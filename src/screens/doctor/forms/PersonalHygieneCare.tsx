@@ -364,7 +364,7 @@ const PersonalHygieneCare = forwardRef<
             }}
             editable={false}
             label={t(STRING.dateOfBirth)}
-            placeholder="DD/MM/YYYY"
+            placeholder={t(STRING.ddmmyyyy)}
             value={state.dob}
             style={styles.inputField}
             pointerEvents="none"
@@ -387,7 +387,7 @@ const PersonalHygieneCare = forwardRef<
             }}
             editable={false}
             label={t(STRING.date)}
-            placeholder="DD/MM/YYYY"
+            placeholder={t(STRING.ddmmyyyy)}
             value={state.prescription_date}
             style={styles.inputField}
             pointerEvents="none"
@@ -600,7 +600,7 @@ const PersonalHygieneCare = forwardRef<
             }}
             editable={false}
             label={t(STRING.catheterRemovalDate)}
-            placeholder="DD/MM/YYYY"
+            placeholder={t(STRING.ddmmyyyy)}
             value={state.catheter_removal_date}
             style={styles.inputField}
             pointerEvents="none"

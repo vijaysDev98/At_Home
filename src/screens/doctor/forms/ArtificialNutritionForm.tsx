@@ -472,13 +472,13 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               }}
               editable={false}
               label={t(STRING.from)}
-              placeholder="DD/MM/YYYY"
+              placeholder={t(STRING.ddmmyyyy)}
               value={state.from_date}
               style={styles.inputField}
               pointerEvents={readOnly ? 'none' : 'auto'}
               error={errors.from_date}
             />
-            <View style={styles.row}>
+            <View style={[styles.row, { alignItems: 'flex-end' }]}>
               <Input
                 isLocked={readOnly}
                 label={t(STRING.prescriptionDurationWeeks)}

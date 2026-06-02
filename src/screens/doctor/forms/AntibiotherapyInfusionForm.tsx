@@ -768,7 +768,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                     setOpen(true);
                   }
                 }}
-                placeholder="DD/MM/YYYY"
+                placeholder={t(STRING.ddmmyyyy)}
                 style={styles.halfWidthInput}
               />
               <Input
@@ -788,7 +788,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                     SHOW_TOAST('Please select start date first', 'error');
                   }
                 }}
-                placeholder="DD/MM/YYYY"
+                placeholder={t(STRING.ddmmyyyy)}
                 style={styles.halfWidthInput}
               />
             </View>
