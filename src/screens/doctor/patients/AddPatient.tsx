@@ -794,6 +794,7 @@ const AddPatient: React.FC = () => {
         modal
         theme='light'
         mode='date'
+        maximumDate={new Date()}
         open={datePickerOpen}
         date={selectedDate}
         onConfirm={date => {

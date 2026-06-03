@@ -440,7 +440,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
               }}
               editable={false}
               label={t(STRING.date)}
-              placeholder="DD/MM/YYYY"
+              placeholder={t(STRING.ddmmyyyy)}
               value={state.date}
               style={styles.inputField}
               pointerEvents="none"

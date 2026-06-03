@@ -26,7 +26,7 @@ import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
 import { fetchPatients } from '../../../actions/patient/patientAction';
 import { setSelectedPatient } from '../../../actions/patient/patientSlice';
-import { useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import {
   PATIENT_FILTERS,
   PatientFilterType,
@@ -146,6 +146,13 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     const filter = getFilterValue(selectedChip);
     fetchPatientsData(1, '', false, filter);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedId(undefined);
+      setSelectedChip("All")
+    }, []),
+  );
 
   // Handle chip filter changes
   useEffect(() => {

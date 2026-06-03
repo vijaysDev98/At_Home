@@ -849,7 +849,7 @@ const HydrationInfusionForm = forwardRef<
                     }
                     setOpen(true);
                   }}
-                  placeholder="DD/MM/YYYY"
+                  placeholder={t(STRING.ddmmyyyy)}
                   style={styles.halfWidthInput}
                 />
 
@@ -875,7 +875,7 @@ const HydrationInfusionForm = forwardRef<
                     }
                     setOpen(true);
                   }}
-                  placeholder="DD/MM/YYYY"
+                  placeholder={t(STRING.ddmmyyyy)}
                   style={styles.halfWidthInput}
                 />
               </View>
