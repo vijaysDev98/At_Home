@@ -10,7 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { SHOW_TOAST } from '../../../constant';
+import { SHOW_TOAST, STRING } from '../../../constant';
 import {
   AppSafeAreaView,
   AppText,
@@ -29,8 +29,10 @@ import {
 } from '../../../services/notificationService';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { useTranslation } from 'react-i18next';
 
 const DoctorNotification: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [page, setPage] = useState(1);
@@ -63,7 +65,6 @@ const DoctorNotification: React.FC = () => {
       if (response && response.status === 200) {
         const fetchedNotifications = response.data?.notifications || [];
         const pag = response.data?.pagination || null;
-        console.log('fetchedNotifications', fetchedNotifications);
 
         if (refresh || p === 1) {
           setNotifications(fetchedNotifications);
@@ -191,22 +192,36 @@ const DoctorNotification: React.FC = () => {
     let label = {
       txt: '',
       onPress: null as (() => void) | null,
+    };
+    let request = {
+      id: item?.metadata?.requestId,
+    };
+
+    // Hide action button if no requestId
+    if (!request.id) {
+      return label;
     }
+
     switch (item.type) {
       case 'formSubmission':
         label.txt = 'View Request';
-        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: item });
+        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: request });
         return label;
       case 'formUpdate':
+        if (item.metadata.submitForReview == true) {
+          label.txt = "Sign Form";
+          label.onPress = () => NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, { request: request, action: 'edit' });
+          return label;
+        }
         label.txt = 'View Form';
-        label.onPress = () => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: item, action: 'view' });
+        label.onPress = () => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: request, action: 'edit' });
         return label;
       case 'formReturned':
         label.txt = 'Review Form';
         return label;
       case 'requestCompleted': //DONE
         label.txt = 'View Details';
-        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: item });
+        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: request });
         return label;
       case 'doctorRegistration':
         // label.txt = 'View Profile';
@@ -246,10 +261,11 @@ const DoctorNotification: React.FC = () => {
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
-          title="Notifications"
+          title={t(STRING.notifications)}
           isBack
           isNotification={true}
           onNotificationPress={handleMarkAllAsRead}
+          unreadCount={unreadCount}
         />
 
         {/* Tabs */}
@@ -264,7 +280,7 @@ const DoctorNotification: React.FC = () => {
               font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
               color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
             >
-              All
+              {t(STRING.all)}
             </AppText>
             {activeTab === 'All' && <View style={styles.activeBorder} />}
           </TouchableOpacity>
@@ -281,7 +297,7 @@ const DoctorNotification: React.FC = () => {
               }
               color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
             >
-              Unread
+              {t(STRING.unread)}
             </AppText>
             {notifications.some(n => n.status === 'unread') && (
               <View style={styles.unreadBadge} />

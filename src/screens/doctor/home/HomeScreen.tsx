@@ -89,6 +89,7 @@ const HomeScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchDashboardData();
+      dispatch(fetchProfile());
     }, []),
   );
 

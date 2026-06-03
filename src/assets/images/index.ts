@@ -87,5 +87,6 @@ export const IMAGES = {
   ic_gender: require('./ic_gender.png'),
   ic_insurance: require('./ic_insurance.png'),
   language: require('./language.png'),
+  play: require('./playstore.png'),
   ic_notification_filled: require('./ic_notification_filled.png'),
 };

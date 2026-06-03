@@ -16,11 +16,12 @@ import NavigationService from '../navigation/NavigationService';
 import { AppDispatch } from '../redux/store';
 import { fetchProfile } from '../actions/profile/profileAction';
 import { useTranslation } from 'react-i18next';
+import { IMAGES } from '../assets/images';
+import { uploadFcmToken } from '../utils/fcmTokenHelper';
 
 const LOGO_URI =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png';
-const LOGO_BG_URI =
-  'https://storage.googleapis.com/uxpilot-auth.appspot.com/FwWoWvhFRtVXodtR5CK3BVPRcSP2%2F2f63fe4a-2524-441c-b0fb-47972806c27b.png';
+const LOGO_BG_URI = IMAGES.play;
 
 export type SplashScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -69,6 +70,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
       const role = await Storage.get(Storage.USER_ROLE);
 
       if (token) {
+        // Upload FCM token for existing logged-in users
+        await uploadFcmToken();
+
         await dispatch(fetchProfile());
         if (role === 'serviceProvider') {
           NavigationService.replace(SCREENS.PROVIDER_BOTTOM_TABS as any);
@@ -91,13 +95,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         <Animated.View
           style={[styles.logoWrapper, { transform: [{ scale: pulse }] }]}
         >
-          {/* <Animated.Image
-            source={{ uri: LOGO_URI }}
-            resizeMode="contain"
-            style={[styles.logo, { opacity: fade }]}
-          /> */}
           <Image
-            source={{ uri: LOGO_BG_URI }}
+            source={LOGO_BG_URI}
             resizeMode="cover"
             style={styles.logoBackground}
           />
@@ -111,9 +110,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         </Animated.Text>
       </View>
 
-      <View style={styles.homeIndicatorContainer}>
+      {/* <View style={styles.homeIndicatorContainer}>
         <View style={styles.homeIndicator} />
-      </View>
+      </View> */}
     </View>
   );
 };

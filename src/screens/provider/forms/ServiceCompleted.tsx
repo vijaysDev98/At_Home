@@ -29,6 +29,8 @@ const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
+  console.log("data route", route.params);
+
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);

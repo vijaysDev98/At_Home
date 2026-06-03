@@ -45,11 +45,11 @@ const AppCheckBox: React.FC<AppCheckBoxProps> = ({
         value={value}
         onValueChange={onValueChange}
         tintColors={{
-          true: COLORS.primary,
+          true: disabled ? COLORS._D0D5DD : COLORS.primary,
           false: disabled ? COLORS._D0D5DD : COLORS._6F767E,
         }}
-        onCheckColor={COLORS.primary}
-        onTintColor={COLORS.primary}
+        onCheckColor={disabled ? COLORS._D0D5DD : COLORS.primary}
+        onTintColor={disabled ? COLORS._D0D5DD : COLORS.primary}
         tintColor={disabled ? COLORS._D0D5DD : COLORS._6F767E}
         animationDuration={0.1}
         lineWidth={1.5}

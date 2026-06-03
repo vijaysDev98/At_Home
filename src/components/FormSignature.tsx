@@ -63,10 +63,9 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     while (attempts < maxAttempts) {
       try {
         const response = await signatureApi.getSignatureStatus(id);
-
         if (!response?.success) {
           SHOW_TOAST(
-            response?.data?.message || response?.message || 'Failed to fetch signature status',
+            response?.data?.message || response?.message,
             'error',
           );
           return false;
@@ -85,15 +84,14 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       } catch (error: any) {
         SHOW_TOAST(
           error?.response?.data?.message ||
-          error?.message ||
-          'Error checking signature status',
+          error?.message,
           'error',
         );
         return false;
       }
     }
 
-    SHOW_TOAST('Signature timeout - please try again', 'error');
+    SHOW_TOAST(t(STRING.signatureTimeout), 'error');
     return false;
   };
 
@@ -143,7 +141,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     if (authResult?.type === 'cancel') {
       onSigningEnd?.();
       dispatch(setLoading(false));
-      SHOW_TOAST('Signing cancelled', 'info');
+      SHOW_TOAST(t(STRING.signingCancelled), 'info');
       return;
     }
 
@@ -157,7 +155,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       } catch {
         // Non-fatal — proceed with navigation even if lock release fails
       }
-      SHOW_TOAST('Document signed successfully', 'success');
+      SHOW_TOAST(t(STRING.documentSignedSuccessfully), 'success');
       onSignatureCompleted?.();
       // Navigate back first, then turn off the loader so it doesn't
       // flash off before the screen transition completes
@@ -201,8 +199,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     } catch (error: any) {
       SHOW_TOAST(
         error?.response?.data?.message ||
-        error?.message ||
-        'Something went wrong',
+        error?.message,
         'error',
       );
       onSigningEnd?.();
@@ -213,7 +210,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   return (
     <View style={styles.container}>
       <AppText
-        size={getScaleSize(12)}
+        size={getScaleSize(15)}
         font={FONTS.Inter.SemiBold}
         style={styles.title}
       >

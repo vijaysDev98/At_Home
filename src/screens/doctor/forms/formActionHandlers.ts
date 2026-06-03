@@ -406,18 +406,20 @@ export const handleSubmitForReview = async (
 
   try {
     // 1. First save progress
-    const saveResponse = await serviceRequestApi.updateProgress(requestId, {
-      formData: state,
-    });
+    // const saveResponse = await serviceRequestApi.updateProgress(requestId, {
+    //   formData: state,
+    // });
 
-    if (!saveResponse.success) {
-      dispatch(setLoading(false));
-      SHOW_TOAST(saveResponse.error, 'error');
-      return { success: false, error: saveResponse.error };
-    }
+    // if (!saveResponse.success) {
+    //   dispatch(setLoading(false));
+    //   SHOW_TOAST(saveResponse.error, 'error');
+    //   return { success: false, error: saveResponse.error };
+    // }
 
     // 2. Submit for review
-    const response = await serviceRequestApi.providerSubmitForReview(requestId);
+    const response = await serviceRequestApi.providerSubmitForReview(requestId, {
+      formData: state,
+    });
     dispatch(setLoading(false));
 
     if (response.success) {

@@ -5,16 +5,19 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar, useColorScheme } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigation from './src/navigation';
 import { Provider } from 'react-redux';
 import store from './src/redux/store';
 import Toast from 'react-native-toast-message';
 import { I18nextProvider } from 'react-i18next';
+import messaging from '@react-native-firebase/messaging';
 import { i18nLocale } from './src/localization/translatation';
 import { useLanguageSync } from './src/hooks/useLanguageSync';
+import { createNotificationChannel, listenForegroundMessages, listenBackgroundMessages, requestNotificationPermission } from './src/hooks/notificationPermission';
+import { COLORS } from './src/utils';
 const AppContent = () => {
   // Sync language between Redux and i18n
   useLanguageSync();
@@ -28,14 +31,23 @@ const AppContent = () => {
 };
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  useEffect(() => {
+    const init = async () => {
+      await createNotificationChannel();
+      await requestNotificationPermission();
+      listenForegroundMessages();
+      listenBackgroundMessages();
+    };
+
+    init();
+  }, []);
 
   return (
     <I18nextProvider i18n={i18nLocale}>
-      <SafeAreaProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <StatusBar
-          backgroundColor="#fff"
-          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={COLORS.white}
+          barStyle={'dark-content'}
         />
         <Provider store={store}>
           <AppContent />

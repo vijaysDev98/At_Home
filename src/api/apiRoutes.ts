@@ -32,6 +32,7 @@ const API_ROUTES = {
   listAvailableRequests: 'service-requests/available',
   resendLoginOtp: 'auth/resendLoginOtp',
   notifications: 'notifications',
+  updateFcm: 'auth/update-fcm'
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

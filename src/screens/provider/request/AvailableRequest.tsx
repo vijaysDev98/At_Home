@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { AppText, AppLoader, ReviewRequestSheet, AppSafeAreaView } from '../../../components';
+import { AppText, AppLoader, ReviewRequestSheet, AppSafeAreaView, Header } from '../../../components';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -313,15 +313,10 @@ const AvailableRequest: React.FC = () => {
     <AppSafeAreaView style={styles.safe} edges={['top']}>
       <AppLoader visible={isGlobalLoading} />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <AppText
-            size={getScaleSize(18)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {t(STRING.requests)}
-          </AppText>
-        </View>
+        <Header
+          style={styles.headerStyle}
+          title={t(STRING.requests)}
+        />
 
         <View style={styles.tabContainer}>
           <ScrollView
@@ -432,10 +427,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F9FAFB,
 
   },
-  header: {
-    backgroundColor: COLORS.white,
+  headerStyle: {
     paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(16),
+    backgroundColor: COLORS.white,
   },
   tabContainer: {
     backgroundColor: COLORS.white,

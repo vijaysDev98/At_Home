@@ -76,24 +76,26 @@ const FormsScreen: React.FC = () => {
   const route = useRoute();
   const isFocused = useIsFocused();
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+
   const request: ServiceRequest = (route.params as any)?.request;
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const from = (route.params as any)?.from;
-  const readOnly = action === 'view';
+  const { profileData } = useSelector((state: RootState) => state.profile);
+  const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
   const requestId = request?.id;
 
-  const dispatch = useDispatch();
-  const { profileData } = useSelector((state: RootState) => state.profile);
 
   // Extract service and patient from request object
   const patientData = request?.patient || {};
-  const serviceName = service?.serviceName;
 
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
+  const serviceName = service?.serviceName || requestData?.serviceId?.serviceName;
+
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
   const status = requestData?.status;
@@ -109,8 +111,15 @@ const FormsScreen: React.FC = () => {
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
+  const readOnly = useMemo(() => {
+    return (
+      action === 'view' ||
+      requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
+      requestData?.formStatus === FORM_STATUS.SIGNED
+    );
+  }, [action, requestData]);
+
   // Use custom hook for lock refresh
-  const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
   useFormLockRefresh({
     requestId,
     isLocked: requestData?.isLocked,

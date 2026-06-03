@@ -1,58 +1,114 @@
 import { useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
 import { ImagePickerResponse } from 'react-native-image-picker';
 import { openGallery, openCamera } from '../utils/simpleImagePicker';
 
 interface UseSimpleImagePickerOptions {
-  onImageSelected?: (uri: string, type: string, fileName: string) => void;
+  onImageSelected?: (
+    uri: string,
+    type: string,
+    fileName: string,
+  ) => void;
   onError?: (error: string) => void;
 }
 
-export const useSimpleImagePicker = (options: UseSimpleImagePickerOptions = {}) => {
+export const useSimpleImagePicker = (
+  options: UseSimpleImagePickerOptions = {},
+) => {
   const onImageGalleryClick = useCallback(() => {
     const pickerOptions = {
       selectionLimit: 1,
       mediaType: 'photo' as const,
-      includeBase64: true
     };
 
-    openGallery(pickerOptions, (res: ImagePickerResponse) => {
-      if (res.didCancel) {
-      } else if (res.errorCode) {
-        options.onError?.(res.errorMessage || 'Gallery error');
-      } else {
-        const asset = res.assets?.[0];
-        if (asset?.base64 && asset.type) {
-          options.onImageSelected?.(asset.uri, asset.type, asset.fileName);
+    try {
+      openGallery(pickerOptions, (res: ImagePickerResponse) => {
+        console.log('Gallery Response:', JSON.stringify(res));
+
+        if (res.didCancel) {
+          console.log('Gallery cancelled');
+          return;
         }
-      }
-    });
-  }, [options.onImageSelected, options.onError]);
+
+        if (res.errorCode) {
+          console.log('Gallery Error:', res.errorMessage);
+          options.onError?.(res.errorMessage || 'Gallery error');
+          return;
+        }
+
+        const asset = res.assets?.[0];
+
+        if (!asset) {
+          options.onError?.('No image selected');
+          return;
+        }
+
+        console.log('Selected Gallery Asset:', asset);
+
+        if (asset.uri && asset.type) {
+          options.onImageSelected?.(
+            asset.uri,
+            asset.type,
+            asset.fileName || `gallery_${Date.now()}.jpg`,
+          );
+        } else {
+          options.onError?.('Invalid image data');
+        }
+      });
+    } catch (error: any) {
+      console.log('Gallery Picker Crash:', error);
+      options.onError?.(error?.message || 'Gallery error');
+    }
+  }, [options]);
 
   const onCameraPress = useCallback(() => {
     const pickerOptions = {
       saveToPhotos: false,
       mediaType: 'photo' as const,
-      includeBase64: true,
     };
 
-    openCamera(pickerOptions, (res: ImagePickerResponse) => {
-      if (res.didCancel) {
-      } else if (res.errorCode) {
-        options.onError?.(res.errorMessage || 'Camera error');
-      } else {
-        const asset = res.assets?.[0];
-        if (asset?.uri && asset.type) {
-          options.onImageSelected?.(asset.uri, asset.type, asset.fileName || `camera_${Date.now()}.jpg`);
+    try {
+      openCamera(pickerOptions, (res: ImagePickerResponse) => {
+        console.log('Camera Response:', JSON.stringify(res));
+
+        if (res.didCancel) {
+          console.log('Camera cancelled');
+          return;
         }
-      }
-    });
-  }, [options.onImageSelected, options.onError]);
+
+        if (res.errorCode) {
+          console.log('Camera Error:', res.errorMessage);
+          options.onError?.(res.errorMessage || 'Camera error');
+          return;
+        }
+
+        const asset = res.assets?.[0];
+
+        if (!asset) {
+          options.onError?.('No image captured');
+          return;
+        }
+
+        console.log('Captured Camera Asset:', asset);
+
+        if (asset.uri && asset.type) {
+          options.onImageSelected?.(
+            asset.uri,
+            asset.type,
+            asset.fileName || `camera_${Date.now()}.jpg`,
+          );
+        } else {
+          options.onError?.('Invalid image data');
+        }
+      });
+    } catch (error: any) {
+      console.log('Camera Picker Crash:', error);
+      options.onError?.(error?.message || 'Camera error');
+    }
+  }, [options]);
 
   const showImagePickerOptions = useCallback(() => {
-    // This will be handled by the ImagePickerSheet component
-    // The component will be shown from the screen that uses this hook
-  }, [onCameraPress, onImageGalleryClick]);
+    // handled by ImagePickerSheet component
+  }, []);
 
   return {
     onImageGalleryClick,

@@ -19,6 +19,22 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
   onHide,
 }) => {
   const { t } = useTranslation();
+
+  const handleCamera = () => {
+    onHide();
+
+    setTimeout(() => {
+      onCameraPress();
+    }, 300);
+  };
+
+  const handleGallery = () => {
+    onHide();
+
+    setTimeout(() => {
+      onGalleryPress();
+    }, 300);
+  };
   return (
     <View style={styles.container}>
       <AppText
@@ -33,10 +49,7 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
 
       <TouchableOpacity
         style={styles.optionButton}
-        onPress={() => {
-          onCameraPress();
-          onHide();
-        }}
+        onPress={handleCamera}
         activeOpacity={0.8}
       >
         <Image
@@ -54,10 +67,7 @@ export const ImagePickerContent: React.FC<ImagePickerContentProps> = ({
 
       <TouchableOpacity
         style={styles.optionButton}
-        onPress={() => {
-          onGalleryPress();
-          onHide();
-        }}
+        onPress={handleGallery}
         activeOpacity={0.8}
       >
         <Image

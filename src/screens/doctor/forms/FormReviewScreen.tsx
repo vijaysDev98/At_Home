@@ -66,7 +66,7 @@ const FormReviewScreen: React.FC = () => {
   });
 
   const patientData = useMemo(() => {
-    return request?.patient || requestData?.patient || {};
+    return request?.patient || requestData?.patient || requestData?.patientId || {};
   }, [request, requestData]);
 
   const isReadOnly = useMemo(() => {
@@ -90,7 +90,7 @@ const FormReviewScreen: React.FC = () => {
     }
   };
 
-  const service: ServiceInfo = requestData?.service || request?.service || {};
+  const service: ServiceInfo = requestData?.service || requestData?.serviceId || request?.service || {};
 
   const serviceId = service?._id || service?.id;
 
@@ -132,42 +132,58 @@ const FormReviewScreen: React.FC = () => {
   return (
     <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
       <AppLoader visible={isLoading} signing={isSigning} />
-      {isFetched && hasError ? (
-        <View
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-        >
-          <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
-        </View>
-      ) : (
-        <>
-          <View style={styles.container}>
-            <Header title={t(STRING.reviewAndSign)} isBack={true} style={styles.header} />
+      <View style={styles.container}>
+        <Header title={t(STRING.reviewAndSign)} isBack={true} style={styles.header} />
 
+        {!isFetched ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppText color={COLORS.primary}>Loading...</AppText>
+          </View>
+        ) : isFetched && hasError ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
+          </View>
+        ) : !requestData ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <AppText color={COLORS.primary}>No data available</AppText>
+          </View>
+        ) : (
+          <>
             <View style={styles.content}>
               <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                <FormRequestHeader
-                  fromReview={true}
-                  patientData={patientData}
-                  serviceName={serviceName}
-                  requestData={requestData}
-                />
+                {patientData && (
+                  <FormRequestHeader
+                    fromReview={true}
+                    patientData={patientData}
+                    serviceName={serviceName}
+                    requestData={requestData}
+                  />
+                )}
 
                 <View
                   style={{
                     backgroundColor: COLORS._F9FAFB,
                   }}
                 >
-                  <ServiceFormRenderer
-                    formRef={formRef}
-                    serviceId={serviceId || ''}
-                    initialData={requestData}
-                    patient={patientData}
-                    readOnly={isReadOnly}
-                  />
+                  {serviceId && (
+                    <ServiceFormRenderer
+                      formRef={formRef}
+                      serviceId={serviceId || ''}
+                      initialData={requestData}
+                      patient={patientData}
+                      readOnly={isReadOnly}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.signatureContainer}>
@@ -197,9 +213,9 @@ const FormReviewScreen: React.FC = () => {
                 </AppText>
               </TouchableOpacity>
             </View>
-          </View>
-        </>
-      )}
+          </>
+        )}
+      </View>
       <AppLoader visible={isLoading} signing={isSigning} />
     </AppSafeAreaView>
   );

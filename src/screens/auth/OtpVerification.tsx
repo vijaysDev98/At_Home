@@ -38,6 +38,7 @@ import {
   resendLoginOtp,
 } from '../../actions/auth/authAction';
 import { useTranslation } from 'react-i18next';
+import { getFcmToken } from '../../hooks/notificationPermission';
 
 export type OtpVerificationProps = NativeStackScreenProps<
   RootStackParamList,
@@ -67,6 +68,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
   }, []);
 
   const verifyOtpCode = async (otpCode: string) => {
+    let token = await getFcmToken();
     try {
       let result;
 
@@ -82,6 +84,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
           verifyOtp({
             email,
             otp: otpCode,
+            fcmToken: token
           }),
         );
       }

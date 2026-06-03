@@ -26,6 +26,7 @@ const Header = ({
   titleContainerStyle,
   isNotification = false,
   onNotificationPress,
+  unreadCount = 0,
 }: {
   isBack?: boolean;
   title?: String;
@@ -37,6 +38,7 @@ const Header = ({
   titleContainerStyle?: ViewStyle;
   isNotification?: boolean;
   onNotificationPress?: () => void;
+  unreadCount?: number;
 }) => {
   return (
     <View style={[styles.header, style]}>
@@ -44,6 +46,7 @@ const Header = ({
         {isBack && (
           <TouchableOpacity
             activeOpacity={0.8}
+            hitSlop={30}
             style={backIcon ? {} : styles.backBtn}
             onPress={() => NavigationService.goBack()}
           >
@@ -56,7 +59,7 @@ const Header = ({
         <View style={titleContainerStyle}>
           {title ? (
             <AppText
-              size={getScaleSize(20)}
+              size={getScaleSize(18)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
               style={titleStyle}
@@ -76,7 +79,7 @@ const Header = ({
         </View>
       </View>
       {leftContent && leftContent()}
-      {isNotification && (
+      {isNotification && unreadCount > 0 && (
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.notificationBtn}

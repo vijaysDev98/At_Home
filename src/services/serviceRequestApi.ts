@@ -592,6 +592,51 @@ export const serviceRequestApi = {
   },
 
   /**
+   * Claim and return a service request (single API call)
+   */
+  claimAndReturnRequest: async (
+    requestId: string,
+    obj: { reasonType: string; comments: string },
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/claim-return`,
+        obj,
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage,
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage,
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message;
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
    * Complete a service request
    * Endpoint: POST /service-requests/{requestId}/complete
    */
@@ -644,11 +689,12 @@ export const serviceRequestApi = {
    */
   providerSubmitForReview: async (
     requestId: string,
+    payload: { formData: any },
   ): Promise<ServiceRequestResponse> => {
     try {
       const response: any = await API.Instance.post(
         `/service-requests/${requestId}/provider-form/submit-for-review`,
-        {},
+        payload,
       );
       const nestedData = response.data?.data || response.data;
       const nestedMessage = response.data?.message || response.message;

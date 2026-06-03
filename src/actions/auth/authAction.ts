@@ -6,6 +6,7 @@ import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { fetchProfile } from '../profile/profileAction';
+import { uploadFcmToken } from '../../utils/fcmTokenHelper';
 import { Alert } from 'react-native';
 
 const getUserDataForRedux = (user: any) => {
@@ -39,7 +40,9 @@ const persistAuthInStorage = async (user: any) => {
   }
 
   if (roles.length > 0) {
-    await Storage.save(Storage.USER_ROLE, roles[0]);
+    // Store the first role that matches our expected values
+    const role = roles.includes('serviceProvider') ? 'serviceProvider' : 'doctor';
+    await Storage.save(Storage.USER_ROLE, role);
   }
 };
 
@@ -109,14 +112,17 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
       data,
     );
     dispatch(setLoading(false));
-    console.log('response', response);
 
     if (response?.status && response?.code === 201) {
       SHOW_TOAST(
         response?.data?.message,
         'success',
       );
-      NavigationService.navigate(SCREENS.REGISTER_SUCCESS);
+
+      // Upload FCM token after successful registration (before admin approval)
+      // await uploadFcmToken();
+
+      NavigationService.replace(SCREENS.REGISTER_SUCCESS);
     } else if (response?.code === 400 || response?.code === 409) {
       SHOW_TOAST(response?.data?.message || response?.message, 'error');
     } else {
@@ -144,7 +150,10 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       await persistAuthInStorage(innerData);
       dispatch(setUserData(getUserDataForRedux(innerData)));
       dispatch(fetchProfile());
-      // SHOW_TOAST(response?.data?.message || response?.message, 'success');
+
+      // Upload FCM token after successful OTP verification
+      // await uploadFcmToken();
+
       dispatch(setLoading(false));
 
       // Role-based navigation
@@ -180,7 +189,6 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
     const response: any = await API.Instance.get(API.API_ROUTES.logout, {
       params: data,
     });
-    console.log("logout response", response);
 
     if (response?.status) {
       SHOW_TOAST(response?.data?.message, 'success');

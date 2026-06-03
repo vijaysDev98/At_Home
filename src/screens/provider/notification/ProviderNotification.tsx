@@ -23,9 +23,11 @@ import {
   Notification,
   PaginationInfo,
 } from '../../../services/notificationService';
-import { SHOW_TOAST } from '../../../constant';
+import { SHOW_TOAST, STRING } from '../../../constant';
+import { useTranslation } from 'react-i18next';
 
 const ProviderNotification: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [page, setPage] = useState(1);
@@ -148,8 +150,6 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
-  const hasUnreadNotifications = unreadCount > 0;
-
   const getNotificationIcon = (type: string, title: string = '') => {
     const normalizedType = type?.toLowerCase() || '';
     const normalizedTitle = title?.toLowerCase() || '';
@@ -196,7 +196,7 @@ const ProviderNotification: React.FC = () => {
     if (normalizedType.includes('assign')) {
       return 'Open Form';
     }
-    return 'View';
+    return null;
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
@@ -220,9 +220,10 @@ const ProviderNotification: React.FC = () => {
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
-          title="Notifications"
+          title={t(STRING.notifications)}
           isNotification={true}
           onNotificationPress={handleMarkAllAsRead}
+          unreadCount={unreadCount}
         />
 
         {/* Tabs */}
@@ -317,12 +318,14 @@ const styles = StyleSheet.create({
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
+    paddingBottom: getScaleSize(10)
   },
   tabs: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 24,
-    paddingHorizontal: 20,
+    paddingHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(12),
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },

@@ -25,7 +25,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import NavigationService from '../../../navigation/NavigationService';
 import { PROVIDER_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { DISABLE_API_LOGS, IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { FORM_STATUS, STRING } from '../../../constant';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
@@ -41,6 +41,7 @@ import {
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 import { useTranslation } from 'react-i18next';
+import { fetchProfile } from '../../../actions/profile/profileAction';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -76,11 +77,12 @@ interface DashboardData {
 }
 
 const ProviderHome: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const { profileData } = useSelector((state: RootState) => state.profile);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const reviewSheetRef = useRef<ActionSheetRef>(null);
+
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
@@ -94,6 +96,7 @@ const ProviderHome: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchDashboardData();
+      dispatch(fetchProfile());
     }, []),
   );
 
@@ -118,6 +121,7 @@ const ProviderHome: React.FC = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchDashboardData();
+    dispatch(fetchProfile());
     setRefreshing(false);
   }, []);
 

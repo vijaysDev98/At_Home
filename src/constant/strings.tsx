@@ -724,6 +724,11 @@ export const STRING = {
   incompleteForm: 'Incomplete Form',
   healthcareEvolved: 'Healthcare Evolved',
   atHome: 'At-Home',
+  services: 'Services',
+  notifications: 'Notifications',
+  unread: 'Unread',
 
-  services: 'Services'
+  signatureTimeout: 'Signature timeout - please try again',
+  signingCancelled: 'Signing cancelled',
+  documentSignedSuccessfully: 'Document signed successfully',
 };
