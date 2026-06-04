@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -92,11 +93,14 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
       <AppLoader visible={isLoading} />
       <Header isBack style={{ paddingHorizontal: getScaleSize(16) }} />
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{
+          flex: 1,
+          minHeight: Dimensions.get('window').height,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        extraScrollHeight={20}
+        // extraScrollHeight={20}
       >
         {/* <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -114,7 +118,9 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               font={FONTS.Inter.Bold}
               align="center"
             >
-              {isChangePassword ? t(STRING.changePassword) : t(STRING.resetPassword)}
+              {isChangePassword
+                ? t(STRING.changePassword)
+                : t(STRING.resetPassword)}
             </AppText>
             <AppText
               size={getScaleSize(15)}
@@ -123,7 +129,9 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               align="center"
               style={{ marginTop: getScaleSize(10) }}
             >
-              {isChangePassword ? t(STRING.changePasswordMessage) : t(STRING.resetPasswordMessage)}
+              {isChangePassword
+                ? t(STRING.changePasswordMessage)
+                : t(STRING.resetPasswordMessage)}
             </AppText>
           </View>
 
@@ -144,8 +152,14 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             )}
 
             <Input
-              label={isChangePassword ? t(STRING.newPassword) : t(STRING.newPassword)}
-              placeholder={isChangePassword ? t(STRING.enterNewPassword) : t(STRING.enterNewPassword)}
+              label={
+                isChangePassword ? t(STRING.newPassword) : t(STRING.newPassword)
+              }
+              placeholder={
+                isChangePassword
+                  ? t(STRING.enterNewPassword)
+                  : t(STRING.enterNewPassword)
+              }
               // secureTextEntry={!showPass}
               value={password}
               onChangeText={setPassword}
@@ -224,7 +238,11 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
 
           <View style={styles.ctaBar}>
             <PrimaryButton
-              title={isChangePassword ? t(STRING.changePassword) : t(STRING.resetPassword)}
+              title={
+                isChangePassword
+                  ? t(STRING.changePassword)
+                  : t(STRING.resetPassword)
+              }
               onPress={onSubmit}
               disabled={!canSubmit || isLoading}
               style={{ marginTop: getScaleSize(40) }}

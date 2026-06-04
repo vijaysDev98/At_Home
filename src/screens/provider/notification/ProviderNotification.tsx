@@ -150,53 +150,14 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: string, title: string = '') => {
-    const normalizedType = type?.toLowerCase() || '';
-    const normalizedTitle = title?.toLowerCase() || '';
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'requestCancelled':
+        return IMAGES.serviceCancelled;
 
-    if (
-      normalizedType.includes('patient') ||
-      normalizedTitle.includes('patient') ||
-      normalizedTitle.includes('assignment')
-    ) {
-      return IMAGES.alert_newPatient;
+      default:
+        return IMAGES.ic_announcement;
     }
-    if (
-      normalizedType.includes('form') ||
-      normalizedTitle.includes('form') ||
-      normalizedTitle.includes('update')
-    ) {
-      return IMAGES.alert_formUpdate;
-    }
-    if (
-      normalizedType.includes('progress') ||
-      normalizedTitle.includes('progress') ||
-      normalizedType.includes('inprogress')
-    ) {
-      return IMAGES.alert_serviceInProgress;
-    }
-    if (
-      normalizedType.includes('complete') ||
-      normalizedTitle.includes('complete')
-    ) {
-      return IMAGES.alert_serviceCompleted;
-    }
-    return IMAGES.ic_announcement;
-  };
-
-  const getNotificationAction = (type: string, actionUrl?: string) => {
-    if (!actionUrl) return undefined;
-    const normalizedType = type?.toLowerCase() || '';
-    if (
-      normalizedType.includes('submit') ||
-      normalizedType.includes('submission')
-    ) {
-      return 'View Request';
-    }
-    if (normalizedType.includes('assign')) {
-      return 'Open Form';
-    }
-    return null;
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
@@ -206,9 +167,9 @@ const ProviderNotification: React.FC = () => {
         title={item.title}
         subtitle={item.message}
         time={moment(item.createdAt).fromNow()}
-        iconSource={getNotificationIcon(item.type, item.title)}
+        iconSource={getNotificationIcon(item.type)}
         unread={isUnread}
-        action={getNotificationAction(item.type, item.actionUrl)}
+        // action={getNotificationAction(item.type, item.actionUrl)}
         onPress={() => handleNotificationPress(item)}
       />
     );
@@ -216,7 +177,9 @@ const ProviderNotification: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <AppLoader visible={(initialLoading && !isRefreshing) || isMarkingAllRead} />
+      <AppLoader
+        visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
+      />
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
@@ -318,7 +281,7 @@ const styles = StyleSheet.create({
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
-    paddingBottom: getScaleSize(10)
+    paddingBottom: getScaleSize(10),
   },
   tabs: {
     flexDirection: 'row',
@@ -352,7 +315,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    paddingTop: getScaleSize(15),
+    // paddingTop: getScaleSize(15),
   },
   scrollContent: {
     paddingBottom: 32,

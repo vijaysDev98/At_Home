@@ -17,7 +17,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { AppText, AppLoader, ReviewRequestSheet, AppSafeAreaView, Header } from '../../../components';
+import {
+  AppText,
+  AppLoader,
+  ReviewRequestSheet,
+  AppSafeAreaView,
+  Header,
+} from '../../../components';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -55,9 +61,7 @@ const AvailableRequest: React.FC = () => {
     null,
   );
 
-  const [activeTab, setActiveTab] = useState(
-    route?.params?.status || 'All',
-  );
+  const [activeTab, setActiveTab] = useState(route?.params?.status || 'All');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -274,7 +278,11 @@ const AvailableRequest: React.FC = () => {
     );
   };
 
-  const onReturnRequest = async (reason: string, details: string, requestId: string) => {
+  const onReturnRequest = async (
+    reason: string,
+    details: string,
+    requestId: string,
+  ) => {
     if (!selectedRequest?.id) {
       SHOW_TOAST(t(STRING.missingID), 'error');
       return;
@@ -293,10 +301,7 @@ const AvailableRequest: React.FC = () => {
       if (response.success) {
         await serviceRequestApi.releaseFormLock(requestId);
 
-        SHOW_TOAST(
-          response.message,
-          'success',
-        );
+        SHOW_TOAST(response.message, 'success');
         reviewSheetRef?.current?.hide();
         await fetchAvailableRequests(1, true);
       } else {
@@ -313,10 +318,7 @@ const AvailableRequest: React.FC = () => {
     <AppSafeAreaView style={styles.safe} edges={['top']}>
       <AppLoader visible={isGlobalLoading} />
       <View style={styles.container}>
-        <Header
-          style={styles.headerStyle}
-          title={t(STRING.requests)}
-        />
+        <Header style={styles.headerStyle} title={t(STRING.requests)} />
 
         <View style={styles.tabContainer}>
           <ScrollView
@@ -396,18 +398,18 @@ const AvailableRequest: React.FC = () => {
         <ReviewRequestSheet
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
-            await handleClaimService({
-              requestId: selectedRequest?.id || '',
-              dispatch,
-              onSuccess: async () => {
-                await onReturnRequest(
-                  reason,
-                  details,
-                  selectedRequest?.id || '',
-                );
-              },
-            });
-            // onReturnRequest(reason, details);
+            // await handleClaimService({
+            //   requestId: selectedRequest?.id || '',
+            //   dispatch,
+            //   onSuccess: async () => {
+            //     await onReturnRequest(
+            //       reason,
+            //       details,
+            //       selectedRequest?.id || '',
+            //     );
+            //   },
+            // });
+            await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
         />
       </View>
@@ -425,7 +427,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS._F9FAFB,
-
   },
   headerStyle: {
     paddingHorizontal: getScaleSize(20),

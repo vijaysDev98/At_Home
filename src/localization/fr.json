@@ -604,5 +604,13 @@
   "At-Home": "À domicile",
   "Services": "Services",
   "Notifications": "Notifications",
-  "Unread": "Non lu"
+  "Unread": "Non lu",
+  "Signature timeout - please try again": "Délai d’attente de la signature dépassé - veuillez réessayer",
+  "Signing cancelled": "Signature annulée",
+  "Document signed successfully": "Document signé avec succès",
+  "Return Reason": "Motif du retour",
+  "No notifications found": "Aucune notification trouvée",
+  "View Request": "Voir la demande",
+  "Sign Form": "Signer le formulaire",
+  "Mark all as read": "Marquer tout comme lu"
 }

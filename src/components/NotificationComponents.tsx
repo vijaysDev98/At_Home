@@ -42,7 +42,10 @@ export const NotificationItem = ({
   <TouchableOpacity
     style={[
       styles.notificationRow,
-      unread ? { backgroundColor: COLORS._EFF6FF4D } : { backgroundColor: COLORS.white },
+      unread
+        ? { backgroundColor: COLORS._EFF6FF4D }
+        : { backgroundColor: COLORS.white },
+      { flexDirection: 'row', alignItems: 'center' },
     ]}
     activeOpacity={onPress ? 0.7 : 1}
     onPress={onPress}
@@ -83,7 +86,7 @@ export const NotificationItem = ({
         <View style={styles.actionWrap}>
           <AppButton
             title={action}
-            onPress={onActionPress || (() => { })}
+            onPress={onActionPress || (() => {})}
             style={styles.actionBtn}
             textSize={getScaleSize(12)}
             textFont={FONTS.Inter.SemiBold}

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
@@ -206,7 +207,9 @@ const AddPatient: React.FC = () => {
       socialInsuranceNumber,
     };
 
-    const hasAnyChanges = (Object.keys(currentValues) as Array<keyof typeof currentValues>).some(key => {
+    const hasAnyChanges = (
+      Object.keys(currentValues) as Array<keyof typeof currentValues>
+    ).some(key => {
       return currentValues[key] !== initialValues.current[key];
     });
 
@@ -216,7 +219,22 @@ const AddPatient: React.FC = () => {
   // Update checkForChanges call when any field changes
   useEffect(() => {
     checkForChanges();
-  }, [fName, lName, phone, email, dob, street, city, zip, notes, country, gender, weight, socialInsuranceNumber, isInitialized]);
+  }, [
+    fName,
+    lName,
+    phone,
+    email,
+    dob,
+    street,
+    city,
+    zip,
+    notes,
+    country,
+    gender,
+    weight,
+    socialInsuranceNumber,
+    isInitialized,
+  ]);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -289,459 +307,462 @@ const AddPatient: React.FC = () => {
   };
 
   return (
-    <>
+    <AppSafeAreaView
+      style={{ flex: 1, backgroundColor: COLORS.white }}
+      edges={['top', 'bottom']}
+    >
       <AppLoader visible={isLoading} />
-      <AppSafeAreaView style={{ backgroundColor: COLORS.white }} edges={['top', 'bottom']}>
-        <Header
-          isBack
-          title={isEdit ? t(STRING.editPatient) : t(STRING.addPatientTitle)}
-          backIcon={IMAGES.arrowLeft}
-          style={styles.headerStyle}
-          {...(!isEdit && {
-            leftContent: () => (
-              <TouchableOpacity activeOpacity={0.8} onPress={handleCancel}>
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                >
-                  {t(STRING.cancel)}
-                </AppText>
-              </TouchableOpacity>
-            ),
-          })}
-        />
-        <View style={styles.container}>
-          <KeyboardAwareScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            enableOnAndroid
-            extraScrollHeight={getScaleSize(100)}
-            enableAutomaticScroll
-            extraHeight={getScaleSize(200)}
-          >
-            {/* Personal Information */}
-            <View style={styles.section}>
+
+      <Header
+        isBack
+        title={isEdit ? t(STRING.editPatient) : t(STRING.addPatientTitle)}
+        backIcon={IMAGES.arrowLeft}
+        style={styles.headerStyle}
+        {...(!isEdit && {
+          leftContent: () => (
+            <TouchableOpacity activeOpacity={0.8} onPress={handleCancel}>
               <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Medium}
                 color={COLORS._6F767E}
-                style={styles.sectionTitle}
               >
-                {t(STRING.personalInformation)}
+                {t(STRING.cancel)}
               </AppText>
-              <View style={styles.card}>
-                <View style={styles.nameRow}>
-                  <View style={{ flex: 1 }}>
-                    <Input
-                      value={fName}
-                      onChangeText={t => {
-                        setFName(t);
-                        setErrors(prev => ({ ...prev, fName: '' }));
-                      }}
-                      placeholder={t(STRING.enterFName)}
-                      placeholderTextColor={COLORS._7A7A7A}
-                      label={t(STRING.fName)}
-                      labelColor={COLORS.black}
-                      labelFont={FONTS.Inter.SemiBold}
-                      labelSize={getScaleSize(13)}
-                      isMandatory={true}
-                      error={errors.fName}
-                      inputWrapperStyle={[
-                        styles.inputWrapperStyle,
-                        errors.fName && {
-                          borderWidth: 1,
-                          borderColor: COLORS.error,
-                        },
-                      ]}
-                      style={styles.inputContainer}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Input
-                      value={lName}
-                      onChangeText={t => {
-                        setLName(t);
-                        setErrors(prev => ({ ...prev, lName: '' }));
-                      }}
-                      placeholder={t(STRING.enterLName)}
-                      placeholderTextColor={COLORS._7A7A7A}
-                      label={t(STRING.lName)}
-                      labelColor={COLORS.black}
-                      labelFont={FONTS.Inter.SemiBold}
-                      labelSize={getScaleSize(13)}
-                      isMandatory={true}
-                      error={errors.lName}
-                      inputWrapperStyle={[
-                        styles.inputWrapperStyle,
-                        errors.lName && {
-                          borderWidth: 1,
-                          borderColor: COLORS.error,
-                        },
-                      ]}
-                      style={styles.inputContainer}
-                    />
-                  </View>
-                </View>
+            </TouchableOpacity>
+          ),
+        })}
+      />
 
-                <View style={styles.fieldGroup}>
+      <KeyboardAwareScrollView
+        // style={styles.scroll}
+        contentContainerStyle={{
+          // flexGrow: 1,
+          minHeight: Dimensions.get('window').height,
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        // enableOnAndroid
+      >
+        <View style={styles.container}>
+          {/* Personal Information */}
+          <View style={styles.section}>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6F767E}
+              style={styles.sectionTitle}
+            >
+              {t(STRING.personalInformation)}
+            </AppText>
+            <View style={styles.card}>
+              <View style={styles.nameRow}>
+                <View style={{ flex: 1 }}>
                   <Input
-                    value={dob}
-                    isMandatory
-                    onPress={() => setDatePickerOpen(true)}
-                    placeholder={t(STRING.selectDateOfBirth)}
-                    placeholderTextColor={COLORS._7A7A7A}
-                    label={t(STRING.dateOfBirth)}
-                    error={errors.dob}
-                    style={styles.inputContainer}
-                    labelColor={COLORS.black}
-                    labelFont={FONTS.Inter.SemiBold}
-                    labelSize={getScaleSize(13)}
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.dob && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
-                    editable={false}
-                    trailing={
-                      <Image
-                        source={IMAGES.ic_calender}
-                        style={styles.inputIcon}
-                      />
-                    }
-                  />
-                </View>
-
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    gap: getScaleSize(12),
-                    flex: 1,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <CustomDropdown
-                      labelStyle={{
-                        fontFamily: FONTS.Inter.SemiBold,
-                        color: COLORS.black,
-                        fontSize: getScaleSize(13),
-                      }}
-                      isMandatory={true}
-                      style={{
-                        paddingHorizontal: 0,
-                        marginBottom: 0,
-                      }}
-                      labelContainerStyle={{
-                        backgroundColor: COLORS._F9FAFB,
-                        borderWidth: 0,
-                      }}
-                      label={t(STRING.gender)}
-                      data={GENDER}
-                      value={gender}
-                      onChange={val => {
-                        setGender(val);
-                        setErrors(e => ({ ...e, gender: '' }));
-                      }}
-                      placeholder={t(STRING.selectGender)}
-                      leftIcon={IMAGES.ic_gender}
-                      error={errors.gender}
-                      zIndex={1000}
-                    />
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Input
-                      value={weight}
-                      onChangeText={text => setWeight(text)}
-                      keyboardType="numeric"
-                      placeholder="e.g. 70"
-                      placeholderTextColor={COLORS._7A7A7A}
-                      label={t(STRING.weightKg)}
-                      labelColor={COLORS.black}
-                      labelFont={FONTS.Inter.SemiBold}
-                      labelSize={getScaleSize(13)}
-                      inputWrapperStyle={styles.inputWrapperStyle}
-                      style={styles.inputContainer}
-                    />
-                  </View>
-                </View>
-                <Input
-                  value={socialInsuranceNumber}
-                  onChangeText={t => {
-                    setSocialInsuranceNumber(t);
-                    setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));
-                  }}
-                  placeholder={t(STRING.enterSocialInsuranceNumber)}
-                  placeholderTextColor={COLORS._7A7A7A}
-                  label={t(STRING.socialInsuranceNumber)}
-                  labelColor={COLORS.black}
-                  labelFont={FONTS.Inter.SemiBold}
-                  leftIcon={IMAGES.ic_insurance}
-                  labelSize={getScaleSize(13)}
-                  // error={errors.socialInsuranceNumber}
-                  inputWrapperStyle={[
-                    styles.inputWrapperStyle,
-                    errors.socialInsuranceNumber && {
-                      borderWidth: 1,
-                      borderColor: COLORS.error,
-                    },
-                  ]}
-                  style={styles.inputContainer}
-                />
-              </View>
-            </View>
-
-            {/* Contact Details */}
-            <View style={styles.section}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._6B7280}
-                style={styles.sectionTitle}
-              >
-                {STRING.contactDetails}
-              </AppText>
-              <View style={styles.card}>
-                <View style={styles.fieldGroup}>
-                  <Input
-                    value={phone}
-                    isCountryCode
-                    countryCode={country}
-                    onCountryCodeSelect={code => {
-                      setCountry(code);
-                    }}
+                    value={fName}
                     onChangeText={t => {
-                      setPhone(t);
-                      setErrors(prev => ({ ...prev, phone: '' }));
+                      setFName(t);
+                      setErrors(prev => ({ ...prev, fName: '' }));
                     }}
-                    keyboardType="phone-pad"
-                    error={errors.phone}
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.phone && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
+                    placeholder={t(STRING.enterFName)}
                     placeholderTextColor={COLORS._7A7A7A}
-                    placeholder={t(STRING.enterPhoneNumber)}
-                    label={t(STRING.phoneNumber)}
+                    label={t(STRING.fName)}
                     labelColor={COLORS.black}
                     labelFont={FONTS.Inter.SemiBold}
                     labelSize={getScaleSize(13)}
                     isMandatory={true}
-                    error={errors.phone}
-                    leftIcon={IMAGES.phone}
+                    error={errors.fName}
+                    inputWrapperStyle={[
+                      styles.inputWrapperStyle,
+                      errors.fName && {
+                        borderWidth: 1,
+                        borderColor: COLORS.error,
+                      },
+                    ]}
                     style={styles.inputContainer}
                   />
                 </View>
-
-                <View style={styles.fieldGroup}>
+                <View style={{ flex: 1 }}>
                   <Input
-                    value={email}
+                    value={lName}
                     onChangeText={t => {
-                      setEmail(t);
-                      setErrors(prev => ({ ...prev, email: '' }));
+                      setLName(t);
+                      setErrors(prev => ({ ...prev, lName: '' }));
                     }}
-                    isMandatory
-                    keyboardType="email-address"
+                    placeholder={t(STRING.enterLName)}
+                    placeholderTextColor={COLORS._7A7A7A}
+                    label={t(STRING.lName)}
+                    labelColor={COLORS.black}
+                    labelFont={FONTS.Inter.SemiBold}
+                    labelSize={getScaleSize(13)}
+                    isMandatory={true}
+                    error={errors.lName}
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
-                      errors.email && {
+                      errors.lName && {
                         borderWidth: 1,
                         borderColor: COLORS.error,
                       },
                     ]}
-                    placeholderTextColor={COLORS._7A7A7A}
-                    autoCapitalize="none"
-                    placeholder={t(STRING.enterEmailAddress)}
-                    labelColor={COLORS.black}
-                    labelFont={FONTS.Inter.SemiBold}
-                    labelSize={getScaleSize(13)}
-                    label={t(STRING.emailAddress)}
-                    error={errors.email}
-                    leftIcon={IMAGES.email_icon}
                     style={styles.inputContainer}
                   />
                 </View>
               </View>
-            </View>
 
-            {/* Address */}
-            <View style={styles.section}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._6B7280}
-                style={styles.sectionTitle}
-              >
-                {t(STRING.address)}
-              </AppText>
-              <View style={styles.card}>
-                <View style={styles.fieldGroup}>
-                  <Input
-                    value={street}
-                    onChangeText={setStreet}
-                    placeholder={t(STRING.enterStreetAddress)}
-                    error={errors.street}
-                    isMandatory
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.street && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
-                    placeholderTextColor={COLORS._7A7A7A}
-                    labelColor={COLORS.black}
-                    labelFont={FONTS.Inter.SemiBold}
-                    labelSize={getScaleSize(13)}
-                    label={t(STRING.streetAddress)}
-                    style={styles.inputContainer}
-                  />
-                </View>
-
-                <View style={styles.rowGap}>
-                  <View style={[styles.fieldGroup, styles.flex1]}>
-                    <Input
-                      isMandatory
-                      value={city}
-                      onChangeText={setCity}
-                      error={errors.city}
-                      inputWrapperStyle={[
-                        styles.inputWrapperStyle,
-                        errors.city && {
-                          borderWidth: 1,
-                          borderColor: COLORS.error,
-                        },
-                      ]}
-                      labelColor={COLORS.black}
-                      labelFont={FONTS.Inter.SemiBold}
-                      labelSize={getScaleSize(13)}
-                      placeholderTextColor={COLORS._7A7A7A}
-                      placeholder={t(STRING.enterCity)}
-                      label={t(STRING.city)}
-                      style={styles.inputContainer}
+              <View style={styles.fieldGroup}>
+                <Input
+                  value={dob}
+                  isMandatory
+                  onPress={() => setDatePickerOpen(true)}
+                  placeholder={t(STRING.selectDateOfBirth)}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  label={t(STRING.dateOfBirth)}
+                  error={errors.dob}
+                  style={styles.inputContainer}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  labelSize={getScaleSize(13)}
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.dob && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  editable={false}
+                  trailing={
+                    <Image
+                      source={IMAGES.ic_calender}
+                      style={styles.inputIcon}
                     />
-                  </View>
-                  <View style={[styles.fieldGroup, styles.zipWidth]}>
-                    <Input
-                      isMandatory
-                      value={zip}
-                      onChangeText={setZip}
-                      error={errors.zip}
-                      inputWrapperStyle={[
-                        styles.inputWrapperStyle,
-                        errors.zip && {
-                          borderWidth: 1,
-                          borderColor: COLORS.error,
-                        },
-                      ]}
-                      placeholderTextColor={COLORS._7A7A7A}
-                      placeholder={t(STRING.enterZip)}
-                      labelColor={COLORS.black}
-                      labelFont={FONTS.Inter.SemiBold}
-                      labelSize={getScaleSize(13)}
-                      label={t(STRING.zip)}
-                      style={styles.inputContainer}
-                    />
-                  </View>
-                </View>
+                  }
+                />
               </View>
-            </View>
 
-            {/* Medical Information */}
-            <View style={[styles.section, { paddingBottom: getScaleSize(20) }]}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._6B7280}
-                style={styles.sectionTitle}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: getScaleSize(12),
+                  flex: 1,
+                }}
               >
-                {t(STRING.medicalInformation)}
-              </AppText>
-              <View style={styles.card}>
-                <View style={styles.fieldGroup}>
-                  <Input
-                    value={notes}
-                    onChangeText={setNotes}
-                    error={errors.notes}
-                    inputWrapperStyle={[
-                      styles.inputWrapperStyle,
-                      errors.notes && {
-                        borderWidth: 1,
-                        borderColor: COLORS.error,
-                      },
-                    ]}
-                    placeholderTextColor={COLORS._7A7A7A}
-                    labelColor={COLORS.black}
-                    labelFont={FONTS.Inter.SemiBold}
-                    labelSize={getScaleSize(13)}
-                    multiline
-                    numberOfLines={4}
-                    placeholder={t(STRING.notesPlaceholder)}
-                    label={t(STRING.initialNotes)}
-                    helper={t(STRING.notesHelper)}
-                    helperStyle={{
-                      color: COLORS._6F767E,
-                      marginTop: getScaleSize(3),
+                <View style={{ flex: 1 }}>
+                  <CustomDropdown
+                    labelStyle={{
+                      fontFamily: FONTS.Inter.SemiBold,
+                      color: COLORS.black,
+                      fontSize: getScaleSize(13),
                     }}
-                    // inputWrapperStyle={[
-                    //   styles.inputWrapperStyle,
-                    //   errors.notes && {
-                    //     borderWidth: 1,
-                    //     borderColor: COLORS.error,
-                    //   },
-                    // ]}
+                    isMandatory={true}
+                    style={{
+                      paddingHorizontal: 0,
+                      marginBottom: 0,
+                    }}
+                    labelContainerStyle={{
+                      backgroundColor: COLORS._F9FAFB,
+                      borderWidth: 0,
+                    }}
+                    label={t(STRING.gender)}
+                    data={GENDER}
+                    value={gender}
+                    onChange={val => {
+                      setGender(val);
+                      setErrors(e => ({ ...e, gender: '' }));
+                    }}
+                    placeholder={t(STRING.selectGender)}
+                    leftIcon={IMAGES.ic_gender}
+                    error={errors.gender}
+                    zIndex={1000}
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Input
+                    value={weight}
+                    onChangeText={text => setWeight(text)}
+                    keyboardType="numeric"
+                    placeholder="e.g. 70"
+                    placeholderTextColor={COLORS._7A7A7A}
+                    label={t(STRING.weightKg)}
+                    labelColor={COLORS.black}
+                    labelFont={FONTS.Inter.SemiBold}
+                    labelSize={getScaleSize(13)}
+                    inputWrapperStyle={styles.inputWrapperStyle}
                     style={styles.inputContainer}
-                    inputStyle={styles.textArea}
                   />
                 </View>
               </View>
-            </View>
-            {isEdit ? (
-              <View style={styles.footerActions}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  activeOpacity={0.7}
-                  onPress={handleCancel}
-                >
-                  <AppText
-                    size={getScaleSize(15)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS._1A1D1F}
-                  >
-                    {t(STRING.cancel)}
-                  </AppText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.saveBtn}
-                  activeOpacity={0.8}
-                  onPress={handleSave}
-                >
-                  <AppText
-                    size={getScaleSize(15)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS.white}
-                  >
-                    {t(STRING.save)}
-                  </AppText>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <PrimaryButton
-                title={t(STRING.savePatient)}
-                onPress={handleSave}
-                style={{ marginHorizontal: getScaleSize(20) }}
+              <Input
+                value={socialInsuranceNumber}
+                onChangeText={t => {
+                  setSocialInsuranceNumber(t);
+                  setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));
+                }}
+                placeholder={t(STRING.enterSocialInsuranceNumber)}
+                placeholderTextColor={COLORS._7A7A7A}
+                label={t(STRING.socialInsuranceNumber)}
+                labelColor={COLORS.black}
+                labelFont={FONTS.Inter.SemiBold}
+                leftIcon={IMAGES.ic_insurance}
+                labelSize={getScaleSize(13)}
+                // error={errors.socialInsuranceNumber}
+                inputWrapperStyle={[
+                  styles.inputWrapperStyle,
+                  errors.socialInsuranceNumber && {
+                    borderWidth: 1,
+                    borderColor: COLORS.error,
+                  },
+                ]}
+                style={styles.inputContainer}
               />
-            )}
-          </KeyboardAwareScrollView>
+            </View>
+          </View>
+
+          {/* Contact Details */}
+          <View style={styles.section}>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}
+              style={styles.sectionTitle}
+            >
+              {STRING.contactDetails}
+            </AppText>
+            <View style={styles.card}>
+              <View style={styles.fieldGroup}>
+                <Input
+                  value={phone}
+                  isCountryCode
+                  countryCode={country}
+                  onCountryCodeSelect={code => {
+                    setCountry(code);
+                  }}
+                  onChangeText={t => {
+                    setPhone(t);
+                    setErrors(prev => ({ ...prev, phone: '' }));
+                  }}
+                  keyboardType="phone-pad"
+                  error={errors.phone}
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.phone && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  placeholder={t(STRING.enterPhoneNumber)}
+                  label={t(STRING.phoneNumber)}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  labelSize={getScaleSize(13)}
+                  isMandatory={true}
+                  error={errors.phone}
+                  leftIcon={IMAGES.phone}
+                  style={styles.inputContainer}
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Input
+                  value={email}
+                  onChangeText={t => {
+                    setEmail(t);
+                    setErrors(prev => ({ ...prev, email: '' }));
+                  }}
+                  isMandatory
+                  keyboardType="email-address"
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.email && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  autoCapitalize="none"
+                  placeholder={t(STRING.enterEmailAddress)}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  labelSize={getScaleSize(13)}
+                  label={t(STRING.emailAddress)}
+                  error={errors.email}
+                  leftIcon={IMAGES.email_icon}
+                  style={styles.inputContainer}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Address */}
+          <View style={styles.section}>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}
+              style={styles.sectionTitle}
+            >
+              {t(STRING.address)}
+            </AppText>
+            <View style={styles.card}>
+              <View style={styles.fieldGroup}>
+                <Input
+                  value={street}
+                  onChangeText={setStreet}
+                  placeholder={t(STRING.enterStreetAddress)}
+                  error={errors.street}
+                  isMandatory
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.street && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  labelSize={getScaleSize(13)}
+                  label={t(STRING.streetAddress)}
+                  style={styles.inputContainer}
+                />
+              </View>
+
+              <View style={styles.rowGap}>
+                <View style={[styles.fieldGroup, styles.flex1]}>
+                  <Input
+                    isMandatory
+                    value={city}
+                    onChangeText={setCity}
+                    error={errors.city}
+                    inputWrapperStyle={[
+                      styles.inputWrapperStyle,
+                      errors.city && {
+                        borderWidth: 1,
+                        borderColor: COLORS.error,
+                      },
+                    ]}
+                    labelColor={COLORS.black}
+                    labelFont={FONTS.Inter.SemiBold}
+                    labelSize={getScaleSize(13)}
+                    placeholderTextColor={COLORS._7A7A7A}
+                    placeholder={t(STRING.enterCity)}
+                    label={t(STRING.city)}
+                    style={styles.inputContainer}
+                  />
+                </View>
+                <View style={[styles.fieldGroup, styles.zipWidth]}>
+                  <Input
+                    isMandatory
+                    value={zip}
+                    onChangeText={setZip}
+                    error={errors.zip}
+                    inputWrapperStyle={[
+                      styles.inputWrapperStyle,
+                      errors.zip && {
+                        borderWidth: 1,
+                        borderColor: COLORS.error,
+                      },
+                    ]}
+                    placeholderTextColor={COLORS._7A7A7A}
+                    placeholder={t(STRING.enterZip)}
+                    labelColor={COLORS.black}
+                    labelFont={FONTS.Inter.SemiBold}
+                    labelSize={getScaleSize(13)}
+                    label={t(STRING.zip)}
+                    style={styles.inputContainer}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Medical Information */}
+          <View style={[styles.section, { paddingBottom: getScaleSize(20) }]}>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}
+              style={styles.sectionTitle}
+            >
+              {t(STRING.medicalInformation)}
+            </AppText>
+            <View style={styles.card}>
+              <View style={styles.fieldGroup}>
+                <Input
+                  value={notes}
+                  onChangeText={setNotes}
+                  error={errors.notes}
+                  inputWrapperStyle={[
+                    styles.inputWrapperStyle,
+                    errors.notes && {
+                      borderWidth: 1,
+                      borderColor: COLORS.error,
+                    },
+                  ]}
+                  placeholderTextColor={COLORS._7A7A7A}
+                  labelColor={COLORS.black}
+                  labelFont={FONTS.Inter.SemiBold}
+                  labelSize={getScaleSize(13)}
+                  multiline
+                  numberOfLines={4}
+                  placeholder={t(STRING.notesPlaceholder)}
+                  label={t(STRING.initialNotes)}
+                  helper={t(STRING.notesHelper)}
+                  helperStyle={{
+                    color: COLORS._6F767E,
+                    marginTop: getScaleSize(3),
+                  }}
+                  // inputWrapperStyle={[
+                  //   styles.inputWrapperStyle,
+                  //   errors.notes && {
+                  //     borderWidth: 1,
+                  //     borderColor: COLORS.error,
+                  //   },
+                  // ]}
+                  style={styles.inputContainer}
+                  inputStyle={styles.textArea}
+                />
+              </View>
+            </View>
+          </View>
+          {isEdit ? (
+            <View style={styles.footerActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                activeOpacity={0.7}
+                onPress={handleCancel}
+              >
+                <AppText
+                  size={getScaleSize(15)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.cancel)}
+                </AppText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                activeOpacity={0.8}
+                onPress={handleSave}
+              >
+                <AppText
+                  size={getScaleSize(15)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
+                >
+                  {t(STRING.save)}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <PrimaryButton
+              title={t(STRING.savePatient)}
+              onPress={handleSave}
+              style={{ marginHorizontal: getScaleSize(20) }}
+            />
+          )}
         </View>
-      </AppSafeAreaView>
+      </KeyboardAwareScrollView>
 
       <AppBottomSheet ref={discardSheetRef}>
         <View style={styles.discardContent}>
@@ -792,9 +813,8 @@ const AddPatient: React.FC = () => {
         confirmText={t(STRING.confirm)}
         maximumDate={new Date()}
         modal
-        theme='light'
-        mode='date'
-        maximumDate={new Date()}
+        theme="light"
+        mode="date"
         open={datePickerOpen}
         date={selectedDate}
         onConfirm={date => {
@@ -821,7 +841,7 @@ const AddPatient: React.FC = () => {
           setDatePickerOpen(false);
         }}
       /> */}
-    </>
+    </AppSafeAreaView>
   );
 };
 
@@ -838,11 +858,12 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    marginBottom: getScaleSize(10),
+    // marginBottom: getScaleSize(10),
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: getScaleSize(20),
+    minHeight: Dimensions.get('window').height,
+    // paddingBottom: getScaleSize(20),
     // paddingTop: getScaleSize(16),
   },
   section: {
@@ -915,7 +936,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 20,
     gap: 12,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   cancelBtn: {
     flex: 1,

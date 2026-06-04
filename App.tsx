@@ -7,7 +7,10 @@
 
 import React, { useEffect } from 'react';
 import { StatusBar, useColorScheme } from 'react-native';
-import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 import RootNavigation from './src/navigation';
 import { Provider } from 'react-redux';
 import store from './src/redux/store';
@@ -16,7 +19,12 @@ import { I18nextProvider } from 'react-i18next';
 import messaging from '@react-native-firebase/messaging';
 import { i18nLocale } from './src/localization/translatation';
 import { useLanguageSync } from './src/hooks/useLanguageSync';
-import { createNotificationChannel, listenForegroundMessages, listenBackgroundMessages, requestNotificationPermission } from './src/hooks/notificationPermission';
+import {
+  createNotificationChannel,
+  listenForegroundMessages,
+  listenBackgroundMessages,
+  requestNotificationPermission,
+} from './src/hooks/notificationPermission';
 import { COLORS } from './src/utils';
 const AppContent = () => {
   // Sync language between Redux and i18n
@@ -32,23 +40,27 @@ const AppContent = () => {
 
 function App() {
   useEffect(() => {
+    let unsubscribeForeground: (() => void) | undefined;
+
     const init = async () => {
       await createNotificationChannel();
       await requestNotificationPermission();
-      listenForegroundMessages();
+
+      unsubscribeForeground = listenForegroundMessages();
       listenBackgroundMessages();
     };
 
     init();
+
+    return () => {
+      unsubscribeForeground?.();
+    };
   }, []);
 
   return (
     <I18nextProvider i18n={i18nLocale}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StatusBar
-          backgroundColor={COLORS.white}
-          barStyle={'dark-content'}
-        />
+        <StatusBar backgroundColor={COLORS.white} barStyle={'dark-content'} />
         <Provider store={store}>
           <AppContent />
         </Provider>

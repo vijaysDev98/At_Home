@@ -83,7 +83,6 @@ const ProviderHome: React.FC = () => {
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const reviewSheetRef = useRef<ActionSheetRef>(null);
 
-
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
@@ -143,16 +142,13 @@ const ProviderHome: React.FC = () => {
         comments: details,
       };
 
-      const response = await serviceRequestApi.returnRequest(
+      const response = await serviceRequestApi.claimAndReturnRequest(
         selectedRequest.id,
         obj,
       );
       if (response.success) {
         await serviceRequestApi.releaseFormLock(requestId);
-        SHOW_TOAST(
-          response.message,
-          'success',
-        );
+        SHOW_TOAST(response.message, 'success');
         reviewSheetRef?.current?.hide();
         await fetchDashboardData();
       } else {
@@ -335,7 +331,8 @@ const ProviderHome: React.FC = () => {
                   font={FONTS.Inter.Bold}
                   color="#111827"
                 >
-                  {dashboardData?.overview?.completedTodayCount || '0'} {t(STRING.services)}
+                  {dashboardData?.overview?.completedTodayCount || '0'}{' '}
+                  {t(STRING.services)}
                 </AppText>
               </View>
             </View>
@@ -446,18 +443,18 @@ const ProviderHome: React.FC = () => {
         <ReviewRequestSheet
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
-            await handleClaimService({
-              requestId: selectedRequest?.id || '',
-              dispatch,
-              onSuccess: async () => {
-                await onReturnRequest(
-                  reason,
-                  details,
-                  selectedRequest?.id || '',
-                );
-              },
-            });
-            // await onReturnRequest(reason, details, selectedRequest?.id || '');
+            // await handleClaimService({
+            //   requestId: selectedRequest?.id || '',
+            //   dispatch,
+            //   onSuccess: async () => {
+            //     await onReturnRequest(
+            //       reason,
+            //       details,
+            //       selectedRequest?.id || '',
+            //     );
+            //   },
+            // });
+            await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
         />
       </View>
@@ -474,7 +471,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
-
   },
   header: {
     flexDirection: 'row',

@@ -604,5 +604,13 @@
   "At-Home": "At-Home",
   "Services": "Services",
   "Notifications": "Notifications",
-  "Unread": "Unread"
+  "Unread": "Unread",
+  "Signature timeout - please try again": "Signature timeout - please try again",
+  "Signing cancelled": "Signing cancelled",
+  "Document signed successfully": "Document signed successfully",
+  "Return Reason": "Return Reason",
+  "No notifications found": "No notifications found",
+  "View Request": "View Request",
+  "Sign Form": "Sign Form",
+  "Mark all as read": "Mark all as read"
 }

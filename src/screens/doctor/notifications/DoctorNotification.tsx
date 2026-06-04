@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -86,13 +86,19 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      setPage(1);
-      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
-      fetchNotificationsData(1, statusFilter, true);
-    }, [activeTab]),
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     setPage(1);
+  //     const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+  //     fetchNotificationsData(1, statusFilter, true);
+  //   }, [activeTab]),
+  // );
+
+  useEffect(() => {
+    setPage(1);
+    const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+    fetchNotificationsData(1, statusFilter, true);
+  }, [activeTab]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -134,7 +140,7 @@ const DoctorNotification: React.FC = () => {
   const hasUnreadNotifications = unreadCount > 0;
 
   const handleNotificationPress = async (item: Notification) => {
-    console.log("NOTIFICATION ITEM", item);
+    console.log('NOTIFICATION ITEM', item);
 
     const action = getNotificationAction(item);
     if (typeof action === 'object' && action?.onPress) {
@@ -163,16 +169,21 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string, forReview: boolean = false) => {
     switch (type) {
+      case 'requestClaimed':
+        return IMAGES.serviceClaimed;
       case 'formSubmission':
         return IMAGES.ic_submitted;
       case 'formUpdate':
+        if (forReview) {
+          return IMAGES.alert_serviceCompleted;
+        }
         return IMAGES.alert_formUpdate;
       case 'formReturned':
-        return IMAGES.ic_reload;
+        return IMAGES.formReturned;
       case 'requestCompleted':
-        return IMAGES.alert_serviceCompleted;
+        return IMAGES.serviceCompleted;
       case 'doctorRegistration':
         return IMAGES.ic_register_done;
       case 'serviceProviderAssignment':
@@ -204,35 +215,51 @@ const DoctorNotification: React.FC = () => {
 
     switch (item.type) {
       case 'formSubmission':
-        label.txt = 'View Request';
-        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: request });
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+            request: request,
+          });
         return label;
       case 'formUpdate':
         if (item.metadata.submitForReview == true) {
-          label.txt = "Sign Form";
-          label.onPress = () => NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, { request: request, action: 'edit' });
+          label.txt = t(STRING.signForm);
+          label.onPress = () =>
+            NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+              request: request,
+              action: 'edit',
+            });
           return label;
         }
-        label.txt = 'View Form';
-        label.onPress = () => NavigationService.navigate(SCREENS.FORMS_SCREEN, { request: request, action: 'edit' });
+        label.txt = t(STRING.viewForm);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: request,
+            action: 'edit',
+          });
         return label;
       case 'formReturned':
-        label.txt = 'Review Form';
+        label.txt = t(STRING.viewForm);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: request,
+            action: 'edit',
+          });
         return label;
       case 'requestCompleted': //DONE
-        label.txt = 'View Details';
-        label.onPress = () => NavigationService.navigate(SCREENS.SERVICE_COMPLETED, { request: request });
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+            request: request,
+          });
         return label;
-      case 'doctorRegistration':
-        // label.txt = 'View Profile';
-        return label;
-      case 'serviceProviderAssignment':
-        return label;
-      case 'adminManual':
-        return label;
-      case 'systemMaintenance':
-        return label;
-      case 'securityAlert':
+      case 'requestClaimed':
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: request,
+            action: 'read',
+          });
         return label;
       default:
         return label;
@@ -246,7 +273,10 @@ const DoctorNotification: React.FC = () => {
         title={item.title}
         subtitle={item.message}
         time={moment(item.createdAt).fromNow()}
-        iconSource={getNotificationIcon(item.type)}
+        iconSource={getNotificationIcon(
+          item.type,
+          item.metadata?.submitForReview || false,
+        )}
         unread={isUnread}
         action={getNotificationAction(item).txt}
         onPress={() => handleNotificationPress(item)}
@@ -257,7 +287,9 @@ const DoctorNotification: React.FC = () => {
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
-      <AppLoader visible={(initialLoading && !isRefreshing) || isMarkingAllRead} />
+      <AppLoader
+        visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
+      />
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
@@ -329,7 +361,7 @@ const DoctorNotification: React.FC = () => {
                 color={COLORS._6F767E}
                 align="center"
               >
-                No notifications found
+                {t(STRING.noNotificationFound)}
               </AppText>
             </View>
           )}
@@ -388,7 +420,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    paddingTop: getScaleSize(15),
+    // paddingTop: getScaleSize(15),
   },
   scrollContent: {
     paddingBottom: 32,

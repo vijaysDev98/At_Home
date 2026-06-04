@@ -12,6 +12,7 @@ import {
   Platform,
   Image,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
@@ -39,7 +40,11 @@ import { AppDispatch } from '../../redux/store';
 import { useRoute } from '@react-navigation/native';
 import { useSimpleImagePicker } from '../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../services/uploadService';
-import { IMAGE_BASE_URL, PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../../api/apiRoutes';
+import {
+  IMAGE_BASE_URL,
+  PRIVACY_POLICY_URL,
+  TERMS_OF_SERVICE_URL,
+} from '../../api/apiRoutes';
 import { SHOW_TOAST } from '../../constant';
 import { CustomDropdown } from '../../components/CustomDropDown';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -77,14 +82,9 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
   );
 };
 
-
-
 // --- Main Screen ---
 
 const Register: React.FC = () => {
-
-
-
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
   const route = useRoute<any>();
@@ -171,8 +171,9 @@ const Register: React.FC = () => {
       if (!password) {
         newErrors.password = t(STRING.passwordRequired);
       } else if (!PASSWORD_REGEX.test(password)) {
-        newErrors.password =
-          t(STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number);
+        newErrors.password = t(
+          STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number,
+        );
       }
       if (!rpps.trim()) {
         newErrors.rpps = t(STRING.rppsNumberRequired);
@@ -295,7 +296,8 @@ const Register: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        extraScrollHeight={20}
+        style={{ flex: 1, minHeight: Dimensions.get('window').height }}
+        extraScrollHeight={40}
       >
         {/* <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -305,12 +307,19 @@ const Register: React.FC = () => {
         <View>
           {/* Header */}
           <Header
-            style={{ marginHorizontal: getScaleSize(16), marginBottom: getScaleSize(10) }}
+            style={{
+              marginHorizontal: getScaleSize(16),
+              marginBottom: getScaleSize(10),
+            }}
             isBack={true}
-            title={isEdit ? t(STRING.updateYourProfile) : t(STRING.createYourAccount)}
-            subTitle={isEdit
-              ? t(STRING.updateYourProfessionalDetails)
-              : t(STRING.createAccountSubtitle)}
+            title={
+              isEdit ? t(STRING.updateYourProfile) : t(STRING.createYourAccount)
+            }
+            subTitle={
+              isEdit
+                ? t(STRING.updateYourProfessionalDetails)
+                : t(STRING.createAccountSubtitle)
+            }
           />
           {/* Profile Image Section (Only in Edit mode) */}
           {isEdit && (
@@ -416,7 +425,9 @@ const Register: React.FC = () => {
               <Input
                 label={t(STRING.rppsNumber)}
                 isMandatory
-                placeholder={`${t(STRING.enterRppsNumber)} (${t(STRING.elevenDigit)})`}
+                placeholder={`${t(STRING.enterRppsNumber)} (${t(
+                  STRING.elevenDigit,
+                )})`}
                 leftIcon={IMAGES.card}
                 value={rpps}
                 onChangeText={t => {
@@ -452,7 +463,9 @@ const Register: React.FC = () => {
               <Input
                 label={t(STRING.finessNumber)}
                 isMandatory
-                placeholder={`${t(STRING.enterFinessNumber)} (${t(STRING.nineDigit)})`}
+                placeholder={`${t(STRING.enterFinessNumber)} (${t(
+                  STRING.nineDigit,
+                )})`}
                 leftIcon={IMAGES.hospital}
                 value={finess}
                 onChangeText={t => {

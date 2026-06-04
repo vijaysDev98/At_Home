@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
+  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
@@ -27,7 +28,10 @@ import { AppDispatch, RootState } from '../../redux/store';
 import { userLogin } from '../../actions/auth/authAction';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { ActionSheetRef } from 'react-native-actions-sheet';
-import { updateLanguage, fetchLanguage } from '../../actions/language/languageAction';
+import {
+  updateLanguage,
+  fetchLanguage,
+} from '../../actions/language/languageAction';
 import { SHOW_TOAST } from '../../constant';
 import { useTranslation } from 'react-i18next';
 
@@ -59,7 +63,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     languageSheetRef.current?.show();
   };
 
-  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+  const handleLanguageSelect = async (language: {
+    key: string;
+    value: string;
+    flag: string;
+  }) => {
     const success = await dispatch(updateLanguage(language.key) as any);
     if (success) {
       SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
@@ -110,13 +118,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   return (
     <AppSafeAreaView edges={['top']}>
       <AppLoader visible={isLoading} />
-      {/* <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      > */}
       <KeyboardAwareScrollView
         enableOnAndroid={true}
         enableAutomaticScroll={true}
+        style={{ flex: 1, minHeight: Dimensions.get('window').height }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -129,7 +134,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <Image source={IMAGES.language} style={styles.languageIcon} />
         </TouchableOpacity>
         <View style={styles.hero}>
-
           <Image
             source={IMAGES.logo}
             style={styles.logo}
@@ -275,7 +279,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           currentLanguage={currentLanguage}
         />
       </KeyboardAwareScrollView>
-      {/* </ScrollView> */}
     </AppSafeAreaView>
   );
 };

@@ -14,6 +14,8 @@ import { COLORS, FONTS } from '../utils';
 import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 const Header = ({
   isBack = false,
@@ -40,6 +42,7 @@ const Header = ({
   onNotificationPress?: () => void;
   unreadCount?: number;
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={[styles.header, style]}>
       <View style={styles.content}>
@@ -85,7 +88,7 @@ const Header = ({
           style={styles.notificationBtn}
           onPress={onNotificationPress}
         >
-          <Text style={styles.notificationText}>Mark all as read</Text>
+          <Text style={styles.notificationText}>{t(STRING.markAllAsRead)}</Text>
         </TouchableOpacity>
       )}
     </View>

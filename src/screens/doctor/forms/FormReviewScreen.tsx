@@ -17,7 +17,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import NavigationService from '../../../navigation/NavigationService';
 
-import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 
@@ -47,9 +47,18 @@ const FormReviewScreen: React.FC = () => {
   const [isFetched, setIsFetched] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
-  const profileData = useSelector((state: RootState) => state.profile.profileData);
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
   const formRef = useRef<any>(null);
-
+  const isReadOnly = useMemo(() => {
+    return (
+      requestData?.status === REQUEST_STATUS.SUBMITTED ||
+      requestData?.status === REQUEST_STATUS.IN_PROGRESS ||
+      requestData?.status === REQUEST_STATUS.COMPLETED ||
+      requestData?.status === REQUEST_STATUS.RETURNED
+    );
+  }, [requestData]);
   // Use custom hook for lock refresh
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
   useFormLockRefresh({
@@ -58,7 +67,7 @@ const FormReviewScreen: React.FC = () => {
     lockedBy: requestData?.formLock?.lockedBy || undefined,
     expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
-    readOnly: false,
+    readOnly: isReadOnly,
     enabled: isFetched && !!requestData && !hasError,
     onLockConflict: () => {
       // warningSheetRef.current?.show();
@@ -66,15 +75,10 @@ const FormReviewScreen: React.FC = () => {
   });
 
   const patientData = useMemo(() => {
-    return request?.patient || requestData?.patient || requestData?.patientId || {};
-  }, [request, requestData]);
-
-  const isReadOnly = useMemo(() => {
     return (
-      requestData?.status === REQUEST_STATUS.SUBMITTED ||
-      request?.status === REQUEST_STATUS.SUBMITTED
+      request?.patient || requestData?.patient || requestData?.patientId || {}
     );
-  }, [requestData, request]);
+  }, [request, requestData]);
 
   const handleLeftButtonPress = async () => {
     if (formRef.current?.editForm) {
@@ -84,13 +88,14 @@ const FormReviewScreen: React.FC = () => {
         NavigationService.replace(SCREENS.FORMS_SCREEN, {
           request: request,
           action: 'edit',
-          from: 'review'
+          from: 'review',
         });
       }
     }
   };
 
-  const service: ServiceInfo = requestData?.service || requestData?.serviceId || request?.service || {};
+  const service: ServiceInfo =
+    requestData?.service || requestData?.serviceId || request?.service || {};
 
   const serviceId = service?._id || service?.id;
 
@@ -130,10 +135,17 @@ const FormReviewScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: COLORS.white }}
+    >
       <AppLoader visible={isLoading} signing={isSigning} />
       <View style={styles.container}>
-        <Header title={t(STRING.reviewAndSign)} isBack={true} style={styles.header} />
+        <Header
+          title={t(STRING.reviewAndSign)}
+          isBack={true}
+          style={styles.header}
+        />
 
         {!isFetched ? (
           <View
@@ -145,7 +157,9 @@ const FormReviewScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
+            <AppText color={COLORS.primary}>
+              {t(STRING.somethingWentWrong)}
+            </AppText>
           </View>
         ) : !requestData ? (
           <View
@@ -163,7 +177,9 @@ const FormReviewScreen: React.FC = () => {
               >
                 {patientData && (
                   <FormRequestHeader
-                    fromReview={true}
+                    fromReview={
+                      requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE
+                    }
                     patientData={patientData}
                     serviceName={serviceName}
                     requestData={requestData}
@@ -198,21 +214,23 @@ const FormReviewScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            <View style={styles.bottomBar}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                style={styles.saveBtn}
-                onPress={handleLeftButtonPress}
-              >
-                <AppText
-                  size={getScaleSize(16)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
+            {!isReadOnly && (
+              <View style={styles.bottomBar}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={styles.saveBtn}
+                  onPress={handleLeftButtonPress}
                 >
-                  {t(STRING.editForm)}
-                </AppText>
-              </TouchableOpacity>
-            </View>
+                  <AppText
+                    size={getScaleSize(16)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {t(STRING.editForm)}
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            )}
           </>
         )}
       </View>

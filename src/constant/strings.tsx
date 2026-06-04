@@ -555,12 +555,13 @@ export const STRING = {
   all: 'All',
   dob: 'DOB:',
 
-
   //Actionsheets
   warning: 'Warning',
-  formTemporarilyUnavailable: 'Form Temporarily Unavailable. This form is currently being updated by another user. Please try again shortly.',
+  formTemporarilyUnavailable:
+    'Form Temporarily Unavailable. This form is currently being updated by another user. Please try again shortly.',
   back: 'Back',
-  pleaseSelectAReasonAndEnterDetails: 'Please select a reason and enter details',
+  pleaseSelectAReasonAndEnterDetails:
+    'Please select a reason and enter details',
   requestReview: 'Request Review',
   describeIssueWithThisService: 'Describe issue with this service',
   quickSelect: 'Quick Select',
@@ -568,7 +569,8 @@ export const STRING = {
   enterDetails: 'Enter details',
   sendForReview: 'Send for Review',
   completeService: 'Complete Service',
-  completeServiceConfirmation: 'Please confirm that the service has been successfully completed. Once completed, this action cannot be undone.',
+  completeServiceConfirmation:
+    'Please confirm that the service has been successfully completed. Once completed, this action cannot be undone.',
   markAsCompleted: 'Mark as Completed',
   logout: 'Logout',
   logoutConfirmation: 'Are you sure you want to log out of your account?',
@@ -632,7 +634,8 @@ export const STRING = {
 
   //changepassword
   changePassword: 'Change Password',
-  changePasswordMessage: 'Enter your current password and create a new password for your account.',
+  changePasswordMessage:
+    'Enter your current password and create a new password for your account.',
   currentPassword: 'Current Password',
   enterCurrentPassword: 'Enter current password',
 
@@ -682,7 +685,8 @@ export const STRING = {
   service: 'Service',
   updateForm: 'Update Form',
   serviceCompleted: 'Service Completed',
-  serviceCompletedDescription: 'This service has been completed and the record is now locked.',
+  serviceCompletedDescription:
+    'This service has been completed and the record is now locked.',
   completedOn: 'Completed on',
   doctor: 'Doctor',
   serviceSummary: 'Service Summary',
@@ -717,7 +721,8 @@ export const STRING = {
   selectDate: 'Select Date',
   confirm: 'Confirm',
   prescriptionValidity: 'Prescription Validity',
-  thisFormMustBeAccompaniedByAHandwrittenSecurePrescription: 'This form must be accompanied by a handwritten secure prescription',
+  thisFormMustBeAccompaniedByAHandwrittenSecurePrescription:
+    'This form must be accompanied by a handwritten secure prescription',
   effectiveFrom: 'Effective From',
   missingInformation: 'Missing Information',
   incorrectPatientDetails: 'Incorrect Patient Details',
@@ -731,4 +736,9 @@ export const STRING = {
   signatureTimeout: 'Signature timeout - please try again',
   signingCancelled: 'Signing cancelled',
   documentSignedSuccessfully: 'Document signed successfully',
+  returnReason: 'Return Reason',
+  noNotificationFound: 'No notifications found',
+  viewRequest: 'View Request',
+  signForm: 'Sign Form',
+  markAllAsRead: 'Mark all as read',
 };

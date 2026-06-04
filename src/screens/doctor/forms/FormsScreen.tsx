@@ -86,7 +86,6 @@ const FormsScreen: React.FC = () => {
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
   const requestId = request?.id;
 
-
   // Extract service and patient from request object
   const patientData = request?.patient || {};
 
@@ -94,7 +93,8 @@ const FormsScreen: React.FC = () => {
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
-  const serviceName = service?.serviceName || requestData?.serviceId?.serviceName;
+  const serviceName =
+    service?.serviceName || requestData?.serviceId?.serviceName;
 
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
@@ -193,10 +193,7 @@ const FormsScreen: React.FC = () => {
             request: { ...request, ...reviewResponse.data },
           });
         } else {
-          SHOW_TOAST(
-            reviewResponse.error,
-            'error',
-          );
+          SHOW_TOAST(reviewResponse.error, 'error');
         }
       } catch (error: any) {
         SHOW_TOAST(error?.message, 'error');
@@ -218,8 +215,8 @@ const FormsScreen: React.FC = () => {
     },
 
     // Unused provider handlers (kept for type safety)
-    submitForReview: async () => { },
-    claimService: async () => { },
+    submitForReview: async () => {},
+    claimService: async () => {},
   };
 
   // Fetch service request details when in view mode
@@ -270,7 +267,7 @@ const FormsScreen: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-              align='center'
+              align="center"
             >
               {t(left.label)}
             </AppText>
@@ -286,7 +283,7 @@ const FormsScreen: React.FC = () => {
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
               color={COLORS.white}
-              align='center'
+              align="center"
             >
               {t(right.label)}
             </AppText>
@@ -297,15 +294,24 @@ const FormsScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: COLORS.white }}
+    >
       <AppLoader visible={isLoading} />
       <View style={styles.container}>
-        <Header title={t(STRING.medicalForm)} isBack={true} style={styles.header} />
+        <Header
+          title={t(STRING.medicalForm)}
+          isBack={true}
+          style={styles.header}
+        />
         {isFetched && hasError ? (
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
+            <AppText color={COLORS.primary}>
+              {t(STRING.somethingWentWrong)}
+            </AppText>
           </View>
         ) : !isFetched ? (
           <View
@@ -321,36 +327,48 @@ const FormsScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {requestData?.status === REQUEST_STATUS.RETURNED &&
-                  requestData?.returnReasons &&
-                  requestData.returnReasons.length > 0 && (
-                    <View style={styles.returnCard}>
-                      <AppText
-                        font={FONTS.Inter.SemiBold}
-                        color={COLORS.returned}
-                      >
-                        {t(REVIEW_REASONS.find(
-                          reason =>
-                            reason.key ===
-                            requestData.returnReasons[
-                              requestData.returnReasons.length - 1
-                            ].reason,
-                        )?.value || '')}
-                      </AppText>
-                      <AppText
-                        font={FONTS.Inter.Regular}
-                        color={COLORS.returned}
-                      >
-                        {requestData?.returnComments}
-                      </AppText>
-                    </View>
-                  )}
                 {/* Patient Info Header */}
                 <FormRequestHeader
                   patientData={requestData?.patientId as any}
                   serviceName={serviceName}
                   requestData={requestData}
                 />
+                {requestData?.status === REQUEST_STATUS.RETURNED &&
+                  requestData?.returnReasons &&
+                  requestData.returnReasons.length > 0 && (
+                    <>
+                      <AppText
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                        size={getScaleSize(16)}
+                        style={{ marginLeft: getScaleSize(16) }}
+                      >
+                        {t(STRING.returnReason)}
+                      </AppText>
+                      <View style={styles.returnCard}>
+                        <AppText
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS.inProgress}
+                        >
+                          {t(
+                            REVIEW_REASONS.find(
+                              reason =>
+                                reason.key ===
+                                requestData.returnReasons[
+                                  requestData.returnReasons.length - 1
+                                ].reason,
+                            )?.value || '',
+                          )}
+                        </AppText>
+                        <AppText
+                          font={FONTS.Inter.Regular}
+                          color={COLORS.inProgress}
+                        >
+                          {requestData?.returnComments}
+                        </AppText>
+                      </View>
+                    </>
+                  )}
                 <View>
                   <View
                     style={{
@@ -390,14 +408,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   returnCard: {
-    backgroundColor: `${COLORS.returned}10`,
+    // backgroundColor: `${COLORS.inProgress}10`,
     padding: getScaleSize(16),
     marginHorizontal: getScaleSize(12),
-    marginTop: getScaleSize(10),
+    // marginTop: getScaleSize(10),
     // margin: getScaleSize(16),
     borderRadius: getScaleSize(8),
     borderWidth: 1,
-    borderColor: COLORS.returned,
+    borderColor: COLORS.inProgress,
   },
   container: {
     flex: 1,

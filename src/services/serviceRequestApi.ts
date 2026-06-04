@@ -603,6 +603,7 @@ export const serviceRequestApi = {
         `/service-requests/${requestId}/claim-return`,
         obj,
       );
+      console.log('response from return', response);
 
       const nestedData = response.data?.data || response.data;
       const nestedMessage = response.data?.message || response.message;
@@ -625,9 +626,7 @@ export const serviceRequestApi = {
         };
       }
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message;
+      const errorMessage = error.response?.data?.message || error.message;
       return {
         success: false,
         message: errorMessage,

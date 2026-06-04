@@ -10,7 +10,8 @@
     "test": "jest",
     "clean": "cd android && ./gradlew clean && cd ..",
     "apk": "npx react-native run-android --mode=release",
-    "build:android": "cd android && ./gradlew assembleRelease"
+    "build:android": "cd android && ./gradlew assembleRelease",
+    "release:build": "cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@notifee/react-native": "^9.1.8",

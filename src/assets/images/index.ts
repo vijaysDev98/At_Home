@@ -89,4 +89,9 @@ export const IMAGES = {
   language: require('./language.png'),
   play: require('./playstore.png'),
   ic_notification_filled: require('./ic_notification_filled.png'),
+  serviceClaimed: require('./serviceClaimed.png'),
+  formReturned: require('./formReturned.png'),
+  serviceCompleted: require('./serviceCompleted.png'),
+  serviceCancelled: require('./serviceCancelled.png'),
+  resetRequest: require('./resetRequest.png'),
 };
