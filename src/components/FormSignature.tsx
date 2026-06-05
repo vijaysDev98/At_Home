@@ -64,16 +64,12 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       try {
         const response = await signatureApi.getSignatureStatus(id);
         if (!response?.success) {
-          SHOW_TOAST(
-            response?.data?.message || response?.message,
-            'error',
-          );
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
           return false;
         }
 
         const data = response?.data;
-        const isCompleted =
-          data?.formStatus === FORM_STATUS.SIGNED;
+        const isCompleted = data?.formStatus === FORM_STATUS.SIGNED;
 
         if (isCompleted) {
           return true;
@@ -82,11 +78,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         await new Promise<void>(resolve => setTimeout(resolve, 2000));
         attempts++;
       } catch (error: any) {
-        SHOW_TOAST(
-          error?.response?.data?.message ||
-          error?.message,
-          'error',
-        );
+        SHOW_TOAST(error?.response?.data?.message || error?.message, 'error');
         return false;
       }
     }
@@ -178,10 +170,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       const response = await signatureApi.initiateSignature(requestId);
 
       if (!response?.success) {
-        SHOW_TOAST(
-          response?.data?.message || response?.message,
-          'error',
-        );
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
         onSigningEnd?.();
         dispatch(setLoading(false));
         return;
@@ -197,11 +186,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       // openSigningUrl owns the loader from this point forward
       await openSigningUrl(signingUrl, requestId);
     } catch (error: any) {
-      SHOW_TOAST(
-        error?.response?.data?.message ||
-        error?.message,
-        'error',
-      );
+      SHOW_TOAST(error?.response?.data?.message || error?.message, 'error');
       onSigningEnd?.();
       dispatch(setLoading(false));
     }
@@ -264,11 +249,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           >
             {capitalizeFirstLetter(
               requestData?.doctorId?.fullName ||
-              capitalizeFirstLetter(
-                requestData?.doctorId?.fName +
-                ' ' +
-                requestData?.doctorId?.lName,
-              ),
+                capitalizeFirstLetter(
+                  requestData?.doctorId?.fName +
+                    ' ' +
+                    requestData?.doctorId?.lName,
+                ),
             )}
           </AppText>
 

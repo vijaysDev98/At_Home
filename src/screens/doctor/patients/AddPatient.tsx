@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AppLoader,
@@ -65,6 +68,8 @@ const AppDatePicker = ({
 
 const AddPatient: React.FC = () => {
   const dispatch = useDispatch<any>();
+  const insets = useSafeAreaInsets();
+
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
   const { isLoading } = useSelector((state: RootState) => state.common);
@@ -334,14 +339,15 @@ const AddPatient: React.FC = () => {
       />
 
       <KeyboardAwareScrollView
-        // style={styles.scroll}
-        contentContainerStyle={{
-          // flexGrow: 1,
-          minHeight: Dimensions.get('window').height,
-        }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 16 }, // ← bottom safe area here
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        // enableOnAndroid
+        enableOnAndroid
+        style={{ flex: 1 }}
+        extraScrollHeight={20}
       >
         <View style={styles.container}>
           {/* Personal Information */}

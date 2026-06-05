@@ -8,7 +8,13 @@ import {
   View,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
-import { AppText, Input, LogoutConfirmationSheet, LanguagePickerSheet, AppSafeAreaView } from '../../../components';
+import {
+  AppText,
+  Input,
+  LogoutConfirmationSheet,
+  LanguagePickerSheet,
+  AppSafeAreaView,
+} from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -20,7 +26,10 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
 import { userLogout } from '../../../actions/auth/authAction';
-import { updateLanguage, fetchLanguage } from '../../../actions/language/languageAction';
+import {
+  updateLanguage,
+  fetchLanguage,
+} from '../../../actions/language/languageAction';
 import { countryCodes } from 'react-native-country-codes-picker';
 
 const ProviderProfile: React.FC = () => {
@@ -60,7 +69,11 @@ const ProviderProfile: React.FC = () => {
     languageSheetRef.current?.show();
   };
 
-  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+  const handleLanguageSelect = async (language: {
+    key: string;
+    value: string;
+    flag: string;
+  }) => {
     const { SHOW_TOAST } = require('../../../constant');
     const success = await dispatch(updateLanguage(language.key));
     if (success) {
@@ -75,7 +88,7 @@ const ProviderProfile: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView style={styles.safe} edges={['top']}>
+    <AppSafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -179,7 +192,12 @@ const ProviderProfile: React.FC = () => {
                 label={t(STRING.phoneNumber)}
                 value={providerPhone}
                 isCountryCode
-                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
+                countryCode={
+                  profileData?.country?.length &&
+                  profileData?.country?.length > 3
+                    ? profileData?.country?.slice(0, 2).toUpperCase()
+                    : profileData?.country
+                }
                 isLocked={false}
                 editable={false}
                 leftIcon={IMAGES.phone}
@@ -255,7 +273,11 @@ const ProviderProfile: React.FC = () => {
           <TouchableOpacity
             style={styles.changePasswordBtn}
             activeOpacity={0.85}
-            onPress={() => NavigationService.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
+            onPress={() =>
+              NavigationService.navigate(SCREENS.RESET_PASSWORD, {
+                isChangePassword: true,
+              })
+            }
           >
             <Image source={IMAGES.lock} style={styles.changePasswordIcon} />
             <AppText
@@ -266,8 +288,6 @@ const ProviderProfile: React.FC = () => {
               {t(STRING.changePassword)}
             </AppText>
           </TouchableOpacity>
-
-
 
           <TouchableOpacity
             style={styles.logoutBtn}
@@ -462,7 +482,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
   languageBtn: {
     marginHorizontal: getScaleSize(20),
@@ -485,7 +505,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
   inputContainer: {
     paddingHorizontal: 0,

@@ -234,7 +234,6 @@ const FormReviewScreen: React.FC = () => {
           </>
         )}
       </View>
-      <AppLoader visible={isLoading} signing={isSigning} />
     </AppSafeAreaView>
   );
 };

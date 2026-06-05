@@ -177,10 +177,7 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView
-      edges={['top']}
-      style={{ backgroundColor: COLORS.white }}
-    >
+    <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -197,8 +194,9 @@ const HomeScreen: React.FC = () => {
             ) : (
               <ProfileAvatar
                 size="medium"
-                name={`${profileData?.fName || ''} ${profileData?.lName || ''
-                  }`.trim()}
+                name={`${profileData?.fName || ''} ${
+                  profileData?.lName || ''
+                }`.trim()}
               />
             )}
             <View>

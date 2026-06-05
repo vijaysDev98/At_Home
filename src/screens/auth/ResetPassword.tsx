@@ -93,14 +93,14 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
       <AppLoader visible={isLoading} />
       <Header isBack style={{ paddingHorizontal: getScaleSize(16) }} />
       <KeyboardAwareScrollView
-        contentContainerStyle={{
-          flex: 1,
-          minHeight: Dimensions.get('window').height,
-        }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // { paddingBottom: insets.bottom + 16 }, // ← bottom safe area here
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        // extraScrollHeight={20}
+        style={{ flex: 1 }}
       >
         {/* <ScrollView
         contentContainerStyle={styles.scrollContent}

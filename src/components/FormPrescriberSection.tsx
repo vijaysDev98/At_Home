@@ -8,6 +8,7 @@ import { IMAGES } from '../assets/images';
 import { STRING } from '../constant';
 import { t } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { capitalizeFirstLetter } from '../constant/smallFunctions';
 
 export interface PrescriberSectionProps {
   state: any;
@@ -45,13 +46,13 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
         <Input
           isLocked
           label={t(STRING.firstName)}
-          value={state.prescriber_first_name}
+          value={capitalizeFirstLetter(state.prescriber_first_name || '')}
           style={[styles.inputField, { flex: 1 }]}
         />
         <Input
           isLocked
           label={t(STRING.lastName)}
-          value={state.prescriber_last_name}
+          value={capitalizeFirstLetter(state.prescriber_last_name || '')}
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>

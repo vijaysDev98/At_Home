@@ -33,7 +33,10 @@ import { AppDispatch, RootState } from '../../../redux/store';
 import { userLogout } from '../../../actions/auth/authAction';
 import { updateProfile } from '../../../actions/profile/profileAction';
 import { setLoading } from '../../../actions/common/commonSlice';
-import { updateLanguage, fetchLanguage } from '../../../actions/language/languageAction';
+import {
+  updateLanguage,
+  fetchLanguage,
+} from '../../../actions/language/languageAction';
 import { SHOW_TOAST } from '../../../constant';
 import { STRING } from '../../../constant/strings';
 import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
@@ -89,7 +92,11 @@ const DoctorProfile: React.FC = () => {
     languageSheetRef.current?.show();
   };
 
-  const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
+  const handleLanguageSelect = async (language: {
+    key: string;
+    value: string;
+    flag: string;
+  }) => {
     const success = await dispatch(updateLanguage(language.key));
     if (success) {
       SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
@@ -120,10 +127,14 @@ const DoctorProfile: React.FC = () => {
 
   const fName = profileData?.fName || '';
   const lName = profileData?.lName || '';
-  const fullName = `${capitalizeFirstLetter(fName)} ${capitalizeFirstLetter(lName)}`.trim();
+  const fullName = `${capitalizeFirstLetter(fName)} ${capitalizeFirstLetter(
+    lName,
+  )}`.trim();
   const userEmail = profileData?.email;
   const userPhone = profileData?.phoneNumber;
-  const userSpecialty = doctorSpecialities.find((spec) => spec.value === profileData?.specialty)?.label || profileData?.specialty;
+  const userSpecialty =
+    doctorSpecialities.find(spec => spec.value === profileData?.specialty)
+      ?.label || profileData?.specialty;
   const userRpps = profileData?.rppsNumber;
   const userFiness = profileData?.finessNumber;
   const userAddress = profileData?.businessAddress;
@@ -209,13 +220,13 @@ const DoctorProfile: React.FC = () => {
           {/* Form card */}
           <View style={styles.card}>
             <AppText
-              size={getScaleSize(12)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
               {t(STRING.personalInformation)}
             </AppText>
-            <View style={styles.fieldBlock}>
+            {/* <View style={styles.fieldBlock}>
               <Input
                 label={t(STRING.fName)}
                 style={styles.inputContainer}
@@ -234,7 +245,7 @@ const DoctorProfile: React.FC = () => {
                 editable={false}
                 leftIcon={IMAGES.person}
               />
-            </View>
+            </View> */}
             <View style={styles.fieldBlock}>
               <Input
                 label={t(STRING.emailAddress)}
@@ -245,11 +256,39 @@ const DoctorProfile: React.FC = () => {
                 leftIcon={IMAGES.email_icon}
               />
             </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={t(STRING.phoneNumber)}
+                value={userPhone}
+                isCountryCode
+                countryCode={
+                  profileData?.country?.length &&
+                  profileData?.country?.length > 3
+                    ? profileData?.country?.slice(0, 2).toUpperCase()
+                    : profileData?.country
+                }
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.phone}
+                style={styles.inputContainer}
+              />
+            </View>
+            <View style={styles.fieldBlock}>
+              <Input
+                label={t(STRING.businessAddress)}
+                value={capitalizeFirstLetter(userAddress || '')}
+                isLocked={false}
+                editable={false}
+                leftIcon={IMAGES.ic_pin}
+                multiline
+                style={styles.inputContainer}
+              />
+            </View>
           </View>
 
           <View style={styles.card}>
             <AppText
-              size={getScaleSize(12)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
@@ -274,32 +313,10 @@ const DoctorProfile: React.FC = () => {
                 value={userFiness}
                 isLocked={false}
                 editable={false}
-                leftIcon={IMAGES.hospital}
+                leftIcon={IMAGES.card}
               />
             </View>
-            <View style={styles.fieldBlock}>
-              <Input
-                label={t(STRING.businessAddress)}
-                value={capitalizeFirstLetter(userAddress || '')}
-                isLocked={false}
-                editable={false}
-                leftIcon={IMAGES.location_pin}
-                multiline
-                style={styles.inputContainer}
-              />
-            </View>
-            <View style={styles.fieldBlock}>
-              <Input
-                label={t(STRING.phoneNumber)}
-                value={userPhone}
-                isCountryCode
-                countryCode={profileData?.country?.length && profileData?.country?.length > 3 ? profileData?.country?.slice(0, 2).toUpperCase() : profileData?.country}
-                isLocked={false}
-                editable={false}
-                leftIcon={IMAGES.phone}
-                style={styles.inputContainer}
-              />
-            </View>
+
             <View style={styles.fieldBlock}>
               <Input
                 label={t(STRING.specialty)}
@@ -358,7 +375,11 @@ const DoctorProfile: React.FC = () => {
           <TouchableOpacity
             style={styles.changePasswordBtn}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate(SCREENS.RESET_PASSWORD, { isChangePassword: true })}
+            onPress={() =>
+              navigation.navigate(SCREENS.RESET_PASSWORD, {
+                isChangePassword: true,
+              })
+            }
           >
             <Image source={IMAGES.lock} style={styles.changePasswordIcon} />
             <AppText
@@ -741,7 +762,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
   languageBtn: {
     marginHorizontal: getScaleSize(20),
@@ -764,7 +785,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     tintColor: COLORS._526674,
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
 });
 

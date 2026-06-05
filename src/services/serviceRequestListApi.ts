@@ -52,12 +52,12 @@ export interface ServiceRequest {
   requestedTime: string;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
   formStatus?:
-  | 'draft'
-  | 'submitted'
-  | 'awaitingSignature'
-  | 'signed'
-  | 'returned'
-  | 'completed';
+    | 'draft'
+    | 'submitted'
+    | 'awaitingSignature'
+    | 'signed'
+    | 'returned'
+    | 'completed';
   createdAt: string;
   updatedAt: string;
   patient: PatientInfo;
@@ -178,13 +178,14 @@ export interface ServiceRequestDetail {
   requestedTime: string;
   initialNotes: string | null;
   status:
-  | 'draft'
-  | 'submitted'
-  | 'approved'
-  | 'rejected'
-  | 'inProgress'
-  | 'returned'
-  | 'completed';
+    | 'draft'
+    | 'submitted'
+    | 'approved'
+    | 'rejected'
+    | 'inProgress'
+    | 'returned'
+    | 'completed'
+    | 'cancelled';
   formStatus: string;
   formData: FormData;
   formTemplateId: string;
@@ -257,7 +258,7 @@ export const serviceRequestListApi = {
           params: {
             page: params.page || 1,
             size: params.size || 10,
-            search: params?.search || "",
+            search: params?.search || '',
           },
         },
       );

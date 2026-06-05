@@ -94,4 +94,5 @@ export const IMAGES = {
   serviceCompleted: require('./serviceCompleted.png'),
   serviceCancelled: require('./serviceCancelled.png'),
   resetRequest: require('./resetRequest.png'),
+  ic_pin: require('./ic_pin.png'),
 };

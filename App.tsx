@@ -41,19 +41,21 @@ const AppContent = () => {
 function App() {
   useEffect(() => {
     let unsubscribeForeground: (() => void) | undefined;
+    let unsubscribeBackground: (() => void) | undefined;
 
     const init = async () => {
       await createNotificationChannel();
       await requestNotificationPermission();
-
       unsubscribeForeground = listenForegroundMessages();
-      listenBackgroundMessages();
+      unsubscribeBackground = listenBackgroundMessages();
     };
 
     init();
 
+    // Cleanup listeners on unmount to prevent duplicates
     return () => {
       unsubscribeForeground?.();
+      unsubscribeBackground?.();
     };
   }, []);
 

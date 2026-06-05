@@ -84,7 +84,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
           verifyOtp({
             email,
             otp: otpCode,
-            fcmToken: token
+            fcmToken: token,
           }),
         );
       }
@@ -143,13 +143,10 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
   const seconds = String(timer % 60).padStart(2, '0');
 
   return (
-    <AppSafeAreaView edges style={styles.safe}>
+    <AppSafeAreaView style={styles.safe}>
       <AppLoader visible={isLoading} />
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior={undefined}>
         <KeyboardAwareScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"

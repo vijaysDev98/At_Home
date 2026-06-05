@@ -184,6 +184,8 @@ const DoctorNotification: React.FC = () => {
         return IMAGES.formReturned;
       case 'requestCompleted':
         return IMAGES.serviceCompleted;
+      case 'requestCancelled':
+        return IMAGES.serviceCancelled;
       case 'doctorRegistration':
         return IMAGES.ic_register_done;
       case 'serviceProviderAssignment':
@@ -259,6 +261,14 @@ const DoctorNotification: React.FC = () => {
           NavigationService.navigate(SCREENS.FORMS_SCREEN, {
             request: request,
             action: 'read',
+          });
+        return label;
+      case 'requestCancelled':
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+            request: request,
+            action: 'view',
           });
         return label;
       default:

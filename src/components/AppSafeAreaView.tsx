@@ -1,5 +1,4 @@
-
-import React, { ReactNode, useContext } from "react";
+import React, { ReactNode, useContext } from 'react';
 import {
   ImageBackground,
   ImageBackgroundProps,
@@ -7,10 +6,12 @@ import {
   StatusBar,
   View,
   ViewStyle,
-} from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS } from "../utils";
-
+} from 'react-native';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
+import { COLORS } from '../utils';
 
 interface AppSafeAreaViewProps {
   children: ReactNode;
@@ -19,7 +20,7 @@ interface AppSafeAreaViewProps {
   isBottomMargin?: boolean;
   isLight?: boolean;
   isFullScreen?: boolean;
-  edges?: any
+  edges?: any;
 }
 
 const AppSafeAreaView = ({
@@ -29,57 +30,55 @@ const AppSafeAreaView = ({
   isBottomMargin = true,
   isFullScreen = false,
   isLight,
-  edges
+  edges,
 }: AppSafeAreaViewProps) => {
-  const insets = useSafeAreaInsets()
+  const insets = useSafeAreaInsets();
 
-  return Platform.OS === "ios" ? (
+  return Platform.OS === 'ios' ? (
     <SafeAreaView
-      edges={edges || ["top", "right", "left", "bottom"]}
+      edges={edges || ['top', 'right', 'left', 'bottom']}
       style={[
         {
           flex: 1,
-          backgroundColor: COLORS.white
+          backgroundColor: COLORS.white,
           // paddingTop: 40,
           //   paddingTop: 10,
         },
         style,
       ]}
     >
-      <StatusBar translucent={false} barStyle={"dark-content"}
-      />
+      <StatusBar translucent={false} barStyle={'dark-content'} />
       {children}
     </SafeAreaView>
-  ) : (
-
-    isFullScreen ? (
-      <View style={[
+  ) : isFullScreen ? (
+    <View
+      style={[
         {
           flex: 1,
         },
         style,
-      ]}>
-        {children}
-      </View>
-    ) : (
-      <SafeAreaView
-        style={[
-          {
-            flex: 1,
-            backgroundColor: COLORS.white,
-          },
-          style,
-        ]}
-        edges={edges ? ["top", "right", "left", "bottom"] : ["top", "right", "left"]}
-      >
-        <StatusBar
-          translucent
-          backgroundColor={COLORS.white}
-          barStyle={"dark-content"}
-        />
-        {children}
-      </SafeAreaView>
-    )
+      ]}
+    >
+      {children}
+    </View>
+  ) : (
+    <SafeAreaView
+      style={[
+        {
+          flex: 1,
+          backgroundColor: COLORS.white,
+        },
+        style,
+      ]}
+      edges={edges || ['top', 'right', 'left', 'bottom']}
+    >
+      <StatusBar
+        translucent
+        backgroundColor={COLORS.white}
+        barStyle={'dark-content'}
+      />
+      {children}
+    </SafeAreaView>
   );
 };
 

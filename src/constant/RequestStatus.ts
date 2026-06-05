@@ -177,13 +177,11 @@ export const getFormScreenButtons = (
   action?: string,
   from?: string,
 ): FormScreenButtonConfig => {
-
-
   // ── Doctor flow ──────────────────────────────────────────────────────────
   if (role === 'doctor') {
     // View-only → no buttons
     if (action === 'view') return {};
-    if (from == "review") {
+    if (from == 'review') {
       return {
         left: {
           label: STRING.saveProgress,
@@ -291,6 +289,10 @@ export const getFormScreenButtons = (
       };
     }
 
+    if (status === REQUEST_STATUS.CANCELLED) {
+      return {};
+    }
+
     return {};
   }
 
@@ -315,6 +317,8 @@ export const getStatusBadgeColor = (status: string) => {
       return COLORS.returned; // Red
     case REQUEST_STATUS.COMPLETED:
       return COLORS.completed; // Green
+    case REQUEST_STATUS.CANCELLED:
+      return COLORS.cancelled;
     default:
       return COLORS.primary; // Gray
   }

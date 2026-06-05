@@ -294,7 +294,7 @@ const AvailableRequest: React.FC = () => {
         comments: details,
       };
 
-      const response = await serviceRequestApi.returnRequest(
+      const response = await serviceRequestApi.claimAndReturnRequest(
         selectedRequest.id,
         obj,
       );

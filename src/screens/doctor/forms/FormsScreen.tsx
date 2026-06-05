@@ -115,7 +115,8 @@ const FormsScreen: React.FC = () => {
     return (
       action === 'view' ||
       requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
-      requestData?.formStatus === FORM_STATUS.SIGNED
+      (requestData?.formStatus === FORM_STATUS.SIGNED &&
+        requestData?.status !== REQUEST_STATUS.RETURNED)
     );
   }, [action, requestData]);
 
@@ -317,7 +318,7 @@ const FormsScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppLoader visible={true} />
+            {/* <AppLoader visible={true} /> */}
           </View>
         ) : (
           <>
@@ -397,7 +398,6 @@ const FormsScreen: React.FC = () => {
           </>
         )}
       </View>
-      <AppLoader visible={isLoading} />
     </AppSafeAreaView>
   );
 };

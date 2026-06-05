@@ -28,7 +28,10 @@ import {
   Header,
 } from '../../components';
 import { ImagePickerContent } from '../../components/ImagePickerContent';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { STRING } from '../../constant/strings';
 import NavigationService from '../../navigation/NavigationService';
 import { doctorSpecialities } from '../../utils/dummyData';
@@ -86,6 +89,8 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
 
 const Register: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const insets = useSafeAreaInsets();
+
   const navigation = useNavigation();
   const route = useRoute<any>();
   const isEdit = route.params?.isEdit || false;
@@ -292,12 +297,15 @@ const Register: React.FC = () => {
     <AppSafeAreaView style={styles.container}>
       <AppLoader visible={isLoading} />
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 16 }, // ← bottom safe area here
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid
-        style={{ flex: 1, minHeight: Dimensions.get('window').height }}
-        extraScrollHeight={40}
+        style={{ flex: 1 }}
+        extraScrollHeight={20}
       >
         {/* <ScrollView
           contentContainerStyle={styles.scrollContent}

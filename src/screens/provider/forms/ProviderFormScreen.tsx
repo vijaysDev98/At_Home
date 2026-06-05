@@ -63,10 +63,6 @@ const ProviderFormScreen: React.FC = () => {
   const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const isComplete = (route.params as any)?.isComplete;
-  const readOnly =
-    action === 'view' ||
-    action === 'claim' ||
-    requestData?.formStatus == FORM_STATUS.AWAITING_SIGNATURE;
   const requestId = request?.id;
 
   const dispatch = useDispatch();
@@ -74,18 +70,40 @@ const ProviderFormScreen: React.FC = () => {
 
   // Extract service and patient from request object
   const patientData = request?.patient || {};
-
+  const [hasError, setHasError] = useState(false);
+  const [isFetched, setIsFetched] = useState(false);
   // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,
   );
-  const [hasError, setHasError] = useState(false);
-  const [isFetched, setIsFetched] = useState(false);
+
+  const readOnly = useMemo(
+    () =>
+      action === 'view' ||
+      action === 'claim' ||
+      requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
+      requestData?.formStatus == FORM_STATUS.SIGNED,
+    [action, requestData?.formStatus],
+  );
+
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
-  let isInProgress: boolean = request?.status == REQUEST_STATUS.IN_PROGRESS;
 
-  const serviceId = service?.id || service?._id || requestData?.serviceId._id;
+  const isInProgress = useMemo(
+    () => status === REQUEST_STATUS.IN_PROGRESS,
+    [status],
+  );
+
+  const isCancelled = useMemo(
+    () => status === REQUEST_STATUS.CANCELLED,
+    [status],
+  );
+
+  const serviceId =
+    service?.id ||
+    service?._id ||
+    requestData?.serviceId._id ||
+    requestData?.serviceId.id;
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
   const completeSheetRef = useRef<ActionSheetRef>(null);
@@ -167,11 +185,11 @@ const ProviderFormScreen: React.FC = () => {
     },
 
     // Unused doctor handlers (kept for type safety)
-    updateFormData: async () => { },
-    saveAsDraft: async () => { },
-    submitRequest: async () => { },
-    updateAndSign: async () => { },
-    updateAndResign: async () => { },
+    updateFormData: async () => {},
+    saveAsDraft: async () => {},
+    submitRequest: async () => {},
+    updateAndSign: async () => {},
+    updateAndResign: async () => {},
   };
 
   // Fetch service request details when in view mode
@@ -294,7 +312,11 @@ const ProviderFormScreen: React.FC = () => {
       <View style={styles.container}>
         <HeaderProvider
           title={
-            readOnly ? t(STRING.viewForm) : isInProgress ? t(STRING.service) : t(STRING.updateForm)
+            readOnly
+              ? t(STRING.viewForm)
+              : isInProgress
+              ? t(STRING.service)
+              : t(STRING.updateForm)
           }
           onViewFormPress={() => {
             openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');
@@ -314,7 +336,9 @@ const ProviderFormScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>{t(STRING.somethingWentWrong)}</AppText>
+            <AppText color={COLORS.primary}>
+              {t(STRING.somethingWentWrong)}
+            </AppText>
           </View>
         ) : (
           <>
@@ -349,7 +373,7 @@ const ProviderFormScreen: React.FC = () => {
             />
             {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
             {renderBottomBar()}
-            {isInProgress && isComplete && (
+            {!isCancelled && isInProgress && isComplete && (
               <AppButton
                 title={t(STRING.markAsCompleted)}
                 onPress={() => {

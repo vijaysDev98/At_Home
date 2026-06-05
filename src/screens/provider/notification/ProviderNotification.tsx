@@ -1,5 +1,4 @@
-import React, { useState, useCallback } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -11,7 +10,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { AppText, AppLoader } from '../../../components';
+import { SHOW_TOAST, STRING } from '../../../constant';
+import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
 import Header from '../../../components/HeaderDoctor';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { NotificationItem } from '../../../components/NotificationComponents';
@@ -23,7 +23,8 @@ import {
   Notification,
   PaginationInfo,
 } from '../../../services/notificationService';
-import { SHOW_TOAST, STRING } from '../../../constant';
+import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
 
 const ProviderNotification: React.FC = () => {
@@ -49,11 +50,7 @@ const ProviderNotification: React.FC = () => {
       setInitialLoading(true);
     }
 
-    const params = {
-      page: p,
-      size: 10,
-      status: statusFilter,
-    };
+    const params = { page: p, size: 10, status: statusFilter };
 
     try {
       const response = await getNotificationsService(params);
@@ -68,7 +65,6 @@ const ProviderNotification: React.FC = () => {
         }
         setPagination(pag);
 
-        // Fetch unread count separately
         const count = await getUnreadCountService();
         setUnreadCount(count);
       }
@@ -81,13 +77,11 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      setPage(1);
-      const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
-      fetchNotificationsData(1, statusFilter, true);
-    }, [activeTab]),
-  );
+  useEffect(() => {
+    setPage(1);
+    const statusFilter = activeTab === 'Unread' ? 'unread' : undefined;
+    fetchNotificationsData(1, statusFilter, true);
+  }, [activeTab]);
 
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -106,9 +100,30 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    setIsMarkingAllRead(true);
+    try {
+      const success = await markAllAsReadService();
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, status: 'read' as const })),
+        );
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
   const handleNotificationPress = async (item: Notification) => {
+    const action = getNotificationAction(item);
+    if (typeof action === 'object' && action?.onPress) {
+      action.onPress();
+    }
+
     if (item.status === 'unread') {
-      // Optimistically update the UI notification's status to 'read'
       setNotifications(prev =>
         prev.map(n =>
           n.id === item.id ? { ...n, status: 'read' as const } : n,
@@ -117,10 +132,9 @@ const ProviderNotification: React.FC = () => {
 
       const success = await markNotificationAsReadService(item.id);
       if (success) {
-        // Update unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } else {
-        // Rollback state if the API failed
+        // Rollback
         setNotifications(prev =>
           prev.map(n =>
             n.id === item.id ? { ...n, status: 'unread' as const } : n,
@@ -130,33 +144,45 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    setIsMarkingAllRead(true);
-    try {
-      const success = await markAllAsReadService();
-      if (success) {
-        // Optimistically update all notifications to 'read'
-        setNotifications(prev =>
-          prev.map(n => ({ ...n, status: 'read' as const })),
-        );
-        // Update unread count to 0
-        setUnreadCount(0);
-        // SHOW_TOAST('All notifications marked as read', 'success');
-      }
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    } finally {
-      setIsMarkingAllRead(false);
-    }
-  };
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'requestCancelled':
         return IMAGES.serviceCancelled;
-
+      case 'requestReset':
+        return IMAGES.resetRequest;
       default:
         return IMAGES.ic_announcement;
+    }
+  };
+
+  const getNotificationAction = (item: any) => {
+    let label = {
+      txt: '',
+      onPress: null as (() => void) | null,
+    };
+    const request = { id: item?.metadata?.requestId };
+
+    if (!request.id) return label;
+
+    switch (item.type) {
+      case 'requestCancelled':
+        // label.txt = t(STRING.viewRequest);
+        // label.onPress = () =>
+        //   NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+        //     request: request,
+        //     action: 'view',
+        //   });
+        return label;
+      case 'requestReset':
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+            request: request,
+            action: 'edit',
+          });
+        return label;
+      default:
+        return label;
     }
   };
 
@@ -169,14 +195,15 @@ const ProviderNotification: React.FC = () => {
         time={moment(item.createdAt).fromNow()}
         iconSource={getNotificationIcon(item.type)}
         unread={isUnread}
-        // action={getNotificationAction(item.type, item.actionUrl)}
+        action={getNotificationAction(item).txt}
         onPress={() => handleNotificationPress(item)}
+        onActionPress={() => handleNotificationPress(item)}
       />
     );
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
       <AppLoader
         visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
       />
@@ -201,7 +228,7 @@ const ProviderNotification: React.FC = () => {
               font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
               color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
             >
-              All
+              {t(STRING.all)}
             </AppText>
             {activeTab === 'All' && <View style={styles.activeBorder} />}
           </TouchableOpacity>
@@ -218,7 +245,7 @@ const ProviderNotification: React.FC = () => {
               }
               color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
             >
-              Unread
+              {t(STRING.unread)}
             </AppText>
             {notifications.some(n => n.status === 'unread') && (
               <View style={styles.unreadBadge} />
@@ -250,7 +277,7 @@ const ProviderNotification: React.FC = () => {
                 color={COLORS._6F767E}
                 align="center"
               >
-                No notifications found
+                {t(STRING.noNotificationFound)}
               </AppText>
             </View>
           )}
@@ -263,17 +290,13 @@ const ProviderNotification: React.FC = () => {
           }
         />
       </View>
-    </SafeAreaView>
+    </AppSafeAreaView>
   );
 };
 
 export default ProviderNotification;
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -281,14 +304,12 @@ const styles = StyleSheet.create({
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
-    paddingBottom: getScaleSize(10),
   },
   tabs: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 24,
-    paddingHorizontal: getScaleSize(20),
-    marginTop: getScaleSize(12),
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
@@ -315,7 +336,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    // paddingTop: getScaleSize(15),
   },
   scrollContent: {
     paddingBottom: 32,

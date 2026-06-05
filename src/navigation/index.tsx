@@ -41,8 +41,13 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
   ResetPassword:
-  | { email?: string; otp?: string; resetToken?: string; isChangePassword?: boolean }
-  | undefined;
+    | {
+        email?: string;
+        otp?: string;
+        resetToken?: string;
+        isChangePassword?: boolean;
+      }
+    | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
   DoctorRequest: undefined;
@@ -53,8 +58,8 @@ export type RootStackParamList = {
   FormReviewScreen: { request: any } | undefined;
   DoctorBottomTabs: NavigatorScreenParams<BottomTabParamList> | undefined;
   ProviderBottomTabs:
-  | NavigatorScreenParams<ProviderBottomTabParamList>
-  | undefined;
+    | NavigatorScreenParams<ProviderBottomTabParamList>
+    | undefined;
   ProviderAvailableRequests: undefined;
   AddPatient: undefined;
   PatientDetail: undefined;
@@ -161,12 +166,12 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.DOCTOR_BOTTOM_TABS}
           component={BottomTabs}
-          options={{ headerShown: false }}
+          options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen
           name={SCREENS.PROVIDER_BOTTOM_TABS}
           component={ProviderBottomTabs}
-          options={{ headerShown: false }}
+          options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen
           name={SCREENS.PROVIDER_AVAILABLE_REQUESTS}
@@ -176,7 +181,7 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.ADD_PATIENT}
           component={AddPatient}
-        // options={{ title: 'Add Patient' }}
+          // options={{ title: 'Add Patient' }}
         />
         <Stack.Screen
           name={SCREENS.PATIENT_DETAIL}

@@ -43,7 +43,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || (STRING.pleaseFillAllRequiredFields);
+      errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;
@@ -148,7 +148,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || (STRING.pleaseFillAllRequiredFields);
+      errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;
@@ -221,13 +221,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
 export const handleUpdateAndSign = async (
   params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
 ): Promise<{ success: boolean; error?: string }> => {
-  const {
-    dispatch,
-    state,
-    initialData,
-    validateForm,
-    errors = {},
-  } = params;
+  const { dispatch, state, initialData, validateForm, errors = {} } = params;
 
   const ok = validateForm();
   if (!ok) {
@@ -267,13 +261,7 @@ export const handleUpdateAndSign = async (
 export const handleSaveProgress = async (
   params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
 ): Promise<{ success: boolean; error?: string }> => {
-  const {
-    dispatch,
-    state,
-    initialData,
-    validateForm,
-    errors = {},
-  } = params;
+  const { dispatch, state, initialData, validateForm, errors = {} } = params;
 
   const ok = validateForm();
   if (!ok) {
@@ -329,13 +317,7 @@ export const handleSaveProgress = async (
 export const handleEditForm = async (
   params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
 ): Promise<{ success: boolean; error?: string }> => {
-  const {
-    dispatch,
-    state,
-    initialData,
-    validateForm,
-    errors = {},
-  } = params;
+  const { dispatch, state, initialData, validateForm, errors = {} } = params;
 
   const ok = validateForm();
   if (!ok) {
@@ -381,13 +363,7 @@ export const handleEditForm = async (
 export const handleSubmitForReview = async (
   params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
 ): Promise<{ success: boolean; error?: string }> => {
-  const {
-    dispatch,
-    state,
-    initialData,
-    validateForm,
-    errors = {},
-  } = params;
+  const { dispatch, state, initialData, validateForm, errors = {} } = params;
 
   const ok = validateForm();
   if (!ok) {
@@ -417,9 +393,12 @@ export const handleSubmitForReview = async (
     // }
 
     // 2. Submit for review
-    const response = await serviceRequestApi.providerSubmitForReview(requestId, {
-      formData: state,
-    });
+    const response = await serviceRequestApi.providerSubmitForReview(
+      requestId,
+      {
+        formData: state,
+      },
+    );
     dispatch(setLoading(false));
 
     if (response.success) {

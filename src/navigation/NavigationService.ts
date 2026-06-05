@@ -1,5 +1,5 @@
-import {CommonActions, StackActions} from '@react-navigation/native';
-import {DrawerActions} from '@react-navigation/native';
+import { CommonActions, StackActions } from '@react-navigation/native';
+import { DrawerActions } from '@react-navigation/native';
 
 let navigator: any;
 
@@ -25,7 +25,7 @@ function reset(route: string) {
   navigator.dispatch(
     CommonActions.reset({
       index: 0,
-      routes: [{name: route}],
+      routes: [{ name: route }],
     }),
   );
 }
@@ -44,6 +44,26 @@ function closeDrawer() {
 function replace(routeName: string, params?: object) {
   navigator.dispatch(StackActions.replace(routeName, params));
 }
+
+// ← Add this
+function getCurrentRoute(): string | undefined {
+  if (!navigator) return undefined;
+  const state = navigator.getRootState();
+  if (!state) return undefined;
+
+  // Recursively get the deepest focused route name
+  const getActiveRoute = (navState: any): string | undefined => {
+    if (!navState || !navState.routes) return undefined;
+    const route = navState.routes[navState.index];
+    if (route?.state) {
+      return getActiveRoute(route.state);
+    }
+    return route?.name;
+  };
+
+  return getActiveRoute(state);
+}
+
 // add other navigation functions that you need and export them
 
 export default {
@@ -56,4 +76,5 @@ export default {
   reset,
   push,
   replace,
+  getCurrentRoute,
 };

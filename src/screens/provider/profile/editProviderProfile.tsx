@@ -16,6 +16,7 @@ import {
   AppBottomSheet,
   AppLoader,
   AppSafeAreaView,
+  Header,
   Input,
   PrimaryButton,
 } from '../../../components';
@@ -153,14 +154,15 @@ const EditProviderProfile: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{t(STRING.editProfile)}</Text>
-
-            <Text style={styles.subtitle}>
-              {t(STRING.updateProviderProfileDetails)}
-            </Text>
-          </View>
+          <Header
+            style={{
+              marginHorizontal: getScaleSize(16),
+              marginBottom: getScaleSize(10),
+            }}
+            isBack={true}
+            title={t(STRING.editProfile)}
+            subTitle={t(STRING.updateProviderProfileDetails)}
+          />
 
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
@@ -187,7 +189,9 @@ const EditProviderProfile: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.avatarTip}>{t(STRING.tapToChangeProfilePhoto)}</Text>
+            <Text style={styles.avatarTip}>
+              {t(STRING.tapToChangeProfilePhoto)}
+            </Text>
           </View>
 
           {/* Provider Name */}

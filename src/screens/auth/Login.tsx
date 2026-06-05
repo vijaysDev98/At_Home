@@ -121,7 +121,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <KeyboardAwareScrollView
         enableOnAndroid={true}
         enableAutomaticScroll={true}
-        style={{ flex: 1, minHeight: Dimensions.get('window').height }}
+        style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
