@@ -507,6 +507,102 @@ export const LogoutConfirmationSheet = React.forwardRef<
 }));
 
 /**
+ * Delete Account Confirmation Bottom Sheet
+ */
+interface DeleteAccountConfirmationSheetProps {
+  onDeleteAccount: () => void;
+}
+
+export const DeleteAccountConfirmationSheet = React.forwardRef<
+  ActionSheetRef,
+  DeleteAccountConfirmationSheetProps
+>((({ onDeleteAccount }, ref) => {
+  const { t } = useTranslation();
+  const sheetRef = React.useRef<ActionSheetRef>(null);
+
+  React.useImperativeHandle(
+    ref,
+    () =>
+    ({
+      show: () => sheetRef.current?.show(),
+      hide: () => sheetRef.current?.hide(),
+      snapToOffset: (offset: number) =>
+        sheetRef.current?.snapToOffset(offset),
+      snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+    } as ActionSheetRef),
+  );
+
+  return (
+    <ActionSheet
+      ref={sheetRef}
+      gestureEnabled
+      containerStyle={[
+        styles.sheetContainer,
+        { backgroundColor: COLORS.white },
+      ]}
+      indicatorStyle={styles.indicator}
+    >
+      <View style={styles.sheetContent}>
+        <AppText
+          size={getScaleSize(18)}
+          font={FONTS.Inter.Bold}
+          color={COLORS._1A1D1F}
+          align={'center'}
+          style={{ marginBottom: getScaleSize(12) }}
+        >
+          {t(STRING.deleteAccount)}
+        </AppText>
+
+        <AppText
+          size={getScaleSize(15)}
+          color={COLORS._6F767E}
+          align={'center'}
+          style={{
+            lineHeight: getScaleSize(22),
+            marginBottom: getScaleSize(16),
+            marginHorizontal: getScaleSize(20),
+          }}
+        >
+          {t(STRING.deleteAccountConfirmation)}
+        </AppText>
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.cancelBtn, { flex: 1 }]}
+            onPress={() => sheetRef.current?.hide()}
+            activeOpacity={0.7}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t(STRING.cancel)}
+            </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sendBtn, { backgroundColor: COLORS.error, flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              sheetRef.current?.hide();
+              onDeleteAccount();
+            }}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.white}
+            >
+              {t(STRING.deleteAccount)}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ActionSheet>
+  );
+}));
+
+/**
  * Language Picker Bottom Sheet
  */
 export const LANGUAGES = [

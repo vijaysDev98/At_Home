@@ -101,6 +101,22 @@ const Input: React.FC<InputProps> = ({
       />
     ) : null);
 
+  const isNumericKeyboard =
+    rest.keyboardType === 'numeric' ||
+    rest.keyboardType === 'number-pad' ||
+    rest.keyboardType === 'decimal-pad' ||
+    rest.keyboardType === 'phone-pad';
+
+  // const handleChangeText = (text: string) => {
+  //   if (!rest.onChangeText) return;
+  //   if (isNumericKeyboard) {
+  //     const cleaned = text.replace(/[^0-9]/g, ''); // ✅ digits only, nothing else
+  //     rest.onChangeText(cleaned);
+  //   } else {
+  //     rest.onChangeText(text);
+  //   }
+  // };
+
   const selectedCountry = React.useMemo(() => {
     if (!countryCode) {
       return countryCodes.find(item => item.code === 'US');
@@ -192,6 +208,7 @@ const Input: React.FC<InputProps> = ({
 
         <TextInput
           {...rest}
+          // onChangeText={handleChangeText}
           editable={isLocked ? false : onPress ? false : rest.editable}
           style={[styles.input, isLocked && styles.inputLocked, inputStyle]}
           placeholderTextColor={placeholderTextColor || COLORS._1E293B80}

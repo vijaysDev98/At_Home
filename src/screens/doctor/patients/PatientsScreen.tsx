@@ -220,41 +220,46 @@ const PatientsScreen: React.FC = () => {
             />
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-          >
-            {PATIENT_FILTERS.map(chip => (
-              <TouchableOpacity
-                key={chip}
-                activeOpacity={0.8}
-                style={[
-                  styles.chip,
-                  selectedChip === chip
-                    ? styles.chipActive
-                    : styles.chipInactive,
-                ]}
-                onPress={() => setSelectedChip(chip)}
+          {/* Only show filters when there are patients */}
+          {patients.length > 0 && (
+            <View style={styles.filtersContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipsRow}
               >
-                <AppText
-                  color={
-                    selectedChip === chip
-                      ? COLORS.white
-                      : COLORS._6F767E
-                  }
-                  size={getScaleSize(12)}
-                  font={
-                    selectedChip === chip
-                      ? FONTS.Inter.SemiBold
-                      : FONTS.Inter.Regular
-                  }
-                >
-                  {t(chip)}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                {PATIENT_FILTERS.map(chip => (
+                  <TouchableOpacity
+                    key={chip}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.chip,
+                      selectedChip === chip
+                        ? styles.chipActive
+                        : styles.chipInactive,
+                    ]}
+                    onPress={() => setSelectedChip(chip)}
+                  >
+                    <AppText
+                      color={
+                        selectedChip === chip
+                          ? COLORS.white
+                          : COLORS._6F767E
+                      }
+                      size={getScaleSize(12)}
+                      font={
+                        selectedChip === chip
+                          ? FONTS.Inter.SemiBold
+                          : FONTS.Inter.Regular
+                      }
+                    >
+                      {t(chip)}
+                    </AppText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         <FlatList
@@ -353,9 +358,11 @@ const styles = StyleSheet.create({
     color: COLORS._1A1D1F,
     paddingVertical: 0,
   },
+  filtersContainer: {
+    marginTop: getScaleSize(12),
+  },
   chipsRow: {
     alignItems: 'center',
-    marginTop: getScaleSize(12),
     paddingHorizontal: getScaleSize(20),
   },
   chip: {

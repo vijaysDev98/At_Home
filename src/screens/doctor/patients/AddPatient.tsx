@@ -267,6 +267,11 @@ const AddPatient: React.FC = () => {
       newErrors.gender = t(STRING.genderRequired);
     }
 
+    // ✅ Only validate weight if user actually typed something
+    if (weight.trim() && (isNaN(Number(weight)) || Number(weight) <= 0)) {
+      newErrors.weight = t(STRING.enterValidWeight);
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -485,6 +490,7 @@ const AddPatient: React.FC = () => {
                   <Input
                     value={weight}
                     onChangeText={text => setWeight(text)}
+                    error={errors.weight}                             // ← add this
                     keyboardType="numeric"
                     placeholder="e.g. 70"
                     placeholderTextColor={COLORS._7A7A7A}
@@ -660,6 +666,7 @@ const AddPatient: React.FC = () => {
                   <Input
                     isMandatory
                     value={zip}
+                    keyboardType="number-pad"
                     onChangeText={setZip}
                     error={errors.zip}
                     inputWrapperStyle={[

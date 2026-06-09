@@ -41,6 +41,7 @@ const API_ROUTES = {
   getProfile: 'user/profile',
   updateProfile: 'user/profile',
   changePassword: 'user/changePassword',
+  deleteAccount: 'user/delete',
   uploadFile: 'common/file/upload',
   addPatient: 'patients',
   getPatients: 'patients',

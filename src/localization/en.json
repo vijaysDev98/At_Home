@@ -136,6 +136,8 @@
   "App Version": "App Version",
   "v2.4.1 (Build 842)": "v2.4.1 (Build 842)",
   "Log Out": "Log Out",
+  "Delete Account": "Delete Account",
+  "Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.": "Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.",
   "Date of Birth": "Date of Birth",
   "Phone Number": "Phone Number",
   "Street Address": "Street Address",
@@ -672,5 +674,6 @@
   "Septic wound": "Septic wound",
   "Summary": "Summary",
   "Signature Date": "Signature Date",
+  "Account Settings": "Account Settings",
   "Fill a cavity\nOccupy dead space\nPrevent premature superficial closure": "Fill a cavity\nOccupy dead space\nPrevent premature superficial closure"
 }

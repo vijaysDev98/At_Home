@@ -123,6 +123,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         mode="date"
         open={openDob}
         date={dobDate}
+        maximumDate={new Date()}
         onConfirm={d => {
           setOpenDob(false);
           setDobDate(d);

@@ -80,6 +80,8 @@ export const STRING = {
   ophthalmologist: 'Ophthalmologist',
   neurology: 'Neurology',
   other: 'Other',
+  enterValidDays: 'Enter valid days',
+  enterValidFrequency: 'Enter valid frequency',
 
   // ─── Auth: Login ─────────────────────────────────────────────
   welcomeBack: 'Welcome Back',
@@ -150,6 +152,7 @@ export const STRING = {
   requestId: 'Request ID',
   formStatus: 'Form Status',
   updateAndSign: 'Update & Sign',
+  enterValidWeight: 'Enter valid weight',
 
   // ─── Doctor Profile ──────────────────────────────────────────
   profile: 'Profile',
@@ -160,6 +163,8 @@ export const STRING = {
   appVersion: 'App Version',
   appVersionValue: 'v2.4.1 (Build 842)',
   logOut: 'Log Out',
+  deleteAccount: 'Delete Account',
+  deleteAccountConfirmation: 'Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.',
 
   // ─── Add Patient ─────────────────────────────────────────────
   addPatientTitle: 'Add Patient',
@@ -802,4 +807,5 @@ export const STRING = {
   exudate: 'Exudate',
   cavity: 'Cavity',
   septicWound: 'Septic wound',
+  accountSetting: 'Account Settings'
 };

@@ -21,6 +21,7 @@ import {
   AppLoader,
   ProfileAvatar,
   LogoutConfirmationSheet,
+  DeleteAccountConfirmationSheet,
   LanguagePickerSheet,
 } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
@@ -30,7 +31,7 @@ import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { userLogout } from '../../../actions/auth/authAction';
+import { userLogout, deleteAccount } from '../../../actions/auth/authAction';
 import { updateProfile } from '../../../actions/profile/profileAction';
 import { setLoading } from '../../../actions/common/commonSlice';
 import {
@@ -78,6 +79,7 @@ const DoctorProfile: React.FC = () => {
   }, [dispatch]);
 
   const logoutSheetRef = useRef<ActionSheetRef>(null);
+  const deleteAccountSheetRef = useRef<ActionSheetRef>(null);
   const languageSheetRef = useRef<ActionSheetRef>(null);
 
   const handleLogout = () => {
@@ -86,6 +88,14 @@ const DoctorProfile: React.FC = () => {
 
   const confirmLogout = () => {
     dispatch(userLogout());
+  };
+
+  const handleDeleteAccount = () => {
+    deleteAccountSheetRef.current?.show();
+  };
+
+  const confirmDeleteAccount = () => {
+    dispatch(deleteAccount());
   };
 
   const handleLanguagePicker = () => {
@@ -263,7 +273,7 @@ const DoctorProfile: React.FC = () => {
                 isCountryCode
                 countryCode={
                   profileData?.country?.length &&
-                  profileData?.country?.length > 3
+                    profileData?.country?.length > 3
                     ? profileData?.country?.slice(0, 2).toUpperCase()
                     : profileData?.country
                 }
@@ -357,7 +367,60 @@ const DoctorProfile: React.FC = () => {
             <RowItem label={STRING.privacyPolicy} chevron />
           </View> */}
 
-          <TouchableOpacity
+          <View style={styles.card}>
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._6B7280}
+            >
+              {t(STRING.accountSetting)}
+            </AppText>
+
+            <TouchableOpacity style={styles.settingRow} onPress={handleLanguagePicker}>
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.language} style={styles.settingIcon} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.language)}</AppText>
+              </View>
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>{currentLanguage.toUpperCase()}</AppText>
+            </TouchableOpacity>
+            <View style={styles.settingDivider} />
+
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() =>
+                navigation.navigate(SCREENS.RESET_PASSWORD, {
+                  isChangePassword: true,
+                })
+              }
+            >
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.lock} style={styles.settingIcon} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.changePassword)}</AppText>
+              </View>
+              {/* <Image source={IMAGES.back} style={styles.chevronIcon} /> */}
+            </TouchableOpacity>
+            <View style={styles.settingDivider} />
+
+
+            <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.arrow_back} style={[styles.settingIcon]} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.logOut)}</AppText>
+              </View>
+            </TouchableOpacity>
+            <View style={styles.settingDivider} />
+
+
+            <TouchableOpacity style={styles.settingRow} onPress={handleDeleteAccount}>
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.trash} style={[styles.settingIcon, { tintColor: COLORS.error }]} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} color={COLORS.error}>{t(STRING.deleteAccount)}</AppText>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* <TouchableOpacity
             style={styles.languageBtn}
             activeOpacity={0.85}
             onPress={handleLanguagePicker}
@@ -405,10 +468,29 @@ const DoctorProfile: React.FC = () => {
               {t(STRING.logOut)}
             </AppText>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.deleteAccountBtn}
+            activeOpacity={0.85}
+            onPress={handleDeleteAccount}
+          >
+            <Image source={IMAGES.arrow_back} style={styles.logoutIcon} />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.error}
+            >
+              {t(STRING.deleteAccount)}
+            </AppText>
+          </TouchableOpacity> */}
         </ScrollView>
         <LogoutConfirmationSheet
           ref={logoutSheetRef}
           onLogout={confirmLogout}
+        />
+        <DeleteAccountConfirmationSheet
+          ref={deleteAccountSheetRef}
+          onDeleteAccount={confirmDeleteAccount}
         />
         <LanguagePickerSheet
           ref={languageSheetRef}
@@ -421,6 +503,28 @@ const DoctorProfile: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  settingDivider: {
+    height: 1,
+    backgroundColor: COLORS._E5E7EB,
+    marginLeft: getScaleSize(30),
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: getScaleSize(7),
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+    tintColor: COLORS._526674,
+    marginRight: getScaleSize(12),
+  },
   safe: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -593,6 +697,23 @@ const styles = StyleSheet.create({
   logoutBtn: {
     marginHorizontal: getScaleSize(20),
     marginTop: getScaleSize(20),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    backgroundColor: COLORS.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  deleteAccountBtn: {
+    marginHorizontal: getScaleSize(20),
+    marginTop: getScaleSize(10),
     paddingVertical: getScaleSize(14),
     borderRadius: getScaleSize(14),
     borderWidth: 1,

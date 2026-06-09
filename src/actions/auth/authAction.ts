@@ -359,3 +359,28 @@ export const resendForgotPasswordOtp =
     }
   };
 
+export const deleteAccount = () => async (dispatch: AppDispatch) => {
+  try {
+    dispatch(setLoading(true));
+    const response: any = await API.Instance.delete(API.API_ROUTES.deleteAccount);
+    console.log("response from delete", response);
+
+    if (response?.status) {
+      SHOW_TOAST(response?.data?.message, 'success');
+    } else {
+      // Show error toast if API delete fails, but proceed with local deletion
+      SHOW_TOAST(response?.data?.message, 'error');
+    }
+  } catch (e: any) {
+    const errorMessage = e?.response?.data?.message || 'Failed to delete account';
+    SHOW_TOAST(errorMessage, 'error');
+  } finally {
+    // Always clear auth state and navigate to login, regardless of API success/failure
+    await Storage.clear();
+    dispatch({ type: 'USER_LOGOUT' });
+    dispatch(resetAuth());
+    NavigationService.reset(SCREENS.LOGIN);
+    dispatch(setLoading(false));
+  }
+};
+

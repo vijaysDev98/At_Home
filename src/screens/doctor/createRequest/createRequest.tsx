@@ -280,41 +280,44 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                   value={search}
                   onChangeText={setSearch}
                 />
-                <View style={{ paddingBottom: getScaleSize(10) }}>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filters}
-                  >
-                    {PATIENT_FILTERS.map(chip => (
-                      <TouchableOpacity
-                        key={chip}
-                        activeOpacity={0.8}
-                        style={[
-                          styles.chip,
-                          selectedChip === chip
-                            ? styles.chipActive
-                            : styles.chipInactive,
-                        ]}
-                        onPress={() => setSelectedChip(chip)}
-                      >
-                        <AppText
-                          color={
-                            selectedChip === chip ? COLORS.white : COLORS._6F767E
-                          }
-                          size={getScaleSize(12)}
-                          font={
+                {/* Only show filters when there are patients */}
+                {patients.length > 0 && (
+                  <View style={{ paddingBottom: getScaleSize(10) }}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.filters}
+                    >
+                      {PATIENT_FILTERS.map(chip => (
+                        <TouchableOpacity
+                          key={chip}
+                          activeOpacity={0.8}
+                          style={[
+                            styles.chip,
                             selectedChip === chip
-                              ? FONTS.Inter.SemiBold
-                              : FONTS.Inter.Regular
-                          }
+                              ? styles.chipActive
+                              : styles.chipInactive,
+                          ]}
+                          onPress={() => setSelectedChip(chip)}
                         >
-                          {t(chip)}
-                        </AppText>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
+                          <AppText
+                            color={
+                              selectedChip === chip ? COLORS.white : COLORS._6F767E
+                            }
+                            size={getScaleSize(12)}
+                            font={
+                              selectedChip === chip
+                                ? FONTS.Inter.SemiBold
+                                : FONTS.Inter.Regular
+                            }
+                          >
+                            {t(chip)}
+                          </AppText>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
               {/* SCROLLABLE AREA ONLY */}
               <ScrollView

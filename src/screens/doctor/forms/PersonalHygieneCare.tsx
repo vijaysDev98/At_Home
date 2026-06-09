@@ -35,6 +35,7 @@ import {
 } from './formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 export interface PersonalHygieneCareProps {
   serviceId?: string;
@@ -55,6 +56,15 @@ const vitalSignsOptions = [
 ];
 
 const dressingType = ['Simple', 'Complex'];
+
+const keyToErrorMap: Record<string, string> = {
+  patient_last_name: 'patientLastName',
+  patient_first_name: 'patientFirstName',
+  prescription_date: 'prescriptionDate',
+  glucose_frequency: 'glucoseFrequency',
+  suture_removal_days: 'sutureRemovalDays',
+  catheter_frequency: 'catheterFrequency',
+};
 
 export interface PersonalHygieneCareRef {
   validateAndSubmit: () => Promise<void>;
@@ -97,8 +107,8 @@ const PersonalHygieneCare = forwardRef<
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    prescriber_last_name: profileData?.lName || '',
-    prescriber_first_name: profileData?.fName || '',
+    prescriber_last_name: capitalizeFirstLetter(profileData?.lName || '') || '',
+    prescriber_first_name: capitalizeFirstLetter(profileData?.fName || '') || '',
     prescription_date: moment().format('DD/MM/YYYY'),
 
     // Daily Care (Home Nurse)
@@ -133,9 +143,14 @@ const PersonalHygieneCare = forwardRef<
     ald_condition_details: '',
 
     // Medical Certification
-    doctor_name: profileData?.fName + ' ' + profileData?.lName || '',
+    doctor_name:
+      capitalizeFirstLetter(profileData?.fName || '') +
+      ' ' +
+      capitalizeFirstLetter(profileData?.lName || ''),
     certified_patient_name:
-      selectedPatient?.fName + ' ' + selectedPatient?.lName || '',
+      capitalizeFirstLetter(selectedPatient?.fName || '') +
+      ' ' +
+      capitalizeFirstLetter(selectedPatient?.lName || ''),
     care_required: false,
     prescription_duration_days: '',
     renewable: false,
@@ -164,12 +179,8 @@ const PersonalHygieneCare = forwardRef<
             setErrors(prevErrs => {
               const ne = { ...prevErrs } as any;
               changedKeys.forEach(k => {
-                if (k === 'patient_last_name' && ne.patientLastName)
-                  delete ne.patientLastName;
-                if (k === 'patient_first_name' && ne.patientFirstName)
-                  delete ne.patientFirstName;
-                if (k === 'prescription_date' && ne.prescriptionDate)
-                  delete ne.prescriptionDate;
+                const errKey = keyToErrorMap[k];
+                if (errKey && ne[errKey]) delete ne[errKey];
               });
               return ne;
             });
@@ -186,10 +197,8 @@ const PersonalHygieneCare = forwardRef<
           setErrors(prevErrs => {
             const ne = { ...prevErrs } as any;
             changedKeys.forEach(k => {
-              if (k === 'patient_last_name' && ne.patientLastName) delete ne.patientLastName;
-              if (k === 'patient_first_name' && ne.patientFirstName) delete ne.patientFirstName;
-              if (k === 'prescription_date' && ne.prescriptionDate)
-                delete ne.prescriptionDate;
+              const errKey = keyToErrorMap[k];
+              if (errKey && ne[errKey]) delete ne[errKey];
             });
             return ne;
           });
@@ -202,19 +211,39 @@ const PersonalHygieneCare = forwardRef<
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    // Required: patient_last_name
-    if (!state?.patient_last_name || !state.patient_last_name.trim()) {
-      newErrors.patientLastName = t(STRING.lastNameRequired);
-    }
-
-    // Required: patient_first_name
-    if (!state?.patient_first_name || !state.patient_first_name.trim()) {
+    // Basic Information
+    if (!state.patient_first_name?.trim()) {
       newErrors.patientFirstName = t(STRING.firstNameRequired);
     }
 
-    // Required: prescription_date
-    if (!state?.prescription_date) {
+    if (!state.patient_last_name?.trim()) {
+      newErrors.patientLastName = t(STRING.lastNameRequired);
+    }
+
+    // prescription_date is pre-filled but still guard it
+    if (!state.prescription_date?.trim()) {
       newErrors.prescriptionDate = t(STRING.prescriptionDateIsRequired);
+    }
+
+    // Treatment Administration — dependsOn glucose_monitoring
+    if (state.glucose_monitoring) {
+      if (!state.glucose_frequency?.trim() || Number(state.glucose_frequency) <= 0) {
+        newErrors.glucoseFrequency = t(STRING.enterValidFrequency);
+      }
+    }
+
+    // Procedures — dependsOn suture_removal
+    if (state.suture_removal) {
+      if (!state.suture_removal_days?.trim() || Number(state.suture_removal_days) <= 0) {
+        newErrors.sutureRemovalDays = t(STRING.enterValidDays);
+      }
+    }
+
+    // Procedures — dependsOn urinary_catheter_care
+    if (state.urinary_catheter_care) {
+      if (!state.catheter_frequency?.trim() || Number(state.catheter_frequency) <= 0) {
+        newErrors.catheterFrequency = t(STRING.enterValidFrequency);
+      }
     }
 
     setErrors(newErrors);
@@ -397,7 +426,7 @@ const PersonalHygieneCare = forwardRef<
 
           <View style={styles.row}>
             <Input
-              isLocked={readOnly}
+              isLocked={true}
               label={t(STRING.firstName)}
               placeholder={t(STRING.enterFirstName)}
               value={state.prescriber_first_name}
@@ -405,7 +434,7 @@ const PersonalHygieneCare = forwardRef<
               style={[styles.inputField, { flex: 1 }]}
             />
             <Input
-              isLocked={readOnly}
+              isLocked={true}
               label={t(STRING.lastName)}
               placeholder={t(STRING.enterLastName)}
               value={state.prescriber_last_name}
@@ -421,7 +450,7 @@ const PersonalHygieneCare = forwardRef<
               setOpen(true);
             }}
             editable={false}
-            label={t(STRING.date)}
+            label={t(STRING.prescriptionDate)}
             placeholder={t(STRING.ddmmyyyy)}
             value={state.prescription_date}
             style={styles.inputField}
@@ -525,6 +554,7 @@ const PersonalHygieneCare = forwardRef<
               placeholder="0"
               keyboardType="numeric"
               style={styles.inputField}
+              error={errors.glucoseFrequency}   // ← add
             />
           </View>
         </View>
@@ -618,6 +648,7 @@ const PersonalHygieneCare = forwardRef<
               placeholder="0"
               keyboardType="numeric"
               style={styles.inputField}
+              error={errors.sutureRemovalDays}
             />
           )}
 
@@ -645,6 +676,7 @@ const PersonalHygieneCare = forwardRef<
               placeholder="0"
               keyboardType="numeric"
               style={styles.inputField}
+              error={errors.catheterFrequency}
             />
           )}
 
@@ -729,7 +761,7 @@ const PersonalHygieneCare = forwardRef<
           {renderSectionHeader(t(STRING.medicalCertification))}
 
           <Input
-            isLocked={readOnly}
+            isLocked={true}
             label={t(STRING.doctorName)}
             value={state.doctor_name}
             onChangeText={value => setFormState({ doctor_name: value })}

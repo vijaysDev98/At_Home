@@ -136,6 +136,8 @@
   "App Version": "Version de l’application",
   "v2.4.1 (Build 842)": "v2.4.1 (Build 842)",
   "Log Out": "Se déconnecter",
+  "Delete Account": "Supprimer le compte",
+  "Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.": "Êtes-vous sûr de vouloir supprimer votre compte ? Toutes vos données seront définitivement supprimées et cette action ne peut être annulée.",
   "Date of Birth": "Date de naissance",
   "Phone Number": "Numéro de téléphone",
   "Street Address": "Adresse",
@@ -670,5 +672,6 @@
   "Septic wound": "Plaie septique",
   "Summary": "Résumé",
   "Signature Date": "Date de signature",
+  "Account Settings": "Paramètres du compte",
   "Fill a cavity\nOccupy dead space\nPrevent premature superficial closure": "Remplir une cavité\nOccuper un espace mort\nPrévenir la fermeture prématurée superficielle"
 }

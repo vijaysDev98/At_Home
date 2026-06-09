@@ -12,6 +12,7 @@ import {
   AppText,
   Input,
   LogoutConfirmationSheet,
+  DeleteAccountConfirmationSheet,
   LanguagePickerSheet,
   AppSafeAreaView,
 } from '../../../components';
@@ -25,7 +26,7 @@ import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
-import { userLogout } from '../../../actions/auth/authAction';
+import { userLogout, deleteAccount } from '../../../actions/auth/authAction';
 import {
   updateLanguage,
   fetchLanguage,
@@ -59,10 +60,19 @@ const ProviderProfile: React.FC = () => {
   const providerAssignedServices = profileData?.assignedServices || [];
 
   const logoutSheetRef = useRef<ActionSheetRef>(null);
+  const deleteAccountSheetRef = useRef<ActionSheetRef>(null);
   const languageSheetRef = useRef<ActionSheetRef>(null);
 
   const handleLogout = () => {
     logoutSheetRef.current?.show();
+  };
+
+  const handleDeleteAccount = () => {
+    deleteAccountSheetRef.current?.show();
+  };
+
+  const confirmDeleteAccount = () => {
+    dispatch(deleteAccount());
   };
 
   const handleLanguagePicker = () => {
@@ -194,7 +204,7 @@ const ProviderProfile: React.FC = () => {
                 isCountryCode
                 countryCode={
                   profileData?.country?.length &&
-                  profileData?.country?.length > 3
+                    profileData?.country?.length > 3
                     ? profileData?.country?.slice(0, 2).toUpperCase()
                     : profileData?.country
                 }
@@ -256,7 +266,86 @@ const ProviderProfile: React.FC = () => {
               ))}
             </View>
           )}
-          <TouchableOpacity
+
+          <View style={styles.sectionCard}>
+            <View style={styles.servicesHeaderLeft}>
+              {/* <View style={styles.sectionIconWrap}> */}
+              <Image source={IMAGES.card} style={styles.sectionIcon} />
+              {/* </View> */}
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.accountSetting)}
+              </AppText>
+            </View>
+            <View style={styles.divider} />
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleLanguagePicker}
+            >
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.language} style={styles.settingIcon} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.language)}</AppText>
+              </View>
+
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>{currentLanguage.toUpperCase()}</AppText>
+
+            </TouchableOpacity>
+
+            <View style={styles.settingDivider} />
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() =>
+                NavigationService.navigate(SCREENS.RESET_PASSWORD, {
+                  isChangePassword: true,
+                })
+              }
+            >
+              <View style={styles.settingLeft}>
+                <Image source={IMAGES.lock} style={styles.settingIcon} />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.changePassword)}</AppText>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.settingDivider} />
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleLogout}
+            >
+              <View style={styles.settingLeft}>
+                <Image
+                  source={IMAGES.arrow_back}
+                  style={[styles.settingIcon]}
+                />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} >
+                  {t(STRING.logOut)}
+                </AppText>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.settingDivider} />
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleDeleteAccount}
+            >
+              <View style={styles.settingLeft}>
+                <Image
+                  source={IMAGES.trash}
+                  style={[styles.settingIcon, { tintColor: COLORS.error }]}
+                />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} color={COLORS.error}>
+                  {t(STRING.deleteAccount)}
+                </AppText>
+              </View>
+            </TouchableOpacity>
+          </View>
+          {/* <TouchableOpacity
             style={styles.languageBtn}
             activeOpacity={0.85}
             onPress={handleLanguagePicker}
@@ -302,11 +391,15 @@ const ProviderProfile: React.FC = () => {
             >
               {t(STRING.logOut)}
             </AppText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
         <LogoutConfirmationSheet
           ref={logoutSheetRef}
           onLogout={confirmLogout}
+        />
+        <DeleteAccountConfirmationSheet
+          ref={deleteAccountSheetRef}
+          onDeleteAccount={confirmDeleteAccount}
         />
         <LanguagePickerSheet
           ref={languageSheetRef}
@@ -321,6 +414,31 @@ const ProviderProfile: React.FC = () => {
 export default ProviderProfile;
 
 const styles = StyleSheet.create({
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: getScaleSize(8),
+  },
+
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  settingIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+    tintColor: COLORS._526674,
+    marginRight: getScaleSize(12),
+  },
+
+  settingDivider: {
+    height: 1,
+    backgroundColor: COLORS._E5E7EB,
+    marginLeft: getScaleSize(30),
+  },
   safe: {
     flex: 1,
     backgroundColor: COLORS.white,
