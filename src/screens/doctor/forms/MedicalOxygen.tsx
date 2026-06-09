@@ -122,24 +122,22 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
       // Prescription Details - Medical Oxygen
       primary_oxygen_source: '',
-      ambulatory_cylinder: false,
+      ambulatory_cylinder: null as boolean | null,
       delivery_method: '',
-      duration_hours_per_day: '',
+      duration_value: '',
+      duration_unit: '',
       flow_rate_rest: '',
       flow_rate_exertion: '',
-      humidifier_required: null,
-      backup_source: null,
-      mobility_source: null,
-      pulse_oximeter_provided: null,
-      non_kinking_tubing: null,
+      humidifier_required: null as boolean | null,
+      backup_source: false,
+      mobility_source: false,
+      pulse_oximeter_provided: false,
+      non_kinking_tubing: false,
       target_spo2: '',
-      contact_phone: '',
-
-      // Patient Instructions
-      instructions_acknowledged: false,
+      prescriber_contact_phone: '',
 
       // Palliative Care
-      palliative_care: false,
+      palliative_care: null as boolean | null,
 
       // Signature
       physician_signature: '',
@@ -428,14 +426,31 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
             </View>
 
-            <AppCheckBox
-              disabled={readOnly}
-              value={state.ambulatory_cylinder}
-              onValueChange={value =>
-                setFormState({ ambulatory_cylinder: value })
-              }
-              label={STRING.ambulatoryCylinder}
-            />
+            <View style={styles.checkboxGroup}>
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS._1A1D1F}
+                font={FONTS.Inter.Medium}
+              >
+                {t(STRING.ambulatoryCylinder)}
+              </AppText>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.ambulatory_cylinder === true}
+                onValueChange={value =>
+                  setFormState({ ambulatory_cylinder: value ? true : null })
+                }
+                label={t(STRING.yes)}
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.ambulatory_cylinder === false && state.ambulatory_cylinder !== null}
+                onValueChange={value =>
+                  setFormState({ ambulatory_cylinder: value ? false : null })
+                }
+                label={t(STRING.no)}
+              />
+            </View>
 
             <View style={styles.checkboxGroup}>
               <AppText
@@ -470,18 +485,42 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
             </View>
 
-            {/* Duration input */}
+            {/* Duration value + unit */}
             <Input
               isLocked={readOnly}
-              label={t(STRING.durationHoursPerDay)}
-              value={state.duration_hours_per_day}
-              onChangeText={value =>
-                setFormState({ duration_hours_per_day: value })
-              }
+              label={t(STRING.durationOxygen)}
+              value={state.duration_value}
+              onChangeText={value => setFormState({ duration_value: value })}
               placeholder={t(STRING.enterDuration)}
               keyboardType="numeric"
               style={styles.inputField}
             />
+
+            <View style={styles.checkboxGroup}>
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS._1A1D1F}
+                font={FONTS.Inter.Medium}
+              >
+                {t(STRING.durationUnit)}
+              </AppText>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.duration_unit === 'hours_per_day'}
+                onValueChange={value =>
+                  setFormState({ duration_unit: value ? 'hours_per_day' : '' })
+                }
+                label={t(STRING.hoursPerDay)}
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.duration_unit === 'month'}
+                onValueChange={value =>
+                  setFormState({ duration_unit: value ? 'month' : '' })
+                }
+                label={t(STRING.month)}
+              />
+            </View>
 
             {/* Flow rate inputs */}
             <Input
@@ -506,15 +545,32 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               style={styles.inputField}
             />
 
-            {/* Humidifier checkbox */}
-            <AppCheckBox
-              disabled={readOnly}
-              value={state.humidifier_required}
-              onValueChange={value =>
-                setFormState({ humidifier_required: value })
-              }
-              label={t(STRING.humidifierRequired)}
-            />
+            {/* Humidifier Yes/No radio */}
+            <View style={styles.checkboxGroup}>
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS._1A1D1F}
+                font={FONTS.Inter.Medium}
+              >
+                {t(STRING.humidifierRequired)}
+              </AppText>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.humidifier_required === true}
+                onValueChange={value =>
+                  setFormState({ humidifier_required: value ? true : null })
+                }
+                label={t(STRING.yes)}
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.humidifier_required === false && state.humidifier_required !== null}
+                onValueChange={value =>
+                  setFormState({ humidifier_required: value ? false : null })
+                }
+                label={t(STRING.no)}
+              />
+            </View>
 
             {/* Backup and mobility checkboxes */}
             <AppCheckBox
@@ -562,12 +618,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               style={styles.inputField}
             />
 
-            {/* Emergency contact phone */}
+            {/* Prescriber contact phone */}
             <Input
               isLocked={readOnly}
-              label={t(STRING.emergencyContactPhone)}
-              value={state.contact_phone}
-              onChangeText={value => setFormState({ contact_phone: value })}
+              label={t(STRING.prescriberContactPhone)}
+              value={state.prescriber_contact_phone}
+              onChangeText={value =>
+                setFormState({ prescriber_contact_phone: value })
+              }
               placeholder={t(STRING.enterPhoneNumber)}
               keyboardType="phone-pad"
               style={styles.inputField}
@@ -623,25 +681,44 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             <AppText style={styles.instructionText}>
               {t(STRING.NEVERkeepTheEquipmentNearHeatSources)}
             </AppText>
-            <AppCheckBox
-              disabled={readOnly}
-              value={state.instructions_acknowledged}
-              onValueChange={value =>
-                setFormState({ instructions_acknowledged: value })
-              }
-              label={t(STRING.patientacknowledgesinstructions)}
-            />
           </View>
 
           {/* Palliative Care Section */}
-          <AppCheckBox
-            disabled={readOnly}
-            value={state.palliative_care}
-            onValueChange={value => setFormState({ palliative_care: value })}
-            label={t(STRING.partOfPalliativeCare)}
-          />
-
-          {/* Instructions Acknowledged */}
+          <View style={styles.card}>
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+              style={styles.sectionTitle}
+            >
+              {t(STRING.palliativeCareSection)}
+            </AppText>
+            <View style={styles.checkboxGroup}>
+              <AppText
+                size={getScaleSize(14)}
+                color={COLORS._1A1D1F}
+                font={FONTS.Inter.Medium}
+              >
+                {t(STRING.palliativeCareLabel)}
+              </AppText>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.palliative_care === true}
+                onValueChange={value =>
+                  setFormState({ palliative_care: value ? true : null })
+                }
+                label={t(STRING.yes)}
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.palliative_care === false && state.palliative_care !== null}
+                onValueChange={value =>
+                  setFormState({ palliative_care: value ? false : null })
+                }
+                label={t(STRING.no)}
+              />
+            </View>
+          </View>
 
 
           {/* <FormSignature readOnly={readOnly} /> */}
@@ -657,7 +734,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           open={open}
           date={date}
           mode="date"
-          minimumDate={new Date()}
+          // minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
             if (pickerType) {

@@ -10,6 +10,8 @@ export { default as RequestSummaryCard } from './RequestSummaryCard';
 export { default as FormPatientSection } from './FormPatientSection';
 export { default as FormPrescriberSection } from './FormPrescriberSection';
 export { default as FormFacilitySection } from './FormFacilitySection';
+export { default as FormFacilityAndContextSection } from './FormFacilityAndContextSection';
+export { default as FormPrescriptionContextSection } from './FormPrescriptionContextSection';
 export { default as FormPrescriptionDetails } from './FormPrescriptionDetails';
 export { default as AppDurationPicker } from './AppDurationPicker';
 export type { AppDurationPickerRef } from './AppDurationPicker';

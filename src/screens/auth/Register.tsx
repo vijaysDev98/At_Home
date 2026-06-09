@@ -44,6 +44,8 @@ import { useRoute } from '@react-navigation/native';
 import { useSimpleImagePicker } from '../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../services/uploadService';
 import {
+  getPrivacyPolicy,
+  getTermsOfService,
   IMAGE_BASE_URL,
   PRIVACY_POLICY_URL,
   TERMS_OF_SERVICE_URL,
@@ -90,6 +92,7 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onToggle }) => {
 const Register: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const insets = useSafeAreaInsets();
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const navigation = useNavigation();
   const route = useRoute<any>();
@@ -564,14 +567,18 @@ const Register: React.FC = () => {
                     {t(STRING.iAgreeToThe)}{' '}
                     <Text
                       style={styles.link}
-                      onPress={() => openInBrowser(PRIVACY_POLICY_URL)}
+                      onPress={() =>
+                        openInBrowser(getPrivacyPolicy(currentLanguage))
+                      }
                     >
                       {t(STRING.privacyPolicy)}
                     </Text>{' '}
                     {t(STRING.and)}{' '}
                     <Text
                       style={styles.link}
-                      onPress={() => openInBrowser(TERMS_OF_SERVICE_URL)}
+                      onPress={() =>
+                        openInBrowser(getTermsOfService(currentLanguage))
+                      }
                     >
                       {t(STRING.termsOfService)}
                     </Text>

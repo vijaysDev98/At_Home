@@ -43,6 +43,7 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
+  FormPrescriptionContextSection,
 } from '../../../components';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
@@ -108,6 +109,9 @@ const FreePrescriptionForm = forwardRef<
     hospital_name: profileData?.facilityName || '',
     hospital_address: profileData?.businessAddress || '',
     finess_number: profileData?.finessNumber || '',
+
+    // Prescription Context
+    forms_for: '',
 
     // Additional Notes
     free_text: '',
@@ -347,8 +351,15 @@ const FreePrescriptionForm = forwardRef<
 
           <FormPrescriberSection state={state} setState={setFormState} />
 
-          {/* FACILITY SECTION */}
+          {/* FACILITY INFORMATION */}
           <FormFacilitySection
+            readOnly={readOnly}
+            state={state}
+            setState={setFormState}
+          />
+
+          {/* PRESCRIPTION CONTEXT */}
+          <FormPrescriptionContextSection
             readOnly={readOnly}
             state={state}
             setState={setFormState}
@@ -363,6 +374,7 @@ const FreePrescriptionForm = forwardRef<
               value={state.free_text}
               onChangeText={text => setFormState({ free_text: text })}
               maxLength={1000}
+              inputWrapperStyle={{ minHeight: getScaleSize(120) }}
               style={[styles.inputField]}
             />
           </View>

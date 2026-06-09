@@ -10,6 +10,7 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import { AppSafeAreaView } from './AppSafeAreaView';
 
 interface AppLoaderProps {
   visible: boolean;
@@ -31,8 +32,9 @@ const AppLoader: React.FC<AppLoaderProps> = ({
       visible={visible}
       statusBarTranslucent
     >
-      <View
-        pointerEvents={signing ? 'auto' : 'none'}
+      <AppSafeAreaView
+        isFullScreen={true}
+        // pointerEvents={signing ? 'auto' : 'none'}
         style={styles.container}
       >
         <View style={styles.loaderWrapper}>
@@ -51,7 +53,7 @@ const AppLoader: React.FC<AppLoaderProps> = ({
             </AppText>
           )}
         </View>
-      </View>
+      </AppSafeAreaView>
     </Modal>
   );
 };

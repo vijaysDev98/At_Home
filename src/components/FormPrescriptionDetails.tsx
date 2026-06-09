@@ -18,6 +18,7 @@ export interface FormPrescriptionDetailsProps {
   setState: (state: any) => void;
   errors?: { [key: string]: string };
   readOnly?: boolean;
+  showDoneAt?: boolean;
 }
 
 const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
@@ -25,6 +26,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
   setState,
   errors = {},
   readOnly = false,
+  showDoneAt = false,
 }) => {
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
@@ -80,6 +82,17 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         error={errors.prescriptionDate}
       />
 
+      {showDoneAt && (
+        <Input
+          isLocked={readOnly}
+          label={t(STRING.doneAt)}
+          placeholder={t(STRING.enterDetails)}
+          value={state.done_at}
+          onChangeText={value => setState({ done_at: value })}
+          style={styles.inputField}
+        />
+      )}
+
       <DatePicker
         locale={locale}
         title={t(STRING.selectDate)}
@@ -90,7 +103,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         mode="date"
         open={open}
         date={date}
-        minimumDate={new Date()}
+        // minimumDate={new Date()}
         onConfirm={d => {
           setOpen(false);
           setDate(d);

@@ -216,8 +216,8 @@ const FormsScreen: React.FC = () => {
     },
 
     // Unused provider handlers (kept for type safety)
-    submitForReview: async () => {},
-    claimService: async () => {},
+    submitForReview: async () => { },
+    claimService: async () => { },
   };
 
   // Fetch service request details when in view mode

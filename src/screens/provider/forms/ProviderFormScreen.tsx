@@ -282,6 +282,7 @@ const ProviderFormScreen: React.FC = () => {
             <AppText
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
+              align="center"
               color={COLORS._1A1D1F}
             >
               {t(left.label)}

@@ -1,36 +1,15 @@
-import messaging from '@react-native-firebase/messaging';
+import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { Storage } from '../constant';
 import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
-import store from '../redux/store';
-
-export const createNotificationChannel = async () => {
-  await notifee.createChannel({
-    id: 'default',
-    name: 'Default Channel',
-    importance: AndroidImportance.HIGH,
-  });
-};
-
-export const getFcmToken = async () => {
-  try {
-    const token = await messaging().getToken();
-    console.log('FCM Token:', token);
-    return token;
-  } catch (error) {
-    console.log('Error getting FCM token:', error);
-    console.log(error);
-    console.log('FCM Token Error:', error);
-  }
-};
+import { createNotificationChannels } from '../services/notificationChannels';
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
     if (Platform.OS === 'android') {
       if (Platform.Version >= 33) {
-        // Android 13+ (API 33) requires explicit POST_NOTIFICATIONS permission
         const existingStatus = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
         );
@@ -53,8 +32,7 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
           }
         }
       }
-      // Android < 13: POST_NOTIFICATIONS permission is granted by default.
-      // Still call messaging().requestPermission() to ensure FCM is initialized.
+
       const authStatus = await messaging().requestPermission();
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -67,7 +45,6 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
       return enabled;
     }
 
-    // iOS — relies entirely on messaging().requestPermission()
     const authStatus = await messaging().requestPermission();
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -83,63 +60,110 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
   }
 };
 
-export const listenForegroundMessages = (): (() => void) => {
-  // In foreground, FCM does NOT auto-show a notification — we must use Notifee
-  return messaging().onMessage(async remoteMessage => {
-    console.log('Foreground message received:', remoteMessage);
-
-    const title =
-      remoteMessage.data?.title ||
-      remoteMessage.notification?.title ||
-      'Notification';
-    const body =
-      remoteMessage.data?.message ||
-      remoteMessage.notification?.body ||
-      '';
-
-    await notifee.displayNotification({
-      title,
-      body,
-      data: remoteMessage.data,
-      android: {
-        channelId: 'default',
-        importance: AndroidImportance.HIGH,
-        pressAction: { id: 'default' },
-      },
-    });
-  });
+export const getFcmToken = async () => {
+  try {
+    const token = await messaging().getToken();
+    console.log('FCM Token:', token);
+    return token;
+  } catch (error) {
+    console.log('Error getting FCM token:', error);
+  }
 };
+
+// Foreground handler - using Notifee for better UX
+export function setupForegroundHandler(): () => void {
+  const unsubscribe = messaging().onMessage(
+    async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      console.log('Foreground message received:', remoteMessage);
+
+      const { notification, data, messageId } = remoteMessage;
+
+      if (notification) {
+        // Create a channel (required for Android)
+        const channelId = await notifee.createChannel({
+          id: 'default',
+          name: 'Default Channel',
+          importance: AndroidImportance.HIGH,
+        });
+
+        // Display the notification
+        await notifee.displayNotification({
+          id: messageId,
+          title: notification.title,
+          body: notification.body,
+          data: data,
+          android: {
+            channelId,
+            smallIcon: 'ic_launcher',
+            pressAction: {
+              id: 'default',
+            },
+          },
+          ios: {
+            foregroundPresentationOptions: {
+              badge: true,
+              sound: true,
+              banner: true,
+              list: true,
+            },
+          },
+        });
+      }
+    }
+  );
+
+  return unsubscribe;
+}
 
 // Guard against getInitialNotification firing more than once
 let initialNotificationHandled = false;
 
-export const listenBackgroundMessages = (): (() => void) => {
-  // NOTE: setBackgroundMessageHandler is intentionally NOT here.
-  // It must be registered in index.js at module level to work in
-  // background and killed states. See index.js.
+// Background notification open handler
+export function setupNotificationOpenHandler(): () => void {
+  // Handle notification opened from background state
+  const unsubscribe = messaging().onNotificationOpenedApp(
+    (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      console.log('App opened from background by notification:', remoteMessage);
+      handleNotificationTap();
+    }
+  );
 
-  // Handle notification TAP when app is in background
-  const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
-    console.log('Notification opened from background:', remoteMessage);
-    handleNotificationTap(remoteMessage);
-  });
-
-  // Handle notification TAP when app was completely killed
-  messaging()
-    .getInitialNotification()
-    .then(remoteMessage => {
-      if (remoteMessage && !initialNotificationHandled) {
-        initialNotificationHandled = true;
-        console.log('Notification opened from quit state:', remoteMessage);
-        setTimeout(() => {
-          handleNotificationTap(remoteMessage);
-        }, 500);
-      }
-    });
-
-  // Only onNotificationOpenedApp is unsubscribable
   return unsubscribe;
-};
+}
+
+// Handle notification when app is opened from quit state
+export async function handleInitialNotification(): Promise<void> {
+  const remoteMessage = await messaging().getInitialNotification();
+
+  if (remoteMessage && !initialNotificationHandled) {
+    initialNotificationHandled = true;
+    console.log('App opened from quit state by notification:', remoteMessage);
+    handleNotificationTap();
+  }
+}
+
+function handleNotificationNavigation(
+  remoteMessage: FirebaseMessagingTypes.RemoteMessage
+): void {
+  const { data } = remoteMessage;
+
+  try {
+    // Determine navigation based on notification data
+    if (!data) return;
+
+    // You can customize this navigation logic based on your app's needs
+    console.log('Notification navigation data:', data);
+
+    // Example: Navigate based on notification type
+    if (data.type === 'order' && data.orderId) {
+      // NavigationService.navigate('OrderDetails', { id: data.orderId });
+    } else if (data.type === 'message' && data.userId) {
+      // NavigationService.navigate('Messages', { userId: data.userId });
+    }
+  } catch (error) {
+    console.log('Error handling notification navigation:', error);
+  }
+}
 
 const handleNotificationTap = async () => {
   try {
@@ -177,3 +201,14 @@ const handleNotificationTap = async () => {
     NavigationService.reset(SCREENS.WELCOME);
   }
 };
+
+// Token refresh listener
+export function setupTokenRefreshListener(): () => void {
+  const unsubscribe = messaging().onTokenRefresh(token => {
+    console.log('New FCM Token:', token);
+    // Send token to backend if needed
+  });
+
+  return unsubscribe;
+}
+

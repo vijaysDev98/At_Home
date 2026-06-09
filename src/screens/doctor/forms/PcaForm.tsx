@@ -16,6 +16,7 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
+  FormPrescriptionContextSection,
   AppCheckBox,
 } from '../../../components';
 
@@ -104,6 +105,9 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     hospital_name: profileData?.facilityName || '',
     hospital_address: profileData?.businessAddress || '',
     finess_number: profileData?.finessNumber || '',
+
+    // Prescription Context
+    forms_for: '',
 
     // Nursing Care Tasks
     nursing_tasks: [] as string[],
@@ -370,6 +374,12 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           setState={updates => setFormState(updates)}
         />
 
+        <FormPrescriptionContextSection
+          readOnly={readOnly}
+          state={state}
+          setState={updates => setFormState(updates)}
+        />
+
         <View style={styles.card}>
           {renderSectionHeader(t(STRING.prescriptionValidity))}
 
@@ -434,183 +444,177 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           />
         </View>
 
+        {/* CARE INSTRUCTIONS */}
         <View style={styles.card}>
-          {renderSectionHeader(t(STRING.prescriptionPlan))}
-          {/* NURSING CARE */}
-          <View style={styles.descriptionBlock}>
-            <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.SemiBold}
-              color={COLORS._1A1D1F}
-            >
-              {t(STRING.nursingCareTasks)}
-            </AppText>
+          {renderSectionHeader(t(STRING.careInstructionsSection))}
+          <AppText
+            size={getScaleSize(13)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._1A1D1F}
+          >
+            {t(STRING.careInstructionNote)}
+          </AppText>
+        </View>
 
-            <View style={styles.checkboxGroup}>
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.preparationAndProgrammingOfPortablePump,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.preparationAndProgrammingOfPortablePump);
-                  } else {
-                    const index = tasks.indexOf(
-                      STRING.preparationAndProgrammingOfPortablePump,
-                    );
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.preparationAndProgrammingOfPortablePump)}
-              />
+        {/* NURSING CARE TASKS */}
+        <View style={styles.card}>
+          {renderSectionHeader(t(STRING.nursingCareTasks))}
+          <View style={styles.checkboxGroup}>
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(
+                STRING.preparationAndProgrammingOfPortablePump,
+              )}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.preparationAndProgrammingOfPortablePump);
+                } else {
+                  const index = tasks.indexOf(
+                    STRING.preparationAndProgrammingOfPortablePump,
+                  );
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.preparationAndProgrammingOfPortablePump)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.fillingAndSetupOfPump,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.fillingAndSetupOfPump);
-                  } else {
-                    const index = tasks.indexOf(STRING.fillingAndSetupOfPump);
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.fillingAndSetupOfPump)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(STRING.fillingAndSetupOfPump)}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.fillingAndSetupOfPump);
+                } else {
+                  const index = tasks.indexOf(STRING.fillingAndSetupOfPump);
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.fillingAndSetupOfPump)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.connectingInfusionAndStartingDevice,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.connectingInfusionAndStartingDevice);
-                  } else {
-                    const index = tasks.indexOf(
-                      STRING.connectingInfusionAndStartingDevice,
-                    );
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.connectingInfusionAndStartingDevice)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(
+                STRING.connectingInfusionAndStartingDevice,
+              )}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.connectingInfusionAndStartingDevice);
+                } else {
+                  const index = tasks.indexOf(
+                    STRING.connectingInfusionAndStartingDevice,
+                  );
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.connectingInfusionAndStartingDevice)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(STRING.reservoirChange)}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.reservoirChange);
-                  } else {
-                    const index = tasks.indexOf(STRING.reservoirChange);
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.reservoirChange)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(STRING.reservoirChange)}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.reservoirChange);
+                } else {
+                  const index = tasks.indexOf(STRING.reservoirChange);
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.reservoirChange)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.stoppingAndRemovingDevice,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.stoppingAndRemovingDevice);
-                  } else {
-                    const index = tasks.indexOf(
-                      STRING.stoppingAndRemovingDevice,
-                    );
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.stoppingAndRemovingDevice)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(
+                STRING.stoppingAndRemovingDevice,
+              )}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.stoppingAndRemovingDevice);
+                } else {
+                  const index = tasks.indexOf(STRING.stoppingAndRemovingDevice);
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.stoppingAndRemovingDevice)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(STRING.flushHeparinization)}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.flushHeparinization);
-                  } else {
-                    const index = tasks.indexOf(STRING.flushHeparinization);
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.flushHeparinization)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(STRING.flushHeparinization)}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.flushHeparinization);
+                } else {
+                  const index = tasks.indexOf(STRING.flushHeparinization);
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.flushHeparinization)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.weeklyDressingChangeHuberNeedleReplacement,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(
-                      STRING.weeklyDressingChangeHuberNeedleReplacement,
-                    );
-                  } else {
-                    const index = tasks.indexOf(
-                      STRING.weeklyDressingChangeHuberNeedleReplacement,
-                    );
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.weeklyDressingChangeHuberNeedleReplacement)}
-              />
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(
+                STRING.weeklyDressingChangeHuberNeedleReplacement,
+              )}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.weeklyDressingChangeHuberNeedleReplacement);
+                } else {
+                  const index = tasks.indexOf(
+                    STRING.weeklyDressingChangeHuberNeedleReplacement,
+                  );
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.weeklyDressingChangeHuberNeedleReplacement)}
+            />
 
-              <AppCheckBox
-                disabled={readOnly}
-                value={state.nursing_tasks.includes(
-                  STRING.monitoringAndCoordinationOfCare,
-                )}
-                onValueChange={value => {
-                  const tasks = [...state.nursing_tasks];
-                  if (value) {
-                    tasks.push(STRING.monitoringAndCoordinationOfCare);
-                  } else {
-                    const index = tasks.indexOf(
-                      STRING.monitoringAndCoordinationOfCare,
-                    );
-                    if (index > -1) tasks.splice(index, 1);
-                  }
-                  setFormState({ nursing_tasks: tasks });
-                }}
-                label={t(STRING.monitoringAndCoordinationOfCare)}
-              />
-            </View>
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.nursing_tasks.includes(
+                STRING.monitoringAndCoordinationOfCare,
+              )}
+              onValueChange={value => {
+                const tasks = [...state.nursing_tasks];
+                if (value) {
+                  tasks.push(STRING.monitoringAndCoordinationOfCare);
+                } else {
+                  const index = tasks.indexOf(
+                    STRING.monitoringAndCoordinationOfCare,
+                  );
+                  if (index > -1) tasks.splice(index, 1);
+                }
+                setFormState({ nursing_tasks: tasks });
+              }}
+              label={t(STRING.monitoringAndCoordinationOfCare)}
+            />
           </View>
+        </View>
 
-          <View style={styles.sectionSpacing}>
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {STRING.morphineAdministration}
-            </AppText>
-          </View>
-
+        {/* MORPHINE ADMINISTRATION */}
+        <View style={styles.card}>
+          {renderSectionHeader(t(STRING.morphineAdministration))}
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={`${t(STRING.concentration)} (mg/hr)`}
+              label={`${t(STRING.morphineHydrochlorideConcentration)} (mg/h)`}
               value={state.morphine_concentration_mg_per_hr}
               onChangeText={value =>
                 setFormState({ morphine_concentration_mg_per_hr: value })
@@ -622,7 +626,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={t(STRING.totalMorphine)}
+              label={`${t(STRING.pureMorphine)} (mg)`}
               value={state.morphine_total_mg}
               onChangeText={value => setFormState({ morphine_total_mg: value })}
               placeholder="0"
@@ -634,7 +638,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={t(STRING.volume)}
+              label={`${t(STRING.solutionVolume)} (ml)`}
               value={state.solution_volume_ml}
               onChangeText={value =>
                 setFormState({ solution_volume_ml: value })
@@ -645,27 +649,24 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              isLocked={true}
-              label={`${t(STRING.bagCapacity)}`}
+              isLocked={readOnly}
+              label={`${t(STRING.flexibleBagCapacity)} (ml)`}
               value={state.bag_capacity_ml}
               onChangeText={value => setFormState({ bag_capacity_ml: value })}
               placeholder="50"
-              editable={false}
               keyboardType="numeric"
               style={styles.halfWidthInput}
             />
           </View>
+        </View>
 
-          <View style={styles.sectionSpacing}>
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {t(STRING.pumpSettings)}
-            </AppText>
-          </View>
-
+        {/* PUMP SETTINGS */}
+        <View style={styles.card}>
+          {renderSectionHeader(t(STRING.pumpSettings))}
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={t(STRING.basalRate)}
+              label={`${t(STRING.basalRateLabel)} (mg/h)`}
               value={state.basal_rate_mg_per_hr}
               onChangeText={value =>
                 setFormState({ basal_rate_mg_per_hr: value })
@@ -677,7 +678,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={t(STRING.bolusDose)}
+              label={`${t(STRING.bolusDoseLabel)} (mg)`}
               value={state.bolus_dose_mg}
               onChangeText={value => setFormState({ bolus_dose_mg: value })}
               placeholder="0"
@@ -689,7 +690,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={t(STRING.lockoutMin)}
+              label={`${t(STRING.lockoutPeriod)} (minutes)`}
               value={state.lockout_minutes}
               onChangeText={value => setFormState({ lockout_minutes: value })}
               placeholder="0"
@@ -699,7 +700,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
 
             <Input
               isLocked={readOnly}
-              label={t(STRING.maxBolusPerHour)}
+              label={t(STRING.maximumNumberOfBolusesPerHour)}
               value={state.max_bolus_per_hour}
               onChangeText={value =>
                 setFormState({ max_bolus_per_hour: value })
@@ -709,17 +710,15 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               style={styles.halfWidthInput}
             />
           </View>
+        </View>
 
-          <View style={styles.sectionSpacing}>
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              {t(STRING.treatmentPlan)}
-            </AppText>
-          </View>
-
+        {/* TREATMENT PLAN */}
+        <View style={styles.card}>
+          {renderSectionHeader(t(STRING.treatmentPlan))}
           <View style={styles.inputRow}>
             <Input
               isLocked={readOnly}
-              label={t(STRING.connectionsPerWeek)}
+              label={t(STRING.connectionsPerWeekLabel)}
               value={state.connections_per_week}
               onChangeText={value =>
                 setFormState({ connections_per_week: value })
@@ -730,31 +729,17 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
             />
 
             <Input
-              isLocked={true}
-              label={`${t(STRING.treatmentDurationDays)}`}
+              isLocked={readOnly}
+              label={`${t(STRING.treatmentDurationLabel)} (days)`}
               value={state.treatment_duration_days}
               onChangeText={value =>
                 setFormState({ treatment_duration_days: value })
               }
-              editable={false}
               placeholder="28"
               keyboardType="numeric"
               style={styles.halfWidthInput}
             />
           </View>
-
-          {/* <View style={[styles.sectionSpacing, { marginTop: getScaleSize(20) }]}>
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.Bold}>
-              Compliance Note
-            </AppText>
-          </View> */}
-
-          {/* <AppCheckBox
-            value={state.requires_handwritten_prescription}
-            onValueChange={() => {}}
-            disabled
-            label="This form must be accompanied by a handwritten secure prescription."
-          /> */}
         </View>
 
         {/* <FormSignature state={state} setState={setFormState} /> */}
@@ -766,11 +751,11 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
-        theme='light'
+        theme="light"
         open={open}
         date={date}
         mode="date"
-        minimumDate={new Date()}
+        // minimumDate={new Date()}
         onConfirm={selectedDate => {
           setOpen(false);
           if (pickerType) {
@@ -876,6 +861,7 @@ const styles = StyleSheet.create({
 
   inputRow: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
     gap: getScaleSize(15),
   },
 

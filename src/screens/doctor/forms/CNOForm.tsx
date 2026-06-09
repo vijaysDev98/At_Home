@@ -5,7 +5,13 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { ScrollView, StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import moment from 'moment';
 
 import {
@@ -117,6 +123,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
     const [state, setState] = useState({
       // Prescription Context
+      done_at: '',
       prescription_place: '',
       prescription_date: '',
       prescription_type: '', // 'outside_ald' or 'ald'
@@ -274,8 +281,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     };
 
     const addProduct = () => {
-      if (state.nutrition_products.length >= 10) {
-        SHOW_TOAST(STRING.youCanOnlyAddUpto10Products, 'info');
+      if (state.nutrition_products.length >= 20) {
+        SHOW_TOAST(STRING.youCanOnlyAddUpto20Products, 'info');
         return;
       }
       setFormState(prev => ({
@@ -337,8 +344,9 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             val !== null &&
             isNaN(Number(val))
           ) {
-            newErrors[`nutrition_products[${index}].quantity_per_day`] =
-              t(STRING.quantityMustBeNumber);
+            newErrors[`nutrition_products[${index}].quantity_per_day`] = t(
+              STRING.quantityMustBeNumber,
+            );
           }
         }
       });
@@ -513,10 +521,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
           />
 
           {/* PRESCRIBER IDENTIFICATION */}
-          <FormPrescriberSection
-            state={state}
-            setState={setFormState}
-          />
+          <FormPrescriberSection state={state} setState={setFormState} />
 
           {/* FACILITY INFORMATION */}
           <FormFacilitySection
@@ -531,6 +536,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             state={state}
             setState={setFormState}
             errors={errors}
+            showDoneAt={true}
           />
 
           {/* PATIENT CONDITION */}
@@ -655,7 +661,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             ))}
           </View>
 
-          {!readOnly && state.nutrition_products.length < 10 && (
+          {!readOnly && state.nutrition_products.length < 20 && (
             <TouchableOpacity style={styles.addButton} onPress={addProduct}>
               <Image source={IMAGES.add_patient} style={styles.addIcon} />
               <AppText
@@ -750,7 +756,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                     : state.reassessment_criteria.filter(c => c !== criterion);
                   setFormState({ reassessment_criteria: updated });
                 }}
-                label={(criterion)}
+                label={criterion}
               />
             ))}
           </View>
@@ -832,7 +838,7 @@ const styles = StyleSheet.create({
   productSmallInputRoot: {
     flex: 1,
     paddingHorizontal: 0,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   productNameBox: {
     borderWidth: 1,

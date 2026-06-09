@@ -25,6 +25,7 @@ import {
   FormFacilitySection,
   FormPatientSection,
   FormPrescriberSection,
+  FormPrescriptionContextSection,
   FormSignature,
   Input,
 } from '../../../components';
@@ -145,6 +146,9 @@ const HydrationInfusionForm = forwardRef<
       hospital_name: profileData?.facilityName || '',
       hospital_address: profileData?.businessAddress || '',
       finess_number: profileData?.finessNumber || '',
+
+      // Prescription Context
+      forms_for: '',
 
       // Infusion Products (repeatable)
       infusion_products: [
@@ -531,6 +535,12 @@ const HydrationInfusionForm = forwardRef<
           />
 
           <FormFacilitySection
+            readOnly={readOnly}
+            state={state}
+            setState={updates => setFormState(updates)}
+          />
+
+          <FormPrescriptionContextSection
             readOnly={readOnly}
             state={state}
             setState={updates => setFormState(updates)}
@@ -939,7 +949,7 @@ const HydrationInfusionForm = forwardRef<
           open={open}
           date={date}
           mode="date"
-          minimumDate={new Date()}
+          // minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
 

@@ -24,6 +24,7 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
+  FormPrescriptionContextSection,
   AppCheckBox,
   FormSignature,
 } from '../../../components';
@@ -60,19 +61,16 @@ export interface AntibiotherapyInfusionFormProps {
   readOnly?: boolean;
 }
 
-const ROUTE_OF_ACCESS = [
-  'Implanted Port',
-  'Central Catheter',
-  'PICC',
-  'Perineural',
-  'Peripheral Venous',
-  'Subcutaneous',
+const CENTRAL_VENOUS_OPTIONS = [
+  STRING.implantedPort,
+  STRING.centralCatheter,
+  STRING.picc,
 ];
 
 const MODE_OF_ADMINISTRATION = [
-  'Gravity',
-  'Elastomeric Diffuser',
-  'Electric Infusion Pump',
+  STRING.gravity,
+  STRING.elastomericDiffuser,
+  STRING.electricInfusionPump,
 ];
 
 export interface AntibiotherapyInfusionFormRef {
@@ -135,6 +133,9 @@ const AntibiotherapyInfusionForm = forwardRef<
     hospital_address: profileData?.businessAddress || '',
     finess_number: profileData?.finessNumber || '',
 
+    // Prescription Context
+    forms_for: '',
+
     // Signature
     physician_signature: '',
 
@@ -148,7 +149,11 @@ const AntibiotherapyInfusionForm = forwardRef<
         duration_hours: '',
         duration_minutes: '',
         frequency_per_day: '',
-        route_of_access: '',
+        central_venous: false,
+        central_venous_options: [] as string[],
+        perineural_access: false,
+        peripheral_venous_access: false,
+        subcutaneous_access: false,
         mode_of_administration: '',
         ambulatory_required: null,
         prepared_in_facility: false,
@@ -340,7 +345,11 @@ const AntibiotherapyInfusionForm = forwardRef<
           duration_hours: '',
           duration_minutes: '',
           frequency_per_day: '',
-          route_of_access: '',
+          central_venous: false,
+          central_venous_options: [] as string[],
+          perineural_access: false,
+          peripheral_venous_access: false,
+          subcutaneous_access: false,
           mode_of_administration: '',
           ambulatory_required: null,
           prepared_in_facility: false,
@@ -400,7 +409,6 @@ const AntibiotherapyInfusionForm = forwardRef<
       setErrors(prev => {
         const ne = { ...prev } as any;
         const val = (state.infusion_products[index] as any)[field];
-        const allowedRoutes = ROUTE_OF_ACCESS;
         const allowedModes = MODE_OF_ADMINISTRATION;
 
         let isValid = false;
@@ -417,8 +425,6 @@ const AntibiotherapyInfusionForm = forwardRef<
         ) {
           // Optional numerics: valid if empty or numeric
           isValid = val === '' || !isNaN(Number(val));
-        } else if (field === 'route_of_access') {
-          isValid = !val || allowedRoutes.includes(val);
         } else if (field === 'mode_of_administration') {
           isValid = !val || allowedModes.includes(val);
         } else if (field === 'diluent_type') {
@@ -509,6 +515,13 @@ const AntibiotherapyInfusionForm = forwardRef<
 
         {/* FACILITY INFORMATION */}
         <FormFacilitySection
+          readOnly={readOnly}
+          state={state}
+          setState={setFormState}
+        />
+
+        {/* PRESCRIPTION CONTEXT */}
+        <FormPrescriptionContextSection
           readOnly={readOnly}
           state={state}
           setState={setFormState}
@@ -654,31 +667,74 @@ const AntibiotherapyInfusionForm = forwardRef<
               {t(STRING.routeOfAccess)}
             </AppText>
             <View style={styles.checkboxGroup}>
-              {ROUTE_OF_ACCESS.map(route => (
-                <AppCheckBox
-                  disabled={readOnly}
-                  key={route}
-                  label={route}
-                  value={product.route_of_access === route}
-                  onValueChange={() =>
-                    updateProduct(
-                      index,
-                      'route_of_access',
-                      product.route_of_access === route ? '' : route,
-                    )
+              {/* Central Venous with nested sub-options */}
+              <AppCheckBox
+                disabled={readOnly}
+                label={STRING.centralVenous}
+                value={product.central_venous}
+                onValueChange={value => {
+                  updateProduct(index, 'central_venous', value);
+                  if (!value) {
+                    updateProduct(index, 'central_venous_options', []);
                   }
-                />
-              ))}
+                }}
+              />
+              {product.central_venous && (
+                <View
+                  style={{
+                    marginLeft: getScaleSize(20),
+                    gap: getScaleSize(12),
+                  }}
+                >
+                  {CENTRAL_VENOUS_OPTIONS.map(option => (
+                    <AppCheckBox
+                      disabled={readOnly}
+                      key={option}
+                      label={option}
+                      value={product.central_venous_options?.includes(option)}
+                      onValueChange={value => {
+                        const current = product.central_venous_options || [];
+                        updateProduct(
+                          index,
+                          'central_venous_options',
+                          value
+                            ? [...current, option]
+                            : current.filter(
+                              (item: string) => item !== option,
+                            ),
+                        );
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {/* Other routes of access */}
+              <AppCheckBox
+                disabled={readOnly}
+                label={STRING.perineural}
+                value={product.perineural_access}
+                onValueChange={value =>
+                  updateProduct(index, 'perineural_access', value)
+                }
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                label={STRING.peripheralVenous}
+                value={product.peripheral_venous_access}
+                onValueChange={value =>
+                  updateProduct(index, 'peripheral_venous_access', value)
+                }
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                label={STRING.subcutaneous}
+                value={product.subcutaneous_access}
+                onValueChange={value =>
+                  updateProduct(index, 'subcutaneous_access', value)
+                }
+              />
             </View>
-            {errors[`infusion_products[${index}].route_of_access`] && (
-              <AppText
-                color={COLORS.error}
-                size={getScaleSize(11)}
-                style={{ marginTop: getScaleSize(4) }}
-              >
-                {errors[`infusion_products[${index}].route_of_access`]}
-              </AppText>
-            )}
 
             <AppText
               size={getScaleSize(13)}
@@ -788,6 +844,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                     SHOW_TOAST('Please select start date first', 'error');
                   }
                 }}
+                numberOfLines={1}
                 placeholder={t(STRING.ddmmyyyy)}
                 style={styles.halfWidthInput}
               />
@@ -860,7 +917,7 @@ const AntibiotherapyInfusionForm = forwardRef<
         open={open}
         date={date}
         mode="date"
-        minimumDate={new Date()}
+        // minimumDate={new Date()}
         onConfirm={selectedDate => {
           setOpen(false);
           if (pickerType) {

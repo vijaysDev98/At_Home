@@ -25,6 +25,7 @@ import {
   FormPatientSection,
   FormPrescriberSection,
   FormFacilitySection,
+  FormPrescriptionContextSection,
   AppCheckBox,
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -62,8 +63,6 @@ export interface ArtificialNutritionFormProps {
   readOnly?: boolean;
 }
 
-
-
 const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
   ({ serviceId, initialData, patient, readOnly = false }, ref) => {
     const dispatch = useDispatch();
@@ -77,10 +76,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       (state: RootState) => state.profile.profileData,
     );
 
-    const FEEDING_MODE = [
-      { label: t(STRING.gravityPackage1), value: 'gravity' },
-      { label: t(STRING.pumpPackage2), value: 'pump' },
-    ];
     const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -117,11 +112,12 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       hospital_address: profileData?.businessAddress || '',
       finess_number: profileData?.finessNumber || '',
 
+      forms_for: '',
+
       nutrition_duration_weeks: '',
-      feeding_mode: '', // single selection
+      weekly_package_type: '', // radio: gravity/pump
 
       initial_setup: false,
-      weekly_package: false,
       nasogastric_tube_ch: '',
       nasogastric_rate_per_month: '',
       jejunostomy_tube_ch: '',
@@ -131,9 +127,12 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       jejunostomy_care_frequency_days: '',
       gastrostomy_replacement_equipment: false,
       button_extension_set: false,
+      button_extension_renewal_days: '7',
 
       non_ald_prescriptions: false,
+      intercurrent_illness_details: '',
       ald_prescriptions: false,
+      ald_condition_details: '',
 
       // Nutrients (repeatable)
       nutrients: [
@@ -155,6 +154,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       ],
 
       physician_signature: '',
+      // signature_date: '',
     });
 
     // Load initial data if editing an existing draft
@@ -179,8 +179,8 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
     const checkedBoxesCount = useMemo(() => {
       const boolFields = [
+        state.ald_condition,
         state.initial_setup,
-        state.weekly_package,
         state.iv_pole_rental,
         state.gastrostomy_care_equipment,
         state.gastrostomy_replacement_equipment,
@@ -303,9 +303,9 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               val !== null &&
               isNaN(Number(val))
             ) {
-              newErrors[
-                `nutrients[${index}].${String(f.key)}`
-              ] = t(STRING.mustBeNumber);
+              newErrors[`nutrients[${index}].${String(f.key)}`] = t(
+                STRING.mustBeNumber,
+              );
             }
           });
         }
@@ -443,24 +443,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             errors={errors}
           />
 
-          {/* PATIENT INFORMATION */}
-          <FormPatientSection
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-            errors={errors}
-          />
-
-          {/* PRESCRIBER IDENTIFICATION */}
-          <FormPrescriberSection state={state} setState={setFormState} />
-
-          {/* FACILITY INFORMATION */}
-          <FormFacilitySection
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-          />
-
           <View style={styles.card}>
             {renderSectionHeader(t(STRING.prescriptionPlan))}
             <Input
@@ -502,6 +484,31 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             </View>
           </View>
 
+          {/* PATIENT INFORMATION */}
+          <FormPatientSection
+            readOnly={readOnly}
+            state={state}
+            setState={setFormState}
+            errors={errors}
+          />
+
+          {/* PRESCRIBER IDENTIFICATION */}
+          <FormPrescriberSection state={state} setState={setFormState} />
+
+          {/* FACILITY INFORMATION */}
+          <FormFacilitySection
+            readOnly={readOnly}
+            state={state}
+            setState={setFormState}
+          />
+
+          {/* PRESCRIPTION CONTEXT */}
+          <FormPrescriptionContextSection
+            readOnly={readOnly}
+            state={state}
+            setState={setFormState}
+          />
+
           {/* TREATMENT PLAN */}
           <View style={styles.card}>
             {renderSectionHeader(t(STRING.treatmentPlan))}
@@ -518,30 +525,6 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               style={styles.inputField}
             />
 
-            <AppText size={getScaleSize(14)} font={FONTS.Inter.SemiBold}>
-              {t(STRING.feedingMode)}
-            </AppText>
-            <View style={styles.checkboxGroup}>
-              {FEEDING_MODE.map(mode => (
-                <AppCheckBox
-                  disabled={readOnly}
-                  key={mode.value}
-                  value={state.feeding_mode === mode.value}
-                  onValueChange={value => {
-                    if (value) {
-                      setFormState({ feeding_mode: mode.value });
-                    }
-                  }}
-                  label={mode.label}
-                />
-              ))}
-            </View>
-          </View>
-
-          {/* EQUIPMENT & PACKAGES */}
-          <View style={styles.card}>
-            {renderSectionHeader(t(STRING.equipmentAndPackages))}
-
             <AppCheckBox
               disabled={readOnly}
               value={state.initial_setup}
@@ -549,13 +532,39 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               label={t(STRING.initialSetupPackage)}
             />
 
-            <AppCheckBox
-              disabled={readOnly}
-              value={state.weekly_package}
-              onValueChange={value => setFormState({ weekly_package: value })}
-              label={t(STRING.weeklyPackage)}
-              containerStyle={{ marginBottom: getScaleSize(5) }}
-            />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              style={{
+                marginTop: getScaleSize(8),
+                marginBottom: getScaleSize(4),
+              }}
+            >
+              {t(STRING.weeklyPackageType)}
+            </AppText>
+            <View style={styles.checkboxGroup}>
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.weekly_package_type === 'gravity'}
+                onValueChange={value => {
+                  if (value) setFormState({ weekly_package_type: 'gravity' });
+                }}
+                label={t(STRING.gravityPackage1)}
+              />
+              <AppCheckBox
+                disabled={readOnly}
+                value={state.weekly_package_type === 'pump'}
+                onValueChange={value => {
+                  if (value) setFormState({ weekly_package_type: 'pump' });
+                }}
+                label={t(STRING.pumpPackage2)}
+              />
+            </View>
+          </View>
+
+          {/* EQUIPMENT & PACKAGES */}
+          <View style={styles.card}>
+            {renderSectionHeader(t(STRING.equipmentAndPackages))}
 
             <Input
               isLocked={readOnly}
@@ -639,6 +648,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               onValueChange={value =>
                 setFormState({ gastrostomy_replacement_equipment: value })
               }
+              containerStyle={{ marginBottom: getScaleSize(5) }}
               label={t(STRING.gastrostomyReplacementEquipment)}
             />
 
@@ -648,8 +658,74 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               onValueChange={value =>
                 setFormState({ button_extension_set: value })
               }
+              containerStyle={{ marginBottom: getScaleSize(5) }}
               label={t(STRING.buttonExtensionSet)}
             />
+
+            {state.button_extension_set && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.buttonExtensionRenewalDays)}
+                value={state.button_extension_renewal_days}
+                onChangeText={value =>
+                  setFormState({ button_extension_renewal_days: value })
+                }
+                placeholder="7"
+                keyboardType="numeric"
+                style={styles.inputField}
+              />
+            )}
+          </View>
+
+          {/* CONDITION CLASSIFICATION */}
+          <View style={styles.card}>
+            {renderSectionHeader(t(STRING.conditionClassification))}
+
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.non_ald_prescriptions}
+              onValueChange={value =>
+                setFormState({ non_ald_prescriptions: value })
+              }
+              containerStyle={{ marginBottom: getScaleSize(5) }}
+              label={t(STRING.nonAldPrescriptions)}
+            />
+
+            {state.non_ald_prescriptions && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.intercurrentIllnessDetails)}
+                value={state.intercurrent_illness_details}
+                onChangeText={value =>
+                  setFormState({ intercurrent_illness_details: value })
+                }
+                placeholder={t(STRING.enterIllnessDetails)}
+                style={styles.inputField}
+              />
+            )}
+
+            <AppCheckBox
+              disabled={readOnly}
+              value={state.ald_prescriptions}
+              onValueChange={value =>
+                setFormState({ ald_prescriptions: value })
+              }
+              containerStyle={{ marginBottom: getScaleSize(5) }}
+              label={t(STRING.aldPrescriptions)}
+            />
+
+            {state.ald_prescriptions && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.aldConditionDetails)}
+                value={state.ald_condition_details}
+                onChangeText={value =>
+                  setFormState({ ald_condition_details: value })
+                }
+                placeholder={t(STRING.enterConditionDetails)}
+                style={styles.inputField}
+              />
+            )}
           </View>
 
           <AppText size={getScaleSize(15)} font={FONTS.Inter.Bold}>
@@ -737,6 +813,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
           </View>
 
           <View style={styles.card}>
+            {renderSectionHeader(t(STRING.summary))}
             <View style={styles.signatureRow}>
               <AppText
                 size={getScaleSize(13)}
@@ -752,6 +829,20 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 placeholder=""
               />
             </View>
+            {/* <Input
+              isLocked={readOnly}
+              onPress={() => {
+                if (readOnly) return;
+                setPickerType({ type: 'signature_date' });
+                setOpen(true);
+              }}
+              editable={false}
+              label={t(STRING.signatureDate)}
+              placeholder={t(STRING.ddmmyyyy)}
+              value={state.signature_date}
+              style={styles.inputField}
+              pointerEvents={readOnly ? 'none' : 'auto'}
+            /> */}
           </View>
 
           {/* <FormSignature readOnly={readOnly} requestData={initialData} /> */}
@@ -763,11 +854,11 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}
           modal
-          theme='light'
+          theme="light"
           open={open}
           date={date}
           mode="date"
-          minimumDate={new Date()}
+          // minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
             setDate(selectedDate);

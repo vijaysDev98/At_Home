@@ -5,6 +5,7 @@ import {
   TextStyle,
   ViewStyle,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 
@@ -32,7 +33,12 @@ const AppCheckBox: React.FC<AppCheckBoxProps> = ({
   textStyle,
 }) => {
   return (
-    <View style={[styles.container, containerStyle]}>
+    <TouchableOpacity
+      activeOpacity={0.7}
+      disabled={disabled}
+      onPress={() => onValueChange(!value)}
+      style={[styles.container, containerStyle]}
+    >
       <CheckBox
         boxType="square"
         style={{
@@ -57,18 +63,13 @@ const AppCheckBox: React.FC<AppCheckBoxProps> = ({
 
       <AppText
         size={getScaleSize(13)}
-        color={
-          disabled
-            ? COLORS._98A2B3
-            : COLORS._1A1D1F
-        }
+        color={disabled ? COLORS._98A2B3 : COLORS._1A1D1F}
         font={FONTS.Inter.Regular}
         style={[styles.label, labelStyle, textStyle]}
       >
         {label}
       </AppText>
-
-    </View>
+    </TouchableOpacity>
   );
 };
 

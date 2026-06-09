@@ -79,9 +79,9 @@ const DRESSING_TYPE_OPTIONS = [
 ];
 
 const WOUND_DETAILS_OPTIONS = [
-  { key: 'exudate', title: 'Exudate' },
-  { key: 'cavity', title: 'Cavity' },
-  { key: 'septic_wound', title: 'Septic wound' },
+  { key: 'exudate', title: 'Exudate', stringKey: 'exudate' },
+  { key: 'cavity', title: 'Cavity', stringKey: 'cavity' },
+  { key: 'septic_wound', title: 'Septic wound', stringKey: 'septicWound' },
 ];
 
 export interface WoundCareFormRef {
@@ -137,9 +137,16 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
       // Type of Wound
       wound_type: [] as string[],
       wound_size: '',
+      wound_type_other: '',
 
       // Desired Dressing Type
       dressing_type: [] as string[],
+      postop_dressing_detail: '',
+      debridement_dressing_detail: '',
+      hydrocolloid_dressing_detail: '',
+      packing_detail_1: '',
+      packing_detail_2: '',
+      packing_detail_3: '',
 
       // Wound Details
       exudate: null,
@@ -480,6 +487,17 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 />
               ))}
             </View>
+
+            {(state.wound_type || []).includes('Other') && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.otherWoundType)}
+                placeholder={t(STRING.enterOtherWoundType)}
+                value={state.wound_type_other}
+                onChangeText={value => setFormState({ wound_type_other: value })}
+                style={styles.inputField}
+              />
+            )}
           </View>
 
           {/* DESIRED DRESSING TYPE */}
@@ -506,6 +524,80 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                 />
               ))}
             </View>
+
+            {(state.dressing_type || []).includes('Post-op') && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.postopDressingDetail)}
+                placeholder={t(STRING.enterPostopDressingDetails)}
+                value={state.postop_dressing_detail}
+                onChangeText={value => setFormState({ postop_dressing_detail: value })}
+                style={styles.inputField}
+              />
+            )}
+
+            {(state.dressing_type || []).includes('Debridement and healing dressing') && (
+              <Input
+                isLocked={readOnly}
+                label={t(STRING.debridementDressingDetail)}
+                placeholder={t(STRING.enterDebridementDressingDetails)}
+                value={state.debridement_dressing_detail}
+                onChangeText={value => setFormState({ debridement_dressing_detail: value })}
+                style={styles.inputField}
+              />
+            )}
+
+            {(state.dressing_type || []).includes('Hydrocolloid') && (
+              <View>
+                <Input
+                  isLocked={readOnly}
+                  label={t(STRING.hydrocolloidDressingDetail)}
+                  placeholder={t(STRING.enterHydrocolloidDressingDetails)}
+                  value={state.hydrocolloid_dressing_detail}
+                  onChangeText={value => setFormState({ hydrocolloid_dressing_detail: value })}
+                  style={styles.inputField}
+                />
+                <View style={[styles.staticTextContainer, { marginTop: getScaleSize(12) }]}>
+                  <AppText size={getScaleSize(13)} color={COLORS._6B7280} style={styles.staticText}>
+                    {t(STRING.hydrocolloidNote)}
+                  </AppText>
+                </View>
+              </View>
+            )}
+
+            {(state.dressing_type || []).includes('Packing') && (
+              <View>
+                <Input
+                  isLocked={readOnly}
+                  label={t(STRING.packingDetail1)}
+                  placeholder={t(STRING.enterPackingDetail1)}
+                  value={state.packing_detail_1}
+                  onChangeText={value => setFormState({ packing_detail_1: value })}
+                  style={styles.inputField}
+                />
+                <Input
+                  isLocked={readOnly}
+                  label={t(STRING.packingDetail2)}
+                  placeholder={t(STRING.enterPackingDetail2)}
+                  value={state.packing_detail_2}
+                  onChangeText={value => setFormState({ packing_detail_2: value })}
+                  style={styles.inputField}
+                />
+                <Input
+                  isLocked={readOnly}
+                  label={t(STRING.packingDetail3)}
+                  placeholder={t(STRING.enterPackingDetail3)}
+                  value={state.packing_detail_3}
+                  onChangeText={value => setFormState({ packing_detail_3: value })}
+                  style={styles.inputField}
+                />
+                <View style={[styles.staticTextContainer, { marginTop: getScaleSize(12) }]}>
+                  <AppText size={getScaleSize(13)} color={COLORS._6B7280} style={styles.staticText}>
+                    {t(STRING.packingNote)}
+                  </AppText>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* WOUND DETAILS */}
@@ -515,7 +607,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             {WOUND_DETAILS_OPTIONS.map(item => (
               <View key={item.key} style={styles.statusRow}>
                 <AppText size={getScaleSize(13)} font={FONTS.Inter.SemiBold}>
-                  {item.title}
+                  {t((STRING as any)[item.stringKey])}
                 </AppText>
 
                 <View style={styles.checkboxRow}>
@@ -523,14 +615,14 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     disabled={readOnly}
                     value={(state as any)[item.key] === true}
                     onValueChange={() => setFormState({ [item.key]: true })}
-                    label={STRING.yes}
+                    label={t(STRING.yes)}
                   />
 
                   <AppCheckBox
                     disabled={readOnly}
                     value={(state as any)[item.key] === false}
                     onValueChange={() => setFormState({ [item.key]: false })}
-                    label={STRING.no}
+                    label={t(STRING.no)}
                   />
                 </View>
               </View>
@@ -565,27 +657,27 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
               />
             </View>
 
-            <View style={styles.inputRow}>
-              <Input
-                isLocked={readOnly}
-                label={t(STRING.cleaningWith)}
-                value={state.cleaning_with}
-                onChangeText={value => setFormState({ cleaning_with: value })}
-                placeholder="Enter product"
-                style={styles.halfWidthInput}
-              />
+            {/* <View style={styles.inputRow}> */}
+            <Input
+              isLocked={readOnly}
+              label={t(STRING.cleaningWith)}
+              value={state.cleaning_with}
+              onChangeText={value => setFormState({ cleaning_with: value })}
+              placeholder={t(STRING.enterProduct)}
+              style={styles.halfWidthInput}
+            />
 
-              <Input
-                isLocked={readOnly}
-                label={t(STRING.disinfectionWith)}
-                value={state.disinfection_with}
-                onChangeText={value =>
-                  setFormState({ disinfection_with: value })
-                }
-                placeholder={t(STRING.enterProduct)}
-                style={styles.halfWidthInput}
-              />
-            </View>
+            <Input
+              isLocked={readOnly}
+              label={t(STRING.disinfectionWith)}
+              value={state.disinfection_with}
+              onChangeText={value =>
+                setFormState({ disinfection_with: value })
+              }
+              placeholder={t(STRING.enterProduct)}
+              style={styles.halfWidthInput}
+            />
+            {/* </View> */}
 
             <View style={styles.inputRow}>
               <Input
@@ -653,7 +745,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
           open={open}
           date={date}
           mode="date"
-          minimumDate={new Date()}
+          // minimumDate={new Date()}
           onConfirm={selectedDate => {
             setOpen(false);
             setDate(selectedDate);
@@ -713,7 +805,7 @@ const styles = StyleSheet.create({
   },
 
   inputField: {
-    marginBottom: getScaleSize(12),
+    marginVertical: getScaleSize(12),
     paddingHorizontal: 0,
   },
 
@@ -746,7 +838,7 @@ const styles = StyleSheet.create({
 
   protocolRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: "flex-end",
     flexWrap: 'wrap',
     // gap: getScaleSize(8),
   },
@@ -798,6 +890,7 @@ const styles = StyleSheet.create({
 
   inputRow: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
     gap: getScaleSize(12),
   },
 
@@ -805,6 +898,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,
     marginBottom: getScaleSize(12),
+  },
+
+  staticTextContainer: {
+    backgroundColor: '#F9FAFB',
+    padding: getScaleSize(12),
+    borderRadius: getScaleSize(8),
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS._3B82F6,
+  },
+
+  staticText: {
+    lineHeight: getScaleSize(18),
   },
 });
 
