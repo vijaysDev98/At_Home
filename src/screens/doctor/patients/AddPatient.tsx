@@ -382,6 +382,7 @@ const AddPatient: React.FC = () => {
                     labelSize={getScaleSize(13)}
                     isMandatory={true}
                     error={errors.fName}
+                    nameOnly={true}
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
                       errors.fName && {
@@ -407,6 +408,7 @@ const AddPatient: React.FC = () => {
                     labelSize={getScaleSize(13)}
                     isMandatory={true}
                     error={errors.lName}
+                    nameOnly={true}
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,
                       errors.lName && {

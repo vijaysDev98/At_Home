@@ -188,7 +188,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                         color={COLORS._1A1D1F}
                         numberOfLines={2}
                       >
-                        {service.serviceName}
+                        {t(service.serviceName)}
                       </AppText>
                       <AppText
                         size={getScaleSize(12)}
@@ -196,7 +196,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                         color={COLORS._6F767E}
                       // numberOfLines={3}
                       >
-                        {service.description}
+                        {t(service.description)}
                       </AppText>
                     </TouchableOpacity>
                   );

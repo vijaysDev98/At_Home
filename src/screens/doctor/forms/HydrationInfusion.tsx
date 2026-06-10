@@ -511,7 +511,7 @@ const HydrationInfusionForm = forwardRef<
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {title}
+              {t(title)}
             </AppText>
           </View>
 

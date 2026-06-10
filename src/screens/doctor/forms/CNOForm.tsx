@@ -547,6 +547,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 isLocked={readOnly}
                 label={t(STRING.age)}
                 value={state.patient_age}
+                isNumberOnly
                 onChangeText={value => setFormState({ patient_age: value })}
                 placeholder={t(STRING.years)}
                 style={styles.rowInput}
@@ -556,6 +557,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 isLocked={readOnly}
                 label={t(STRING.weightKg)}
                 value={state.patient_weight_confirm}
+                isNumberOnly
                 onChangeText={value =>
                   setFormState({ patient_weight_confirm: value })
                 }
@@ -644,6 +646,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                       updateProduct(index, 'quantity_per_day', value)
                     }
                     keyboardType="numeric"
+                    multiline
                     style={styles.productSmallInputRoot}
                     inputWrapperStyle={styles.productSmallBox}
                     inputStyle={styles.productSmallText}
@@ -717,6 +720,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 isLocked={readOnly}
                 label={t(STRING.reassessmentAfterMonths)}
                 value={state.reassessment_after_month}
+                isNumberOnly
                 onChangeText={value =>
                   setFormState({ reassessment_after_month: value })
                 }
@@ -728,6 +732,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 isLocked={readOnly}
                 label={t(STRING.renewalMonths)}
                 value={state.renewal_months}
+                isNumberOnly
                 onChangeText={value => setFormState({ renewal_months: value })}
                 placeholder={t(STRING.months)}
                 style={styles.rowInput}

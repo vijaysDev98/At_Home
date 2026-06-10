@@ -129,8 +129,8 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       flow_rate_rest: '',
       flow_rate_exertion: '',
       humidifier_required: null as boolean | null,
-      backup_source: false,
-      mobility_source: false,
+      backup_source: true,
+      mobility_source: true,
       pulse_oximeter_provided: false,
       non_kinking_tubing: false,
       target_spo2: '',
@@ -346,7 +346,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {STRING.medicalOxygenForm}
+              {t(STRING.medicalOxygenForm)}
             </AppText>
           </View>
 
@@ -574,14 +574,14 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
 
             {/* Backup and mobility checkboxes */}
             <AppCheckBox
-              disabled={readOnly}
+              disabled={true}
               value={state.backup_source}
               onValueChange={value => setFormState({ backup_source: value })}
               label={t(STRING.backupOxygenCylinder)}
             />
 
             <AppCheckBox
-              disabled={readOnly}
+              disabled={true}
               value={state.mobility_source}
               onValueChange={value => setFormState({ mobility_source: value })}
               label={t(STRING.mobilityOxygenCylinder)}

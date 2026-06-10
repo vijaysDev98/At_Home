@@ -679,25 +679,25 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
             />
             {/* </View> */}
 
-            <View style={styles.inputRow}>
-              <Input
-                isLocked={readOnly}
-                label={t(STRING.layer1)}
-                value={state.first_layer}
-                onChangeText={value => setFormState({ first_layer: value })}
-                placeholder=""
-                style={styles.halfWidthInput}
-              />
+            {/* <View style={styles.inputRow}> */}
+            <Input
+              isLocked={readOnly}
+              label={t(STRING.layer1)}
+              value={state.first_layer}
+              onChangeText={value => setFormState({ first_layer: value })}
+              placeholder=""
+              style={styles.halfWidthInput}
+            />
 
-              <Input
-                isLocked={readOnly}
-                label={t(STRING.layer2)}
-                value={state.second_layer}
-                onChangeText={value => setFormState({ second_layer: value })}
-                placeholder=""
-                style={styles.halfWidthInput}
-              />
-            </View>
+            <Input
+              isLocked={readOnly}
+              label={t(STRING.layer2)}
+              value={state.second_layer}
+              onChangeText={value => setFormState({ second_layer: value })}
+              placeholder=""
+              style={styles.halfWidthInput}
+            />
+            {/* </View> */}
 
             <Input
               isLocked={readOnly}

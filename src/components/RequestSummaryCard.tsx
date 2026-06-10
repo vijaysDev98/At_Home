@@ -30,7 +30,7 @@ interface RequestSummaryCardProps {
 const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   patient,
   serviceTitle,
-  serviceCategory = 'Primary Service',
+  serviceCategory = STRING.primaryService,
   serviceIcon,
   showEdit = false,
   onEditPatient,
@@ -50,7 +50,7 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
   return (
     <View style={[styles.summaryCard, style]}>
       <View style={styles.summaryRow}>
-        <View style={styles.summaryLeft}>
+        <View style={[styles.summaryLeft]}>
           <ProfileAvatar name={name} size="small" />
           <View style={styles.summaryTextBlock}>
             <AppText
@@ -91,23 +91,28 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
           <View style={[styles.avatarWrap, styles.serviceIconWrap]}>
             <Image source={serviceIcon} style={styles.avatar} />
           </View>
+
           <View style={styles.summaryTextBlock}>
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
+              numberOfLines={2}
+              ellipsizeMode="tail"
             >
-              {serviceTitle}
+              {t(serviceTitle)}
             </AppText>
+
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6F767E}
             >
-              {serviceCategory}
+              {t(serviceCategory)}
             </AppText>
           </View>
         </View>
+
         {showEdit && (
           <TouchableOpacity activeOpacity={0.8} onPress={onEditService}>
             <AppText
@@ -137,6 +142,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    // gap: getScaleSize(5),
     justifyContent: 'space-between',
   },
   summaryRowDivider: {
@@ -144,9 +150,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._EFEFEF,
   },
   summaryLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(10),
+    marginRight: getScaleSize(10),
+    minWidth: 0, // important
+  },
+
+  summaryTextBlock: {
+    flex: 1,
+    minWidth: 0, // important
+    gap: getScaleSize(2),
   },
   avatarWrap: {
     width: getScaleSize(40),
@@ -164,9 +179,7 @@ const styles = StyleSheet.create({
   serviceIconWrap: {
     backgroundColor: COLORS._E7EEF3,
   },
-  summaryTextBlock: {
-    gap: getScaleSize(2),
-  },
+
 });
 
 export default RequestSummaryCard;

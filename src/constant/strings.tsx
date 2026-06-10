@@ -324,6 +324,7 @@ export const STRING = {
 
   //ANTI-Biotherpy
   youCanOnlyAddUpto20Products: 'You can only add up to 20 products',
+  youCanOnlyAddUpto10Products: 'You can only add up to 10 products',
   prescriptionDateRequired: 'Prescription date is required',
   lastNameRequired: 'Last name is required',
   firstNameRequired: 'First name is required',
@@ -577,8 +578,8 @@ export const STRING = {
   cleaningWith: 'Cleaning with',
   disinfectionWith: 'Disinfection with',
   enterProduct: 'Enter product',
-  layer1: '1st Layer',
-  layer2: '2nd Layer',
+  layer1: '1st Layer In Contact With The Wound',
+  layer2: '2nd Overlapping Layer',
   treatmentDuration: 'Treatment Duration',
   eg15days: 'e.g. 15 days',
   untilHealed: 'Until healed',
@@ -807,5 +808,22 @@ export const STRING = {
   exudate: 'Exudate',
   cavity: 'Cavity',
   septicWound: 'Septic wound',
-  accountSetting: 'Account Settings'
+  accountSetting: 'Account Settings',
+  doctorInformation: 'Doctor Information',
+
+  //SERVICES
+  AntibiotherapyInfusion: 'Antibiotherapy Infusion',
+  AdministrationOfAntibioticsThroughInfusionTherapy: 'Administration of antibiotics through infusion therapy',
+  artificialNutrition: "Artificial Nutrition",
+  nutritionalSupportThroughMedicalMethodsSuchAsEnteralFeeding: "Nutritional support through medical methods such as enteral feeding",
+  CNO: "CNO",
+  careCoordinationAndNursingOversightServices: "Care coordination and nursing oversight services",
+  generic: "Generic",
+  basicGeneralCareService: "Basic general care service",
+  hydrationInfusion: "Hydration Infusion",
+  fluidInfusionTherapyForHydrationAndRecovery: "Fluid infusion therapy for hydration and recovery",
+  ivTherapyPrescriptionForm: "IV Therapy Prescription Form",
+  parenteralNutritionCentralLinePrescriptionForm: "Parenteral Nutrition (Central Line) Prescription Form",
+  pregnancyRelatedCarePrescriptionForm: "Pregnancy-Related Care Prescription Form",
+  primaryService: 'Primary Service'
 };

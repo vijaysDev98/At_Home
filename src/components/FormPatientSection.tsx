@@ -67,6 +67,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           onChangeText={text => setState({ patient_first_name: text })}
           style={[styles.inputField, { flex: 1 }]}
           error={errors.patientFirstName}
+          nameOnly={true}
         />
         <Input
           isLocked={readOnly}
@@ -77,6 +78,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           onChangeText={text => setState({ patient_last_name: text })}
           style={[styles.inputField, { flex: 1 }]}
           error={errors.patientLastName}
+          nameOnly={true}
         />
       </View>
       <View style={styles.row}>
@@ -105,6 +107,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
             isLocked={readOnly}
             label={t(STRING.weightKg)}
             placeholder="e.g. 70"
+            isNumberOnly
             value={state.weight || ''}
             onChangeText={text => setState({ weight: text })}
             style={[styles.inputField, { flex: 1 }]}

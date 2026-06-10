@@ -465,6 +465,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 isLocked={readOnly}
                 label={t(STRING.prescriptionDurationWeeks)}
                 value={state.prescription_duration_weeks}
+                isNumberOnly
                 onChangeText={value =>
                   setFormState({ prescription_duration_weeks: value })
                 }
@@ -475,6 +476,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               <Input
                 isLocked={readOnly}
                 label={t(STRING.renewalTimes)}
+                isNumberOnly
                 value={state.renewal_times}
                 onChangeText={value => setFormState({ renewal_times: value })}
                 placeholder={t(STRING.number)}
@@ -520,6 +522,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               onChangeText={value =>
                 setFormState({ nutrition_duration_weeks: value })
               }
+              isNumberOnly
               placeholder={t(STRING.weeks)}
               keyboardType="numeric"
               style={styles.inputField}
@@ -581,6 +584,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               isLocked={readOnly}
               label={t(STRING.nasogastricRatePerMonth)}
               value={state.nasogastric_rate_per_month}
+              isNumberOnly
               onChangeText={value =>
                 setFormState({ nasogastric_rate_per_month: value })
               }
@@ -612,6 +616,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
               isLocked={readOnly}
               label={t(STRING.nasogastricCareFrequencyDays)}
               value={state.nasogastric_care_frequency_days}
+              isNumberOnly
               onChangeText={value =>
                 setFormState({ nasogastric_care_frequency_days: value })
               }
@@ -784,6 +789,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                     }
                     keyboardType="numeric"
                     style={styles.nutrientSmallInputRoot}
+                    multiline
                     inputWrapperStyle={styles.nutrientSmallBox}
                     inputStyle={styles.nutrientSmallText}
                     placeholder={t(STRING.ml)}
@@ -798,6 +804,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                     }
                     keyboardType="numeric"
                     style={styles.nutrientSmallInputRoot}
+                    multiline
                     inputWrapperStyle={styles.nutrientSmallBox}
                     inputStyle={styles.nutrientSmallText}
                     placeholder={t(STRING.qty)}
@@ -985,6 +992,7 @@ const styles = StyleSheet.create({
   nutrientSmallInputRoot: {
     flex: 1,
     paddingHorizontal: 0,
+    textAlign: 'center'
   },
   nutrientNameBox: {
     // height: getScaleSize(42),

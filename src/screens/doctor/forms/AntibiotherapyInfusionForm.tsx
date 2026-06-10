@@ -575,6 +575,8 @@ const AntibiotherapyInfusionForm = forwardRef<
               isLocked={readOnly}
               label={t(STRING.strength)}
               value={product.strength}
+              isNumberOnly
+              keyboardType="number-pad"
               onChangeText={value => updateProduct(index, 'strength', value)}
               placeholder={t(STRING.concentration)}
               style={styles.inputField}
@@ -616,6 +618,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onChangeText={value =>
                 updateProduct(index, 'diluent_volume_ml', value)
               }
+              isNumberOnly
               placeholder={t(STRING.volumePerDay)}
               style={styles.inputField}
               keyboardType="numeric"
@@ -628,6 +631,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onChangeText={value =>
                 updateProduct(index, 'duration_hours', value)
               }
+              isNumberOnly
               placeholder={t(STRING.hours)}
               style={styles.inputField}
               keyboardType="numeric"
@@ -640,6 +644,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onChangeText={value =>
                 updateProduct(index, 'duration_minutes', value)
               }
+              isNumberOnly
               placeholder={t(STRING.minutes)}
               style={styles.inputField}
               keyboardType="numeric"
@@ -652,6 +657,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onChangeText={value =>
                 updateProduct(index, 'frequency_per_day', value)
               }
+              isNumberOnly
               placeholder={t(STRING.freqPerDay)}
               style={styles.inputField}
               keyboardType="numeric"
@@ -856,6 +862,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               onChangeText={value =>
                 updateProduct(index, 'treatment_duration_days', value)
               }
+              isNumberOnly
               placeholder={t(STRING.treatmentDurationDays)}
               style={styles.inputField}
               keyboardType="numeric"

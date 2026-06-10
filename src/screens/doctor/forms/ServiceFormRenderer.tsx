@@ -11,6 +11,7 @@ import PcaForm from './PcaForm';
 import PersonalHygieneCare from './PersonalHygieneCare';
 import WoundCareForm from './WoundCareForm';
 import HydrationInfusionForm from './HydrationInfusion';
+import { STRING } from '../../../constant';
 
 interface Props {
   serviceId: string;
@@ -63,7 +64,7 @@ const ServiceFormRenderer = ({
       return (
         <HydrationInfusionForm
           {...commonProps}
-          title="IV Therapy Prescription Form"
+          title={STRING.ivTherapyPrescriptionForm}
         />
       );
 
@@ -80,7 +81,7 @@ const ServiceFormRenderer = ({
       return (
         <HydrationInfusionForm
           {...commonProps}
-          title="Parenteral Nutrition (Central Line) Prescription Form"
+          title={STRING.parenteralNutritionCentralLinePrescriptionForm}
         />
       );
 
@@ -97,7 +98,7 @@ const ServiceFormRenderer = ({
       return (
         <HydrationInfusionForm
           {...commonProps}
-          title="Pregnancy-Related Care Prescription Form"
+          title={STRING.pregnancyRelatedCarePrescriptionForm}
         />
       );
 

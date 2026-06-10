@@ -86,8 +86,8 @@ const ProviderFormScreen: React.FC = () => {
     [action, requestData?.formStatus],
   );
 
-  const status = requestData?.status;
-  const formStatus = requestData?.formStatus;
+  const status = requestData?.status || request?.status;
+  const formStatus = requestData?.formStatus || request?.formStatus;
 
   const isInProgress = useMemo(
     () => status === REQUEST_STATUS.IN_PROGRESS,
@@ -185,11 +185,11 @@ const ProviderFormScreen: React.FC = () => {
     },
 
     // Unused doctor handlers (kept for type safety)
-    updateFormData: async () => {},
-    saveAsDraft: async () => {},
-    submitRequest: async () => {},
-    updateAndSign: async () => {},
-    updateAndResign: async () => {},
+    updateFormData: async () => { },
+    saveAsDraft: async () => { },
+    submitRequest: async () => { },
+    updateAndSign: async () => { },
+    updateAndResign: async () => { },
   };
 
   // Fetch service request details when in view mode
@@ -203,6 +203,7 @@ const ProviderFormScreen: React.FC = () => {
   const fetchServiceRequestDetails = async (isInProgress: boolean) => {
     try {
       setHasError(false);
+
       const data = isInProgress
         ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
         : await serviceRequestApi.getPreClaimDetails(requestId || '');
@@ -316,8 +317,8 @@ const ProviderFormScreen: React.FC = () => {
             readOnly
               ? t(STRING.viewForm)
               : isInProgress
-              ? t(STRING.service)
-              : t(STRING.updateForm)
+                ? t(STRING.service)
+                : t(STRING.updateForm)
           }
           onViewFormPress={() => {
             openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');

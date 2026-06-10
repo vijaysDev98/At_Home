@@ -397,6 +397,7 @@ const PersonalHygieneCare = forwardRef<
               onChangeText={value => setFormState({ patient_first_name: value })}
               style={[styles.inputField, { flex: 1 }]}
               error={errors.patientFirstName}
+              nameOnly={true}
             />
             <Input
               isLocked={readOnly}
@@ -407,6 +408,7 @@ const PersonalHygieneCare = forwardRef<
               onChangeText={value => setFormState({ patient_last_name: value })}
               style={[styles.inputField, { flex: 1 }]}
               error={errors.patientLastName}
+              nameOnly={true}
             />
           </View>
 
@@ -423,6 +425,8 @@ const PersonalHygieneCare = forwardRef<
             style={styles.inputField}
             pointerEvents="none"
           />
+
+          {renderSectionHeader(t(STRING.doctorInformation))}
 
           <View style={styles.row}>
             <Input

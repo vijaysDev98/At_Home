@@ -49,6 +49,8 @@ export interface InputProps extends TextInputProps {
   isCountryCode?: boolean;
   countryCode?: string;
   onCountryCodeSelect?: (code: string) => void;
+  nameOnly?: boolean;
+  isNumberOnly?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -81,6 +83,8 @@ const Input: React.FC<InputProps> = ({
   isCountryCode,
   countryCode,
   onCountryCodeSelect,
+  nameOnly = false,
+  isNumberOnly = false,
   ...rest
 }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -107,15 +111,30 @@ const Input: React.FC<InputProps> = ({
     rest.keyboardType === 'decimal-pad' ||
     rest.keyboardType === 'phone-pad';
 
-  // const handleChangeText = (text: string) => {
-  //   if (!rest.onChangeText) return;
-  //   if (isNumericKeyboard) {
-  //     const cleaned = text.replace(/[^0-9]/g, ''); // ✅ digits only, nothing else
-  //     rest.onChangeText(cleaned);
-  //   } else {
-  //     rest.onChangeText(text);
-  //   }
-  // };
+  const isNameField = nameOnly === true;
+
+  const handleChangeText = (text: string) => {
+    if (!rest.onChangeText) return;
+
+    if (isCountryCode) {
+      const cleaned = text.replace(/[^0-9]/g, ''); // ✅ digits only, nothing else
+      rest.onChangeText(cleaned);
+    } else if (isNameField) {
+      // ✅ letters only (including spaces, hyphens, and apostrophes for names)
+      const cleaned = text.replace(/[^a-zA-Z\s\-']/g, '');
+      rest.onChangeText(cleaned);
+    } else if (isNumberOnly || isNumericKeyboard) {
+      const cleaned = text
+        .replace(/[^0-9.]/g, '')
+        .replace(/^\./, '')
+        .replace(/(\..*)\./g, '$1');
+
+      rest.onChangeText(cleaned);
+    }
+    else {
+      rest.onChangeText(text);
+    }
+  };
 
   const selectedCountry = React.useMemo(() => {
     if (!countryCode) {
@@ -208,7 +227,7 @@ const Input: React.FC<InputProps> = ({
 
         <TextInput
           {...rest}
-          // onChangeText={handleChangeText}
+          onChangeText={handleChangeText}
           editable={isLocked ? false : onPress ? false : rest.editable}
           style={[styles.input, isLocked && styles.inputLocked, inputStyle]}
           placeholderTextColor={placeholderTextColor || COLORS._1E293B80}
