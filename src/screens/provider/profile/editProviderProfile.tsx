@@ -177,21 +177,19 @@ const EditProviderProfile: React.FC = () => {
                       : { uri: IMAGE_BASE_URL + userAvatar }
                     : IMAGES.person
                 }
-                style={styles.avatar}
+                style={[
+                  styles.avatar,
+                  ...(!userAvatar ? [{ resizeMode: 'center' }] : []),
+                ]}
               />
-
               <TouchableOpacity
-                activeOpacity={0.8}
                 style={styles.cameraBtn}
+                activeOpacity={0.8}
                 onPress={() => imagePickerSheetRef.current?.show()}
               >
                 <Image source={IMAGES.ic_edit} style={styles.cameraIcon} />
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.avatarTip}>
-              {t(STRING.tapToChangeProfilePhoto)}
-            </Text>
           </View>
 
           {/* Provider Name */}

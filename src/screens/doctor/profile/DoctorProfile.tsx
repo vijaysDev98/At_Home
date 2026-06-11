@@ -230,12 +230,13 @@ const DoctorProfile: React.FC = () => {
           {/* Form card */}
           <View style={styles.card}>
             <AppText
-              size={getScaleSize(13)}
+              size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
               {t(STRING.personalInformation)}
             </AppText>
+
             {/* <View style={styles.fieldBlock}>
               <Input
                 label={t(STRING.fName)}
@@ -298,7 +299,7 @@ const DoctorProfile: React.FC = () => {
 
           <View style={styles.card}>
             <AppText
-              size={getScaleSize(13)}
+              size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
@@ -369,7 +370,7 @@ const DoctorProfile: React.FC = () => {
 
           <View style={styles.card}>
             <AppText
-              size={getScaleSize(13)}
+              size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
               color={COLORS._6B7280}
             >
@@ -379,7 +380,7 @@ const DoctorProfile: React.FC = () => {
             <TouchableOpacity style={styles.settingRow} onPress={handleLanguagePicker}>
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.language} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.language)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.language)}</AppText>
               </View>
               <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>{currentLanguage.toUpperCase()}</AppText>
             </TouchableOpacity>
@@ -396,7 +397,7 @@ const DoctorProfile: React.FC = () => {
             >
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.lock} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.changePassword)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.changePassword)}</AppText>
               </View>
               {/* <Image source={IMAGES.back} style={styles.chevronIcon} /> */}
             </TouchableOpacity>
@@ -406,7 +407,7 @@ const DoctorProfile: React.FC = () => {
             <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.arrow_back} style={[styles.settingIcon]} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.logOut)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.logOut)}</AppText>
               </View>
             </TouchableOpacity>
             <View style={styles.settingDivider} />
@@ -415,7 +416,7 @@ const DoctorProfile: React.FC = () => {
             <TouchableOpacity style={styles.settingRow} onPress={handleDeleteAccount}>
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.trash} style={[styles.settingIcon, { tintColor: COLORS.error }]} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} color={COLORS.error}>{t(STRING.deleteAccount)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)} color={COLORS.error}>{t(STRING.deleteAccount)}</AppText>
               </View>
             </TouchableOpacity>
           </View>

@@ -15,6 +15,7 @@ import {
   DeleteAccountConfirmationSheet,
   LanguagePickerSheet,
   AppSafeAreaView,
+  ProfileAvatar,
 } from '../../../components';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -45,7 +46,7 @@ const ProviderProfile: React.FC = () => {
 
   useEffect(() => {
     if (profileData?.profileImg) {
-      setUserAvatar(profileData.profileImg);
+      setUserAvatar(profileData?.profileImg);
     }
   }, [profileData?.profileImg]);
 
@@ -131,18 +132,26 @@ const ProviderProfile: React.FC = () => {
         >
           {/* Profile Card */}
           <View style={styles.profileCard}>
-            <Image
-              source={
-                userAvatar
-                  ? userAvatar.startsWith('file://') ||
-                    userAvatar.startsWith('content://') ||
-                    userAvatar.startsWith('data:')
-                    ? { uri: userAvatar }
-                    : { uri: IMAGE_BASE_URL + userAvatar }
-                  : IMAGES.person
-              }
-              style={styles.avatar}
-            />
+            {userAvatar ? (
+              <View style={styles.avatarWrap}>
+                <Image
+                  source={
+                    userAvatar
+                      ? userAvatar.startsWith('file://') ||
+                        userAvatar.startsWith('content://') ||
+                        userAvatar.startsWith('data:')
+                        ? { uri: userAvatar }
+                        : { uri: IMAGE_BASE_URL + userAvatar }
+                      : IMAGES.person
+                  }
+                  style={styles.avatar}
+                />
+              </View>
+            ) : (
+              <View style={{ marginBottom: getScaleSize(10) }}>
+                <ProfileAvatar size="large" name={providerName} />
+              </View>
+            )}
             <AppText
               size={getScaleSize(20)}
               font={FONTS.Inter.Bold}
@@ -420,7 +429,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: getScaleSize(8),
   },
-
+  avatarWrap: {
+    width: getScaleSize(96),
+    height: getScaleSize(96),
+    borderRadius: getScaleSize(48),
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: getScaleSize(12),
+    borderWidth: 4,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
+  },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',

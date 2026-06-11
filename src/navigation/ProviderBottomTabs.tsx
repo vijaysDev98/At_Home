@@ -9,7 +9,7 @@ import {
 } from 'react-native-safe-area-context';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, FONTS } from '../utils';
-import { PROVIDER_TAB_SCREENS } from './routes';
+import { DOCTOR_TAB_SCREENS, PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
 import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
@@ -20,10 +20,12 @@ import { getScaleSize } from '../utils/scaleSize';
 import AvailableRequest from '../screens/provider/request/AvailableRequest';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import CreateRequest from '../screens/doctor/createRequest/createRequest';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
   Requests: undefined;
+  CreateRequest: undefined;
   Alerts: undefined;
   Profile: undefined;
 };
@@ -55,6 +57,10 @@ const ProviderBottomTabs: React.FC = () => {
       <Tab.Screen
         name={PROVIDER_TAB_SCREENS.REQUESTS}
         component={AvailableRequest}
+      />
+      <Tab.Screen
+        name={DOCTOR_TAB_SCREENS.CREATE_REQUEST}
+        component={CreateRequest}
       />
       <Tab.Screen
         name={PROVIDER_TAB_SCREENS.ALERTS}
@@ -98,6 +104,36 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
           const icon = iconForRoute(
             route.name as keyof ProviderBottomTabParamList,
           );
+
+          if (route.name === DOCTOR_TAB_SCREENS.CREATE_REQUEST) {
+            return (
+              <Pressable
+                key={route.key}
+                style={({ pressed }) => [
+                  styles.fab,
+                  pressed ? styles.plusBtnPressed : null,
+                  {
+                    backgroundColor: isFocused
+                      ? COLORS.primary
+                      : COLORS._E8EDF1,
+                  },
+                ]}
+                onPress={() =>
+                  navigation.navigate(
+                    DOCTOR_TAB_SCREENS.CREATE_REQUEST as never,
+                  )
+                }
+              >
+                <Image
+                  source={IMAGES.new_request}
+                  style={[
+                    styles.icon,
+                    { tintColor: isFocused ? COLORS.white : COLORS.primary },
+                  ]}
+                />
+              </Pressable>
+            );
+          }
 
           return (
             <Pressable
@@ -156,6 +192,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: getScaleSize(4),
     overflow: 'hidden',
+  },
+  fab: {
+    width: getScaleSize(56),
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(28),
+    backgroundColor: COLORS._E8EDF1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    bottom: getScaleSize(8),
+  },
+  plusBtnPressed: {
+    opacity: 0.85,
   },
   iconContainerActive: {
     backgroundColor: '#E8EDF1',

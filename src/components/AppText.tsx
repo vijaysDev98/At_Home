@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { Text as RNText, StyleProp, TextStyle, TextProps } from 'react-native';
+import { Text as RNText, StyleProp, TextStyle, TextProps, Platform } from 'react-native';
+import FONTS from '../utils/fonts';
 
 interface AppTextProps extends TextProps {
   style?: StyleProp<TextStyle>;
@@ -23,6 +24,38 @@ function AppText({
   children,
   ...rest
 }: AppTextProps) {
+  // Enhanced font handling for iOS
+  const getFontStyle = (): TextStyle => {
+    if (!font) return {};
+
+    if (Platform.OS === 'ios') {
+      // For iOS, use base font family with fontWeight
+      // This ensures proper font weight rendering on iOS
+      let fontWeight = weight;
+
+      // Map font names to weights for iOS
+      if (font === FONTS.Inter.Bold) {
+        fontWeight = FONTS.Inter.Weights.Bold;
+      } else if (font === FONTS.Inter.Medium) {
+        fontWeight = FONTS.Inter.Weights.Medium;
+      } else if (font === FONTS.Inter.SemiBold) {
+        fontWeight = FONTS.Inter.Weights.SemiBold;
+      } else if (font === FONTS.Inter.Regular) {
+        fontWeight = FONTS.Inter.Weights.Regular;
+      }
+
+      return {
+        fontFamily: FONTS.Inter.Family,
+        fontWeight,
+      };
+    } else {
+      // For Android, use the specific font names
+      return {
+        fontFamily: font,
+      };
+    }
+  };
+
   return (
     <RNText
       {...rest}
@@ -31,10 +64,9 @@ function AppText({
         {
           color,
           fontSize: size,
-          fontFamily: font,
           lineHeight,
           textAlign: align,
-          fontWeight: weight,
+          ...getFontStyle(),
         },
       ]}
     >
