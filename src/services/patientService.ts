@@ -23,8 +23,39 @@ export const updatePatientService = async (id: string, data: any) => {
   return await API.Instance.put(`${API.API_ROUTES.addPatient}/${id}`, data);
 };
 
-export const getServicesService = async (page: number, size: number) => {
-  return await API.Instance.get(API.API_ROUTES.getServices, {
-    params: { page, size },
+export const getServicesService = async (
+  page: number,
+  size: number,
+  serviceIDs?: string[],
+) => {
+  const params: any = { page, size };
+
+  if (serviceIDs?.length) {
+    params.serviceIds = serviceIDs.join(',');
+  }
+
+  return API.Instance.get(API.API_ROUTES.getServices, {
+    params,
+  });
+};
+
+export const getDoctorsService = async (
+  page: number,
+  size: number,
+  search?: string,
+  specialty?: string,
+) => {
+  const params: any = { page, size };
+
+  if (search) {
+    params.search = search;
+  }
+
+  if (specialty) {
+    params.specialty = specialty;
+  }
+
+  return API.Instance.get(API.API_ROUTES.getDoctors, {
+    params,
   });
 };

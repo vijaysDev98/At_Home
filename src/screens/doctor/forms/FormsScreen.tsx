@@ -66,6 +66,7 @@ import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import { useTranslation } from 'react-i18next';
+import { ROLES } from '../../../constant/getRole';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -248,7 +249,7 @@ const FormsScreen: React.FC = () => {
 
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons('doctor', status, formStatus, action, from),
+    () => getFormScreenButtons(ROLES.DOCTOR, status, formStatus, action, from),
     [status, formStatus, action, from],
   );
 

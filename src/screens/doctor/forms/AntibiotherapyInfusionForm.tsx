@@ -59,6 +59,7 @@ export interface AntibiotherapyInfusionFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 const CENTRAL_VENOUS_OPTIONS = [
@@ -84,7 +85,7 @@ export interface AntibiotherapyInfusionFormRef {
 const AntibiotherapyInfusionForm = forwardRef<
   AntibiotherapyInfusionFormRef,
   AntibiotherapyInfusionFormProps
->(({ serviceId, initialData, patient, readOnly = false }, ref) => {
+>(({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
 
@@ -96,6 +97,9 @@ const AntibiotherapyInfusionForm = forwardRef<
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+
+  // Use prescriber prop (selected doctor or profile data)
+  const prescriberData = prescriber || profileData;
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [pickerType, setPickerType] = useState<{
@@ -123,15 +127,15 @@ const AntibiotherapyInfusionForm = forwardRef<
     ald_condition: false,
 
     // Prescriber Identification (Auto-filled from doctor profile)
-    prescriber_last_name: profileData?.lName || '',
-    prescriber_first_name: profileData?.fName || '',
-    prescriber_phone: profileData?.phoneNumber || '',
-    rpps_id: profileData?.rppsNumber || '',
+    prescriber_last_name: prescriberData?.lName || '',
+    prescriber_first_name: prescriberData?.fName || '',
+    prescriber_phone: prescriberData?.phoneNumber || '',
+    rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: profileData?.facilityName || '',
-    hospital_address: profileData?.businessAddress || '',
-    finess_number: profileData?.finessNumber || '',
+    hospital_name: prescriberData?.facilityName || '',
+    hospital_address: prescriberData?.businessAddress || '',
+    finess_number: prescriberData?.finessNumber || '',
 
     // Prescription Context
     forms_for: '',
@@ -183,6 +187,7 @@ const AntibiotherapyInfusionForm = forwardRef<
       initialData,
       serviceId,
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -197,6 +202,7 @@ const AntibiotherapyInfusionForm = forwardRef<
       initialData,
       serviceId,
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,

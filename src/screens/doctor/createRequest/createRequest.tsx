@@ -32,6 +32,7 @@ import {
   PatientFilterType,
 } from '../../../constant/constantData';
 import { useTranslation } from 'react-i18next';
+import { ROLES, useUserRole } from '../../../constant/getRole';
 
 export type CreateRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -46,14 +47,6 @@ interface PatientItemProps {
 
 const PatientItem: React.FC<PatientItemProps> = React.memo(
   ({ patient, isSelected, onSelect }) => {
-    const getInitials = (name: string) => {
-      if (!name) return '??';
-      const parts = name.split(' ');
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
-      return name.slice(0, 2).toUpperCase();
-    };
 
     return (
       <TouchableOpacity
@@ -101,6 +94,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const dispatch = useDispatch<any>();
+  const role: string = useUserRole();
   const { t } = useTranslation();
 
   const { patients } = useSelector((state: RootState) => state.patient);
@@ -207,7 +201,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     if (patient) {
       dispatch(setSelectedPatient(patient));
 
-      NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP2, {
+      NavigationService.navigate(role == ROLES.PROVIDER ? SCREENS.DOCTOR_LIST : SCREENS.CREATE_REQUEST_STEP2, {
         patientId: selectedId,
       });
     }

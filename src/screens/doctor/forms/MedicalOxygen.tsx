@@ -60,6 +60,7 @@ export interface MedicalOxygenProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 export interface MedicalOxygenRef {
@@ -71,7 +72,7 @@ export interface MedicalOxygenRef {
 }
 
 const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
-  ({ serviceId = '', initialData, patient, readOnly = false }, ref) => {
+  ({ serviceId = '', initialData, patient, readOnly = false, prescriber }, ref) => {
     const dispatch = useDispatch();
     const locale = useSelector((state: any) => state.language.currentLanguage);
     const { t } = useTranslation();
@@ -83,6 +84,9 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
     const profileData = useSelector(
       (state: RootState) => state.profile.profileData,
     );
+
+    // Use prescriber prop (selected doctor or profile data)
+    const prescriberData = prescriber || profileData;
 
     const lastFirstErrorKey = useRef<string | null>(null);
 
@@ -110,15 +114,15 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       ald_condition: false,
 
       // Prescriber Identification
-      prescriber_last_name: profileData?.lName || '',
-      prescriber_first_name: profileData?.fName || '',
-      prescriber_phone: profileData?.phoneNumber || '',
-      rpps_id: profileData?.rppsNumber || '',
+      prescriber_last_name: prescriberData?.lName || '',
+      prescriber_first_name: prescriberData?.fName || '',
+      prescriber_phone: prescriberData?.phoneNumber || '',
+      rpps_id: prescriberData?.rppsNumber || '',
 
       // Facility Information
-      hospital_name: profileData?.facilityName || '',
-      hospital_address: profileData?.businessAddress || '',
-      finess_number: profileData?.finessNumber || '',
+      hospital_name: prescriberData?.facilityName || '',
+      hospital_address: prescriberData?.businessAddress || '',
+      finess_number: prescriberData?.finessNumber || '',
 
       // Prescription Details - Medical Oxygen
       primary_oxygen_source: '',
@@ -239,6 +243,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,
@@ -253,6 +258,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,

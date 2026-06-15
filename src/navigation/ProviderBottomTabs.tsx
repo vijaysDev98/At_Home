@@ -21,10 +21,12 @@ import AvailableRequest from '../screens/provider/request/AvailableRequest';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
 import CreateRequest from '../screens/doctor/createRequest/createRequest';
+import PatientsScreen from '../screens/doctor/patients/PatientsScreen';
 
 export type ProviderBottomTabParamList = {
   Home: undefined;
   Requests: undefined;
+  Patients: undefined;
   CreateRequest: undefined;
   Alerts: undefined;
   Profile: undefined;
@@ -36,6 +38,8 @@ const iconForRoute = (name: keyof ProviderBottomTabParamList) => {
   switch (name) {
     case PROVIDER_TAB_SCREENS.HOME:
       return IMAGES.tab_home;
+    case DOCTOR_TAB_SCREENS.PATIENTS:
+      return IMAGES.tab_patients;
     case PROVIDER_TAB_SCREENS.REQUESTS:
       return IMAGES.tab_requests2;
     case PROVIDER_TAB_SCREENS.ALERTS:
@@ -54,17 +58,22 @@ const ProviderBottomTabs: React.FC = () => {
       tabBar={props => <CustomTabBar {...props} />}
     >
       <Tab.Screen name={PROVIDER_TAB_SCREENS.HOME} component={ProviderHome} />
+
       <Tab.Screen
-        name={PROVIDER_TAB_SCREENS.REQUESTS}
-        component={AvailableRequest}
+        name={DOCTOR_TAB_SCREENS.PATIENTS}
+        component={PatientsScreen}
       />
       <Tab.Screen
         name={DOCTOR_TAB_SCREENS.CREATE_REQUEST}
         component={CreateRequest}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name={PROVIDER_TAB_SCREENS.ALERTS}
         component={ProviderNotification}
+      /> */}
+      <Tab.Screen
+        name={PROVIDER_TAB_SCREENS.REQUESTS}
+        component={AvailableRequest}
       />
       <Tab.Screen
         name={PROVIDER_TAB_SCREENS.PROFILE}

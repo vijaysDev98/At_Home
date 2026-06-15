@@ -94,6 +94,7 @@ export interface CNOFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 export interface CNOFormRef {
@@ -105,7 +106,7 @@ export interface CNOFormRef {
 }
 
 const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
-  ({ serviceId, initialData, patient, readOnly = false }, ref) => {
+  ({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const reduxPatient = useSelector(
@@ -115,6 +116,9 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     const profileData = useSelector(
       (state: RootState) => state.profile.profileData,
     );
+
+    // Use prescriber prop (selected doctor or profile data)
+    const prescriberData = prescriber || profileData;
 
     const productPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
@@ -141,15 +145,15 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       patient_weight_confirm: '',
 
       // Prescriber
-      prescriber_last_name: profileData?.lName || '',
-      prescriber_first_name: profileData?.fName || '',
-      prescriber_phone: profileData?.phoneNumber || '',
-      rpps_id: profileData?.rppsNumber || '',
+      prescriber_last_name: prescriberData?.lName || '',
+      prescriber_first_name: prescriberData?.fName || '',
+      prescriber_phone: prescriberData?.phoneNumber || '',
+      rpps_id: prescriberData?.rppsNumber || '',
 
       // Facility
-      hospital_name: profileData?.facilityName || '',
-      hospital_address: profileData?.businessAddress || '',
-      finess_number: profileData?.finessNumber || '',
+      hospital_name: prescriberData?.facilityName || '',
+      hospital_address: prescriberData?.businessAddress || '',
+      finess_number: prescriberData?.finessNumber || '',
 
       // Nutrition Products (repeatable)
       nutrition_products: [
@@ -389,6 +393,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,
@@ -403,6 +408,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,

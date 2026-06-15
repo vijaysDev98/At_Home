@@ -42,6 +42,7 @@ export interface PersonalHygieneCareProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 const hygieneCareOptions = [
@@ -77,7 +78,7 @@ export interface PersonalHygieneCareRef {
 const PersonalHygieneCare = forwardRef<
   PersonalHygieneCareRef,
   PersonalHygieneCareProps
->(({ serviceId, initialData, patient, readOnly = false }, ref) => {
+>(({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
@@ -89,6 +90,9 @@ const PersonalHygieneCare = forwardRef<
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+
+  // Use prescriber prop (selected doctor or profile data)
+  const prescriberData = prescriber || profileData;
 
 
   const [open, setOpen] = useState(false);
@@ -107,8 +111,8 @@ const PersonalHygieneCare = forwardRef<
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    prescriber_last_name: capitalizeFirstLetter(profileData?.lName || '') || '',
-    prescriber_first_name: capitalizeFirstLetter(profileData?.fName || '') || '',
+    prescriber_last_name: capitalizeFirstLetter(prescriberData?.lName || '') || '',
+    prescriber_first_name: capitalizeFirstLetter(prescriberData?.fName || '') || '',
     prescription_date: moment().format('DD/MM/YYYY'),
 
     // Daily Care (Home Nurse)
@@ -144,9 +148,9 @@ const PersonalHygieneCare = forwardRef<
 
     // Medical Certification
     doctor_name:
-      capitalizeFirstLetter(profileData?.fName || '') +
+      capitalizeFirstLetter(prescriberData?.fName || '') +
       ' ' +
-      capitalizeFirstLetter(profileData?.lName || ''),
+      capitalizeFirstLetter(prescriberData?.lName || ''),
     certified_patient_name:
       capitalizeFirstLetter(selectedPatient?.fName || '') +
       ' ' +
@@ -259,6 +263,7 @@ const PersonalHygieneCare = forwardRef<
       initialData,
       serviceId: serviceId || '',
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -273,6 +278,7 @@ const PersonalHygieneCare = forwardRef<
       initialData,
       serviceId: serviceId || '',
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,

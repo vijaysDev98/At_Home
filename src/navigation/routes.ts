@@ -14,6 +14,7 @@ export const SCREENS = {
   DOCTOR_BOTTOM_TABS: 'DoctorBottomTabs',
   PROVIDER_BOTTOM_TABS: 'ProviderBottomTabs',
   PROVIDER_AVAILABLE_REQUESTS: 'ProviderAvailableRequests',
+  PROVIDER_REQUESTS: 'ProviderRequests',
   ADD_PATIENT: 'AddPatient',
   PATIENT_DETAIL: 'PatientDetail',
   SIGNATURE_FORM: 'SignatureForm',
@@ -24,6 +25,8 @@ export const SCREENS = {
   PROVIDER_FORMS_SCREEN: 'ProviderFormScreen',
   FORM_REVIEW_SCREEN: 'FormReviewScreen',
   EDIT_PROVIDER_PROFILE: 'EditProviderProfile',
+  ALERTS: "Alerts",
+  DOCTOR_LIST: "DoctorList",
 } as const;
 
 // Doctor Bottom Tab Screen Names

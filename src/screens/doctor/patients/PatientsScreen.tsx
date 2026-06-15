@@ -29,6 +29,7 @@ import { RootState } from '../../../redux/store';
 import { PATIENT_FILTERS } from '../../../constant/constantData';
 import { useTranslation } from 'react-i18next';
 import App from '../../../../App';
+import { getCountryCode } from '../../../constant/getCountryCode';
 
 const PatientsScreen: React.FC = () => {
   const dispatch = useDispatch<any>();
@@ -125,18 +126,6 @@ const PatientsScreen: React.FC = () => {
     }
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return '??';
-
-    const parts = name.split(' ');
-
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-
-    return name.slice(0, 2).toUpperCase();
-  };
-
   const PatientItem = memo(
     ({ item, onPress }: { item: any; onPress: () => void }) => (
       <TouchableOpacity
@@ -162,7 +151,7 @@ const PatientsScreen: React.FC = () => {
               />
 
               <Text style={styles.phone}>
-                {item.phoneNumber}
+                {getCountryCode(item?.country)} {item.phoneNumber}
               </Text>
             </View>
           </View>

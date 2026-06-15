@@ -27,6 +27,7 @@ import { getButtonConfig, REQUEST_STATUS, STRING } from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { useTranslation } from 'react-i18next';
+import { getCountryCode } from '../../../constant/getCountryCode';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -178,7 +179,7 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Medium}
                     color={COLORS._1A1D1F}
                   >
-                    {patient?.phoneNumber || '---'}
+                    {getCountryCode(patient?.country)} {patient?.phoneNumber || '---'}
                   </AppText>
                 </View>
               </View>

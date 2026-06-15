@@ -50,6 +50,7 @@ import { SCREENS } from '../../../navigation/routes';
 import { API_BASE_URL } from '../../../api/apiRoutes';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
+import { ROLES } from '../../../constant/getRole';
 
 export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -90,7 +91,10 @@ const ProviderFormScreen: React.FC = () => {
   const formStatus = requestData?.formStatus || request?.formStatus;
 
   const isInProgress = useMemo(
-    () => status === REQUEST_STATUS.IN_PROGRESS,
+    () =>
+      (status === REQUEST_STATUS.IN_PROGRESS ||
+        status === REQUEST_STATUS.RETURNED) ||
+      status !== REQUEST_STATUS.COMPLETED,
     [status],
   );
 
@@ -204,9 +208,10 @@ const ProviderFormScreen: React.FC = () => {
     try {
       setHasError(false);
 
-      const data = isInProgress
-        ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
-        : await serviceRequestApi.getPreClaimDetails(requestId || '');
+      const data =
+        isInProgress && status !== REQUEST_STATUS.SUBMITTED
+          ? await serviceRequestApi.getServiceRequestDetails(requestId || '')
+          : await serviceRequestApi.getPreClaimDetails(requestId || '');
 
       if (data) {
         setRequestData(data);
@@ -264,7 +269,7 @@ const ProviderFormScreen: React.FC = () => {
 
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons('serviceProvider', status, formStatus, action),
+    () => getFormScreenButtons(ROLES.PROVIDER, status, formStatus, action),
     [status, formStatus, action],
   );
 

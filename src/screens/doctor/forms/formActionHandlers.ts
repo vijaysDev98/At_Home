@@ -2,13 +2,14 @@ import { Dispatch } from 'react';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
+import { SCREENS, PROVIDER_TAB_SCREENS } from '../../../navigation/routes';
 import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant/showToast';
 import moment from 'moment';
 import store from '../../../redux/store';
 import { Alert } from 'react-native';
 import { STRING } from '../../../constant';
 import { useTranslation } from 'react-i18next';
+import { ROLES } from '../../../constant/getRole';
 
 export interface FormActionParams {
   dispatch: Dispatch<any>;
@@ -16,6 +17,7 @@ export interface FormActionParams {
   initialData: any;
   serviceId: string;
   selectedPatient: any;
+  doctorId?: string; // Optional doctor ID for provider-created requests
   validateForm: () => boolean;
   lastFirstErrorKey?: any;
   errors?: any;
@@ -32,6 +34,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
     initialData,
     serviceId,
     selectedPatient,
+    doctorId,
     validateForm,
     lastFirstErrorKey,
     errors = {},
@@ -64,9 +67,19 @@ export const handleFormSubmit = async (params: FormActionParams) => {
         dispatch(setLoading(false));
         await serviceRequestApi.releaseFormLock(requestId);
         setTimeout(() => {
-          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-            screen: SCREENS.DOCTOR_REQUEST,
-          });
+          // Role-based navigation
+          const roles = store.getState().profile.profileData?.roles || [];
+          const isProvider = roles.includes(ROLES.PROVIDER);
+
+          if (isProvider) {
+            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
+              screen: PROVIDER_TAB_SCREENS.REQUESTS,
+            });
+          } else {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: SCREENS.DOCTOR_REQUEST,
+            });
+          }
         }, 500);
       } else {
         dispatch(setLoading(false));
@@ -77,6 +90,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
+        doctorId: doctorId, // Include doctorId when provider creates request
         // requestedDate: moment(
         //   state?.prescription_date || state?.date,
         //   'DD/MM/YYYY',
@@ -91,7 +105,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
-        SHOW_SUCCESS_TOAST(response?.data?.message || response?.message);
+        // SHOW_SUCCESS_TOAST(response?.data?.message || response?.message);
 
         // Submit for review to lock the request
         const newRequestId = response.data?.data?.id;
@@ -103,9 +117,19 @@ export const handleFormSubmit = async (params: FormActionParams) => {
             SHOW_SUCCESS_TOAST(submitResponse.message);
             dispatch(setLoading(false));
             setTimeout(() => {
-              NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                screen: SCREENS.DOCTOR_REQUEST,
-              });
+              // Role-based navigation
+              const roles = store.getState().profile.profileData?.roles || [];
+              const isProvider = roles.includes(ROLES.PROVIDER);
+
+              if (isProvider) {
+                NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
+                  screen: PROVIDER_TAB_SCREENS.REQUESTS,
+                });
+              } else {
+                NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+                  screen: SCREENS.DOCTOR_REQUEST,
+                });
+              }
             }, 500);
           } else {
             dispatch(setLoading(false));
@@ -136,6 +160,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
     initialData,
     serviceId,
     selectedPatient,
+    doctorId,
     validateForm,
     lastFirstErrorKey,
     errors = {},
@@ -170,9 +195,19 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       if (response.success) {
         SHOW_SUCCESS_TOAST(response.message);
         setTimeout(() => {
-          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-            screen: SCREENS.DOCTOR_REQUEST,
-          });
+          // Role-based navigation
+          const roles = store.getState().profile.profileData?.roles || [];
+          const isProvider = roles.includes(ROLES.PROVIDER);
+
+          if (isProvider) {
+            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
+              screen: PROVIDER_TAB_SCREENS.REQUESTS,
+            });
+          } else {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: SCREENS.DOCTOR_REQUEST,
+            });
+          }
         }, 500);
       } else {
         SHOW_TOAST(response.error, 'error');
@@ -182,6 +217,7 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       const payload = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
+        doctorId: doctorId, // Include doctorId when provider creates request
         // requestedDate: state?.prescription_date || state?.date
         //   ? moment(
         //     state?.prescription_date || state?.date,
@@ -200,9 +236,19 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
       if (response.success) {
         SHOW_SUCCESS_TOAST(response?.data?.message || response?.message);
         setTimeout(() => {
-          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-            screen: SCREENS.DOCTOR_REQUEST,
-          });
+          // Role-based navigation
+          const roles = store.getState().profile.profileData?.roles || [];
+          const isProvider = roles.includes(ROLES.PROVIDER);
+
+          if (isProvider) {
+            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
+              screen: PROVIDER_TAB_SCREENS.REQUESTS,
+            });
+          } else {
+            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+              screen: SCREENS.DOCTOR_REQUEST,
+            });
+          }
         }, 500);
       } else {
         SHOW_TOAST(response.error, 'error');
@@ -262,6 +308,7 @@ export const handleSaveProgress = async (
   params: Omit<FormActionParams, 'serviceId' | 'selectedPatient'>,
 ): Promise<{ success: boolean; error?: string }> => {
   const { dispatch, state, initialData, validateForm, errors = {} } = params;
+  console.log("initialDataa", initialData);
 
   const ok = validateForm();
   if (!ok) {
@@ -279,7 +326,7 @@ export const handleSaveProgress = async (
   try {
     dispatch(setLoading(true));
     const roles = store.getState().profile.profileData?.roles || [];
-    const isProvider = roles.includes('serviceProvider');
+    const isProvider = roles.includes(ROLES.PROVIDER);
     let response;
 
     if (isProvider) {

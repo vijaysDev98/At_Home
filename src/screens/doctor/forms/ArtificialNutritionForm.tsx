@@ -61,10 +61,11 @@ export interface ArtificialNutritionFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
-  ({ serviceId, initialData, patient, readOnly = false }, ref) => {
+  ({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
     const dispatch = useDispatch();
     const locale = useSelector((state: any) => state.language.currentLanguage);
     const { t } = useTranslation();
@@ -75,6 +76,9 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     const profileData = useSelector(
       (state: RootState) => state.profile.profileData,
     );
+
+    // Use prescriber prop (selected doctor or profile data)
+    const prescriberData = prescriber || profileData;
 
     const nutrientPositions = useRef<{ [index: number]: number }>({}).current;
     const lastFirstErrorKey = useRef<string | null>(null);
@@ -103,14 +107,14 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
       nir: selectedPatient?.socialInsuranceNumber || '',
       ald_condition: false,
 
-      prescriber_last_name: profileData?.lName || '',
-      prescriber_first_name: profileData?.fName || '',
-      prescriber_phone: profileData?.phoneNumber || '',
-      rpps_id: profileData?.rppsNumber || '',
+      prescriber_last_name: prescriberData?.lName || '',
+      prescriber_first_name: prescriberData?.fName || '',
+      prescriber_phone: prescriberData?.phoneNumber || '',
+      rpps_id: prescriberData?.rppsNumber || '',
 
-      hospital_name: profileData?.facilityName || '',
-      hospital_address: profileData?.businessAddress || '',
-      finess_number: profileData?.finessNumber || '',
+      hospital_name: prescriberData?.facilityName || '',
+      hospital_address: prescriberData?.businessAddress || '',
+      finess_number: prescriberData?.finessNumber || '',
 
       forms_for: '',
 
@@ -324,6 +328,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,
@@ -338,6 +343,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         initialData,
         serviceId,
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm,
         lastFirstErrorKey,
         errors,

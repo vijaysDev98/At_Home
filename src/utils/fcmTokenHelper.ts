@@ -6,10 +6,10 @@ import messaging from '@react-native-firebase/messaging';
  * Upload FCM token to backend
  * @returns Promise<boolean> - true if successful, false otherwise
  */
-export const uploadFcmToken = async (): Promise<boolean> => {
+export const uploadFcmToken = async (token?: string): Promise<boolean> => {
   try {
     // Get fresh FCM token from Firebase
-    const fcmToken = await messaging().getToken();
+    const fcmToken = token || (await messaging().getToken());
 
     if (!fcmToken) {
       console.log('No FCM token found');

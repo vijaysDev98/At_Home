@@ -59,6 +59,7 @@ export interface FreePrescriptionFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 export interface FreePrescriptionFormRef {
@@ -72,7 +73,7 @@ export interface FreePrescriptionFormRef {
 const FreePrescriptionForm = forwardRef<
   FreePrescriptionFormRef,
   FreePrescriptionFormProps
->(({ serviceId, initialData, patient, readOnly = false }, ref) => {
+>(({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const reduxPatient = useSelector(
@@ -83,6 +84,9 @@ const FreePrescriptionForm = forwardRef<
     (state: RootState) => state.profile.profileData,
   );
   const lastFirstErrorKey = useRef<string | null>(null);
+
+  // Use prescriber prop (selected doctor or profile data)
+  const prescriberData = prescriber || profileData;
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -100,15 +104,15 @@ const FreePrescriptionForm = forwardRef<
     ald_condition: false,
 
     // Prescriber Identification
-    prescriber_last_name: profileData?.lName || '',
-    prescriber_first_name: profileData?.fName || '',
-    prescriber_phone: profileData?.phoneNumber || '',
-    rpps_id: profileData?.rppsNumber || '',
+    prescriber_last_name: prescriberData?.lName || '',
+    prescriber_first_name: prescriberData?.fName || '',
+    prescriber_phone: prescriberData?.phoneNumber || '',
+    rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: profileData?.facilityName || '',
-    hospital_address: profileData?.businessAddress || '',
-    finess_number: profileData?.finessNumber || '',
+    hospital_name: prescriberData?.facilityName || '',
+    hospital_address: prescriberData?.businessAddress || '',
+    finess_number: prescriberData?.finessNumber || '',
 
     // Prescription Context
     forms_for: '',
@@ -214,6 +218,7 @@ const FreePrescriptionForm = forwardRef<
       initialData,
       serviceId,
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -228,6 +233,7 @@ const FreePrescriptionForm = forwardRef<
       initialData,
       serviceId,
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,

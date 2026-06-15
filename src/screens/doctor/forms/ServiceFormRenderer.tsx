@@ -20,6 +20,7 @@ interface Props {
   initialData?: any;
   patient?: any;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 const ServiceFormRenderer = ({
@@ -28,6 +29,7 @@ const ServiceFormRenderer = ({
   initialData,
   patient,
   readOnly = false,
+  prescriber,
 }: Props) => {
   const commonProps = {
     ref: formRef,
@@ -35,6 +37,7 @@ const ServiceFormRenderer = ({
     initialData,
     patient,
     readOnly,
+    prescriber,
   };
 
   switch (serviceId) {

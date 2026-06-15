@@ -8,6 +8,7 @@ import { SHOW_TOAST } from '../constant/showToast';
 export interface CreateServiceRequestPayload {
   serviceId: string;
   patientId: string;
+  doctorId?: string; // Optional doctor ID for provider-created requests
   requestedDate: string; // YYYY-MM-DD format
   requestedTime: string; // HH:mm format
   initialNotes?: string;
@@ -92,23 +93,22 @@ export const serviceRequestApi = {
         API_ROUTES.createServiceRequest,
         payload,
       );
-      console.log('payload', payload);
 
       if (response.status) {
         return {
           success: true,
-          message: 'Service request created successfully',
+          message: response.data?.message || response.message,
           data: response.data,
         };
       } else {
         return {
           success: false,
-          message: response.message || 'Failed to create service request',
+          message: response.message,
           error: response.message,
         };
       }
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create service request';
+      const errorMessage = error.message;
 
       return {
         success: false,
@@ -286,8 +286,6 @@ export const serviceRequestApi = {
         `/forms/${requestId}/draft`,
         payload,
       );
-
-      console.log('Update draft response:', requestId, response);
 
       const nestedData = response.data?.data || response.data;
       const nestedMessage = response.data?.message || response.message;

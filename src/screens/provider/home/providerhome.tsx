@@ -199,7 +199,7 @@ const ProviderHome: React.FC = () => {
           </View>
           <TouchableOpacity
             onPress={() =>
-              NavigationService.navigate(PROVIDER_TAB_SCREENS.ALERTS)
+              NavigationService.navigate(SCREENS.ALERTS)
             }
             activeOpacity={0.7}
             style={styles.notificationBtn}

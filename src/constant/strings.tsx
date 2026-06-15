@@ -825,5 +825,12 @@ export const STRING = {
   ivTherapyPrescriptionForm: "IV Therapy Prescription Form",
   parenteralNutritionCentralLinePrescriptionForm: "Parenteral Nutrition (Central Line) Prescription Form",
   pregnancyRelatedCarePrescriptionForm: "Pregnancy-Related Care Prescription Form",
-  primaryService: 'Primary Service'
+  primaryService: 'Primary Service',
+  selectDoctor: 'Select Doctor',
+  step2Of4: 'Step 2/4: Doctor',
+  step3Of4: 'Step 3/4: Service',
+  step4Of4: 'Step 4/4: Fill Medical Form',
+  noDoctorsFound: 'No doctors found',
+  noDoctorsAvailable: 'No doctors available',
+  myRequests: 'My Requests'
 };

@@ -57,6 +57,7 @@ export interface WoundCareFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 const WOUND_TYPE_OPTIONS = [
@@ -93,7 +94,7 @@ export interface WoundCareFormRef {
 }
 
 const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
-  ({ serviceId, initialData, patient, readOnly = false }, ref) => {
+  ({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
     const dispatch = useDispatch();
     const locale = useSelector((state: any) => state.language.currentLanguage);
     const { t } = useTranslation();
@@ -104,6 +105,9 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
     const profileData = useSelector(
       (state: RootState) => state.profile.profileData,
     );
+
+    // Use prescriber prop (selected doctor or profile data)
+    const prescriberData = prescriber || profileData;
 
 
     const [open, setOpen] = useState(false);
@@ -117,10 +121,10 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
     const [state, setState] = useState({
       // Physician Information
-      prescriber_last_name: profileData?.lName || '',
-      prescriber_first_name: profileData?.fName || '',
-      rpps_id: profileData?.rppsNumber || '',
-      prescriber_finess: profileData?.finessNumber || '',
+      prescriber_last_name: prescriberData?.lName || '',
+      prescriber_first_name: prescriberData?.fName || '',
+      rpps_id: prescriberData?.rppsNumber || '',
+      prescriber_finess: prescriberData?.finessNumber || '',
 
       // Patient Information
       patient_last_name: selectedPatient?.lName || '',
@@ -264,6 +268,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         initialData,
         serviceId: serviceId || '',
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm: () => validateForm().ok,
         lastFirstErrorKey,
         errors,
@@ -278,6 +283,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         initialData,
         serviceId: serviceId || '',
         selectedPatient,
+        doctorId: prescriber?.id, // Pass doctorId from prescriber
         validateForm: () => validateForm().ok,
         lastFirstErrorKey,
         errors,

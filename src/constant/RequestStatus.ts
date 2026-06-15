@@ -1,4 +1,5 @@
 import { COLORS } from '../utils';
+import { ROLES } from './getRole';
 import { STRING } from './strings';
 
 export const REQUEST_STATUS = {
@@ -93,7 +94,7 @@ export const getButtonConfig = (formStatus: string, status: string) => {
 export const getButtonConfigProvider = (formStatus: string, status: string) => {
   switch (status) {
     case REQUEST_STATUS.SUBMITTED:
-      if (formStatus == FORM_STATUS.SIGNED) {
+      if (formStatus === FORM_STATUS.SIGNED) {
         return {
           show: true,
           label: STRING.claimService,
@@ -132,6 +133,12 @@ export const getButtonConfigProvider = (formStatus: string, status: string) => {
         show: false,
         label: null,
         action: null,
+      };
+    case REQUEST_STATUS.DRAFT:
+      return {
+        show: true,
+        label: STRING.editForm,
+        action: 'edit',
       };
     default:
       return {
@@ -178,7 +185,7 @@ export const getFormScreenButtons = (
   from?: string,
 ): FormScreenButtonConfig => {
   // ── Doctor flow ──────────────────────────────────────────────────────────
-  if (role === 'doctor') {
+  if (role === ROLES.DOCTOR) {
     // View-only → no buttons
     if (action === 'view') return {};
     if (from == 'review') {
@@ -253,7 +260,7 @@ export const getFormScreenButtons = (
   }
 
   // ── Provider flow ────────────────────────────────────────────────────────
-  if (role === 'serviceProvider') {
+  if (role === ROLES.PROVIDER) {
     if (action == 'view') return {};
     // Submitted request, submitted form → Submit for Review + Save Progress
     if (

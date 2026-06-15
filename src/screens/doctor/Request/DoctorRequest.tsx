@@ -137,7 +137,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           size: PAGE_SIZE,
           search: search || "",
         };
-        console.log("params", search);
 
         const response =
           await serviceRequestListApi.listServiceRequests(params);

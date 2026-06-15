@@ -18,6 +18,7 @@ import { fetchProfile } from '../actions/profile/profileAction';
 import { useTranslation } from 'react-i18next';
 import { IMAGES } from '../assets/images';
 import { uploadFcmToken } from '../utils/fcmTokenHelper';
+import { ROLES } from '../constant/getRole';
 
 const LOGO_URI =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png';
@@ -74,7 +75,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         await uploadFcmToken();
 
         await dispatch(fetchProfile());
-        if (role === 'serviceProvider') {
+        if (role === ROLES.PROVIDER) {
           NavigationService.replace(SCREENS.PROVIDER_BOTTOM_TABS as any);
         } else {
           NavigationService.replace(SCREENS.DOCTOR_BOTTOM_TABS as any);

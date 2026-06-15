@@ -174,7 +174,7 @@ const DoctorNotification: React.FC = () => {
       case 'requestClaimed':
         return IMAGES.serviceClaimed;
       case 'formSubmission':
-        return IMAGES.ic_submitted;
+        return IMAGES.alert_formUpdate;
       case 'formUpdate':
         if (forReview) {
           return IMAGES.alert_serviceCompleted;
@@ -217,10 +217,11 @@ const DoctorNotification: React.FC = () => {
 
     switch (item.type) {
       case 'formSubmission':
-        label.txt = t(STRING.viewRequest);
+        label.txt = t(STRING.viewForm);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
             request: request,
+            action: 'edit',
           });
         return label;
       case 'formUpdate':

@@ -5,6 +5,8 @@ import { Storage } from '../constant';
 import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import { createNotificationChannels } from '../services/notificationChannels';
+import { uploadFcmToken } from '../utils/fcmTokenHelper';
+import { ROLES } from '../constant/getRole';
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -142,46 +144,19 @@ export async function handleInitialNotification(): Promise<void> {
   }
 }
 
-function handleNotificationNavigation(
-  remoteMessage: FirebaseMessagingTypes.RemoteMessage
-): void {
-  const { data } = remoteMessage;
-
-  try {
-    // Determine navigation based on notification data
-    if (!data) return;
-
-    // You can customize this navigation logic based on your app's needs
-    console.log('Notification navigation data:', data);
-
-    // Example: Navigate based on notification type
-    if (data.type === 'order' && data.orderId) {
-      // NavigationService.navigate('OrderDetails', { id: data.orderId });
-    } else if (data.type === 'message' && data.userId) {
-      // NavigationService.navigate('Messages', { userId: data.userId });
-    }
-  } catch (error) {
-    console.log('Error handling notification navigation:', error);
-  }
-}
-
 const handleNotificationTap = async () => {
   try {
     const token = await Storage.get(Storage.USER_TOKEN);
     const role = await Storage.get(Storage.USER_ROLE);
 
-    console.log('Notification tap - token:', token, 'role:', role);
-
     if (token && role) {
       // User is logged in, navigate to appropriate notification screen
-      if (role === 'serviceProvider') {
+      if (role === ROLES.PROVIDER) {
         // Reset to provider bottom tabs (replaces splash), then navigate to alerts tab
         NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
         // Small delay to ensure bottom tabs are loaded, then navigate to alerts
         setTimeout(() => {
-          NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-            screen: 'Alerts',
-          });
+          NavigationService.navigate(SCREENS.ALERTS);
         }, 100);
       } else {
         // Reset to doctor bottom tabs (replaces splash), then navigate to notifications
@@ -205,7 +180,7 @@ const handleNotificationTap = async () => {
 // Token refresh listener
 export function setupTokenRefreshListener(): () => void {
   const unsubscribe = messaging().onTokenRefresh(token => {
-    console.log('New FCM Token:', token);
+    uploadFcmToken(token);
     // Send token to backend if needed
   });
 

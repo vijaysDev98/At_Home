@@ -316,7 +316,7 @@
 				CODE_SIGN_ENTITLEMENTS = HealthCare/HealthCare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DKH2PR3979;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = HealthCare/Info.plist;
@@ -327,7 +327,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -356,7 +356,7 @@
 				CODE_SIGN_ENTITLEMENTS = HealthCare/HealthCare.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = DKH2PR3979;
 				INFOPLIST_FILE = HealthCare/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "At Home";
@@ -366,7 +366,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

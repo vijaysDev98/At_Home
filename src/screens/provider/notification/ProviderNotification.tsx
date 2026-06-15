@@ -118,6 +118,8 @@ const ProviderNotification: React.FC = () => {
   };
 
   const handleNotificationPress = async (item: Notification) => {
+    console.log("noooooo", item);
+
     const action = getNotificationAction(item);
     if (typeof action === 'object' && action?.onPress) {
       action.onPress();
@@ -150,6 +152,8 @@ const ProviderNotification: React.FC = () => {
         return IMAGES.serviceCancelled;
       case 'requestReset':
         return IMAGES.resetRequest;
+      case 'formSigned':
+        return IMAGES.serviceClaimed;
       default:
         return IMAGES.ic_announcement;
     }
@@ -175,6 +179,14 @@ const ProviderNotification: React.FC = () => {
         return label;
       case 'requestReset':
         label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+            request: request,
+            action: 'edit',
+          });
+        return label;
+      case 'formSigned':
+        label.txt = t(STRING.claimService);
         label.onPress = () =>
           NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
             request: request,
@@ -211,6 +223,7 @@ const ProviderNotification: React.FC = () => {
         <Header
           style={styles.headerStyle}
           title={t(STRING.notifications)}
+          isBack={true}
           isNotification={true}
           onNotificationPress={handleMarkAllAsRead}
           unreadCount={unreadCount}

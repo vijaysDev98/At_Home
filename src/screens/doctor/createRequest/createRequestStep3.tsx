@@ -37,6 +37,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { getServiceIcon } from './createRequestStep2';
 import ServiceFormRenderer from '../forms/ServiceFormRenderer';
 import { useTranslation } from 'react-i18next';
+import { ROLES } from '../../../constant/getRole';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -48,12 +49,18 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
 
   const service = route?.params?.selected || {};
   const patientId = route?.params?.patientId;
+  const doctorId = route?.params?.doctorId;
+  const selectedDoctor = route?.params?.selectedDoctor;
   const initialData = (route?.params as any)?.initialData; // Existing request data if editing
   const requestStatus = (route?.params as any)?.requestStatus; // 'draft', 'submitted', or undefined for new
 
   const serviceId = service?.id;
   const serviceName = service?.serviceName;
   const serviceIcon = getServiceIcon(serviceName);
+
+  // Get profile data to determine role
+  const profileData = useSelector((state: any) => state.profile.profileData);
+  let role: string = profileData?.roles?.[0] || '';
 
   // Fetch patient from Redux using patientId
   const allPatients = useSelector((state: any) => state.patient.patients);
@@ -115,12 +122,12 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               {t(STRING.createRequest)}
             </AppText>
             <AppText
-              size={getScaleSize(14)}
+              size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
               align='center'
             >
-              {t(STRING.step3Of3)}
+              {t(role === ROLES.PROVIDER ? STRING.step4Of4 : STRING.step3Of3)}
             </AppText>
           </View>
           <View style={{ flex: 0.5 }} />
@@ -149,6 +156,11 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 onEditPatient={() =>
                   NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
                 }
+                rightContent={
+                  <View style={{ flex: 1 }}>
+                    {/* This will be handled by a context or global state */}
+                  </View>
+                }
               />
             </View>
             <View>
@@ -163,6 +175,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                   formRef={formRef}
                   initialData={initialData}
                   patient={patient}
+                  prescriber={selectedDoctor || profileData}
                 />
               </View>
             </View>
@@ -238,6 +251,7 @@ const styles = StyleSheet.create({
   crossIcon: {
     width: getScaleSize(15),
     height: getScaleSize(15),
+    resizeMode: 'contain'
   },
 
   headerCenter: {

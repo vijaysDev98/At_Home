@@ -53,9 +53,11 @@ const API_ROUTES = {
   updateServiceRequest: 'service-requests',
   listServiceRequests: 'service-requests',
   listAvailableRequests: 'service-requests/available',
+  listProviderInitiatedRequests: 'service-requests/provider/initiated',
   resendLoginOtp: 'auth/resendLoginOtp',
   notifications: 'notifications',
   updateFcm: 'auth/update-fcm',
+  getDoctors: 'providers/doctors'
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

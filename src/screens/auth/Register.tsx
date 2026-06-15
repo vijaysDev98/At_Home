@@ -26,6 +26,7 @@ import {
   AppBottomSheet,
   AppSafeAreaView,
   Header,
+  AppText,
 } from '../../components';
 import { ImagePickerContent } from '../../components/ImagePickerContent';
 import {
@@ -55,6 +56,7 @@ import { CustomDropdown } from '../../components/CustomDropDown';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTranslation } from 'react-i18next';
 import { openInBrowser } from '../../hooks/openBrowser';
+import { ROLES } from '../../constant/getRole';
 
 // --- Sub-components ---
 
@@ -284,7 +286,7 @@ const Register: React.FC = () => {
       email: email.trim(),
       password: password.trim(),
       phoneNumber: phone.trim(),
-      role: 'doctor',
+      role: ROLES.DOCTOR,
       country: country,
       rppsNumber: rpps.trim(),
       finessNumber: finess.trim(),
@@ -563,26 +565,34 @@ const Register: React.FC = () => {
                 checked={agreed}
                 onToggle={() => setAgreed(!agreed)}
                 label={
-                  <Text>
+                  <AppText
+                    // style={{ color: COLORS.primary }}
+                    color={COLORS.primaryMuted}
+
+                  >
                     {t(STRING.iAgreeToThe)}{' '}
-                    <Text
+                    <AppText
+                      font={FONTS.Inter.SemiBold}
                       style={styles.link}
+                      color={COLORS.primary}
                       onPress={() =>
                         openInBrowser(getPrivacyPolicy(currentLanguage))
                       }
                     >
                       {t(STRING.privacyPolicy)}
-                    </Text>{' '}
+                    </AppText>{' '}
                     {t(STRING.and)}{' '}
-                    <Text
+                    <AppText
+                      font={FONTS.Inter.SemiBold}
                       style={styles.link}
+                      color={COLORS.primary}
                       onPress={() =>
                         openInBrowser(getTermsOfService(currentLanguage))
                       }
                     >
-                      {t(STRING.termsOfService)}
-                    </Text>
-                  </Text>
+                      {t(STRING.termsOfService)}.
+                    </AppText>
+                  </AppText>
                 }
               />
               {!!errors.agreed && (

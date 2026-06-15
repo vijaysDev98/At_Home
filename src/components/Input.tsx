@@ -38,6 +38,7 @@ export interface InputProps extends TextInputProps {
   subText?: string;
   leftComponent?: React.ReactNode;
   inputStyle?: StyleProp<TextStyle>;
+  inputWrapper?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
   helperStyle?: StyleProp<TextStyle>;
   containerBackgroundColor?: string;
@@ -73,6 +74,7 @@ const Input: React.FC<InputProps> = ({
   subText,
   leftComponent,
   inputStyle,
+  inputWrapper,
   helperStyle,
   containerBackgroundColor,
   labelRight,
@@ -185,7 +187,7 @@ const Input: React.FC<InputProps> = ({
         onPress={onPress}
         disabled={isLocked || !onPress}
         style={[
-          styles.inputWrapper,
+          styles.inputWrapper, inputWrapper,
           { backgroundColor: resolvedBg, borderColor: resolvedBorder },
           !rest.multiline && styles.inputWrapperFixed,
           rest.multiline && styles.inputWrapperMultiline,

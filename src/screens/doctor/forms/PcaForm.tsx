@@ -46,6 +46,7 @@ export interface PcaFormProps {
   initialData?: ServiceRequestDetail | null;
   patient?: PatientInfo;
   readOnly?: boolean;
+  prescriber?: any; // Selected doctor (provider flow) or profileData (doctor flow)
 }
 
 export interface PcaFormRef {
@@ -57,7 +58,7 @@ export interface PcaFormRef {
 }
 
 const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
-  const { serviceId, initialData, patient, readOnly = false } = props;
+  const { serviceId, initialData, patient, readOnly = false, prescriber } = props;
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
@@ -69,6 +70,9 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+
+  // Use prescriber prop (selected doctor or profile data)
+  const prescriberData = prescriber || profileData;
 
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
@@ -96,15 +100,15 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     ald_condition: false,
 
     // Prescriber Identification (Auto-filled from doctor profile)
-    prescriber_last_name: profileData?.lName || '',
-    prescriber_first_name: profileData?.fName || '',
-    prescriber_phone: profileData?.phoneNumber || '',
-    rpps_id: profileData?.rppsNumber || '',
+    prescriber_last_name: prescriberData?.lName || '',
+    prescriber_first_name: prescriberData?.fName || '',
+    prescriber_phone: prescriberData?.phoneNumber || '',
+    rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
-    hospital_name: profileData?.facilityName || '',
-    hospital_address: profileData?.businessAddress || '',
-    finess_number: profileData?.finessNumber || '',
+    hospital_name: prescriberData?.facilityName || '',
+    hospital_address: prescriberData?.businessAddress || '',
+    finess_number: prescriberData?.finessNumber || '',
 
     // Prescription Context
     forms_for: '',
@@ -225,6 +229,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       initialData,
       serviceId: serviceId || '',
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -239,6 +244,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
       initialData,
       serviceId: serviceId || '',
       selectedPatient,
+      doctorId: prescriber?.id, // Pass doctorId from prescriber
       validateForm,
       lastFirstErrorKey,
       errors,

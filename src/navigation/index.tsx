@@ -24,6 +24,7 @@ import ProviderBottomTabs, {
   ProviderBottomTabParamList,
 } from './ProviderBottomTabs';
 import ProviderAvailableRequests from '../screens/provider/request/AvailableRequest';
+import ProviderRequests from '../screens/provider/request/ProviderRequests';
 import ServiceCompletedScreen from '../screens/provider/forms/ServiceCompleted';
 import NavigationService from './NavigationService';
 import { SCREENS } from './routes';
@@ -31,6 +32,8 @@ import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderFormScreen from '../screens/provider/forms/ProviderFormScreen';
 import FormReviewScreen from '../screens/doctor/forms/FormReviewScreen';
 import EditProviderProfile from '../screens/provider/profile/editProviderProfile';
+import ProviderNotification from '../screens/provider/notification/ProviderNotification';
+import DoctorList from '../screens/provider/doctorList/DoctorList';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -39,30 +42,45 @@ export type RootStackParamList = {
   Register: undefined;
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
+  Alerts: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
   ResetPassword:
-    | {
-        email?: string;
-        otp?: string;
-        resetToken?: string;
-        isChangePassword?: boolean;
-      }
-    | undefined;
+  | {
+    email?: string;
+    otp?: string;
+    resetToken?: string;
+    isChangePassword?: boolean;
+  }
+  | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
   DoctorRequest: undefined;
-  CreateRequestStep2: undefined;
-  CreateRequestStep3: undefined;
+  CreateRequestStep2: {
+    patientId?: string;
+    doctorId?: string;
+    selectedDoctor?: any;
+  } | undefined;
+  CreateRequestStep3: {
+    selected?: any;
+    patientId?: string;
+    doctorId?: string;
+    selectedDoctor?: any;
+    initialData?: any;
+    requestStatus?: string;
+  } | undefined;
   Forms_Screen: undefined;
   ProviderFormScreen: undefined;
   FormReviewScreen: { request: any } | undefined;
   DoctorBottomTabs: NavigatorScreenParams<BottomTabParamList> | undefined;
   ProviderBottomTabs:
-    | NavigatorScreenParams<ProviderBottomTabParamList>
-    | undefined;
+  | NavigatorScreenParams<ProviderBottomTabParamList>
+  | undefined;
   ProviderAvailableRequests: undefined;
+  ProviderRequests: undefined;
   AddPatient: undefined;
   PatientDetail: undefined;
+  EditProviderProfile: undefined;
+  DoctorList: undefined;
   ServiceCompleted: {
     patientName?: string;
     requestId?: string;
@@ -134,6 +152,11 @@ export default function RootNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name={SCREENS.ALERTS}
+          component={ProviderNotification}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name={SCREENS.CREATE_REQUEST}
           component={CreateRequest}
           options={{ headerShown: false }}
@@ -179,9 +202,14 @@ export default function RootNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name={SCREENS.PROVIDER_REQUESTS}
+          component={ProviderRequests}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name={SCREENS.ADD_PATIENT}
           component={AddPatient}
-          // options={{ title: 'Add Patient' }}
+        // options={{ title: 'Add Patient' }}
         />
         <Stack.Screen
           name={SCREENS.PATIENT_DETAIL}
@@ -196,6 +224,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name="EditProviderProfile"
           component={EditProviderProfile}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.DOCTOR_LIST}
+          component={DoctorList}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -222,6 +222,8 @@ const AvailableRequest: React.FC = () => {
     });
   }, [requests, activeTab]);
 
+
+
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item?.formStatus || '';
@@ -318,7 +320,26 @@ const AvailableRequest: React.FC = () => {
     <AppSafeAreaView style={styles.safe} edges={['top']}>
       <AppLoader visible={isGlobalLoading} />
       <View style={styles.container}>
-        <Header style={styles.headerStyle} title={t(STRING.requests)} />
+        <View style={styles.headerContainer}>
+          <View style={styles.headerContent}>
+            <Header
+              style={styles.headerStyle}
+              title={t(STRING.requests)}
+            />
+            <TouchableOpacity
+              style={styles.myRequestsButton}
+              onPress={() => NavigationService.navigate(SCREENS.PROVIDER_REQUESTS)}
+            >
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Medium}
+                color={COLORS.white}
+              >
+                {t(STRING.myRequests)}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <View style={styles.tabContainer}>
           <ScrollView
@@ -431,6 +452,22 @@ const styles = StyleSheet.create({
   headerStyle: {
     paddingHorizontal: getScaleSize(20),
     backgroundColor: COLORS.white,
+  },
+  headerContainer: {
+    backgroundColor: COLORS.white,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    // paddingHorizontal: getScaleSize(20),
+  },
+  myRequestsButton: {
+    paddingHorizontal: getScaleSize(12),
+    marginHorizontal: getScaleSize(20),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(6),
+    backgroundColor: COLORS.primary,
   },
   tabContainer: {
     backgroundColor: COLORS.white,

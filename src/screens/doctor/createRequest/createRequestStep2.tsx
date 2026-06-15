@@ -24,6 +24,9 @@ import { SCREENS } from '../../../navigation/routes';
 import { getServicesService } from '../../../services/patientService';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { ROLES } from '../../../constant/getRole';
 
 export const getServiceIcon = (id: string) => {
   switch (id) {
@@ -67,14 +70,25 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
 }) => {
   const { t } = useTranslation();
   const patientId = route?.params?.patientId;
+  const doctorId = route?.params?.doctorId;
+  const selectedDoctor = route?.params?.selectedDoctor;
   const [apiServices, setApiServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<string>('');
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+
+  let role: string = profileData?.roles?.[0] || '';
+  // console.log(profileData);
+
+  let serviceIDs = role === ROLES.DOCTOR ? null : profileData?.assignedServices?.map((service: any) => service.id);
 
   const fetchServices = async () => {
     try {
       setIsLoading(true);
-      const response: any = await getServicesService(1, 20);
+      const response: any = await getServicesService(1, 20, serviceIDs || undefined);
+
       if (response?.status && response?.code === 200) {
         const list = response.data.data.services || [];
         setApiServices(list);
@@ -119,7 +133,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              {t(STRING.step2Of3)}
+              {t(role === ROLES.PROVIDER ? STRING.step3Of4 : STRING.step2Of3)}
             </AppText>
           </View>
           <View style={styles.headerLeft} />
@@ -215,6 +229,8 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                 NavigationService.navigate(SCREENS.CREATE_REQUEST_STEP3, {
                   selected,
                   patientId,
+                  doctorId,
+                  selectedDoctor,
                 });
               }}
             />
@@ -410,6 +426,7 @@ const styles = StyleSheet.create({
   crossIcon: {
     width: getScaleSize(15),
     height: getScaleSize(15),
+    resizeMode: 'contain'
   },
   bottomButtonContainer: {
     backgroundColor: COLORS.white,

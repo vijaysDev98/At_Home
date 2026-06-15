@@ -52,12 +52,12 @@ export interface ServiceRequest {
   requestedTime: string;
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
   formStatus?:
-    | 'draft'
-    | 'submitted'
-    | 'awaitingSignature'
-    | 'signed'
-    | 'returned'
-    | 'completed';
+  | 'draft'
+  | 'submitted'
+  | 'awaitingSignature'
+  | 'signed'
+  | 'returned'
+  | 'completed';
   createdAt: string;
   updatedAt: string;
   patient: PatientInfo;
@@ -178,14 +178,14 @@ export interface ServiceRequestDetail {
   requestedTime: string;
   initialNotes: string | null;
   status:
-    | 'draft'
-    | 'submitted'
-    | 'approved'
-    | 'rejected'
-    | 'inProgress'
-    | 'returned'
-    | 'completed'
-    | 'cancelled';
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'inProgress'
+  | 'returned'
+  | 'completed'
+  | 'cancelled';
   formStatus: string;
   formData: FormData;
   formTemplateId: string;
@@ -340,6 +340,42 @@ export const serviceRequestListApi = {
     } catch (error: any) {
       console.error(
         'Error fetching provider assigned service requests:',
+        error.message,
+      );
+      return null;
+    }
+  },
+
+  /**
+   * Fetch list of service requests initiated by the current provider with pagination
+   */
+  listProviderInitiatedRequests: async (
+    params: ListServiceRequestsParams = { page: 1, size: 10 },
+  ): Promise<ListServiceRequestsResponse | null> => {
+    try {
+      const response: any = await API.Instance.get(
+        API_ROUTES.listProviderInitiatedRequests,
+        {
+          params: {
+            page: params.page || 1,
+            size: params.size || 10,
+            status: params.status,
+          },
+        },
+      );
+
+      if (response.status) {
+        return response.data as ListServiceRequestsResponse;
+      } else {
+        console.error(
+          'Failed to fetch provider initiated service requests:',
+          response.message,
+        );
+        return null;
+      }
+    } catch (error: any) {
+      console.error(
+        'Error fetching provider initiated service requests:',
         error.message,
       );
       return null;
