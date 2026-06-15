@@ -10,7 +10,6 @@ import AppText from './AppText';
 import { getScaleSize } from '../utils/scaleSize';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
-import { AppSafeAreaView } from './AppSafeAreaView';
 
 interface AppLoaderProps {
   visible: boolean;
@@ -23,29 +22,29 @@ const AppLoader: React.FC<AppLoaderProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  if (!visible) return null;
-
   return (
     <Modal
       transparent
       animationType="fade"
       visible={visible}
       statusBarTranslucent
+      hardwareAccelerated
+      // Required on Android, otherwise it throws a warning
+      // and the hardware back button won't be handled.
+      onRequestClose={() => { }}
     >
-      <AppSafeAreaView
-        isFullScreen={true}
-        // pointerEvents={signing ? 'auto' : 'none'}
+      <View
         style={styles.container}
+        // Block touches behind the loader while it's visible,
+        // regardless of "signing" state.
+        pointerEvents="auto"
       >
         <View style={styles.loaderWrapper}>
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} />
 
           {signing && (
             <AppText
-              style={{ marginTop: getScaleSize(10) }}
+              style={styles.signingText}
               font={FONTS.Inter.SemiBold}
               color={COLORS.primary}
             >
@@ -53,12 +52,12 @@ const AppLoader: React.FC<AppLoaderProps> = ({
             </AppText>
           )}
         </View>
-      </AppSafeAreaView>
+      </View>
     </Modal>
   );
 };
 
-export default AppLoader;
+export default React.memo(AppLoader);
 
 const styles = StyleSheet.create({
   container: {
@@ -69,8 +68,11 @@ const styles = StyleSheet.create({
   },
   loaderWrapper: {
     backgroundColor: COLORS.white,
-    padding: 24,
-    borderRadius: 16,
+    padding: getScaleSize(24),
+    borderRadius: getScaleSize(16),
+    minWidth: getScaleSize(96),
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -79,5 +81,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  signingText: {
+    marginTop: getScaleSize(10),
+    textAlign: 'center',
   },
 });

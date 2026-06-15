@@ -319,76 +319,74 @@ const FreePrescriptionForm = forwardRef<
   );
 
   return (
-    <>
-      <View style={styles.container}>
-        <KeyboardAwareScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          enableOnAndroid={true}
-          enableAutomaticScroll={true}
-        >
-          <View style={styles.headerTextContainer}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              {t(STRING.freePrescription)}
-            </AppText>
-          </View>
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+      >
+        <View style={styles.headerTextContainer}>
+          <AppText
+            size={getScaleSize(16)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+          >
+            {t(STRING.freePrescription)}
+          </AppText>
+        </View>
 
-          {/* PRESCRIPTION DETAILS */}
-          <FormPrescriptionDetails
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-            errors={errors}
+        {/* PRESCRIPTION DETAILS */}
+        <FormPrescriptionDetails
+          readOnly={readOnly}
+          state={state}
+          setState={setFormState}
+          errors={errors}
+        />
+
+        {/* PATIENT SECTION */}
+        <FormPatientSection
+          readOnly={readOnly}
+          state={state}
+          setState={setFormState}
+          errors={errors}
+        />
+
+        <FormPrescriberSection state={state} setState={setFormState} />
+
+        {/* FACILITY INFORMATION */}
+        <FormFacilitySection
+          readOnly={readOnly}
+          state={state}
+          setState={setFormState}
+        />
+
+        {/* PRESCRIPTION CONTEXT */}
+        <FormPrescriptionContextSection
+          readOnly={readOnly}
+          state={state}
+          setState={setFormState}
+        />
+
+        <View style={[styles.card, { elevation: 4 }]}>
+          {renderSectionHeader(t(STRING.additionalNotes))}
+          <Input
+            isLocked={readOnly}
+            multiline
+            placeholder={t(STRING.enterAdditionalNotes)}
+            value={state.free_text}
+            onChangeText={text => setFormState({ free_text: text })}
+            maxLength={1000}
+            inputWrapperStyle={{ minHeight: getScaleSize(120) }}
+            style={[styles.inputField]}
           />
+        </View>
 
-          {/* PATIENT SECTION */}
-          <FormPatientSection
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-            errors={errors}
-          />
-
-          <FormPrescriberSection state={state} setState={setFormState} />
-
-          {/* FACILITY INFORMATION */}
-          <FormFacilitySection
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-          />
-
-          {/* PRESCRIPTION CONTEXT */}
-          <FormPrescriptionContextSection
-            readOnly={readOnly}
-            state={state}
-            setState={setFormState}
-          />
-
-          <View style={[styles.card, { elevation: 4 }]}>
-            {renderSectionHeader(t(STRING.additionalNotes))}
-            <Input
-              isLocked={readOnly}
-              multiline
-              placeholder={t(STRING.enterAdditionalNotes)}
-              value={state.free_text}
-              onChangeText={text => setFormState({ free_text: text })}
-              maxLength={1000}
-              inputWrapperStyle={{ minHeight: getScaleSize(120) }}
-              style={[styles.inputField]}
-            />
-          </View>
-
-          {/* <FormSignature readOnly={readOnly} /> */}
-        </KeyboardAwareScrollView>
-      </View>
-    </>
+        {/* <FormSignature readOnly={readOnly} /> */}
+      </KeyboardAwareScrollView>
+    </View>
   );
 });
 

@@ -24,6 +24,7 @@ import { AppLoader, ProfileAvatar } from '../../../components';
 import { downloadPdfFromUrl } from '../../../hooks/pdfDownloader';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -225,7 +226,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 </AppText>
               </View>
 
-              <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
+              {/* <View style={[styles.gridItem, { alignItems: 'flex-end' }]}>
                 <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
                   {t(STRING.priority)}
                 </AppText>
@@ -237,7 +238,7 @@ const ServiceCompletedScreen: React.FC = () => {
                 >
                   {requestData?.priorityLevel || '-'}
                 </AppText>
-              </View>
+              </View> */}
             </View>
 
             <View style={styles.providerSection}>
@@ -285,7 +286,7 @@ const ServiceCompletedScreen: React.FC = () => {
             <View style={styles.vitalsRow}>
               <VitalsItem
                 label={t(STRING.gender)}
-                value={requestData?.patientId?.gender || '-'}
+                value={capitalizeFirstLetter(requestData?.patientId?.gender) || '-'}
               />
               <VitalsItem label={t(STRING.weight)} value={`${weight} kg`} />
             </View>

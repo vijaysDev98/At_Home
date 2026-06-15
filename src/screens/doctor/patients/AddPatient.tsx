@@ -507,6 +507,8 @@ const AddPatient: React.FC = () => {
               </View>
               <Input
                 value={socialInsuranceNumber}
+                isNumberOnly
+                keyboardType='number-pad'
                 onChangeText={t => {
                   setSocialInsuranceNumber(t);
                   setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));

@@ -67,7 +67,7 @@ const FormReviewScreen: React.FC = () => {
     lockedBy: requestData?.formLock?.lockedBy || undefined,
     expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
-    readOnly: isReadOnly,
+    readOnly: false,
     enabled: isFetched && !!requestData && !hasError,
     onLockConflict: () => {
       // warningSheetRef.current?.show();

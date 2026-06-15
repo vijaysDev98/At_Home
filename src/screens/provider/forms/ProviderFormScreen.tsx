@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AppSafeAreaView,
@@ -350,10 +351,13 @@ const ProviderFormScreen: React.FC = () => {
         ) : (
           <>
             <View style={styles.content}>
-              <ScrollView
+              <KeyboardAwareScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                enableAutomaticScroll={true}
               >
                 <View>
                   <View
@@ -370,7 +374,7 @@ const ProviderFormScreen: React.FC = () => {
                     />
                   </View>
                 </View>
-              </ScrollView>
+              </KeyboardAwareScrollView>
             </View>
             <CompleteServiceSheet
               ref={completeSheetRef}
@@ -392,7 +396,7 @@ const ProviderFormScreen: React.FC = () => {
           </>
         )}
       </View>
-      <AppLoader visible={isLoading} />
+      {/* <AppLoader visible={isLoading} /> */}
     </AppSafeAreaView>
   );
 };

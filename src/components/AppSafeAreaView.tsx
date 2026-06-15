@@ -47,7 +47,7 @@ const AppSafeAreaView = ({
         style,
       ]}
     >
-      <StatusBar translucent={false} barStyle={'dark-content'} />
+      {/* <StatusBar translucent={false} barStyle={'dark-content'} /> */}
       {children}
     </SafeAreaView>
   ) : isFullScreen ? (
@@ -72,11 +72,11 @@ const AppSafeAreaView = ({
       ]}
       edges={edges || ['top', 'right', 'left', 'bottom']}
     >
-      <StatusBar
+      {/* <StatusBar
         translucent
         backgroundColor={COLORS.white}
         barStyle={'dark-content'}
-      />
+      /> */}
       {children}
     </SafeAreaView>
   );

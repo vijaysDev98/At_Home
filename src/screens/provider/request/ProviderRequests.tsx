@@ -249,7 +249,7 @@ const ProviderRequests = () => {
 
   return (
     <AppSafeAreaView style={styles.safe}>
-      <AppLoader visible={isGlobalLoading} />
+      <AppLoader visible={isLoading} />
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}

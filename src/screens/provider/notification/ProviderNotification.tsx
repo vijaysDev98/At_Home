@@ -215,7 +215,7 @@ const ProviderNotification: React.FC = () => {
   };
 
   return (
-    <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
+    <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
       <AppLoader
         visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
       />
