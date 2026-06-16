@@ -50,6 +50,7 @@ import {
 } from './formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getCountryCode } from '../../../constant/getCountryCode';
 
 const NUTRITION_CATEGORIES = [
   { label: 'Diabetic Range', value: 'Diabetic Range' },
@@ -147,7 +148,10 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
       // Prescriber
       prescriber_last_name: prescriberData?.lName || '',
       prescriber_first_name: prescriberData?.fName || '',
-      prescriber_phone: prescriberData?.phoneNumber || '',
+      prescriber_phone:
+        getCountryCode(prescriberData?.country) +
+        ' ' +
+        (prescriberData?.phoneNumber || ''),
       rpps_id: prescriberData?.rppsNumber || '',
 
       // Facility
@@ -186,6 +190,22 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         }));
       }
     }, [initialData]);
+
+    // Update patient fields when selectedPatient changes (e.g., after editing patient)
+    React.useEffect(() => {
+      if (!initialData && selectedPatient) {
+        setState(prev => ({
+          ...prev,
+          patient_last_name: selectedPatient?.lName || '',
+          patient_first_name: selectedPatient?.fName || '',
+          dob: selectedPatient?.dateOfBirth
+            ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+            : '',
+          weight: selectedPatient?.weight?.toString() || '',
+          nir: selectedPatient?.socialInsuranceNumber || '',
+        }));
+      }
+    }, [selectedPatient, initialData]);
 
     // Wrapper setter that clears errors immediately on any change
     const setFormState = (updaterOrPartial: any): void => {

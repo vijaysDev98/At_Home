@@ -73,7 +73,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             font={FONTS.Inter.Regular}
             color={COLORS._6B7280}
           >
-            {requestType}
+            {t(requestType || '')}
           </AppText>
         </View>
         <View
@@ -136,6 +136,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
         <AppButton
           title={buttonText}
           onPress={onButtonPress}
+          textSize={getScaleSize(13)}
           style={styles.updateButtonStyle}
         />
       )}

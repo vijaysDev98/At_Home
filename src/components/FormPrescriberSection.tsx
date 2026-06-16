@@ -56,29 +56,29 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
           style={[styles.inputField, { flex: 1 }]}
         />
       </View>
-      <View style={styles.row}>
-        {showFiness ? (
-          <Input
-            isLocked
-            label={t(STRING.finess)}
-            value={state.prescriber_finess}
-            style={[styles.inputField, { flex: 1 }]}
-          />
-        ) : (
-          <Input
-            isLocked
-            label={t(STRING.phone)}
-            value={state.prescriber_phone || state.prescriber_emergency_phone}
-            style={[styles.inputField, { flex: 1 }]}
-          />
-        )}
+      {/* <View style={styles.row}> */}
+      {showFiness ? (
         <Input
           isLocked
-          label={t(STRING.rppsId)}
-          value={state.rpps_id}
+          label={t(STRING.finess)}
+          value={state.prescriber_finess}
           style={[styles.inputField, { flex: 1 }]}
         />
-      </View>
+      ) : (
+        <Input
+          isLocked
+          label={t(STRING.phone)}
+          value={state.prescriber_phone || state.prescriber_emergency_phone}
+          style={[styles.inputField, { flex: 1 }]}
+        />
+      )}
+      <Input
+        isLocked
+        label={t(STRING.rppsId)}
+        value={state.rpps_id}
+        style={[styles.inputField, { flex: 1 }]}
+      />
+      {/* </View> */}
       <AppText
         size={getScaleSize(12)}
         color={COLORS._6F767E}

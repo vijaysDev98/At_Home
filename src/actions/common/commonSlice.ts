@@ -15,9 +15,10 @@ export const commonSlice = createSlice({
     setLoading: (state, { payload }) => {
       state.isLoading = payload;
     },
+    resetCommon: () => initialState,
   },
 });
 
-export const { setLoading } = commonSlice.actions;
+export const { setLoading, resetCommon } = commonSlice.actions;
 
 export default commonSlice.reducer;

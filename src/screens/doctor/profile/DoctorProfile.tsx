@@ -412,7 +412,6 @@ const DoctorProfile: React.FC = () => {
             </TouchableOpacity>
             <View style={styles.settingDivider} />
 
-
             <TouchableOpacity style={styles.settingRow} onPress={handleDeleteAccount}>
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.trash} style={[styles.settingIcon, { tintColor: COLORS.error }]} />

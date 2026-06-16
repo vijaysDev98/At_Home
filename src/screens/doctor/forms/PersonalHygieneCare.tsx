@@ -170,6 +170,24 @@ const PersonalHygieneCare = forwardRef<
     }
   }, [initialData]);
 
+  // Update patient fields when selectedPatient changes (e.g., after editing patient)
+  useEffect(() => {
+    if (!initialData && selectedPatient) {
+      setState(prev => ({
+        ...prev,
+        patient_last_name: selectedPatient?.lName || '',
+        patient_first_name: selectedPatient?.fName || '',
+        dob: selectedPatient?.dateOfBirth
+          ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+          : '',
+        certified_patient_name:
+          capitalizeFirstLetter(selectedPatient?.fName || '') +
+          ' ' +
+          capitalizeFirstLetter(selectedPatient?.lName || ''),
+      }));
+    }
+  }, [selectedPatient, initialData]);
+
   // Wrapper setter that clears errors for changed top-level keys
   const setFormState = (updaterOrPartial: any) => {
     if (typeof updaterOrPartial === 'function') {

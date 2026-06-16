@@ -10,6 +10,7 @@ import { Alert } from 'react-native';
 import { STRING } from '../../../constant';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '../../../constant/getRole';
+import i18next from 'i18next';
 
 export interface FormActionParams {
   dispatch: Dispatch<any>;
@@ -46,7 +47,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
+      errors[firstErrorKey] || i18next.t(STRING.pleaseFillAllRequiredFields);
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;
@@ -173,7 +174,8 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
   if (!ok) {
     const firstErrorKey = lastFirstErrorKey?.current || '';
     const firstErrorMessage =
-      errors[firstErrorKey] || STRING.pleaseFillAllRequiredFields;
+      errors[firstErrorKey] ||
+      i18next.t(STRING.pleaseFillAllRequiredFields);
     SHOW_TOAST(firstErrorMessage, 'error');
 
     return;

@@ -52,6 +52,7 @@ interface DoctorItemProps {
 
 const DoctorItem: React.FC<DoctorItemProps> = React.memo(
     ({ doctor, isSelected, onSelect }) => {
+        const { t } = useTranslation();
         return (
             <TouchableOpacity
                 key={doctor.id}
@@ -80,8 +81,8 @@ const DoctorItem: React.FC<DoctorItemProps> = React.memo(
                             font={FONTS.Inter.Regular}
                             color={COLORS._6F767E}
                         >
-                            {doctorSpecialities.find(spec => spec.value === doctor.specialty)
-                                ?.label || doctor.specialty}
+                            {t(doctorSpecialities.find(spec => spec.value === doctor.specialty)
+                                ?.label || doctor.specialty)}
                         </AppText>
                     )}
 

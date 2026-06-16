@@ -80,7 +80,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             font={FONTS.Inter.Regular}
             color={COLORS._6B7280}
           >
-            {requestType}
+            {t(requestType || '')}
           </AppText>
         </View>
         <View
@@ -144,6 +144,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           status == REQUEST_STATUS.SUBMITTED && (
             <AppButton
               title={t(STRING.returnRequest)}
+              textSize={getScaleSize(13)}
               onPress={() => {
                 onLeftButtonPress();
               }}
@@ -162,6 +163,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
         {buttonText && (
           <AppButton
             title={t(buttonText)}
+            textSize={getScaleSize(13)}
             onPress={() => {
               onButtonPress();
             }}

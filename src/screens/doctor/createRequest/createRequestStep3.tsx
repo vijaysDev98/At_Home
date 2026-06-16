@@ -156,11 +156,11 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 onEditPatient={() =>
                   NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
                 }
-                rightContent={
-                  <View style={{ flex: 1 }}>
-                    {/* This will be handled by a context or global state */}
-                  </View>
-                }
+              // rightContent={
+              //   <View style={{ flex: 1 }}>
+              //     {/* This will be handled by a context or global state */}
+              //   </View>
+              // }
               />
             </View>
             <View>
@@ -190,7 +190,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             onPress={handleLeftButtonPress}
           >
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
               // numberOfLines={1}
@@ -205,7 +205,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             onPress={handleRightButtonPress}
           >
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >

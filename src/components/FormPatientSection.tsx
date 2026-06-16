@@ -108,6 +108,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
             label={t(STRING.weightKg)}
             placeholder="e.g. 70"
             isNumberOnly
+            maxLength={6}
             value={state.weight || ''}
             onChangeText={text => setState({ weight: text })}
             style={[styles.inputField, { flex: 1 }]}

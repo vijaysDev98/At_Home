@@ -53,6 +53,7 @@ import {
 } from './formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getCountryCode } from '../../../constant/getCountryCode';
 
 export interface AntibiotherapyInfusionFormProps {
   serviceId: string;
@@ -129,7 +130,10 @@ const AntibiotherapyInfusionForm = forwardRef<
     // Prescriber Identification (Auto-filled from doctor profile)
     prescriber_last_name: prescriberData?.lName || '',
     prescriber_first_name: prescriberData?.fName || '',
-    prescriber_phone: prescriberData?.phoneNumber || '',
+    prescriber_phone:
+      getCountryCode(prescriberData?.country) +
+      ' ' +
+      prescriberData?.phoneNumber || '',
     rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
@@ -175,6 +179,22 @@ const AntibiotherapyInfusionForm = forwardRef<
       setState(initialData?.formData as any);
     }
   }, [initialData]);
+
+  // Update patient fields when selectedPatient changes (e.g., after editing patient)
+  useEffect(() => {
+    if (!initialData && selectedPatient) {
+      setState(prev => ({
+        ...prev,
+        patient_last_name: selectedPatient?.lName || '',
+        patient_first_name: selectedPatient?.fName || '',
+        dob: selectedPatient?.dateOfBirth
+          ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+          : '',
+        weight: selectedPatient?.weight?.toString() || '',
+        nir: selectedPatient?.socialInsuranceNumber || '',
+      }));
+    }
+  }, [selectedPatient, initialData]);
 
   // Validation errors state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});

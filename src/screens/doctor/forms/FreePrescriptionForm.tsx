@@ -53,6 +53,7 @@ import {
 } from '../../../services/serviceRequestListApi';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getCountryCode } from '../../../constant/getCountryCode';
 
 export interface FreePrescriptionFormProps {
   serviceId: string;
@@ -106,7 +107,9 @@ const FreePrescriptionForm = forwardRef<
     // Prescriber Identification
     prescriber_last_name: prescriberData?.lName || '',
     prescriber_first_name: prescriberData?.fName || '',
-    prescriber_phone: prescriberData?.phoneNumber || '',
+    prescriber_phone: getCountryCode(prescriberData?.country) +
+      ' ' +
+      prescriberData?.phoneNumber || '',
     rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
@@ -130,6 +133,22 @@ const FreePrescriptionForm = forwardRef<
       }));
     }
   }, [initialData]);
+
+  // Update patient fields when selectedPatient changes (e.g., after editing patient)
+  useEffect(() => {
+    if (!initialData && selectedPatient) {
+      setState(prev => ({
+        ...prev,
+        patient_last_name: selectedPatient?.lName || '',
+        patient_first_name: selectedPatient?.fName || '',
+        dob: selectedPatient?.dateOfBirth
+          ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
+          : '',
+        weight: selectedPatient?.weight?.toString() || '',
+        nir: selectedPatient?.socialInsuranceNumber || '',
+      }));
+    }
+  }, [selectedPatient, initialData]);
 
   // Wrapper setter that clears errors immediately on any change
   const setFormState = (updaterOrPartial: any): void => {
@@ -379,7 +398,7 @@ const FreePrescriptionForm = forwardRef<
             value={state.free_text}
             onChangeText={text => setFormState({ free_text: text })}
             maxLength={1000}
-            inputWrapperStyle={{ minHeight: getScaleSize(120) }}
+            inputWrapperStyle={{ minHeight: getScaleSize(100) }}
             style={[styles.inputField]}
           />
         </View>

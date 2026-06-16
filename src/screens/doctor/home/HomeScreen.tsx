@@ -130,13 +130,13 @@ const HomeScreen: React.FC = () => {
       id: REQUEST_STATUS.RETURNED,
       value: dashboardData?.requestsOverview?.returnedCount?.toString() || '0',
       label: t(STRING.returned),
-      icon: IMAGES.document_icon,
+      icon: IMAGES.returnedForm,
     },
     {
       id: REQUEST_STATUS.COMPLETED,
       value: dashboardData?.requestsOverview?.completedCount?.toString() || '0',
       label: t(STRING.completed),
-      icon: IMAGES.clipboard,
+      icon: IMAGES.completedForm,
     },
   ];
 
@@ -147,7 +147,7 @@ const HomeScreen: React.FC = () => {
       value:
         dashboardData?.actionRequired?.awaitingSignatureCount?.toString() ||
         '0',
-      icon: IMAGES.document_icon,
+      icon: IMAGES.awaitingSign,
     },
   ];
 
@@ -194,9 +194,8 @@ const HomeScreen: React.FC = () => {
             ) : (
               <ProfileAvatar
                 size="medium"
-                name={`${profileData?.fName || ''} ${
-                  profileData?.lName || ''
-                }`.trim()}
+                name={`${profileData?.fName || ''} ${profileData?.lName || ''
+                  }`.trim()}
               />
             )}
             <View>

@@ -57,11 +57,11 @@ const patientSlice = createSlice({
       const index = state.patients.findIndex(
         p => p.id === updatedPatient.id || p._id === updatedPatient.id || p.id === updatedPatient._id
       );
-      
+
       if (index !== -1) {
         state.patients[index] = { ...state.patients[index], ...updatedPatient };
       }
-      
+
       if (state.selectedPatient && (state.selectedPatient.id === updatedPatient.id || state.selectedPatient._id === updatedPatient.id)) {
         state.selectedPatient = { ...state.selectedPatient, ...updatedPatient };
       }
@@ -82,6 +82,12 @@ const patientSlice = createSlice({
     clearSelectedPatient: (state) => {
       state.selectedPatient = null;
     },
+
+    /**
+     * Resets the entire patient state to initial state.
+     * Used on logout and account deletion.
+     */
+    resetPatient: () => initialState,
   },
 });
 
@@ -92,6 +98,7 @@ export const {
   updatePatientInList,
   addPatientToList,
   clearSelectedPatient,
+  resetPatient,
 } = patientSlice.actions;
 
 export default patientSlice.reducer;

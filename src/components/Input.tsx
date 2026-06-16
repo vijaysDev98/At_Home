@@ -52,6 +52,7 @@ export interface InputProps extends TextInputProps {
   onCountryCodeSelect?: (code: string) => void;
   nameOnly?: boolean;
   isNumberOnly?: boolean;
+  isFiness?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -87,6 +88,7 @@ const Input: React.FC<InputProps> = ({
   onCountryCodeSelect,
   nameOnly = false,
   isNumberOnly = false,
+  isFiness = false,
   ...rest
 }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -118,6 +120,17 @@ const Input: React.FC<InputProps> = ({
   const handleChangeText = (text: string) => {
     if (!rest.onChangeText) return;
 
+    if (isFiness) {
+      const cleaned = text.replace(/[^0-9]/g, '');
+
+      const formatted = cleaned
+        .match(/.{1,3}/g)
+        ?.join('-') ?? '';
+
+      rest.onChangeText(formatted);
+      return;
+    }
+
     if (isCountryCode) {
       const cleaned = text.replace(/[^0-9]/g, ''); // ✅ digits only, nothing else
       rest.onChangeText(cleaned);
@@ -132,8 +145,7 @@ const Input: React.FC<InputProps> = ({
         .replace(/(\..*)\./g, '$1');
 
       rest.onChangeText(cleaned);
-    }
-    else {
+    } else {
       rest.onChangeText(text);
     }
   };

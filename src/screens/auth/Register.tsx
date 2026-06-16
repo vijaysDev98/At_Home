@@ -438,6 +438,8 @@ const Register: React.FC = () => {
               <Input
                 label={t(STRING.rppsNumber)}
                 isMandatory
+                isNumberOnly
+                maxLength={12}
                 placeholder={`${t(STRING.enterRppsNumber)} (${t(
                   STRING.elevenDigit,
                 )})`}
@@ -447,7 +449,7 @@ const Register: React.FC = () => {
                   setRpps(t);
                   setErrors(e => ({ ...e, rpps: '' }));
                 }}
-                keyboardType="numeric"
+                keyboardType="number-pad"
                 error={errors.rpps}
                 helper={errors.rpps ? undefined : t(STRING.rppsNumber)}
                 style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
@@ -457,6 +459,7 @@ const Register: React.FC = () => {
               <Input
                 label={t(STRING.phoneNumber)}
                 isMandatory
+                maxLength={15}
                 placeholder={t(STRING.enterPhoneNumber)}
                 isCountryCode
                 countryCode={country}
@@ -485,7 +488,9 @@ const Register: React.FC = () => {
                   setFiness(t);
                   setErrors(e => ({ ...e, finess: '' }));
                 }}
-                keyboardType="numeric"
+                maxLength={11}
+                isFiness={true}
+                keyboardType="number-pad"
                 error={errors.finess}
                 helper={
                   errors.finess

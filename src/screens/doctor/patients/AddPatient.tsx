@@ -509,6 +509,7 @@ const AddPatient: React.FC = () => {
                 value={socialInsuranceNumber}
                 isNumberOnly
                 keyboardType='number-pad'
+                maxLength={15}
                 onChangeText={t => {
                   setSocialInsuranceNumber(t);
                   setErrors(prev => ({ ...prev, socialInsuranceNumber: '' }));
@@ -549,6 +550,7 @@ const AddPatient: React.FC = () => {
                   value={phone}
                   isCountryCode
                   countryCode={country}
+                  maxLength={15}
                   onCountryCodeSelect={code => {
                     setCountry(code);
                   }}
@@ -672,6 +674,7 @@ const AddPatient: React.FC = () => {
                     value={zip}
                     keyboardType="number-pad"
                     onChangeText={setZip}
+                    maxLength={6}
                     error={errors.zip}
                     inputWrapperStyle={[
                       styles.inputWrapperStyle,

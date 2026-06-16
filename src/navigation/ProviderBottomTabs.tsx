@@ -185,7 +185,7 @@ export default ProviderBottomTabs;
 const styles = StyleSheet.create({
   barContainer: {
     backgroundColor: COLORS.white,
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
     borderTopColor: COLORS._EFEFEF,
   },
   icon: {

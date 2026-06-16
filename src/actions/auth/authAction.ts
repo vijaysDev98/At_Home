@@ -1,13 +1,14 @@
 import { SHOW_TOAST, Storage } from '../../constant';
 import { AppDispatch } from '../../redux/store';
 import { setUserData, resetAuth } from './authSlice';
-import { setLoading } from '../common/commonSlice';
+import { setLoading, resetCommon } from '../common/commonSlice';
+import { resetProfile } from '../profile/profileSlice';
+import { resetPatient } from '../patient/patientSlice';
+import { resetLanguage } from '../language/languageSlice';
 import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { fetchProfile } from '../profile/profileAction';
-import { uploadFcmToken } from '../../utils/fcmTokenHelper';
-import { Alert } from 'react-native';
 
 const getUserDataForRedux = (user: any) => {
   if (!user) {
@@ -95,7 +96,7 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
         SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     console.log('login Error', e);
     SHOW_TOAST(e?.message || 'Something went wrong', 'error');
   } finally {
@@ -202,7 +203,10 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
     await Storage.clear();
     dispatch({ type: 'USER_LOGOUT' });
     dispatch(resetAuth());
-    dispatch(setLoading(false));
+    dispatch(resetProfile());
+    dispatch(resetPatient());
+    dispatch(resetCommon());
+    dispatch(resetLanguage());
     NavigationService.reset(SCREENS.WELCOME);
   }
 };
@@ -379,6 +383,10 @@ export const deleteAccount = () => async (dispatch: AppDispatch) => {
     await Storage.clear();
     dispatch({ type: 'USER_LOGOUT' });
     dispatch(resetAuth());
+    dispatch(resetProfile());
+    dispatch(resetPatient());
+    dispatch(resetCommon());
+    dispatch(resetLanguage());
     NavigationService.reset(SCREENS.LOGIN);
     dispatch(setLoading(false));
   }

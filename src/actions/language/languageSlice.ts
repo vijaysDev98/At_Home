@@ -20,8 +20,9 @@ const languageSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    resetLanguage: () => initialState,
   },
 });
 
-export const { setLanguage, setLoading } = languageSlice.actions;
+export const { setLanguage, setLoading, resetLanguage } = languageSlice.actions;
 export default languageSlice.reducer;

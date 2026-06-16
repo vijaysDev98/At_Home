@@ -134,7 +134,7 @@ export const STRING = {
   save: 'Save',
   requestsOverview: 'Requests Overview',
   active: 'Active',
-  available: 'Available',
+  available: 'Available To Claim',
   inprogress: 'Inprogress',
   completed: 'Completed',
   submitted: 'Submitted',

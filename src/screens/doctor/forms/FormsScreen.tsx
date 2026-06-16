@@ -266,7 +266,7 @@ const FormsScreen: React.FC = () => {
             onPress={handlerMap[left.handler]}
           >
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
               align="center"
@@ -282,7 +282,7 @@ const FormsScreen: React.FC = () => {
             onPress={handlerMap[right.handler]}
           >
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(13)}
               font={FONTS.Inter.Bold}
               color={COLORS.white}
               align="center"

@@ -260,8 +260,11 @@ const ProviderHome: React.FC = () => {
                   size={getScaleSize(12)}
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                  style={styles.kpiTitle}
                 >
-                  {t(STRING.submitted)}
+                  {t(STRING.available)}
                 </AppText>
                 <Image source={IMAGES.ic_submitted} style={styles.kpiIcon} />
               </View>
@@ -479,6 +482,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(24),
     paddingVertical: getScaleSize(16),
     backgroundColor: COLORS.white,
+    borderBottomWidth: 0.5,
+    borderColor: COLORS._EFEFEF,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -546,13 +551,18 @@ const styles = StyleSheet.create({
   },
   kpiTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between', // fine to keep
+  },
+  kpiTitle: {
+    flex: 1,
+    marginRight: getScaleSize(8),
   },
   kpiIcon: {
     width: getScaleSize(24),
     height: getScaleSize(24),
     resizeMode: 'contain',
+    flexShrink: 0, // icon stays fixed size, never gets pushed/squeezed
   },
   kpiWide: {
     marginTop: getScaleSize(12),
