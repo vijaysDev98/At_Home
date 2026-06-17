@@ -833,5 +833,6 @@ export const STRING = {
   step4Of4: 'Step 4/4: Fill Medical Form',
   noDoctorsFound: 'No doctors found',
   noDoctorsAvailable: 'No doctors available',
-  myRequests: 'My Requests'
+  myRequests: 'My Requests',
+  sessionExpired: 'Your session has expired. Please log in again.'
 };

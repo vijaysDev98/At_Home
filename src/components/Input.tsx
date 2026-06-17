@@ -52,7 +52,7 @@ export interface InputProps extends TextInputProps {
   onCountryCodeSelect?: (code: string) => void;
   nameOnly?: boolean;
   isNumberOnly?: boolean;
-  isFiness?: boolean;
+  // isFiness?: boolean;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -88,7 +88,7 @@ const Input: React.FC<InputProps> = ({
   onCountryCodeSelect,
   nameOnly = false,
   isNumberOnly = false,
-  isFiness = false,
+  // isFiness = false,
   ...rest
 }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -120,16 +120,16 @@ const Input: React.FC<InputProps> = ({
   const handleChangeText = (text: string) => {
     if (!rest.onChangeText) return;
 
-    if (isFiness) {
-      const cleaned = text.replace(/[^0-9]/g, '');
+    // if (isFiness) {
+    //   const cleaned = text.replace(/[^0-9]/g, '');
 
-      const formatted = cleaned
-        .match(/.{1,3}/g)
-        ?.join('-') ?? '';
+    //   const formatted = cleaned
+    //     .match(/.{1,3}/g)
+    //     ?.join('-') ?? '';
 
-      rest.onChangeText(formatted);
-      return;
-    }
+    //   rest.onChangeText(formatted);
+    //   return;
+    // }
 
     if (isCountryCode) {
       const cleaned = text.replace(/[^0-9]/g, ''); // ✅ digits only, nothing else
@@ -270,12 +270,12 @@ const Input: React.FC<InputProps> = ({
       </Pressable>
 
       {error ? (
-        <View style={styles.helperRow}>
+        <View style={[styles.helperRow, { marginVertical: getScaleSize(8) }]}>
           <Image source={IMAGES.error_icon} style={{ width: 11, height: 11 }} />
           <AppText
             size={getScaleSize(12)}
             color={COLORS.error}
-            style={[styles.helperText, helperStyle]}
+            style={[styles.helperText]}
           >
             {error}
           </AppText>

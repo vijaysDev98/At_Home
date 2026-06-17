@@ -712,5 +712,6 @@
   "No doctors found": "Aucun médecin trouvé",
   "No doctors available": "Aucun médecin disponible",
   "My Requests": "Mes demandes",
-  "Available To Claim": "Disponible à réclamer"
+  "Available To Claim": "Disponible à réclamer",
+  "Your session has expired. Please log in again.": "Votre session a expiré. Veuillez vous reconnecter."
 }

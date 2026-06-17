@@ -140,7 +140,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
         const response =
           await serviceRequestListApi.listServiceRequests(params);
-        console.log("searched res", response);
 
         if (thisFetchId !== fetchIdRef.current) return;
 

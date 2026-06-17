@@ -17,6 +17,7 @@ import {
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -131,7 +132,15 @@ const FormsScreen: React.FC = () => {
     readOnly,
     enabled: isFetched && !!requestData && !hasError,
     onLockConflict: () => {
-      warningSheetRef.current?.show();
+      if (Platform.OS === 'ios') {
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            warningSheetRef.current?.show();
+          });
+        }, 1000);
+      } else {
+        warningSheetRef.current?.show();
+      }
     },
   });
 

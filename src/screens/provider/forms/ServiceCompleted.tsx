@@ -89,6 +89,7 @@ const ServiceCompletedScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <AppLoader visible={loading} />
       <HeaderProvider
         title={t(STRING.serviceCompleted)}
         isBack
@@ -349,7 +350,7 @@ const ServiceCompletedScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      <AppLoader visible={loading} />
+
     </SafeAreaView>
   );
 };

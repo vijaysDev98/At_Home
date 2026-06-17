@@ -214,7 +214,7 @@ const FormReviewScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            {!isReadOnly && (
+            {(
               <View style={styles.bottomBar}>
                 <TouchableOpacity
                   activeOpacity={0.9}

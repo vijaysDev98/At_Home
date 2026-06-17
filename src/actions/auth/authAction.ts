@@ -164,19 +164,56 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
       } else {
         NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
       }
+      return { success: true };
     } else {
       dispatch(setLoading(false));
       if (response?.code === 400) {
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        // Return error info for UI handling
+        return {
+          success: false,
+          error: {
+            status: response?.code,
+            message: response?.data?.message || response?.message,
+            isInvalidOtp: true
+          }
+        };
       } else if (response?.code === 401) {
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        return {
+          success: false,
+          error: {
+            status: response?.code,
+            message: response?.data?.message || response?.message,
+            isInvalidOtp: false
+          }
+        };
       } else {
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        return {
+          success: false,
+          error: {
+            status: response?.code || 500,
+            message: response?.data?.message || response?.message,
+            isInvalidOtp: false
+          }
+        };
       }
     }
-  } catch (e) {
-    // SHOW_TOAST(undefined, 'error');
+  } catch (e: any) {
     dispatch(setLoading(false));
+    // Handle network errors and other exceptions
+    const errorMessage = e?.message || 'Network error occurred';
+    SHOW_TOAST(errorMessage, 'error');
+    return {
+      success: false,
+      error: {
+        status: 0,
+        message: errorMessage,
+        isInvalidOtp: false,
+        isNetworkError: true
+      }
+    };
   }
 };
 
@@ -254,18 +291,55 @@ export const verifyForgotPasswordOtp =
           otp: data.otp,
           resetToken,
         });
+        return { success: true };
       } else {
         dispatch(setLoading(false));
         if (response?.code === 400) {
           SHOW_TOAST(response?.data?.message || response?.message, 'error');
+          return {
+            success: false,
+            error: {
+              status: response?.code,
+              message: response?.data?.message || response?.message,
+              isInvalidOtp: true
+            }
+          };
         } else if (response?.code === 401) {
           SHOW_TOAST(response?.data?.message || response?.message, 'error');
+          return {
+            success: false,
+            error: {
+              status: response?.code,
+              message: response?.data?.message || response?.message,
+              isInvalidOtp: false
+            }
+          };
         } else {
           SHOW_TOAST(response?.data?.message || response?.message, 'error');
+          return {
+            success: false,
+            error: {
+              status: response?.code || 500,
+              message: response?.data?.message || response?.message,
+              isInvalidOtp: false
+            }
+          };
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       dispatch(setLoading(false));
+      // Handle network errors and other exceptions
+      const errorMessage = e?.message || 'Network error occurred';
+      SHOW_TOAST(errorMessage, 'error');
+      return {
+        success: false,
+        error: {
+          status: 0,
+          message: errorMessage,
+          isInvalidOtp: false,
+          isNetworkError: true
+        }
+      };
     }
   };
 

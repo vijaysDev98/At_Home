@@ -89,17 +89,23 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ route }) => {
         );
       }
 
-      const isRejected =
-        verifyOtp.rejected.match(result) ||
-        verifyForgotPasswordOtp.rejected.match(result);
+      // The auth actions now return structured error information
+      console.log("OTP verification result:", result);
 
-      if (isRejected) {
-        setOtpError(true);
+      // Check if verification failed and if it's specifically an invalid OTP error
+      if (result && result.success === false) {
+        // Only show UI error for invalid OTP, not for network errors
+        if (result.error?.isInvalidOtp) {
+          setOtpError(true);
+        } else {
+          setOtpError(false);
+        }
       } else {
         setOtpError(false);
       }
     } catch (error) {
-      setOtpError(true);
+      // Don't show generic OTP error for other exceptions
+      setOtpError(false);
     }
   };
 

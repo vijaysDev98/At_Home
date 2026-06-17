@@ -184,6 +184,13 @@ const PatientsScreen: React.FC = () => {
       edges={['top']}
       style={{ backgroundColor: COLORS.white }}
     >
+      <AppLoader
+        visible={
+          globalLoading &&
+          page === 1 &&
+          !isRefreshing
+        }
+      />
       <View style={styles.container}>
         <Header
           title={t(STRING.patients)}
@@ -301,13 +308,7 @@ const PatientsScreen: React.FC = () => {
         </View>
       </View>
 
-      <AppLoader
-        visible={
-          globalLoading &&
-          page === 1 &&
-          !isRefreshing
-        }
-      />
+
     </AppSafeAreaView>
   );
 };

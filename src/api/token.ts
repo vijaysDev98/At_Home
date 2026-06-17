@@ -1,17 +1,13 @@
-
 import axios from 'axios';
-import { Storage } from '../constant';
+import { SHOW_SUCCESS_TOAST, SHOW_TOAST, Storage } from '../constant';
 import { jwtDecode } from 'jwt-decode';
 import { API } from '.';
-
 
 // Types
 interface TokenDetail {
   exp: number;
   [key: string]: any;
 }
-
-
 
 export function isTokenExpire(accessToken: string): boolean {
   try {
@@ -28,35 +24,42 @@ export function isTokenExpire(accessToken: string): boolean {
 }
 
 export async function refreshAccessToken(
-  refresh_token: string,
+  refreshToken: string,
 ): Promise<string | null> {
   try {
+    // Show toast when attempting token refresh
+
     const params = {
-      refresh_token: refresh_token,
-    }
-    const result = await axios.post(API.API_BASE_URL + API.API_ROUTES.getRefreshToken, params, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + refresh_token,
-      }
-    });
-    if (result.status) {
+      refreshToken: refreshToken,
+    };
+    const result = await axios.post(
+      API.API_BASE_URL + API.API_ROUTES.getRefreshToken,
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': 'Bearer ' + refreshToken,
+        },
+      },
+    );
 
+    if (result.status == 200) {
       const refreshResponse = result?.data?.data; // 👈 new access token data
-      if (!refreshResponse?.access_token) return "";
+      if (!refreshResponse?.accessToken) return null;
+      // SHOW_SUCCESS_TOAST('Session refreshed successfully');
+      await Storage.save(Storage.USER_TOKEN, refreshResponse.accessToken);
 
-      await Storage.save(Storage.USER_TOKEN, refreshResponse.access_token);
-      
       // If the backend also returns a new refresh token, save it too
-      if (refreshResponse.refresh_token) {
-        await Storage.save(Storage.REFRESH_TOKEN, refreshResponse.refresh_token);
+      if (refreshResponse.refreshToken) {
+        await Storage.save(Storage.REFRESH_TOKEN, refreshResponse.refreshToken);
       }
-      
-      return refreshResponse.access_token;
+
+      return refreshResponse.accessToken;
     } else {
-      return "";
+      return null;
     }
   } catch (error: any) {
-    return "";
+    console.log('Token refresh failed:', error);
+    return null;
   }
 }

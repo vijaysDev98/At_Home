@@ -83,6 +83,8 @@ const PatientDetail: React.FC = () => {
       edges={['top', 'bottom']}
       style={{ backgroundColor: COLORS.white }}
     >
+      <AppLoader visible={globalLoading && !patient?.id} />
+
       <Header
         isBack
         backIcon={IMAGES.arrowLeft}
@@ -432,7 +434,6 @@ const PatientDetail: React.FC = () => {
         </ScrollView>
       </View>
 
-      <AppLoader visible={globalLoading && !patient?.id} />
     </AppSafeAreaView>
   );
 };

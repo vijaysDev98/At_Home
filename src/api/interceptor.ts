@@ -1,16 +1,62 @@
 import axios, { AxiosResponse } from 'axios';
 
 // CONSTANTS
-import { SHOW_TOAST, Storage } from '../constant';
+import { SHOW_TOAST, Storage, STRING } from '../constant';
 import { API_BASE_URL, DISABLE_API_LOGS } from './apiRoutes';
 
 // PACKAGES
 import NetInfo from '@react-native-community/netinfo';
-// import { EventRegister } from "react-native-event-listeners";
+import store from '../redux/store';
 import { isTokenExpire, refreshAccessToken } from './token';
 import { getLanguageParam } from '../utils/languageHelper';
+import { userLogout } from '../actions/auth/authAction';
+import { resetAuth } from '../actions/auth/authSlice';
+import { resetProfile } from '../actions/profile/profileSlice';
+import { resetPatient } from '../actions/patient/patientSlice';
+import { resetCommon } from '../actions/common/commonSlice';
+import { resetLanguage } from '../actions/language/languageSlice';
+import NavigationService from '../navigation/NavigationService';
+import { SCREENS } from '../navigation/routes';
+import i18next from 'i18next';
 
 let hasShownNoInternetAlert = false;
+let isHandlingTokenExpiration = false;
+
+// Helper function to handle token expiration and logout
+const handleTokenExpiration = async () => {
+  // Prevent infinite loops
+  if (isHandlingTokenExpiration) {
+    console.log('Token expiration already being handled, skipping...');
+    return;
+  }
+
+  isHandlingTokenExpiration = true;
+
+  try {
+    // Show toast message to user
+    SHOW_TOAST(i18next.t(STRING.sessionExpired), 'error');
+    // Direct logout without API call to avoid loop
+    await Storage.clear();
+
+    // Dispatch logout actions to clear Redux state
+    store.dispatch({ type: 'USER_LOGOUT' });
+    store.dispatch(resetAuth());
+    store.dispatch(resetProfile());
+    store.dispatch(resetPatient());
+    store.dispatch(resetCommon());
+    store.dispatch(resetLanguage());
+
+    // Navigate to welcome screen
+    NavigationService.reset(SCREENS.WELCOME);
+  } catch (error) {
+    console.log('Error handling token expiration:', error);
+    // Fallback: clear storage and navigate to welcome
+    await Storage.clear();
+    NavigationService.reset(SCREENS.WELCOME);
+  } finally {
+    isHandlingTokenExpiration = false;
+  }
+};
 
 export const Instance = axios.create({
   baseURL: API_BASE_URL,
@@ -68,8 +114,24 @@ Instance.interceptors.request.use(
           if (newAccessToken) {
             config.headers.Authorization = 'Bearer ' + `${newAccessToken}`;
           } else {
-            // EventRegister.emit('onInvalidToken')
+            // Token refresh failed, handle expiration
+            await handleTokenExpiration();
+            return Promise.reject({
+              message: 'Session expired. Please log in again.',
+              code: 401,
+              data: null,
+              status: false,
+            });
           }
+        } else if (isExpired && !refreshToken) {
+          // No refresh token available, handle expiration
+          await handleTokenExpiration();
+          return Promise.reject({
+            message: 'Session expired. Please log in again.',
+            code: 401,
+            data: null,
+            status: false,
+          });
         } else {
           config.headers.Authorization = 'Bearer ' + `${accessToken}`;
         }
@@ -124,7 +186,7 @@ const responseValidator = (response: AxiosResponse<any, any>) => {
   return res;
 };
 
-const errorValidator = (error: any) => {
+const errorValidator = async (error: any) => {
   if (!DISABLE_API_LOGS) {
     console.log(`Error ${error}`);
     console.log(`Error Status ${error?.response?.status}`);
@@ -134,7 +196,18 @@ const errorValidator = (error: any) => {
     console.log(`Error Details ${error?.response?.data}`);
   }
   if (error?.response?.status == 401) {
-    // EventRegister.emit('onInvalidToken')
+    console.log('401 Unauthorized - token expired or invalid', error);
+    // Handle 401 Unauthorized - token expired or invalid
+    await handleTokenExpiration();
+    // Return a specific error to indicate logout happened
+    return {
+      error: error,
+      message: 'Session expired. Please log in again.',
+      code: 401,
+      data: null,
+      status: false,
+      loggedOut: true,
+    };
   }
 
   if (error?.message === 'canceled') {
@@ -159,3 +232,4 @@ const errorValidator = (error: any) => {
 };
 
 Instance.interceptors.response.use(responseValidator, errorValidator);
+

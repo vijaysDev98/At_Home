@@ -488,8 +488,8 @@ const Register: React.FC = () => {
                   setFiness(t);
                   setErrors(e => ({ ...e, finess: '' }));
                 }}
-                maxLength={11}
-                isFiness={true}
+                maxLength={9}
+                // isFiness={true}
                 keyboardType="number-pad"
                 error={errors.finess}
                 helper={

@@ -428,7 +428,6 @@ export const serviceRequestApi = {
     payload: { formData: any },
   ): Promise<ServiceRequestResponse> => {
     try {
-      console.log('to update', requestId, JSON.stringify(payload));
 
       const response: any = await API.Instance.put(
         `/service-requests/${requestId}/provider-form`,

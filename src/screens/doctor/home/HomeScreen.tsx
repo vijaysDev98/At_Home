@@ -21,13 +21,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import { getButtonConfig } from '../../../constant';
+import { getButtonConfig, Storage } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
 import { useTranslation } from 'react-i18next';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
+import { refreshAccessToken } from '../../../api/token';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -92,6 +93,7 @@ const HomeScreen: React.FC = () => {
       dispatch(fetchProfile());
     }, []),
   );
+
 
   const fetchDashboardData = async () => {
     // dispatch(setLoading(true));
