@@ -50,9 +50,10 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
   const reqs = useMemo(() => {
     const hasLength = password.length >= 8;
     const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecial = /[^A-Za-z0-9]/.test(password);
-    return { hasLength, hasUpper, hasNumber, hasSpecial };
+    return { hasLength, hasUpper, hasLower, hasNumber, hasSpecial };
   }, [password]);
 
   const strengthLevel = useMemo(() => {
@@ -63,8 +64,8 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
 
   const isMatch = confirm.length > 0 && confirm === password;
   const canSubmit = isChangePassword
-    ? oldPassword.length > 0 && strengthLevel === 4 && isMatch
-    : strengthLevel === 4 && isMatch;
+    ? oldPassword.length > 0 && strengthLevel === 5 && isMatch
+    : strengthLevel === 5 && isMatch;
 
   const onSubmit = () => {
     if (!canSubmit || isLoading) return;
@@ -172,7 +173,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
             />
 
             <View style={styles.meterRow}>
-              {[0, 1, 2, 3].map(i => (
+              {[0, 1, 2, 3, 4].map(i => (
                 <View
                   key={i}
                   style={[
@@ -199,6 +200,7 @@ const ResetPassword: React.FC<ResetPasswordProps> = ({ navigation, route }) => {
               {[
                 { text: STRING.atLeast8Chars, met: reqs.hasLength },
                 { text: STRING.containsUpper, met: reqs.hasUpper },
+                { text: STRING.containsLower, met: reqs.hasLower },
                 { text: STRING.containsNumber, met: reqs.hasNumber },
                 { text: STRING.containsSpecial, met: reqs.hasSpecial },
               ].map(item => (

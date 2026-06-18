@@ -102,6 +102,7 @@
   "Password Strength": "Force du mot de passe",
   "At least 8 characters": "Au moins 8 caractères",
   "Contains uppercase letter": "Contient une lettre majuscule",
+  "Contains lowercase letter": "Contient une lettre minuscule",
   "Contains number": "Contient un chiffre",
   "Contains special character": "Contient un caractère spécial",
   "Enter new password": "Saisissez le nouveau mot de passe",

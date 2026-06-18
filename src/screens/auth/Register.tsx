@@ -573,7 +573,6 @@ const Register: React.FC = () => {
                   <AppText
                     // style={{ color: COLORS.primary }}
                     color={COLORS.primaryMuted}
-
                   >
                     {t(STRING.iAgreeToThe)}{' '}
                     <AppText

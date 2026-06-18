@@ -44,7 +44,7 @@ const handleTokenExpiration = async () => {
     store.dispatch(resetProfile());
     store.dispatch(resetPatient());
     store.dispatch(resetCommon());
-    store.dispatch(resetLanguage());
+    // store.dispatch(resetLanguage());
 
     // Navigate to welcome screen
     NavigationService.reset(SCREENS.WELCOME);

@@ -27,6 +27,7 @@ import {
 } from './src/hooks/notificationPermission';
 import { createNotificationChannels } from './src/services/notificationChannels';
 import { COLORS } from './src/utils';
+import { toastConfig } from './src/constant/toastConfig';
 
 const AppContent = () => {
   // Sync language between Redux and i18n
@@ -35,7 +36,7 @@ const AppContent = () => {
   return (
     <>
       <RootNavigation />
-      <Toast />
+      <Toast config={toastConfig} />
     </>
   );
 };

@@ -59,7 +59,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       {renderSectionHeader(t(STRING.patientInformation), IMAGES.person)}
       <View style={styles.row}>
         <Input
-          isLocked={readOnly}
+          isLocked
           label={t(STRING.firstName)}
           placeholder={t(STRING.enterFirstName)}
           isMandatory
@@ -70,7 +70,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
           nameOnly={true}
         />
         <Input
-          isLocked={readOnly}
+          isLocked
           label={t(STRING.lastName)}
           isMandatory
           placeholder={t(STRING.enterLastName)}
@@ -83,7 +83,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </View>
       <View style={styles.row}>
         <Input
-          isLocked={readOnly}
+          isLocked
           onPress={() => !readOnly && setOpenDob(true)}
           label={t(STRING.dateOfBirth)}
           placeholder={t(STRING.ddmmyyyy)}
@@ -104,7 +104,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
         )}
         {showWeight && (
           <Input
-            isLocked={readOnly}
+            isLocked
             label={t(STRING.weightKg)}
             placeholder="e.g. 70"
             isNumberOnly
@@ -139,9 +139,12 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
 
       {showNIR && (
         <Input
-          isLocked={readOnly}
+          isLocked
           label={t(STRING.socialInsuranceNumberNIR)}
           placeholder={t(STRING.enterNIR)}
+          isNumberOnly
+          maxLength={15}
+          keyboardType='numeric'
           value={state.nir || ''}
           onChangeText={text => setState({ nir: text })}
           style={[styles.inputField, { marginBottom: 0 }]}

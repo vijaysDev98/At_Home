@@ -20,15 +20,13 @@ import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import { getButtonConfig, Storage } from '../../../constant';
+import { getButtonConfig, SHOW_TOAST, Storage } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
 import { useTranslation } from 'react-i18next';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
-import { refreshAccessToken } from '../../../api/token';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -99,7 +97,7 @@ const HomeScreen: React.FC = () => {
     // dispatch(setLoading(true));
     try {
       const [response, count] = await Promise.all([
-        dashboardApi.getDashboardOverview(5),
+        dashboardApi.getDashboardOverview(10),
         getUnreadCountService(),
       ]);
 
@@ -163,20 +161,6 @@ const HomeScreen: React.FC = () => {
   ];
 
   const recentQueue = dashboardData?.recentQueue || [];
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-
-    if (hour < 12) {
-      return 'Good Morning';
-    } else if (hour < 17) {
-      return 'Good Afternoon';
-    } else if (hour < 21) {
-      return 'Good Evening';
-    } else {
-      return 'Good Night';
-    }
-  };
 
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>

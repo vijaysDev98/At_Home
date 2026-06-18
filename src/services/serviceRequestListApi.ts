@@ -288,6 +288,7 @@ export const serviceRequestListApi = {
           params: {
             page: params.page || 1,
             size: params.size || 10,
+            status: params.status,
           },
         },
       );

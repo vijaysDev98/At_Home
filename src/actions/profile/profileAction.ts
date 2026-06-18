@@ -78,10 +78,8 @@ export const updateProfile =
           payload,
         );
 
-        console.log('update profile response', JSON.stringify(response));
-
         if (response?.status && response?.code === 200) {
-          SHOW_TOAST('Profile updated successfully', 'success');
+          SHOW_TOAST(response?.data?.message || response?.message, 'success');
 
           dispatch(fetchProfile());
           return true;

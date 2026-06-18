@@ -102,6 +102,7 @@
   "Password Strength": "Password Strength",
   "At least 8 characters": "At least 8 characters",
   "Contains uppercase letter": "Contains uppercase letter",
+  "Contains lowercase letter": "Contains lowercase letter",
   "Contains number": "Contains number",
   "Contains special character": "Contains special character",
   "Enter new password": "Enter new password",

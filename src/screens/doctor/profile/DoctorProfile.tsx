@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -32,7 +33,10 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { userLogout, deleteAccount } from '../../../actions/auth/authAction';
-import { updateProfile } from '../../../actions/profile/profileAction';
+import {
+  updateProfile,
+  fetchProfile,
+} from '../../../actions/profile/profileAction';
 import { setLoading } from '../../../actions/common/commonSlice';
 import {
   updateLanguage,
@@ -55,6 +59,8 @@ const DoctorProfile: React.FC = () => {
   const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  console.log("image loaddd", userAvatar);
 
   const doctorSpecialities = [
     { label: t(STRING.generalPractitioner), value: 'generalPractice' },
@@ -76,6 +82,18 @@ const DoctorProfile: React.FC = () => {
   // Fetch stored language on component mount
   useEffect(() => {
     dispatch(fetchLanguage());
+  }, [dispatch]);
+
+  // Refresh profile data
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await dispatch(fetchProfile());
+    } catch (error) {
+      console.log('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
   }, [dispatch]);
 
   const logoutSheetRef = useRef<ActionSheetRef>(null);
@@ -169,6 +187,14 @@ const DoctorProfile: React.FC = () => {
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS._526674]}
+              tintColor={COLORS._526674}
+            />
+          }
         >
           {/* Avatar section */}
           <View style={styles.avatarSection}>
@@ -184,6 +210,9 @@ const DoctorProfile: React.FC = () => {
                         : { uri: IMAGE_BASE_URL + userAvatar }
                       : IMAGES.person
                   }
+                  onError={(e) => {
+                    console.log("image loaddd", e);
+                  }}
                   style={styles.avatar}
                 />
               </View>
@@ -377,15 +406,21 @@ const DoctorProfile: React.FC = () => {
               {t(STRING.accountSetting)}
             </AppText>
 
-            <TouchableOpacity style={styles.settingRow} onPress={handleLanguagePicker}>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleLanguagePicker}
+            >
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.language} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.language)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>
+                  {t(STRING.language)}
+                </AppText>
               </View>
-              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>{currentLanguage.toUpperCase()}</AppText>
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>
+                {currentLanguage.toUpperCase()}
+              </AppText>
             </TouchableOpacity>
             <View style={styles.settingDivider} />
-
 
             <TouchableOpacity
               style={styles.settingRow}
@@ -397,25 +432,43 @@ const DoctorProfile: React.FC = () => {
             >
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.lock} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.changePassword)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>
+                  {t(STRING.changePassword)}
+                </AppText>
               </View>
               {/* <Image source={IMAGES.back} style={styles.chevronIcon} /> */}
             </TouchableOpacity>
             <View style={styles.settingDivider} />
 
-
             <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
               <View style={styles.settingLeft}>
-                <Image source={IMAGES.arrow_back} style={[styles.settingIcon]} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>{t(STRING.logOut)}</AppText>
+                <Image
+                  source={IMAGES.arrow_back}
+                  style={[styles.settingIcon]}
+                />
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)}>
+                  {t(STRING.logOut)}
+                </AppText>
               </View>
             </TouchableOpacity>
             <View style={styles.settingDivider} />
 
-            <TouchableOpacity style={styles.settingRow} onPress={handleDeleteAccount}>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleDeleteAccount}
+            >
               <View style={styles.settingLeft}>
-                <Image source={IMAGES.trash} style={[styles.settingIcon, { tintColor: COLORS.error }]} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(14)} color={COLORS.error}>{t(STRING.deleteAccount)}</AppText>
+                <Image
+                  source={IMAGES.trash}
+                  style={[styles.settingIcon, { tintColor: COLORS.error }]}
+                />
+                <AppText
+                  font={FONTS.Inter.Regular}
+                  size={getScaleSize(14)}
+                  color={COLORS.error}
+                >
+                  {t(STRING.deleteAccount)}
+                </AppText>
               </View>
             </TouchableOpacity>
           </View>
@@ -590,8 +643,8 @@ const styles = StyleSheet.create({
     width: getScaleSize(96),
     height: getScaleSize(96),
     borderRadius: getScaleSize(48),
-    overflow: 'hidden',
-    position: 'relative',
+    // overflow: 'hidden',
+    // position: 'relative',
     marginBottom: getScaleSize(12),
     borderWidth: 4,
     borderColor: COLORS.white,
@@ -602,8 +655,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: getScaleSize(86),
+    height: getScaleSize(86),
+    borderRadius: getScaleSize(42),
+    alignSelf: 'center',
     // borderRadius:"50%"
   },
   cameraBtn: {

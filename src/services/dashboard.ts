@@ -12,8 +12,6 @@ export const dashboardApi = {
       const response: any = await API.Instance.get(
         `/doctor/dashboard/overview?recentLimit=${recentLimit}`,
       );
-      console.log('dashboard response', response);
-
       const nestedData = response.data?.data || response.data;
       const nestedMessage = response.data?.msg || response.message;
 

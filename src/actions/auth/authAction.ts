@@ -243,7 +243,7 @@ export const userLogout = () => async (dispatch: AppDispatch) => {
     dispatch(resetProfile());
     dispatch(resetPatient());
     dispatch(resetCommon());
-    dispatch(resetLanguage());
+    // dispatch(resetLanguage());
     NavigationService.reset(SCREENS.WELCOME);
   }
 };
@@ -460,7 +460,7 @@ export const deleteAccount = () => async (dispatch: AppDispatch) => {
     dispatch(resetProfile());
     dispatch(resetPatient());
     dispatch(resetCommon());
-    dispatch(resetLanguage());
+    // dispatch(resetLanguage());
     NavigationService.reset(SCREENS.LOGIN);
     dispatch(setLoading(false));
   }

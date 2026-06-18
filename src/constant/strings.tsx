@@ -123,6 +123,7 @@ export const STRING = {
   passwordStrength: 'Password Strength',
   atLeast8Chars: 'At least 8 characters',
   containsUpper: 'Contains uppercase letter',
+  containsLower: 'Contains lowercase letter',
   containsNumber: 'Contains number',
   containsSpecial: 'Contains special character',
   enterNewPassword: 'Enter new password',

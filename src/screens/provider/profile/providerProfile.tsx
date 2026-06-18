@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
 import {
@@ -28,6 +29,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { STRING } from '../../../constant';
 import { userLogout, deleteAccount } from '../../../actions/auth/authAction';
+import { fetchProfile } from '../../../actions/profile/profileAction';
 import {
   updateLanguage,
   fetchLanguage,
@@ -44,6 +46,7 @@ const ProviderProfile: React.FC = () => {
   const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (profileData?.profileImg) {
@@ -54,6 +57,18 @@ const ProviderProfile: React.FC = () => {
   // Fetch stored language on component mount
   useEffect(() => {
     dispatch(fetchLanguage());
+  }, [dispatch]);
+
+  // Refresh profile data
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await dispatch(fetchProfile());
+    } catch (error) {
+      console.log('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
   }, [dispatch]);
 
   const providerName = profileData?.providerName;
@@ -130,6 +145,14 @@ const ProviderProfile: React.FC = () => {
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS._526674]}
+              tintColor={COLORS._526674}
+            />
+          }
         >
           {/* Profile Card */}
           <View style={styles.profileCard}>

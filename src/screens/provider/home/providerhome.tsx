@@ -103,7 +103,7 @@ const ProviderHome: React.FC = () => {
     // dispatch(setGlobalLoading(true));
     try {
       const [dashboardResponse, count] = await Promise.all([
-        dashboardApi.getProviderDashboardOverview(5),
+        dashboardApi.getProviderDashboardOverview(10),
         getUnreadCountService(),
       ]);
 
@@ -178,7 +178,7 @@ const ProviderHome: React.FC = () => {
                 style={styles.avatar}
               />
             ) : (
-              <ProfileAvatar size="medium" name={profileData?.fullName} />
+              <ProfileAvatar size="medium" name={profileData?.providerName} />
             )}
             <View>
               <AppText
@@ -198,9 +198,7 @@ const ProviderHome: React.FC = () => {
             </View>
           </View>
           <TouchableOpacity
-            onPress={() =>
-              NavigationService.navigate(SCREENS.ALERTS)
-            }
+            onPress={() => NavigationService.navigate(SCREENS.ALERTS)}
             activeOpacity={0.7}
             style={styles.notificationBtn}
           >

@@ -116,7 +116,7 @@ const HeaderProvider = ({
               <AppButton
                 style={styles.viewFormBtn}
                 textSize={getScaleSize(10)}
-                onPress={onViewFormPress || (() => { })}
+                onPress={onViewFormPress || (() => {})}
                 title={t(STRING.viewForm)}
               />
             )}
@@ -149,7 +149,9 @@ const HeaderProvider = ({
                     color={getStatusBadgeColor(requestStatus || status || '')}
                     font={FONTS.Inter.SemiBold}
                   >
-                    {t(requestStatus || '') || t(DISPLAY_FORM_STATUS[status || '']) || ''}
+                    {t(requestStatus || '') ||
+                      t(DISPLAY_FORM_STATUS[status || '']) ||
+                      ''}
                   </AppText>
                 </View>
               )}
