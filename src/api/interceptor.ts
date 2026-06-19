@@ -23,7 +23,7 @@ let hasShownNoInternetAlert = false;
 let isHandlingTokenExpiration = false;
 
 // Helper function to handle token expiration and logout
-const handleTokenExpiration = async () => {
+const handleTokenExpiration = async (customMessage?: string) => {
   // Prevent infinite loops
   if (isHandlingTokenExpiration) {
     console.log('Token expiration already being handled, skipping...');
@@ -33,8 +33,9 @@ const handleTokenExpiration = async () => {
   isHandlingTokenExpiration = true;
 
   try {
-    // Show toast message to user
-    SHOW_TOAST(i18next.t(STRING.sessionExpired), 'error');
+    // Show toast message to user - use custom message if provided, otherwise default
+    const message = customMessage || i18next.t(STRING.sessionExpired);
+    SHOW_TOAST(message, 'error');
     // Direct logout without API call to avoid loop
     await Storage.clear();
 
@@ -46,13 +47,19 @@ const handleTokenExpiration = async () => {
     store.dispatch(resetCommon());
     // store.dispatch(resetLanguage());
 
-    // Navigate to welcome screen
-    NavigationService.reset(SCREENS.WELCOME);
+    // Navigate to welcome screen only if not already on login/welcome screen
+    const currentRoute = NavigationService.getCurrentRoute();
+    if (currentRoute !== SCREENS.WELCOME && currentRoute !== SCREENS.LOGIN) {
+      NavigationService.reset(SCREENS.WELCOME);
+    }
   } catch (error) {
     console.log('Error handling token expiration:', error);
     // Fallback: clear storage and navigate to welcome
     await Storage.clear();
-    NavigationService.reset(SCREENS.WELCOME);
+    const currentRoute = NavigationService.getCurrentRoute();
+    if (currentRoute !== SCREENS.WELCOME && currentRoute !== SCREENS.LOGIN) {
+      NavigationService.reset(SCREENS.WELCOME);
+    }
   } finally {
     isHandlingTokenExpiration = false;
   }
@@ -197,13 +204,16 @@ const errorValidator = async (error: any) => {
   }
   if (error?.response?.status == 401) {
     console.log('401 Unauthorized - token expired or invalid', error);
-    // Handle 401 Unauthorized - token expired or invalid
-    await handleTokenExpiration();
+    // Use API response message if available, otherwise use default message
+    const apiMessage =
+      error?.response?.data?.message || 'Session expired. Please log in again.';
+    // Handle 401 Unauthorized - token expired or invalid with custom message
+    await handleTokenExpiration(apiMessage);
     // Return a specific error to indicate logout happened
     return {
       error: error,
-      message: 'Session expired. Please log in again.',
-      code: 401,
+      message: apiMessage,
+      code: error?.response?.status,
       data: null,
       status: false,
       loggedOut: true,
@@ -223,13 +233,10 @@ const errorValidator = async (error: any) => {
   return {
     error: error,
     code: error?.response?.status,
-    message:
-      error?.response?.data?.message ??
-      error?.message,
+    message: error?.response?.data?.message ?? error?.message,
     data: error?.response?.data ?? {},
     status: false,
   };
 };
 
 Instance.interceptors.response.use(responseValidator, errorValidator);
-

@@ -132,8 +132,8 @@ const AntibiotherapyInfusionForm = forwardRef<
     prescriber_first_name: prescriberData?.fName || '',
     prescriber_phone:
       getCountryCode(prescriberData?.country) +
-      ' ' +
-      prescriberData?.phoneNumber || '',
+        ' ' +
+        prescriberData?.phoneNumber || '',
     rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
@@ -326,7 +326,7 @@ const AntibiotherapyInfusionForm = forwardRef<
               return ne;
             });
           }
-        } catch { }
+        } catch {}
         return next;
       });
     } else {
@@ -491,8 +491,9 @@ const AntibiotherapyInfusionForm = forwardRef<
       .filter(i => i !== -1);
 
     if (filledProductIndices.length === 0) {
-      newErrors['infusion_products[0].product_name'] =
-        t(STRING.atLeastOneProductRequired);
+      newErrors['infusion_products[0].product_name'] = t(
+        STRING.atLeastOneProductRequired,
+      );
     }
 
     setErrors(newErrors);
@@ -580,7 +581,9 @@ const AntibiotherapyInfusionForm = forwardRef<
               </AppText>
               {state.infusion_products.length > 1 && !readOnly && (
                 <TouchableOpacity onPress={() => removeProduct(index)}>
-                  <Text style={{ color: COLORS.error }}>remove</Text>
+                  <Text style={{ color: COLORS.error }}>
+                    {t(STRING.remove)}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -731,9 +734,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                           'central_venous_options',
                           value
                             ? [...current, option]
-                            : current.filter(
-                              (item: string) => item !== option,
-                            ),
+                            : current.filter((item: string) => item !== option),
                         );
                       }}
                     />
@@ -851,7 +852,9 @@ const AntibiotherapyInfusionForm = forwardRef<
                   if (!readOnly) {
                     setPickerType({ type: 'start_date', index });
                     if (product.start_date) {
-                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                      setDate(
+                        moment(product.start_date, 'DD/MM/YYYY').toDate(),
+                      );
                     }
                     setOpen(true);
                   }
@@ -869,7 +872,9 @@ const AntibiotherapyInfusionForm = forwardRef<
                     if (product.end_date) {
                       setDate(moment(product.end_date, 'DD/MM/YYYY').toDate());
                     } else {
-                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                      setDate(
+                        moment(product.start_date, 'DD/MM/YYYY').toDate(),
+                      );
                     }
                     setOpen(true);
                   } else if (!product.start_date) {
@@ -946,7 +951,7 @@ const AntibiotherapyInfusionForm = forwardRef<
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
-        theme='light'
+        theme="light"
         open={open}
         date={date}
         mode="date"

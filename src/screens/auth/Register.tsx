@@ -439,7 +439,7 @@ const Register: React.FC = () => {
                 label={t(STRING.rppsNumber)}
                 isMandatory
                 isNumberOnly
-                maxLength={12}
+                maxLength={11}
                 placeholder={`${t(STRING.enterRppsNumber)} (${t(
                   STRING.elevenDigit,
                 )})`}

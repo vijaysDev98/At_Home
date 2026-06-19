@@ -1,6 +1,8 @@
-const API_BASE_URL = 'http://163.227.92.122:3047/';
+const API_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
+//  'http://163.227.92.122:3047/';
 
-export const IMAGE_BASE_URL = 'http://163.227.92.122:3047/';
+export const IMAGE_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
+// 'http://163.227.92.122:3047/';
 
 export const PRIVACY_POLICY_URL =
   'https://doubtful-olive-hvnl1qwe9z.edgeone.app/';
@@ -57,7 +59,7 @@ const API_ROUTES = {
   resendLoginOtp: 'auth/resendLoginOtp',
   notifications: 'notifications',
   updateFcm: 'auth/update-fcm',
-  getDoctors: 'providers/doctors'
+  getDoctors: 'providers/doctors',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };
