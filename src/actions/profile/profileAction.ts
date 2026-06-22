@@ -36,8 +36,6 @@ export const fetchProfile = () => async (dispatch: AppDispatch) => {
 export const updateProfile =
   (profileData: any, fromProvider = false) =>
   async (dispatch: AppDispatch) => {
-    dispatch(setLoading(true));
-
     try {
       const {
         fName,

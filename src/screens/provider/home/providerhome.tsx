@@ -39,9 +39,9 @@ import {
   REQUEST_STATUS,
 } from '../../../constant/RequestStatus';
 import { ActionSheetRef } from 'react-native-actions-sheet';
-import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { fetchProfile } from '../../../actions/profile/profileAction';
+import FastImage from 'react-native-fast-image';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -169,7 +169,7 @@ const ProviderHome: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {profileData?.profileImg ? (
-              <Image
+              <FastImage
                 source={
                   profileData?.profileImg
                     ? { uri: IMAGE_BASE_URL + profileData.profileImg }

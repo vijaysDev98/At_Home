@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -35,6 +41,7 @@ import {
   fetchLanguage,
 } from '../../../actions/language/languageAction';
 import { countryCodes } from 'react-native-country-codes-picker';
+import FastImage from 'react-native-fast-image';
 
 const ProviderProfile: React.FC = () => {
   const { t } = useTranslation();
@@ -158,7 +165,7 @@ const ProviderProfile: React.FC = () => {
           <View style={styles.profileCard}>
             {userAvatar ? (
               <View style={styles.avatarWrap}>
-                <Image
+                <FastImage
                   source={
                     userAvatar
                       ? userAvatar.startsWith('file://') ||
@@ -237,7 +244,7 @@ const ProviderProfile: React.FC = () => {
                 isCountryCode
                 countryCode={
                   profileData?.country?.length &&
-                    profileData?.country?.length > 3
+                  profileData?.country?.length > 3
                     ? profileData?.country?.slice(0, 2).toUpperCase()
                     : profileData?.country
                 }
@@ -321,11 +328,14 @@ const ProviderProfile: React.FC = () => {
             >
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.language} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.language)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>
+                  {t(STRING.language)}
+                </AppText>
               </View>
 
-              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>{currentLanguage.toUpperCase()}</AppText>
-
+              <AppText font={FONTS.Inter.SemiBold} color={COLORS._6B7280}>
+                {currentLanguage.toUpperCase()}
+              </AppText>
             </TouchableOpacity>
 
             <View style={styles.settingDivider} />
@@ -340,22 +350,21 @@ const ProviderProfile: React.FC = () => {
             >
               <View style={styles.settingLeft}>
                 <Image source={IMAGES.lock} style={styles.settingIcon} />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>{t(STRING.changePassword)}</AppText>
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>
+                  {t(STRING.changePassword)}
+                </AppText>
               </View>
             </TouchableOpacity>
 
             <View style={styles.settingDivider} />
 
-            <TouchableOpacity
-              style={styles.settingRow}
-              onPress={handleLogout}
-            >
+            <TouchableOpacity style={styles.settingRow} onPress={handleLogout}>
               <View style={styles.settingLeft}>
                 <Image
                   source={IMAGES.arrow_back}
                   style={[styles.settingIcon]}
                 />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} >
+                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)}>
                   {t(STRING.logOut)}
                 </AppText>
               </View>
@@ -372,7 +381,11 @@ const ProviderProfile: React.FC = () => {
                   source={IMAGES.trash}
                   style={[styles.settingIcon, { tintColor: COLORS.error }]}
                 />
-                <AppText font={FONTS.Inter.Regular} size={getScaleSize(13)} color={COLORS.error}>
+                <AppText
+                  font={FONTS.Inter.Regular}
+                  size={getScaleSize(13)}
+                  color={COLORS.error}
+                >
                   {t(STRING.deleteAccount)}
                 </AppText>
               </View>

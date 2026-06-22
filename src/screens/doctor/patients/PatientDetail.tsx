@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,11 +6,13 @@ import {
   View,
   Image,
   FlatList,
+  RefreshControl,
 } from 'react-native';
 import {
   AppSafeAreaView,
   AppText,
   Header,
+  ReviewRequestSheet,
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -23,11 +25,24 @@ import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
-import { getButtonConfig, REQUEST_STATUS, STRING } from '../../../constant';
+import {
+  getButtonConfig,
+  REQUEST_STATUS,
+  SHOW_TOAST,
+  STRING,
+} from '../../../constant';
 import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { useTranslation } from 'react-i18next';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import { ROLES } from '../../../constant/getRole';
+import RequestCardProvider from '../../../components/RequestCardProvider';
+import { getButtonConfigProvider } from '../../../constant/RequestStatus';
+import { ServiceRequest } from '../../../services/serviceRequestListApi';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { setLoading } from '../../../actions/common/commonSlice';
+import serviceRequestApi from '../../../services/serviceRequestApi';
+import { fetchProfile } from '../../../actions/profile/profileAction';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -35,10 +50,20 @@ const PatientDetail: React.FC = () => {
   const dispatch = useDispatch<any>();
   const route = useRoute<any>();
   const { id } = route.params || {};
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+  const isServiceProvider = profileData?.roles[0] == ROLES.PROVIDER;
 
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
   );
+
+  const reviewSheetRef = useRef<ActionSheetRef>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
+    null,
+  );
+  const [refreshing, setRefreshing] = useState(false);
 
   const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
     .filter(item => item && item !== 'null')
@@ -78,6 +103,53 @@ const PatientDetail: React.FC = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const onReturnRequest = async (
+    reason: string,
+    details: string,
+    requestId: string,
+  ) => {
+    if (!selectedRequest?.id) {
+      SHOW_TOAST(t(STRING.missingID), 'error');
+      return;
+    }
+    dispatch(setLoading(true));
+    try {
+      let obj = {
+        reasonType: reason,
+        comments: details,
+      };
+
+      const response = await serviceRequestApi.claimAndReturnRequest(
+        selectedRequest.id,
+        obj,
+      );
+      if (response.success) {
+        await serviceRequestApi.releaseFormLock(requestId);
+
+        SHOW_TOAST(response.message, 'success');
+        reviewSheetRef?.current?.hide();
+        fetchPatientData();
+      } else {
+        SHOW_TOAST(response.error, 'error');
+      }
+    } catch (error: any) {
+      SHOW_TOAST(error?.message, 'error');
+    } finally {
+      dispatch(setLoading(true));
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchPatientData();
+    } catch (error) {
+      console.log('Error refreshing profile:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [dispatch]);
+
   return (
     <AppSafeAreaView
       edges={['top', 'bottom']}
@@ -97,6 +169,14 @@ const PatientDetail: React.FC = () => {
           nestedScrollEnabled={true}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS._526674]}
+              tintColor={COLORS._526674}
+            />
+          }
         >
           <View style={styles.card}>
             <TouchableOpacity
@@ -181,7 +261,8 @@ const PatientDetail: React.FC = () => {
                     font={FONTS.Inter.Medium}
                     color={COLORS._1A1D1F}
                   >
-                    {getCountryCode(patient?.country)} {patient?.phoneNumber || '---'}
+                    {getCountryCode(patient?.country)}{' '}
+                    {patient?.phoneNumber || '---'}
                   </AppText>
                 </View>
               </View>
@@ -380,52 +461,129 @@ const PatientDetail: React.FC = () => {
             renderItem={({ item }) => {
               const formStatus = item?.formStatus;
               const buttonConfig = getButtonConfig(formStatus, item?.status);
-
+              const buttonConfigProvider = getButtonConfigProvider(
+                formStatus,
+                item?.status,
+              );
               return (
                 <View style={{ marginBottom: getScaleSize(12) }}>
-                  <RequestCardDoctor
-                    name={patient?.fullName}
-                    requestId={item?.requestId}
-                    requestType={item?.service?.serviceName}
-                    status={item?.status}
-                    formStatus={item?.formStatus}
-                    buttonText={
-                      buttonConfig.show
-                        ? t(buttonConfig.label || '') || undefined
-                        : undefined
-                    }
-                    onPress={() => {
-                      if (item.status === REQUEST_STATUS.COMPLETED) {
-                        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
-                          request: item,
-                        });
-                        return;
+                  {isServiceProvider ? (
+                    <RequestCardProvider
+                      name={patient?.fullName || ''}
+                      requestId={item.requestId}
+                      requestType={item.service.serviceName}
+                      formStatus={formStatus}
+                      status={item.status}
+                      buttonText={
+                        buttonConfigProvider.show
+                          ? buttonConfigProvider.label || undefined
+                          : undefined
                       }
+                      onPress={() => {
+                        if (item.status == REQUEST_STATUS.COMPLETED) {
+                          NavigationService.navigate(
+                            SCREENS.SERVICE_COMPLETED,
+                            {
+                              request: item,
+                            },
+                          );
+                          return;
+                        }
 
-                      NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                        request: item,
-                        action: 'view',
-                      });
-                    }}
-                    onButtonPress={() => {
-                      if (buttonConfig.action === 'edit') {
-                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                          request: item,
-                          action: buttonConfig.action,
-                        });
-                      } else if (buttonConfig.action === 'sign') {
-                        NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
-                          request: item,
-                          action: buttonConfig.action,
-                        });
-                      } else if (buttonConfig.action === 'view') {
-                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                          request: item,
-                          action: buttonConfig.action,
-                        });
+                        if (item.status === REQUEST_STATUS.DRAFT) {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: 'view',
+                          });
+                          return;
+                        }
+
+                        NavigationService.navigate(
+                          SCREENS.PROVIDER_FORMS_SCREEN,
+                          {
+                            request: item,
+                            action: 'view',
+                          },
+                        );
+                      }}
+                      onButtonPress={() => {
+                        if (item.status === REQUEST_STATUS.DRAFT) {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfigProvider.action,
+                            ...(buttonConfigProvider.isComplete && {
+                              isComplete: buttonConfigProvider.isComplete,
+                            }),
+                          });
+                          return;
+                        }
+                        NavigationService.navigate(
+                          SCREENS.PROVIDER_FORMS_SCREEN,
+                          {
+                            request: item,
+                            action: buttonConfigProvider.action,
+                            ...(buttonConfigProvider.isComplete && {
+                              isComplete: buttonConfigProvider.isComplete,
+                            }),
+                          },
+                        );
+                      }}
+                      onLeftButtonPress={() => {
+                        setSelectedRequest(item);
+                        reviewSheetRef.current?.show();
+                      }}
+                    />
+                  ) : (
+                    <RequestCardDoctor
+                      name={patient?.fullName}
+                      requestId={item?.requestId}
+                      requestType={item?.service?.serviceName}
+                      status={item?.status}
+                      formStatus={item?.formStatus}
+                      buttonText={
+                        buttonConfig.show
+                          ? t(buttonConfig.label || '') || undefined
+                          : undefined
                       }
-                    }}
-                  />
+                      onPress={() => {
+                        if (item.status === REQUEST_STATUS.COMPLETED) {
+                          NavigationService.navigate(
+                            SCREENS.SERVICE_COMPLETED,
+                            {
+                              request: item,
+                            },
+                          );
+                          return;
+                        }
+
+                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                          request: item,
+                          action: 'view',
+                        });
+                      }}
+                      onButtonPress={() => {
+                        if (buttonConfig.action === 'edit') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        } else if (buttonConfig.action === 'sign') {
+                          NavigationService.navigate(
+                            SCREENS.FORM_REVIEW_SCREEN,
+                            {
+                              request: item,
+                              action: buttonConfig.action,
+                            },
+                          );
+                        } else if (buttonConfig.action === 'view') {
+                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                            request: item,
+                            action: buttonConfig.action,
+                          });
+                        }
+                      }}
+                    />
+                  )}
                 </View>
               );
             }}
@@ -433,7 +591,12 @@ const PatientDetail: React.FC = () => {
           />
         </ScrollView>
       </View>
-
+      <ReviewRequestSheet
+        ref={reviewSheetRef}
+        onSend={async (reason, details) => {
+          await onReturnRequest(reason, details, selectedRequest?.id || '');
+        }}
+      />
     </AppSafeAreaView>
   );
 };

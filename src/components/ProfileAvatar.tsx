@@ -3,6 +3,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import { AppText } from '.';
 import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
+import FastImage from 'react-native-fast-image';
 
 interface ProfileAvatarProps {
   name?: string;
@@ -73,10 +74,10 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
   return (
     <View style={styles.container}>
       {imageUrl ? (
-        <Image
+        <FastImage
           source={{ uri: imageUrl }}
           style={styles.image}
-        // defaultSource={require('../assets/images/placeholder.png')}
+          // defaultSource={require('../assets/images/placeholder.png')}
         />
       ) : (
         <AppText

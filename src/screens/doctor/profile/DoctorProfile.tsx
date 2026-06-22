@@ -49,6 +49,7 @@ import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { SCREENS } from '../../../navigation/routes';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import FastImage from 'react-native-fast-image';
 
 const DoctorProfile: React.FC = () => {
   const { t } = useTranslation();
@@ -60,7 +61,6 @@ const DoctorProfile: React.FC = () => {
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  console.log("image loaddd", userAvatar);
 
   const doctorSpecialities = [
     { label: t(STRING.generalPractitioner), value: 'generalPractice' },
@@ -200,7 +200,7 @@ const DoctorProfile: React.FC = () => {
           <View style={styles.avatarSection}>
             {userAvatar ? (
               <View style={styles.avatarWrap}>
-                <Image
+                <FastImage
                   source={
                     userAvatar
                       ? userAvatar.startsWith('file://') ||
@@ -210,9 +210,6 @@ const DoctorProfile: React.FC = () => {
                         : { uri: IMAGE_BASE_URL + userAvatar }
                       : IMAGES.person
                   }
-                  onError={(e) => {
-                    console.log("image loaddd", e);
-                  }}
                   style={styles.avatar}
                 />
               </View>
@@ -303,7 +300,7 @@ const DoctorProfile: React.FC = () => {
                 isCountryCode
                 countryCode={
                   profileData?.country?.length &&
-                    profileData?.country?.length > 3
+                  profileData?.country?.length > 3
                     ? profileData?.country?.slice(0, 2).toUpperCase()
                     : profileData?.country
                 }

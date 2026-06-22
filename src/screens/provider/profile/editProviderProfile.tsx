@@ -36,6 +36,8 @@ import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import { useTranslation } from 'react-i18next';
+import { setLoading } from '../../../actions/common/commonSlice';
+import FastImage from 'react-native-fast-image';
 
 const EditProviderProfile: React.FC = () => {
   const navigation = useNavigation();
@@ -111,6 +113,7 @@ const EditProviderProfile: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
+    dispatch(setLoading(true));
 
     let profileImageUrl = profileData?.profileImg || '';
 
@@ -124,6 +127,8 @@ const EditProviderProfile: React.FC = () => {
 
         profileImageUrl = uploadResponse.data.filePath;
       } catch (error) {
+        dispatch(setLoading(false));
+        SHOW_TOAST(t(STRING.failedToUploadProfileImage), 'error');
         return;
       }
     }
@@ -140,6 +145,8 @@ const EditProviderProfile: React.FC = () => {
     if (isSuccess) {
       navigation.goBack();
     }
+
+    dispatch(setLoading(false));
   };
 
   return (
@@ -167,7 +174,7 @@ const EditProviderProfile: React.FC = () => {
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <View style={styles.avatarWrapper}>
-              <Image
+              <FastImage
                 source={
                   userAvatar
                     ? userAvatar.startsWith('file://') ||
@@ -177,10 +184,8 @@ const EditProviderProfile: React.FC = () => {
                       : { uri: IMAGE_BASE_URL + userAvatar }
                     : IMAGES.person
                 }
-                style={[
-                  styles.avatar,
-                  ...(!userAvatar ? [{ resizeMode: 'center' }] : []),
-                ]}
+                style={styles.avatar}
+                resizeMode={!userAvatar ? 'center' : 'cover'}
               />
               <TouchableOpacity
                 style={styles.cameraBtn}

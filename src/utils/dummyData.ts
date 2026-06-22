@@ -19,7 +19,7 @@ export const doctorSpecialities = [
   { label: 'Dermatologist', value: 'dermatology' },
   { label: 'Ophthalmologist', value: 'orthopedics' },
   { label: 'Neurology', value: 'neurology' },
-  { label: 'Other', value: 'other' },
+  // { label: 'Other', value: 'other' },
 ];
 
 export const patientsList: PatientListProps[] = [

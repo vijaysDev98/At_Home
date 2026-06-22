@@ -27,6 +27,7 @@ import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
+import FastImage from 'react-native-fast-image';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -91,7 +92,6 @@ const HomeScreen: React.FC = () => {
       dispatch(fetchProfile());
     }, []),
   );
-
 
   const fetchDashboardData = async () => {
     // dispatch(setLoading(true));
@@ -169,7 +169,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {profileData?.profileImg ? (
-              <Image
+              <FastImage
                 source={
                   profileData?.profileImg
                     ? { uri: IMAGE_BASE_URL + profileData.profileImg }
@@ -180,8 +180,9 @@ const HomeScreen: React.FC = () => {
             ) : (
               <ProfileAvatar
                 size="medium"
-                name={`${profileData?.fName || ''} ${profileData?.lName || ''
-                  }`.trim()}
+                name={`${profileData?.fName || ''} ${
+                  profileData?.lName || ''
+                }`.trim()}
               />
             )}
             <View>

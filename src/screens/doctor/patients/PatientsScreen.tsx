@@ -1,5 +1,6 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   ScrollView,
@@ -39,15 +40,15 @@ const PatientsScreen: React.FC = () => {
     (state: RootState) => state.patient,
   );
 
-  const { isLoading: globalLoading } = useSelector(
-    (state: RootState) => state.common,
-  );
+  const { isLoading } = useSelector((state: RootState) => state.common);
 
   const [selectedChip, setSelectedChip] = useState(STRING.all);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getFilterValue = (chip: string): string | undefined => {
     switch (chip) {
@@ -68,7 +69,7 @@ const PatientsScreen: React.FC = () => {
     refresh: boolean = false,
     f?: string,
   ) => {
-    if (globalLoading && !refresh && p === 1) return;
+    if (isLoading && !refresh && p === 1) return;
 
     if (p > 1) {
       setIsFetchingNextPage(true);
@@ -83,41 +84,54 @@ const PatientsScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    const filter = getFilterValue(selectedChip);
-    fetchPatientsData(1, '', false, filter);
+    fetchPatientsData(1, '', false, getFilterValue(selectedChip));
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
   }, []);
 
-  useEffect(() => {
+  const handleChipPress = (chip: string) => {
+    setSelectedChip(chip);
     setPage(1);
-    const filter = getFilterValue(selectedChip);
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    const filter = getFilterValue(chip);
     fetchPatientsData(1, search, false, filter);
-  }, [selectedChip]);
+  };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const filter = getFilterValue(selectedChip);
+  const handleSearchChange = (text: string) => {
+    setSearch(text);
 
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
       setPage(1);
-      fetchPatientsData(1, search, false, filter);
+      const filter = getFilterValue(selectedChip);
+      fetchPatientsData(1, text, false, filter);
     }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search]);
+  };
 
   const onRefresh = () => {
     setIsRefreshing(true);
     setPage(1);
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
 
     const filter = getFilterValue(selectedChip);
     fetchPatientsData(1, search, true, filter);
   };
 
   const onLoadMore = () => {
-    if (
-      pagination?.hasNextPage &&
-      !isFetchingNextPage &&
-      !globalLoading
-    ) {
+    if (pagination?.hasNextPage && !isFetchingNextPage && !isLoading) {
       const nextPage = page + 1;
       setPage(nextPage);
 
@@ -134,10 +148,7 @@ const PatientsScreen: React.FC = () => {
         onPress={onPress}
       >
         <View style={styles.cardLeft}>
-          <ProfileAvatar
-            name={`${item.fName} ${item.lName}`}
-            size='medium'
-          />
+          <ProfileAvatar name={`${item.fName} ${item.lName}`} size="medium" />
 
           <View>
             <AppText font={FONTS.Inter.Bold} style={styles.name}>
@@ -145,10 +156,7 @@ const PatientsScreen: React.FC = () => {
             </AppText>
 
             <View style={styles.phoneRow}>
-              <Image
-                source={IMAGES.phone}
-                style={styles.phoneIcon}
-              />
+              <Image source={IMAGES.phone} style={styles.phoneIcon} />
 
               <Text style={styles.phone}>
                 {getCountryCode(item?.country)} {item.phoneNumber}
@@ -157,10 +165,7 @@ const PatientsScreen: React.FC = () => {
           </View>
         </View>
 
-        <Image
-          source={IMAGES.forwardIcon}
-          style={styles.rightIcon}
-        />
+        <Image source={IMAGES.forwardIcon} style={styles.rightIcon} />
       </TouchableOpacity>
     ),
   );
@@ -169,28 +174,16 @@ const PatientsScreen: React.FC = () => {
     <PatientItem
       item={item}
       onPress={() =>
-        NavigationService.navigate(
-          SCREENS.PATIENT_DETAIL,
-          {
-            id: item.id,
-          } as never,
-        )
+        NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
+          id: item.id,
+        } as never)
       }
     />
   );
 
   return (
-    <AppSafeAreaView
-      edges={['top']}
-      style={{ backgroundColor: COLORS.white }}
-    >
-      <AppLoader
-        visible={
-          globalLoading &&
-          page === 1 &&
-          !isRefreshing
-        }
-      />
+    <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
+      <AppLoader visible={isLoading && page === 1 && !isRefreshing} />
       <View style={styles.container}>
         <Header
           title={t(STRING.patients)}
@@ -202,17 +195,14 @@ const PatientsScreen: React.FC = () => {
 
         <View style={styles.header}>
           <View style={styles.searchWrapper}>
-            <Image
-              source={IMAGES.search}
-              style={styles.searchIcon}
-            />
+            <Image source={IMAGES.search} style={styles.searchIcon} />
 
             <TextInput
               placeholder={t(STRING.searchPatients)}
               placeholderTextColor="#6F767E"
               style={styles.searchInput}
               value={search}
-              onChangeText={setSearch}
+              onChangeText={handleSearchChange}
             />
           </View>
 
@@ -234,13 +224,11 @@ const PatientsScreen: React.FC = () => {
                       ? styles.chipActive
                       : styles.chipInactive,
                   ]}
-                  onPress={() => setSelectedChip(chip)}
+                  onPress={() => handleChipPress(chip)}
                 >
                   <AppText
                     color={
-                      selectedChip === chip
-                        ? COLORS.white
-                        : COLORS._6F767E
+                      selectedChip === chip ? COLORS.white : COLORS._6F767E
                     }
                     size={getScaleSize(12)}
                     font={
@@ -259,11 +247,11 @@ const PatientsScreen: React.FC = () => {
         </View>
 
         <FlatList
-          data={patients}
+          data={patients || []}
           style={styles.flatListContainer}
           contentContainerStyle={[
             styles.listContent,
-            patients.length === 0 && { flexGrow: 1 },
+            (!patients || patients.length === 0) && { flexGrow: 1 },
           ]}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
@@ -287,7 +275,7 @@ const PatientsScreen: React.FC = () => {
           ListFooterComponent={() =>
             isFetchingNextPage ? (
               <View style={{ paddingVertical: 20 }}>
-                <AppLoader visible />
+                <ActivityIndicator size="small" color={COLORS.primary} />
               </View>
             ) : null
           }
@@ -301,14 +289,10 @@ const PatientsScreen: React.FC = () => {
         <View style={styles.footer}>
           <PrimaryButton
             title={t(STRING.addPatient)}
-            onPress={() =>
-              NavigationService.navigate(SCREENS.ADD_PATIENT)
-            }
+            onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
           />
         </View>
       </View>
-
-
     </AppSafeAreaView>
   );
 };

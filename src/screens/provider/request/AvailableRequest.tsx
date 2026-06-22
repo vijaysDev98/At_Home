@@ -119,10 +119,10 @@ const AvailableRequest: React.FC = () => {
           isFilteredTab
             ? Promise.resolve(null)
             : serviceRequestListApi.listAvailableRequestsForProvider({
-              page,
-              size: PAGE_SIZE,
-              status: mappedStatus,
-            }),
+                page,
+                size: PAGE_SIZE,
+                status: mappedStatus,
+              }),
           serviceRequestListApi.listAssignedRequestsForProvider({
             page,
             size: PAGE_SIZE,
@@ -246,8 +246,6 @@ const AvailableRequest: React.FC = () => {
     });
   }, [requests, activeTab]);
 
-
-
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     // Get button configuration based on form status (default to status if formStatus not available)
     const formStatus = item?.formStatus || '';
@@ -348,13 +346,12 @@ const AvailableRequest: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <View style={styles.headerContent}>
-            <Header
-              style={styles.headerStyle}
-              title={t(STRING.requests)}
-            />
+            <Header style={styles.headerStyle} title={t(STRING.requests)} />
             <TouchableOpacity
               style={styles.myRequestsButton}
-              onPress={() => NavigationService.navigate(SCREENS.PROVIDER_REQUESTS)}
+              onPress={() =>
+                NavigationService.navigate(SCREENS.PROVIDER_REQUESTS)
+              }
             >
               <AppText
                 size={getScaleSize(14)}
@@ -447,17 +444,6 @@ const AvailableRequest: React.FC = () => {
         <ReviewRequestSheet
           ref={reviewSheetRef}
           onSend={async (reason, details) => {
-            // await handleClaimService({
-            //   requestId: selectedRequest?.id || '',
-            //   dispatch,
-            //   onSuccess: async () => {
-            //     await onReturnRequest(
-            //       reason,
-            //       details,
-            //       selectedRequest?.id || '',
-            //     );
-            //   },
-            // });
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
         />

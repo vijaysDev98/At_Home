@@ -57,6 +57,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useTranslation } from 'react-i18next';
 import { openInBrowser } from '../../hooks/openBrowser';
 import { ROLES } from '../../constant/getRole';
+import FastImage from 'react-native-fast-image';
+import { setLoading } from '../../actions/common/commonSlice';
 
 // --- Sub-components ---
 
@@ -245,6 +247,7 @@ const Register: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validate()) return;
+    dispatch(setLoading(true));
 
     if (isEdit) {
       let profileImageUrl = userData.profileImg || '';
@@ -258,6 +261,7 @@ const Register: React.FC = () => {
           );
           profileImageUrl = uploadResponse.data.filePath;
         } catch (error) {
+          dispatch(setLoading(false));
           SHOW_TOAST(t(STRING.failedToUploadProfileImage), 'error');
           return;
         }
@@ -277,6 +281,8 @@ const Register: React.FC = () => {
       if (isSuccess) {
         navigation.goBack();
       }
+      dispatch(setLoading(false));
+
       return;
     }
 
@@ -338,7 +344,7 @@ const Register: React.FC = () => {
           {isEdit && (
             <View style={styles.avatarSection}>
               <View style={styles.avatarWrapper}>
-                <Image
+                <FastImage
                   source={
                     userAvatar
                       ? userAvatar.startsWith('file://') ||

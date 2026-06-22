@@ -51,7 +51,9 @@ const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 const ProviderRequests = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const isGlobalLoading = useSelector((state: RootState) => state.common.isLoading);
+  const isGlobalLoading = useSelector(
+    (state: RootState) => state.common.isLoading,
+  );
 
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,9 @@ const ProviderRequests = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
+    null,
+  );
   const reviewSheetRef = useRef<ActionSheetRef>(null);
   const PAGE_SIZE = 10;
 
@@ -87,11 +91,12 @@ const ProviderRequests = () => {
           }
         }
 
-        const response = await serviceRequestListApi.listProviderInitiatedRequests({
-          page,
-          size: PAGE_SIZE,
-          status: mappedStatus,
-        });
+        const response =
+          await serviceRequestListApi.listProviderInitiatedRequests({
+            page,
+            size: PAGE_SIZE,
+            status: mappedStatus,
+          });
 
         if (response) {
           providerRequests = response.data.requests;
@@ -209,7 +214,7 @@ const ProviderRequests = () => {
               ...(buttonConfig.isComplete && {
                 isComplete: buttonConfig.isComplete,
               }),
-            })
+            });
           }}
           onLeftButtonPress={() => {
             setSelectedRequest(item);
@@ -229,7 +234,7 @@ const ProviderRequests = () => {
     try {
       const response = await serviceRequestApi.claimAndReturnRequest(
         requestId,
-        { reasonType: reason, comments: details }
+        { reasonType: reason, comments: details },
       );
       if (response.success) {
         await serviceRequestApi.releaseFormLock(requestId);
@@ -325,7 +330,7 @@ const ProviderRequests = () => {
                   size={getScaleSize(14)}
                   font={FONTS.Inter.Medium}
                   color={COLORS._6F767E}
-                  align='center'
+                  align="center"
                 >
                   Loading more...
                 </AppText>
