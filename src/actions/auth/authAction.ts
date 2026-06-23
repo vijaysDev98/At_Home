@@ -42,7 +42,9 @@ const persistAuthInStorage = async (user: any) => {
 
   if (roles.length > 0) {
     // Store the first role that matches our expected values
-    const role = roles.includes('serviceProvider') ? 'serviceProvider' : 'doctor';
+    const role = roles.includes('serviceProvider')
+      ? 'serviceProvider'
+      : 'doctor';
     await Storage.save(Storage.USER_ROLE, role);
   }
 };
@@ -89,11 +91,20 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
     } else {
       console.log('Login failed:', response);
       if (response?.code === 401) {
-        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
+        SHOW_TOAST(
+          response?.message || response?.data?.message || response?.message,
+          'error',
+        );
       } else if (response?.code === 403) {
-        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
+        SHOW_TOAST(
+          response?.message || response?.data?.message || response?.message,
+          'error',
+        );
       } else {
-        SHOW_TOAST(response?.message || response?.data?.message || response?.message, 'error');
+        SHOW_TOAST(
+          response?.message || response?.data?.message || response?.message,
+          'error',
+        );
       }
     }
   } catch (e: any) {
@@ -106,7 +117,6 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
 
 export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
   try {
-
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(
       API.API_ROUTES.register,
@@ -115,10 +125,7 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
     dispatch(setLoading(false));
 
     if (response?.status && response?.code === 201) {
-      SHOW_TOAST(
-        response?.data?.message,
-        'success',
-      );
+      SHOW_TOAST(response?.data?.message, 'success');
 
       // Upload FCM token after successful registration (before admin approval)
       // await uploadFcmToken();
@@ -159,6 +166,7 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
 
       // Role-based navigation
       const roles = innerData?.roles || [];
+      SHOW_TOAST(response?.data?.message || response?.message, 'success');
       if (roles.includes('serviceProvider')) {
         NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
       } else {
@@ -175,8 +183,8 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
           error: {
             status: response?.code,
             message: response?.data?.message || response?.message,
-            isInvalidOtp: true
-          }
+            isInvalidOtp: true,
+          },
         };
       } else if (response?.code === 401) {
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
@@ -185,8 +193,8 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
           error: {
             status: response?.code,
             message: response?.data?.message || response?.message,
-            isInvalidOtp: false
-          }
+            isInvalidOtp: false,
+          },
         };
       } else {
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
@@ -195,8 +203,8 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
           error: {
             status: response?.code || 500,
             message: response?.data?.message || response?.message,
-            isInvalidOtp: false
-          }
+            isInvalidOtp: false,
+          },
         };
       }
     }
@@ -211,8 +219,8 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
         status: 0,
         message: errorMessage,
         isInvalidOtp: false,
-        isNetworkError: true
-      }
+        isNetworkError: true,
+      },
     };
   }
 };
@@ -301,8 +309,8 @@ export const verifyForgotPasswordOtp =
             error: {
               status: response?.code,
               message: response?.data?.message || response?.message,
-              isInvalidOtp: true
-            }
+              isInvalidOtp: true,
+            },
           };
         } else if (response?.code === 401) {
           SHOW_TOAST(response?.data?.message || response?.message, 'error');
@@ -311,8 +319,8 @@ export const verifyForgotPasswordOtp =
             error: {
               status: response?.code,
               message: response?.data?.message || response?.message,
-              isInvalidOtp: false
-            }
+              isInvalidOtp: false,
+            },
           };
         } else {
           SHOW_TOAST(response?.data?.message || response?.message, 'error');
@@ -321,8 +329,8 @@ export const verifyForgotPasswordOtp =
             error: {
               status: response?.code || 500,
               message: response?.data?.message || response?.message,
-              isInvalidOtp: false
-            }
+              isInvalidOtp: false,
+            },
           };
         }
       }
@@ -337,8 +345,8 @@ export const verifyForgotPasswordOtp =
           status: 0,
           message: errorMessage,
           isInvalidOtp: false,
-          isNetworkError: true
-        }
+          isNetworkError: true,
+        },
       };
     }
   };
@@ -349,28 +357,28 @@ export const resetPassword =
     newPassword: string;
     confirmPassword: string;
   }) =>
-    async (dispatch: AppDispatch) => {
-      try {
-        dispatch(setLoading(true));
+  async (dispatch: AppDispatch) => {
+    try {
+      dispatch(setLoading(true));
 
-        const response: any = await API.Instance.post(
-          API.API_ROUTES.resetPassword,
-          data,
-        );
+      const response: any = await API.Instance.post(
+        API.API_ROUTES.resetPassword,
+        data,
+      );
 
-        if (response?.status && response?.code === 200) {
-          SHOW_TOAST(response?.data?.message || response?.message, 'success');
-          dispatch(setLoading(false));
-          NavigationService.reset(SCREENS.LOGIN);
-        } else {
-          dispatch(setLoading(false));
-          SHOW_TOAST(response?.data?.message || response?.message, 'error');
-        }
-      } catch (e) {
-        SHOW_TOAST(undefined, 'error');
+      if (response?.status && response?.code === 200) {
+        SHOW_TOAST(response?.data?.message || response?.message, 'success');
         dispatch(setLoading(false));
+        NavigationService.reset(SCREENS.LOGIN);
+      } else {
+        dispatch(setLoading(false));
+        SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
-    };
+    } catch (e) {
+      SHOW_TOAST(undefined, 'error');
+      dispatch(setLoading(false));
+    }
+  };
 
 export const resendLoginOtp =
   (email: string) => async (dispatch: AppDispatch) => {
@@ -394,7 +402,12 @@ export const resendLoginOtp =
   };
 
 export const changePassword =
-  (data: { oldPassword: string; newPassword: string; confirmPassword: string }) => async (dispatch: AppDispatch) => {
+  (data: {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) =>
+  async (dispatch: AppDispatch) => {
     try {
       dispatch(setLoading(true));
       const response: any = await API.Instance.post(
@@ -440,8 +453,10 @@ export const resendForgotPasswordOtp =
 export const deleteAccount = () => async (dispatch: AppDispatch) => {
   try {
     dispatch(setLoading(true));
-    const response: any = await API.Instance.delete(API.API_ROUTES.deleteAccount);
-    console.log("response from delete", response);
+    const response: any = await API.Instance.delete(
+      API.API_ROUTES.deleteAccount,
+    );
+    console.log('response from delete', response);
 
     if (response?.status) {
       SHOW_TOAST(response?.data?.message, 'success');
@@ -450,7 +465,8 @@ export const deleteAccount = () => async (dispatch: AppDispatch) => {
       SHOW_TOAST(response?.data?.message, 'error');
     }
   } catch (e: any) {
-    const errorMessage = e?.response?.data?.message || 'Failed to delete account';
+    const errorMessage =
+      e?.response?.data?.message || 'Failed to delete account';
     SHOW_TOAST(errorMessage, 'error');
   } finally {
     // Always clear auth state and navigate to login, regardless of API success/failure
@@ -465,4 +481,3 @@ export const deleteAccount = () => async (dispatch: AppDispatch) => {
     dispatch(setLoading(false));
   }
 };
-

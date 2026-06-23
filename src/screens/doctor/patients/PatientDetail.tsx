@@ -430,7 +430,9 @@ const PatientDetail: React.FC = () => {
 
             <TouchableOpacity
               onPress={() => {
-                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST);
+                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST, {
+                  fromPatient: true,
+                });
               }}
               style={styles.plusBtn}
               activeOpacity={0.8}

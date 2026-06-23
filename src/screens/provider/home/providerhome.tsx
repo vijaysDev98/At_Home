@@ -42,6 +42,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { useTranslation } from 'react-i18next';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import FastImage from 'react-native-fast-image';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -193,7 +194,7 @@ const ProviderHome: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
               >
-                {profileData?.providerName}
+                {capitalizeFirstLetter(profileData?.providerName || '')}
               </AppText>
             </View>
           </View>

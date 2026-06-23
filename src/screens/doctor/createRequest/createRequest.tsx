@@ -26,7 +26,11 @@ import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
 import { fetchPatients } from '../../../actions/patient/patientAction';
 import { setSelectedPatient } from '../../../actions/patient/patientSlice';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useRoute,
+} from '@react-navigation/native';
 import {
   PATIENT_FILTERS,
   PatientFilterType,
@@ -47,7 +51,6 @@ interface PatientItemProps {
 
 const PatientItem: React.FC<PatientItemProps> = React.memo(
   ({ patient, isSelected, onSelect }) => {
-
     return (
       <TouchableOpacity
         key={patient.id}
@@ -58,7 +61,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
         {/* <View style={styles.avatarWrap}> */}
         <ProfileAvatar
           name={`${patient.fName} ${patient.lName}`}
-          size='medium'
+          size="medium"
         />
         {/* </View> */}
 
@@ -94,6 +97,8 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
 
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const dispatch = useDispatch<any>();
+  const route = useRoute();
+  const fromPatient = route.params?.fromPatient;
   const role: string = useUserRole();
   const { t } = useTranslation();
 
@@ -144,7 +149,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       setSelectedId(undefined);
-      setSelectedChip("All")
+      setSelectedChip('All');
     }, []),
   );
 
@@ -201,9 +206,14 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     if (patient) {
       dispatch(setSelectedPatient(patient));
 
-      NavigationService.navigate(role == ROLES.PROVIDER ? SCREENS.DOCTOR_LIST : SCREENS.CREATE_REQUEST_STEP2, {
-        patientId: selectedId,
-      });
+      NavigationService.navigate(
+        role == ROLES.PROVIDER
+          ? SCREENS.DOCTOR_LIST
+          : SCREENS.CREATE_REQUEST_STEP2,
+        {
+          patientId: selectedId,
+        },
+      );
     }
   }, [selectedId, patients, dispatch]);
 
@@ -212,9 +222,11 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   }, []);
 
   return (
-    <AppSafeAreaView edges={['top']} style={styles.safe}>
+    <AppSafeAreaView
+      edges={fromPatient ? ['top', 'bottom'] : ['top']}
+      style={styles.safe}
+    >
       <View style={styles.container}>
-
         {/* HEADER (fixed) */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -250,14 +262,18 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
 
         {/* BODY */}
         <View style={styles.content}>
-
           {globalLoading && patients.length === 0 ? (
             <View style={styles.loaderContainer}>
               <AppLoader visible />
             </View>
           ) : (
             <>
-              <View style={{ marginHorizontal: getScaleSize(16), marginTop: getScaleSize(10) }}>
+              <View
+                style={{
+                  marginHorizontal: getScaleSize(16),
+                  marginTop: getScaleSize(10),
+                }}
+              >
                 <AppText
                   size={getScaleSize(18)}
                   font={FONTS.Inter.Bold}
@@ -296,7 +312,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                       >
                         <AppText
                           color={
-                            selectedChip === chip ? COLORS.white : COLORS._6F767E
+                            selectedChip === chip
+                              ? COLORS.white
+                              : COLORS._6F767E
                           }
                           size={getScaleSize(12)}
                           font={
@@ -326,7 +344,6 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                   />
                 }
               >
-
                 <View style={styles.list}>
                   {filteredPatients.map(patient => (
                     <PatientItem

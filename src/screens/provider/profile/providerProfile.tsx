@@ -42,6 +42,7 @@ import {
 } from '../../../actions/language/languageAction';
 import { countryCodes } from 'react-native-country-codes-picker';
 import FastImage from 'react-native-fast-image';
+import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const ProviderProfile: React.FC = () => {
   const { t } = useTranslation();
@@ -188,7 +189,7 @@ const ProviderProfile: React.FC = () => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
             >
-              {providerName}
+              {capitalizeFirstLetter(providerName || '')}
             </AppText>
             {/* <AppText
               size={getScaleSize(13)}

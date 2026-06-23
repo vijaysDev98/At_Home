@@ -1,4 +1,6 @@
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import messaging, {
+  FirebaseMessagingTypes,
+} from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { Storage } from '../constant';
@@ -96,6 +98,7 @@ export function setupForegroundHandler(): () => void {
           data: data,
           android: {
             channelId,
+            importance: AndroidImportance.HIGH,
             smallIcon: 'ic_launcher',
             pressAction: {
               id: 'default',
@@ -111,7 +114,7 @@ export function setupForegroundHandler(): () => void {
           },
         });
       }
-    }
+    },
   );
 
   return unsubscribe;
@@ -127,7 +130,7 @@ export function setupNotificationOpenHandler(): () => void {
     (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
       console.log('App opened from background by notification:', remoteMessage);
       handleNotificationTap();
-    }
+    },
   );
 
   return unsubscribe;
@@ -186,4 +189,3 @@ export function setupTokenRefreshListener(): () => void {
 
   return unsubscribe;
 }
-

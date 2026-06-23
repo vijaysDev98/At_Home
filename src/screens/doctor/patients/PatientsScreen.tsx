@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -91,6 +92,24 @@ const PatientsScreen: React.FC = () => {
       }
     };
   }, []);
+
+  // Reset screen every time it comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Reset search text
+      setSearch('');
+      // Reset selected chip to "All"
+      setSelectedChip(STRING.all);
+      // Reset page
+      setPage(1);
+      // Clear any pending search debounce
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+      // Fetch patients with default filter (All)
+      fetchPatientsData(1, '', false, undefined);
+    }, []),
+  );
 
   const handleChipPress = (chip: string) => {
     setSelectedChip(chip);

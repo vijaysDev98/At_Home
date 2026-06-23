@@ -135,11 +135,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         const params: Record<string, unknown> = {
           page,
           size: PAGE_SIZE,
-          search: search || "",
+          search: search || '',
         };
 
-        const response =
-          await serviceRequestListApi.listServiceRequests(params);
+        const response = await serviceRequestListApi.listServiceRequests(
+          params,
+        );
 
         if (thisFetchId !== fetchIdRef.current) return;
 
@@ -364,8 +365,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           color={COLORS._6B7280}
           style={styles.resultCount}
         >
-          {`${filteredRequests.length} ${t(STRING.form)}${filteredRequests.length !== 1 ? 's' : ''
-            } ${t(STRING.found)}`}
+          {`${filteredRequests.length} ${t(STRING.form)}${
+            filteredRequests.length !== 1 ? 's' : ''
+          } ${t(STRING.found)}`}
         </AppText>
       </View>
 

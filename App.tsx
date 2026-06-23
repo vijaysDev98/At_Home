@@ -6,7 +6,12 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import {
+  AppState,
+  AppStateStatus,
+  StatusBar,
+  useColorScheme,
+} from 'react-native';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -28,6 +33,7 @@ import {
 import { createNotificationChannels } from './src/services/notificationChannels';
 import { COLORS } from './src/utils';
 import { toastConfig } from './src/constant/toastConfig';
+import notifee, { AndroidImportance } from '@notifee/react-native';
 
 const AppContent = () => {
   // Sync language between Redux and i18n
@@ -74,6 +80,33 @@ function App() {
       unsubscribeForeground?.();
       unsubscribeBackground?.();
       unsubscribeTokenRefresh?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    const clearBadge = async () => {
+      try {
+        await notifee.setBadgeCount(0);
+      } catch (error) {
+        console.error('Failed to clear badge count:', error);
+      }
+    };
+
+    // Clear on app launch
+    clearBadge();
+
+    // Clear whenever app becomes active
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState === 'active') {
+          clearBadge();
+        }
+      },
+    );
+
+    return () => {
+      subscription.remove();
     };
   }, []);
 
