@@ -43,6 +43,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import FastImage from 'react-native-fast-image';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import ProviderHomeSkeleton from './placeholder';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -87,6 +88,7 @@ const ProviderHome: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRequest, setSelectedRequest] =
@@ -101,13 +103,11 @@ const ProviderHome: React.FC = () => {
   );
 
   const fetchDashboardData = async () => {
-    // dispatch(setGlobalLoading(true));
     try {
       const [dashboardResponse, count] = await Promise.all([
         dashboardApi.getProviderDashboardOverview(10),
         getUnreadCountService(),
       ]);
-
       if (dashboardResponse.success) {
         setDashboardData(dashboardResponse.data);
       }
@@ -115,6 +115,7 @@ const ProviderHome: React.FC = () => {
     } catch (error) {
     } finally {
       dispatch(setGlobalLoading(false));
+      setIsInitialLoad(false); // ← mark first load done
     }
   };
 
@@ -165,7 +166,9 @@ const ProviderHome: React.FC = () => {
   return (
     <AppSafeAreaView edges={['top']} style={styles.safe}>
       <AppLoader visible={isLoading} />
-      <View style={styles.container}>
+      {isInitialLoad ? (
+        <ProviderHomeSkeleton />
+      ) : <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -459,7 +462,7 @@ const ProviderHome: React.FC = () => {
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
         />
-      </View>
+      </View>}
     </AppSafeAreaView>
   );
 };

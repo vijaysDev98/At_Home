@@ -43,6 +43,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { setLoading } from '../../../actions/common/commonSlice';
 import serviceRequestApi from '../../../services/serviceRequestApi';
 import { fetchProfile } from '../../../actions/profile/profileAction';
+import PatientDetailSkeleton from './PatientDetailSkeleton';
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -155,7 +156,7 @@ const PatientDetail: React.FC = () => {
       edges={['top', 'bottom']}
       style={{ backgroundColor: COLORS.white }}
     >
-      <AppLoader visible={globalLoading && !patient?.id} />
+      {/* <AppLoader visible={globalLoading && !patient?.id} /> */}
 
       <Header
         isBack
@@ -165,433 +166,437 @@ const PatientDetail: React.FC = () => {
       />
 
       <View style={styles.container}>
-        <ScrollView
-          nestedScrollEnabled={true}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[COLORS._526674]}
-              tintColor={COLORS._526674}
-            />
-          }
-        >
-          <View style={styles.card}>
-            <TouchableOpacity
-              style={styles.editBtn}
-              activeOpacity={0.8}
-              hitSlop={20}
-              onPress={() =>
-                NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
-              }
-            >
-              <Image source={IMAGES.editIcon} style={styles.editIcon} />
-            </TouchableOpacity>
+        {!patient?.id ? (
+          <PatientDetailSkeleton />
+        ) : (
+          <ScrollView
+            nestedScrollEnabled={true}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS._526674]}
+                tintColor={COLORS._526674}
+              />
+            }
+          >
+            <View style={styles.card}>
+              <TouchableOpacity
+                style={styles.editBtn}
+                activeOpacity={0.8}
+                hitSlop={20}
+                onPress={() =>
+                  NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
+                }
+              >
+                <Image source={IMAGES.editIcon} style={styles.editIcon} />
+              </TouchableOpacity>
 
-            <View style={styles.profileRow}>
-              <View style={styles.avatarWrap}>
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <AppText
-                    size={getScaleSize(20)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS._526674}
+              <View style={styles.profileRow}>
+                <View style={styles.avatarWrap}>
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
-                    {getInitials(patient?.fName + ' ' + patient?.lName)}
+                    <AppText
+                      size={getScaleSize(20)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._526674}
+                    >
+                      {getInitials(patient?.fName + ' ' + patient?.lName)}
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.profileMeta}>
+                  <AppText
+                    size={getScaleSize(18)}
+                    color={COLORS._1A1D1F}
+                    font={FONTS.Inter.Bold}
+                  >
+                    {patient?.fullName || '---'}
                   </AppText>
+
+                  <AppText
+                    size={getScaleSize(13)}
+                    color={COLORS._6F767E}
+                    font={FONTS.Inter.Regular}
+                  >
+                    {t(STRING.dob)}{' '}
+                    {patient?.dateOfBirth
+                      ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
+                      : '---'}{' '}
+                    ({patient?.age || 0}yo)
+                  </AppText>
+
+                  <View style={styles.statusRow}>
+                    <View style={styles.statusDot} />
+                    <AppText
+                      size={getScaleSize(12)}
+                      color={COLORS._2ECA7F}
+                      font={FONTS.Inter.Medium}
+                    >
+                      {t(STRING.activePatient)}
+                    </AppText>
+                  </View>
                 </View>
               </View>
 
-              <View style={styles.profileMeta}>
-                <AppText
-                  size={getScaleSize(18)}
-                  color={COLORS._1A1D1F}
-                  font={FONTS.Inter.Bold}
-                >
-                  {patient?.fullName || '---'}
-                </AppText>
+              <View style={styles.divider} />
 
+              <View style={styles.infoList}>
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.phone} style={styles.infoIcon} />
+                  <View style={styles.infoContent}>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {t(STRING.primaryContact)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {getCountryCode(patient?.country)}{' '}
+                      {patient?.phoneNumber || '---'}
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Image source={IMAGES.mail} style={styles.infoIcon} />
+                  <View style={styles.infoContent}>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {t(STRING.emailAddress)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._1A1D1F}
+                    >
+                      {patient?.email || '---'}
+                    </AppText>
+                  </View>
+                </View>
+
+                {homeAddress && (
+                  <View style={styles.infoRow}>
+                    <Image source={IMAGES.location_pin} style={styles.infoIcon} />
+                    <View style={styles.infoContent}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                      >
+                        {t(STRING.homeAddress)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._1A1D1F}
+                      >
+                        {homeAddress}
+                      </AppText>
+                    </View>
+                  </View>
+                )}
+
+                {patient?.gender && (
+                  <View style={styles.infoRow}>
+                    <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
+                    <View style={styles.infoContent}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                      >
+                        {t(STRING.gender)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._1A1D1F}
+                      >
+                        {patient?.gender}
+                      </AppText>
+                    </View>
+                  </View>
+                )}
+
+                {patient?.socialInsuranceNumber && (
+                  <View style={styles.infoRow}>
+                    <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
+                    <View style={styles.infoContent}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                      >
+                        {t(STRING.socialInsuranceNumber)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._1A1D1F}
+                      >
+                        {patient?.socialInsuranceNumber}
+                      </AppText>
+                    </View>
+                  </View>
+                )}
+
+                {patient?.weight && (
+                  <View style={styles.infoRow}>
+                    <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
+                    <View style={styles.infoContent}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                      >
+                        {t(STRING.weight)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._1A1D1F}
+                      >
+                        {patient?.weight}
+                      </AppText>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.sectionHeader}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.black}
+              >
+                {t(STRING.medicalNotes)}
+              </AppText>
+
+              <TouchableOpacity
+                onPress={() =>
+                  NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
+                }
+                activeOpacity={0.8}
+              >
                 <AppText
                   size={getScaleSize(13)}
-                  color={COLORS._6F767E}
-                  font={FONTS.Inter.Regular}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._526674}
                 >
-                  {t(STRING.dob)}{' '}
-                  {patient?.dateOfBirth
-                    ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
-                    : '---'}{' '}
-                  ({patient?.age || 0}yo)
+                  {t(STRING.edit)}
                 </AppText>
-
-                <View style={styles.statusRow}>
-                  <View style={styles.statusDot} />
-                  <AppText
-                    size={getScaleSize(12)}
-                    color={COLORS._2ECA7F}
-                    font={FONTS.Inter.Medium}
-                  >
-                    {t(STRING.activePatient)}
-                  </AppText>
-                </View>
-              </View>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.infoList}>
-              <View style={styles.infoRow}>
-                <Image source={IMAGES.phone} style={styles.infoIcon} />
-                <View style={styles.infoContent}>
-                  <AppText
-                    size={getScaleSize(12)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                  >
-                    {t(STRING.primaryContact)}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(14)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}
-                  >
-                    {getCountryCode(patient?.country)}{' '}
-                    {patient?.phoneNumber || '---'}
-                  </AppText>
-                </View>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Image source={IMAGES.mail} style={styles.infoIcon} />
-                <View style={styles.infoContent}>
-                  <AppText
-                    size={getScaleSize(12)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                  >
-                    {t(STRING.emailAddress)}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(14)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS._1A1D1F}
-                  >
-                    {patient?.email || '---'}
-                  </AppText>
-                </View>
-              </View>
-
-              {homeAddress && (
-                <View style={styles.infoRow}>
-                  <Image source={IMAGES.location_pin} style={styles.infoIcon} />
-                  <View style={styles.infoContent}>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                    >
-                      {t(STRING.homeAddress)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._1A1D1F}
-                    >
-                      {homeAddress}
-                    </AppText>
-                  </View>
-                </View>
-              )}
-
-              {patient?.gender && (
-                <View style={styles.infoRow}>
-                  <Image source={IMAGES.ic_gender} style={styles.infoIcon} />
-                  <View style={styles.infoContent}>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                    >
-                      {t(STRING.gender)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._1A1D1F}
-                    >
-                      {patient?.gender}
-                    </AppText>
-                  </View>
-                </View>
-              )}
-
-              {patient?.socialInsuranceNumber && (
-                <View style={styles.infoRow}>
-                  <Image source={IMAGES.ic_insurance} style={styles.infoIcon} />
-                  <View style={styles.infoContent}>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                    >
-                      {t(STRING.socialInsuranceNumber)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._1A1D1F}
-                    >
-                      {patient?.socialInsuranceNumber}
-                    </AppText>
-                  </View>
-                </View>
-              )}
-
-              {patient?.weight && (
-                <View style={styles.infoRow}>
-                  <Image source={IMAGES.ic_weight} style={styles.infoIcon} />
-                  <View style={styles.infoContent}>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                    >
-                      {t(STRING.weight)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._1A1D1F}
-                    >
-                      {patient?.weight}
-                    </AppText>
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.black}
-            >
-              {t(STRING.medicalNotes)}
-            </AppText>
-
-            <TouchableOpacity
-              onPress={() =>
-                NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
-              }
-              activeOpacity={0.8}
-            >
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._526674}
-              >
-                {t(STRING.edit)}
-              </AppText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.card}>
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._1A1A1A}
-            >
+            <View style={styles.card}>
               <AppText
                 size={getScaleSize(14)}
-                font={FONTS.Inter.SemiBold}
+                font={FONTS.Inter.Regular}
                 color={COLORS._1A1A1A}
               >
-                {t(STRING.medicalDescription)}:
-              </AppText>{' '}
-              {patient?.medicalDescription}
-            </AppText>
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.black}
-            >
-              {t(STRING.linkedRequests)}
-            </AppText>
-
-            <TouchableOpacity
-              onPress={() => {
-                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST, {
-                  fromPatient: true,
-                });
-              }}
-              style={styles.plusBtn}
-              activeOpacity={0.8}
-            >
-              <Image
-                source={IMAGES.new_request}
-                style={styles.newRequestIcon}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <FlatList
-            data={(patient?.linkedRequests || []) as any[]}
-            nestedScrollEnabled={true}
-            scrollEnabled={false}
-            ListEmptyComponent={() => (
-              <View style={styles.emptyContainer}>
                 <AppText
                   size={getScaleSize(14)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                  align="center"
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._1A1A1A}
                 >
-                  {t(STRING.noLinkedRequestsFound)}
-                </AppText>
-              </View>
-            )}
-            renderItem={({ item }) => {
-              const formStatus = item?.formStatus;
-              const buttonConfig = getButtonConfig(formStatus, item?.status);
-              const buttonConfigProvider = getButtonConfigProvider(
-                formStatus,
-                item?.status,
-              );
-              return (
-                <View style={{ marginBottom: getScaleSize(12) }}>
-                  {isServiceProvider ? (
-                    <RequestCardProvider
-                      name={patient?.fullName || ''}
-                      requestId={item.requestId}
-                      requestType={item.service.serviceName}
-                      formStatus={formStatus}
-                      status={item.status}
-                      buttonText={
-                        buttonConfigProvider.show
-                          ? buttonConfigProvider.label || undefined
-                          : undefined
-                      }
-                      onPress={() => {
-                        if (item.status == REQUEST_STATUS.COMPLETED) {
+                  {t(STRING.medicalDescription)}:
+                </AppText>{' '}
+                {patient?.medicalDescription}
+              </AppText>
+            </View>
+
+            <View style={styles.sectionHeader}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.black}
+              >
+                {t(STRING.linkedRequests)}
+              </AppText>
+
+              <TouchableOpacity
+                onPress={() => {
+                  NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST, {
+                    fromPatient: true,
+                  });
+                }}
+                style={styles.plusBtn}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={IMAGES.new_request}
+                  style={styles.newRequestIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={(patient?.linkedRequests || []) as any[]}
+              nestedScrollEnabled={true}
+              scrollEnabled={false}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    align="center"
+                  >
+                    {t(STRING.noLinkedRequestsFound)}
+                  </AppText>
+                </View>
+              )}
+              renderItem={({ item }) => {
+                const formStatus = item?.formStatus;
+                const buttonConfig = getButtonConfig(formStatus, item?.status);
+                const buttonConfigProvider = getButtonConfigProvider(
+                  formStatus,
+                  item?.status,
+                );
+                return (
+                  <View style={{ marginBottom: getScaleSize(12) }}>
+                    {isServiceProvider ? (
+                      <RequestCardProvider
+                        name={patient?.fullName || ''}
+                        requestId={item.requestId}
+                        requestType={item.service.serviceName}
+                        formStatus={formStatus}
+                        status={item.status}
+                        buttonText={
+                          buttonConfigProvider.show
+                            ? buttonConfigProvider.label || undefined
+                            : undefined
+                        }
+                        onPress={() => {
+                          if (item.status == REQUEST_STATUS.COMPLETED) {
+                            NavigationService.navigate(
+                              SCREENS.SERVICE_COMPLETED,
+                              {
+                                request: item,
+                              },
+                            );
+                            return;
+                          }
+
+                          if (item.status === REQUEST_STATUS.DRAFT) {
+                            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                              request: item,
+                              action: 'view',
+                            });
+                            return;
+                          }
+
                           NavigationService.navigate(
-                            SCREENS.SERVICE_COMPLETED,
+                            SCREENS.PROVIDER_FORMS_SCREEN,
                             {
                               request: item,
+                              action: 'view',
                             },
                           );
-                          return;
+                        }}
+                        onButtonPress={() => {
+                          if (item.status === REQUEST_STATUS.DRAFT) {
+                            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                              request: item,
+                              action: buttonConfigProvider.action,
+                              ...(buttonConfigProvider.isComplete && {
+                                isComplete: buttonConfigProvider.isComplete,
+                              }),
+                            });
+                            return;
+                          }
+                          NavigationService.navigate(
+                            SCREENS.PROVIDER_FORMS_SCREEN,
+                            {
+                              request: item,
+                              action: buttonConfigProvider.action,
+                              ...(buttonConfigProvider.isComplete && {
+                                isComplete: buttonConfigProvider.isComplete,
+                              }),
+                            },
+                          );
+                        }}
+                        onLeftButtonPress={() => {
+                          setSelectedRequest(item);
+                          reviewSheetRef.current?.show();
+                        }}
+                      />
+                    ) : (
+                      <RequestCardDoctor
+                        name={patient?.fullName}
+                        requestId={item?.requestId}
+                        requestType={item?.service?.serviceName}
+                        status={item?.status}
+                        formStatus={item?.formStatus}
+                        buttonText={
+                          buttonConfig.show
+                            ? t(buttonConfig.label || '') || undefined
+                            : undefined
                         }
+                        onPress={() => {
+                          if (item.status === REQUEST_STATUS.COMPLETED) {
+                            NavigationService.navigate(
+                              SCREENS.SERVICE_COMPLETED,
+                              {
+                                request: item,
+                              },
+                            );
+                            return;
+                          }
 
-                        if (item.status === REQUEST_STATUS.DRAFT) {
                           NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                             request: item,
                             action: 'view',
                           });
-                          return;
-                        }
-
-                        NavigationService.navigate(
-                          SCREENS.PROVIDER_FORMS_SCREEN,
-                          {
-                            request: item,
-                            action: 'view',
-                          },
-                        );
-                      }}
-                      onButtonPress={() => {
-                        if (item.status === REQUEST_STATUS.DRAFT) {
-                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                            request: item,
-                            action: buttonConfigProvider.action,
-                            ...(buttonConfigProvider.isComplete && {
-                              isComplete: buttonConfigProvider.isComplete,
-                            }),
-                          });
-                          return;
-                        }
-                        NavigationService.navigate(
-                          SCREENS.PROVIDER_FORMS_SCREEN,
-                          {
-                            request: item,
-                            action: buttonConfigProvider.action,
-                            ...(buttonConfigProvider.isComplete && {
-                              isComplete: buttonConfigProvider.isComplete,
-                            }),
-                          },
-                        );
-                      }}
-                      onLeftButtonPress={() => {
-                        setSelectedRequest(item);
-                        reviewSheetRef.current?.show();
-                      }}
-                    />
-                  ) : (
-                    <RequestCardDoctor
-                      name={patient?.fullName}
-                      requestId={item?.requestId}
-                      requestType={item?.service?.serviceName}
-                      status={item?.status}
-                      formStatus={item?.formStatus}
-                      buttonText={
-                        buttonConfig.show
-                          ? t(buttonConfig.label || '') || undefined
-                          : undefined
-                      }
-                      onPress={() => {
-                        if (item.status === REQUEST_STATUS.COMPLETED) {
-                          NavigationService.navigate(
-                            SCREENS.SERVICE_COMPLETED,
-                            {
-                              request: item,
-                            },
-                          );
-                          return;
-                        }
-
-                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                          request: item,
-                          action: 'view',
-                        });
-                      }}
-                      onButtonPress={() => {
-                        if (buttonConfig.action === 'edit') {
-                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                            request: item,
-                            action: buttonConfig.action,
-                          });
-                        } else if (buttonConfig.action === 'sign') {
-                          NavigationService.navigate(
-                            SCREENS.FORM_REVIEW_SCREEN,
-                            {
+                        }}
+                        onButtonPress={() => {
+                          if (buttonConfig.action === 'edit') {
+                            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                               request: item,
                               action: buttonConfig.action,
-                            },
-                          );
-                        } else if (buttonConfig.action === 'view') {
-                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                            request: item,
-                            action: buttonConfig.action,
-                          });
-                        }
-                      }}
-                    />
-                  )}
-                </View>
-              );
-            }}
-            keyExtractor={item => item.id}
-          />
-        </ScrollView>
+                            });
+                          } else if (buttonConfig.action === 'sign') {
+                            NavigationService.navigate(
+                              SCREENS.FORM_REVIEW_SCREEN,
+                              {
+                                request: item,
+                                action: buttonConfig.action,
+                              },
+                            );
+                          } else if (buttonConfig.action === 'view') {
+                            NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+                              request: item,
+                              action: buttonConfig.action,
+                            });
+                          }
+                        }}
+                      />
+                    )}
+                  </View>
+                );
+              }}
+              keyExtractor={item => item.id}
+            />
+          </ScrollView>
+        )}
       </View>
       <ReviewRequestSheet
         ref={reviewSheetRef}

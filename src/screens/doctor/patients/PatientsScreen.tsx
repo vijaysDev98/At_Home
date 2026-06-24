@@ -32,6 +32,7 @@ import { PATIENT_FILTERS } from '../../../constant/constantData';
 import { useTranslation } from 'react-i18next';
 import App from '../../../../App';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import PatientsSkeleton from './PatientsSkeleton';
 
 const PatientsScreen: React.FC = () => {
   const dispatch = useDispatch<any>();
@@ -48,6 +49,7 @@ const PatientsScreen: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,16 +73,14 @@ const PatientsScreen: React.FC = () => {
     f?: string,
   ) => {
     if (isLoading && !refresh && p === 1) return;
-
-    if (p > 1) {
-      setIsFetchingNextPage(true);
-    }
+    if (p > 1) setIsFetchingNextPage(true);
 
     try {
       await dispatch(fetchPatients(p, s, f));
     } finally {
       setIsFetchingNextPage(false);
       setIsRefreshing(false);
+      setInitialLoading(false); // ← add this
     }
   };
 
@@ -202,7 +202,7 @@ const PatientsScreen: React.FC = () => {
 
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
-      <AppLoader visible={isLoading && page === 1 && !isRefreshing} />
+      {/* <AppLoader visible={isLoading && page === 1 && !isRefreshing} /> */}
       <View style={styles.container}>
         <Header
           title={t(STRING.patients)}
@@ -212,105 +212,112 @@ const PatientsScreen: React.FC = () => {
           }}
         />
 
-        <View style={styles.header}>
-          <View style={styles.searchWrapper}>
-            <Image source={IMAGES.search} style={styles.searchIcon} />
+        {initialLoading && !isRefreshing ? (
+          <PatientsSkeleton />
+        ) : (
+          <>
+            <View style={styles.header}>
+              <View style={styles.searchWrapper}>
+                <Image source={IMAGES.search} style={styles.searchIcon} />
 
-            <TextInput
-              placeholder={t(STRING.searchPatients)}
-              placeholderTextColor="#6F767E"
-              style={styles.searchInput}
-              value={search}
-              onChangeText={handleSearchChange}
-            />
-          </View>
-
-          {/* Only show filters when there are patients */}
-          {/* {patients.length > 0 && ( */}
-          <View style={styles.filtersContainer}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chipsRow}
-            >
-              {PATIENT_FILTERS.map(chip => (
-                <TouchableOpacity
-                  key={chip}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.chip,
-                    selectedChip === chip
-                      ? styles.chipActive
-                      : styles.chipInactive,
-                  ]}
-                  onPress={() => handleChipPress(chip)}
-                >
-                  <AppText
-                    color={
-                      selectedChip === chip ? COLORS.white : COLORS._6F767E
-                    }
-                    size={getScaleSize(12)}
-                    font={
-                      selectedChip === chip
-                        ? FONTS.Inter.SemiBold
-                        : FONTS.Inter.Regular
-                    }
-                  >
-                    {t(chip)}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-          {/* )} */}
-        </View>
-
-        <FlatList
-          data={patients || []}
-          style={styles.flatListContainer}
-          contentContainerStyle={[
-            styles.listContent,
-            (!patients || patients.length === 0) && { flexGrow: 1 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          onRefresh={onRefresh}
-          refreshing={isRefreshing}
-          onEndReached={onLoadMore}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <AppText
-                size={getScaleSize(15)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-                align="center"
-              >
-                {t(STRING.noPatientsFound)}
-              </AppText>
-            </View>
-          )}
-          ListFooterComponent={() =>
-            isFetchingNextPage ? (
-              <View style={{ paddingVertical: 20 }}>
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <TextInput
+                  placeholder={t(STRING.searchPatients)}
+                  placeholderTextColor="#6F767E"
+                  style={styles.searchInput}
+                  value={search}
+                  onChangeText={handleSearchChange}
+                />
               </View>
-            ) : null
-          }
-          removeClippedSubviews
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={50}
-          initialNumToRender={10}
-          windowSize={10}
-        />
 
-        <View style={styles.footer}>
-          <PrimaryButton
-            title={t(STRING.addPatient)}
-            onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
-          />
-        </View>
+              {/* Only show filters when there are patients */}
+              {/* {patients.length > 0 && ( */}
+              <View style={styles.filtersContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.chipsRow}
+                >
+                  {PATIENT_FILTERS.map(chip => (
+                    <TouchableOpacity
+                      key={chip}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.chip,
+                        selectedChip === chip
+                          ? styles.chipActive
+                          : styles.chipInactive,
+                      ]}
+                      onPress={() => handleChipPress(chip)}
+                    >
+                      <AppText
+                        color={
+                          selectedChip === chip ? COLORS.white : COLORS._6F767E
+                        }
+                        size={getScaleSize(12)}
+                        font={
+                          selectedChip === chip
+                            ? FONTS.Inter.SemiBold
+                            : FONTS.Inter.Regular
+                        }
+                      >
+                        {t(chip)}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              {/* )} */}
+            </View>
+
+            <FlatList
+              data={patients || []}
+              style={styles.flatListContainer}
+              contentContainerStyle={[
+                styles.listContent,
+                (!patients || patients.length === 0) && { flexGrow: 1 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              renderItem={renderItem}
+              keyExtractor={item => item.id}
+              onRefresh={onRefresh}
+              refreshing={isRefreshing}
+              onEndReached={onLoadMore}
+              onEndReachedThreshold={0.5}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    align="center"
+                  >
+                    {t(STRING.noPatientsFound)}
+                  </AppText>
+                </View>
+              )}
+              ListFooterComponent={() =>
+                isFetchingNextPage ? (
+                  <View style={{ paddingVertical: 20 }}>
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  </View>
+                ) : null
+              }
+              removeClippedSubviews
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={50}
+              initialNumToRender={10}
+              windowSize={10}
+            />
+
+            <View style={styles.footer}>
+              <PrimaryButton
+                title={t(STRING.addPatient)}
+                onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
+              />
+            </View></>
+        )}
+
+
       </View>
     </AppSafeAreaView>
   );

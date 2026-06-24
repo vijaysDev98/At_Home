@@ -45,6 +45,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
+import AvailableRequestSkeleton from './AvailableRequestSkeleton';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
@@ -119,10 +120,10 @@ const AvailableRequest: React.FC = () => {
           isFilteredTab
             ? Promise.resolve(null)
             : serviceRequestListApi.listAvailableRequestsForProvider({
-                page,
-                size: PAGE_SIZE,
-                status: mappedStatus,
-              }),
+              page,
+              size: PAGE_SIZE,
+              status: mappedStatus,
+            }),
           serviceRequestListApi.listAssignedRequestsForProvider({
             page,
             size: PAGE_SIZE,
@@ -401,7 +402,7 @@ const AvailableRequest: React.FC = () => {
 
         <View style={{ flex: 1 }}>
           {isLoading && requests.length === 0 ? (
-            <AppLoader visible={true} />
+            <AvailableRequestSkeleton />
           ) : (
             <FlatList
               data={filteredRequests}

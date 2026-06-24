@@ -26,6 +26,7 @@ import {
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
+import NotificationSkeleton from './NotificationSkeleton';
 
 const ProviderNotification: React.FC = () => {
   const { t } = useTranslation();
@@ -216,9 +217,9 @@ const ProviderNotification: React.FC = () => {
 
   return (
     <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
-      <AppLoader
+      {/* <AppLoader
         visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
-      />
+      /> */}
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
@@ -230,78 +231,84 @@ const ProviderNotification: React.FC = () => {
         />
 
         {/* Tabs */}
-        <View style={styles.tabs}>
-          <TouchableOpacity
-            style={styles.tabWrap}
-            activeOpacity={0.7}
-            onPress={() => setActiveTab('All')}
-          >
-            <AppText
-              size={getScaleSize(15)}
-              font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
-              color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
-            >
-              {t(STRING.all)}
-            </AppText>
-            {activeTab === 'All' && <View style={styles.activeBorder} />}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.tabWrap}
-            activeOpacity={0.7}
-            onPress={() => setActiveTab('Unread')}
-          >
-            <AppText
-              size={getScaleSize(15)}
-              font={
-                activeTab === 'Unread' ? FONTS.Inter.Bold : FONTS.Inter.Medium
-              }
-              color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
-            >
-              {t(STRING.unread)}
-            </AppText>
-            {notifications.some(n => n.status === 'unread') && (
-              <View style={styles.unreadBadge} />
-            )}
-            {activeTab === 'Unread' && <View style={styles.activeBorder} />}
-          </TouchableOpacity>
-        </View>
 
         {/* Notifications List */}
-        <FlatList
-          data={notifications}
-          style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            notifications.length === 0 && { flexGrow: 1 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          onRefresh={onRefresh}
-          refreshing={isRefreshing}
-          onEndReached={onLoadMore}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <AppText
-                size={getScaleSize(15)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-                align="center"
+        {initialLoading && !isRefreshing ? (
+          <NotificationSkeleton />
+        ) : (
+          <View style={{ flex: 1 }}>
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={styles.tabWrap}
+                activeOpacity={0.7}
+                onPress={() => setActiveTab('All')}
               >
-                {t(STRING.noNotificationFound)}
-              </AppText>
+                <AppText
+                  size={getScaleSize(15)}
+                  font={activeTab === 'All' ? FONTS.Inter.Bold : FONTS.Inter.Medium}
+                  color={activeTab === 'All' ? COLORS._526674 : COLORS._6F767E}
+                >
+                  {t(STRING.all)}
+                </AppText>
+                {activeTab === 'All' && <View style={styles.activeBorder} />}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.tabWrap}
+                activeOpacity={0.7}
+                onPress={() => setActiveTab('Unread')}
+              >
+                <AppText
+                  size={getScaleSize(15)}
+                  font={
+                    activeTab === 'Unread' ? FONTS.Inter.Bold : FONTS.Inter.Medium
+                  }
+                  color={activeTab === 'Unread' ? COLORS._526674 : COLORS._6F767E}
+                >
+                  {t(STRING.unread)}
+                </AppText>
+                {notifications.some(n => n.status === 'unread') && (
+                  <View style={styles.unreadBadge} />
+                )}
+                {activeTab === 'Unread' && <View style={styles.activeBorder} />}
+              </TouchableOpacity>
             </View>
-          )}
-          ListFooterComponent={() =>
-            isFetchingNextPage ? (
-              <View style={styles.footerLoader}>
-                <ActivityIndicator size="small" color={COLORS._526674} />
-              </View>
-            ) : null
-          }
-        />
+
+            <FlatList
+              data={notifications}
+              style={styles.scroll}
+              contentContainerStyle={[
+                styles.scrollContent,
+                notifications.length === 0 && { flexGrow: 1 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              renderItem={renderItem}
+              keyExtractor={item => item.id}
+              onRefresh={onRefresh}
+              refreshing={isRefreshing}
+              onEndReached={onLoadMore}
+              onEndReachedThreshold={0.5}
+              ListEmptyComponent={() => (
+                <View style={styles.emptyContainer}>
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    align="center"
+                  >
+                    {t(STRING.noNotificationFound)}
+                  </AppText>
+                </View>
+              )}
+              ListFooterComponent={() =>
+                isFetchingNextPage ? (
+                  <View style={styles.footerLoader}>
+                    <ActivityIndicator size="small" color={COLORS._526674} />
+                  </View>
+                ) : null
+              }
+            />
+          </View>)}
       </View>
     </AppSafeAreaView>
   );

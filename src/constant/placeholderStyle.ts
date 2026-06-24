@@ -1,0 +1,1 @@
+export const txtPlaceHolderStyle = { height: 12, width: 70, borderRadius: 10 };
