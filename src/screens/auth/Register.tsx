@@ -356,8 +356,9 @@ const Register: React.FC = () => {
                   }
                   style={[
                     styles.avatar,
-                    ...(!userAvatar ? [{ resizeMode: 'center' }] : []),
+                    // ...(!userAvatar ? [{ resizeMode: 'center' }] : []),
                   ]}
+                  resizeMode={!userAvatar ? "center" : "cover"}
                 />
                 <TouchableOpacity
                   style={styles.cameraBtn}
