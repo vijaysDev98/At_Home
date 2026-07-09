@@ -20,3 +20,5 @@ export { default as AppCheckBox } from './AppCheckBox';
 export { default as FormSignature } from './FormSignature';
 export { default as ProfileAvatar } from './ProfileAvatar';
 export { default as AppDropDown } from './AppDropDown';
+export { default as SecurityAlertModal } from './SecurityAlertModal';
+export type { SecurityAlertModalProps } from './SecurityAlertModal';

@@ -714,5 +714,8 @@
   "No doctors available": "Aucun médecin disponible",
   "My Requests": "Mes demandes",
   "Available To Claim": "Disponible à réclamer",
-  "Your session has expired. Please log in again.": "Votre session a expiré. Veuillez vous reconnecter."
+  "Your session has expired. Please log in again.": "Votre session a expiré. Veuillez vous reconnecter.",
+  "Security Setup Needed": "Configuration de sécurité requise",
+  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.": "Aucune donnée biométrique enregistrée et aucun code d'accès défini sur l'appareil. Veuillez configurer un verrouillage d'écran (Face ID, empreinte digitale ou code d'accès) dans les paramètres de votre appareil pour une signature sécurisée, ou choisissez Continuer quand même sans cela.",
+  "Still Proceed": "Continuer quand même"
 }

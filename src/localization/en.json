@@ -716,5 +716,8 @@
   "No doctors available": "No doctors available",
   "My Requests": "My Requests",
   "Available To Claim": "Available To Claim",
-  "Your session has expired. Please log in again.": "Your session has expired. Please log in again."
+  "Your session has expired. Please log in again.": "Your session has expired. Please log in again.",
+  "Security Setup Needed": "Security Setup Needed",
+  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.": "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.",
+  "Still Proceed": "Still Proceed"
 }

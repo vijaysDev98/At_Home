@@ -21,6 +21,8 @@ import { IMAGES } from '../assets/images';
 import moment from 'moment';
 import { capitalizeFirstLetter } from '../constant/smallFunctions';
 import { useTranslation } from 'react-i18next';
+import { useBiometricAuth } from '../hooks/useBiometricAuth';
+import SecurityAlertModal from './SecurityAlertModal';
 
 export interface FormSignatureProps {
   title?: string;
@@ -39,6 +41,16 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   onSigningStart,
   onSigningEnd,
 }) => {
+  const {
+    authenticate,
+    isAuthenticating,
+    error,
+    biometryType,
+    checkAvailability,
+  } = useBiometricAuth({
+    title: 'Authorize Signature',
+  });
+  const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
   const { t } = useTranslation();
   const requestId = requestData?._id || requestData?.id;
   const dispatch = useDispatch();
@@ -163,6 +175,31 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     }
   };
 
+  const handleSignPress = async () => {
+    const sensorInfo = await checkAvailability();
+    const hasBiometrics = sensorInfo?.available;
+    const hasDeviceCredential = sensorInfo?.isDeviceSecure;
+
+    if (sensorInfo && !hasBiometrics && !hasDeviceCredential) {
+      setShowSecurityAlert(true);
+    } else {
+      const result = await authenticate({
+        reason: 'Confirm to sign this document',
+      });
+
+      if (result.success) {
+        handleSignature();
+        // proceed into your actual signing flow
+        // onVerified();
+      } else {
+        // result.error is a friendly message already
+        console.log('error', result);
+        SHOW_TOAST(result.error, 'error');
+        // Alert.alert('Authentication failed', result.error ?? 'Please try again');
+      }
+    }
+  };
+
   const handleSignature = async () => {
     // Turn loader ON once here — it stays on until openSigningUrl explicitly turns it off
     dispatch(setLoading(true));
@@ -223,7 +260,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           ) : (
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={handleSignature}
+              onPress={handleSignPress}
               style={styles.signButton}
             >
               <AppText
@@ -270,6 +307,15 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           )}
         </View>
       </View>
+
+      <SecurityAlertModal
+        visible={showSecurityAlert}
+        onCancel={() => setShowSecurityAlert(false)}
+        onProceed={() => {
+          setShowSecurityAlert(false);
+          handleSignature();
+        }}
+      />
     </View>
   );
 };

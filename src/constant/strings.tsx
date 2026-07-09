@@ -166,7 +166,8 @@ export const STRING = {
   appVersionValue: 'v2.4.1 (Build 842)',
   logOut: 'Log Out',
   deleteAccount: 'Delete Account',
-  deleteAccountConfirmation: 'Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.',
+  deleteAccountConfirmation:
+    'Are you sure you want to delete your account? All your data will be permanently removed and this action cannot be undone.',
 
   // ─── Add Patient ─────────────────────────────────────────────
   addPatientTitle: 'Add Patient',
@@ -468,7 +469,8 @@ export const STRING = {
   targetSpO2: 'Target SpO2 (%)',
   enterTargetSpO2: 'Enter target SpO2',
   emergencyContactPhone: 'Emergency Contact Phone',
-  prescriberContactPhone: "Prescriber's Phone Number to Call if Contact is Necessary",
+  prescriberContactPhone:
+    "Prescriber's Phone Number to Call if Contact is Necessary",
   palliativeCareSection: 'Palliative Care',
   palliativeCareLabel: 'Home Oxygen Therapy as Part of Palliative Care',
   patientInstructions: 'Patient Instructions',
@@ -780,7 +782,8 @@ export const STRING = {
 
   // ─── Personal Hygiene Care Form ──────────────────────────────────
   careInstructions: 'Care Instructions',
-  careLocationNote: 'To be carried out by a private/home care nurse at the patient\'s home, every day, including Sundays and public holidays.',
+  careLocationNote:
+    "To be carried out by a private/home care nurse at the patient's home, every day, including Sundays and public holidays.",
   hygieneCare: 'Hygiene Care',
   assistanceWithHygieneCare: 'Assistance with hygiene care twice a day',
   completeBedHygieneCare: 'Complete bed hygiene care twice a day',
@@ -794,18 +797,21 @@ export const STRING = {
   otherWoundType: 'Other Wound Type',
   postopDressingDetail: 'Post-op dressing (e.g., Mediane Post-op)',
   enterPostopDressingDetails: 'Enter post-op dressing details',
-  debridementDressingDetail: 'Debridement and healing dressing (e.g., Algostéril)',
+  debridementDressingDetail:
+    'Debridement and healing dressing (e.g., Algostéril)',
   enterDebridementDressingDetails: 'Enter debridement dressing details',
   hydrocolloidDressingDetail: 'Hydrocolloid dressing',
   enterHydrocolloidDressingDetails: 'Enter hydrocolloid dressing details',
-  hydrocolloidNote: 'Hydrocolloid: absorbs exudate and forms a moist gel on contact with the wound.',
+  hydrocolloidNote:
+    'Hydrocolloid: absorbs exudate and forms a moist gel on contact with the wound.',
   packingDetail1: 'Packing detail 1',
   enterPackingDetail1: 'Enter packing detail 1',
   packingDetail2: 'Packing detail 2',
   enterPackingDetail2: 'Enter packing detail 2',
   packingDetail3: 'Packing detail 3',
   enterPackingDetail3: 'Enter packing detail 3',
-  packingNote: 'Fill a cavity\nOccupy dead space\nPrevent premature superficial closure',
+  packingNote:
+    'Fill a cavity\nOccupy dead space\nPrevent premature superficial closure',
   enterOtherWoundType: 'Enter other wound type',
   exudate: 'Exudate',
   cavity: 'Cavity',
@@ -815,18 +821,24 @@ export const STRING = {
 
   //SERVICES
   AntibiotherapyInfusion: 'Antibiotherapy Infusion',
-  AdministrationOfAntibioticsThroughInfusionTherapy: 'Administration of antibiotics through infusion therapy',
-  artificialNutrition: "Artificial Nutrition",
-  nutritionalSupportThroughMedicalMethodsSuchAsEnteralFeeding: "Nutritional support through medical methods such as enteral feeding",
-  CNO: "CNO",
-  careCoordinationAndNursingOversightServices: "Care coordination and nursing oversight services",
-  generic: "Generic",
-  basicGeneralCareService: "Basic general care service",
-  hydrationInfusion: "Hydration Infusion",
-  fluidInfusionTherapyForHydrationAndRecovery: "Fluid infusion therapy for hydration and recovery",
-  ivTherapyPrescriptionForm: "IV Therapy Prescription Form",
-  parenteralNutritionCentralLinePrescriptionForm: "Parenteral Nutrition (Central Line) Prescription Form",
-  pregnancyRelatedCarePrescriptionForm: "Pregnancy-Related Care Prescription Form",
+  AdministrationOfAntibioticsThroughInfusionTherapy:
+    'Administration of antibiotics through infusion therapy',
+  artificialNutrition: 'Artificial Nutrition',
+  nutritionalSupportThroughMedicalMethodsSuchAsEnteralFeeding:
+    'Nutritional support through medical methods such as enteral feeding',
+  CNO: 'CNO',
+  careCoordinationAndNursingOversightServices:
+    'Care coordination and nursing oversight services',
+  generic: 'Generic',
+  basicGeneralCareService: 'Basic general care service',
+  hydrationInfusion: 'Hydration Infusion',
+  fluidInfusionTherapyForHydrationAndRecovery:
+    'Fluid infusion therapy for hydration and recovery',
+  ivTherapyPrescriptionForm: 'IV Therapy Prescription Form',
+  parenteralNutritionCentralLinePrescriptionForm:
+    'Parenteral Nutrition (Central Line) Prescription Form',
+  pregnancyRelatedCarePrescriptionForm:
+    'Pregnancy-Related Care Prescription Form',
   primaryService: 'Primary Service',
   selectDoctor: 'Select Doctor',
   step2Of4: 'Step 2/4: Doctor',
@@ -835,5 +847,9 @@ export const STRING = {
   noDoctorsFound: 'No doctors found',
   noDoctorsAvailable: 'No doctors available',
   myRequests: 'My Requests',
-  sessionExpired: 'Your session has expired. Please log in again.'
+  sessionExpired: 'Your session has expired. Please log in again.',
+  securityAlertTitle: 'Security Setup Needed',
+  securityAlertDescription:
+    'No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.',
+  stillProceed: 'Still Proceed',
 };

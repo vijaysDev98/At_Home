@@ -292,7 +292,7 @@ const ProviderProfile: React.FC = () => {
                       font={FONTS.Inter.Bold}
                       color={COLORS._1A1D1F}
                     >
-                      {item.serviceName}
+                      {t(item.serviceName)}
                     </AppText>
                     <AppText
                       size={getScaleSize(12)}
@@ -300,7 +300,7 @@ const ProviderProfile: React.FC = () => {
                       color={COLORS._6F767E}
                       style={{ marginTop: getScaleSize(4) }}
                     >
-                      {item.description}
+                      {t(item.description)}
                     </AppText>
                   </View>
                 </View>

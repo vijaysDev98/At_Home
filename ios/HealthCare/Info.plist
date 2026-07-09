@@ -10,6 +10,8 @@
 	<string>At Home</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to confirm your identity before signing documents</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
