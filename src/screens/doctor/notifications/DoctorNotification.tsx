@@ -405,8 +405,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 24,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   tabWrap: {
     position: 'relative',

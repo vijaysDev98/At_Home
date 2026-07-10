@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -145,9 +146,10 @@ const HydrationInfusionForm = forwardRef<
       // Prescriber Identification
       prescriber_last_name: prescriberData?.lName || '',
       prescriber_first_name: prescriberData?.fName || '',
-      prescriber_phone: getCountryCode(prescriberData?.country) +
-        ' ' +
-        prescriberData?.phoneNumber || '',
+      prescriber_phone:
+        getCountryCode(prescriberData?.country) +
+          ' ' +
+          prescriberData?.phoneNumber || '',
       rpps_id: prescriberData?.rppsNumber || '',
 
       // Facility Information
@@ -172,7 +174,8 @@ const HydrationInfusionForm = forwardRef<
           central_venous_options: [],
           perineural_access: false,
           peripheral_venous_access: false,
-          subcutaneous_access: false, mode_of_administration: '',
+          subcutaneous_access: false,
+          mode_of_administration: '',
           ambulatory_required: false,
           prepared_in_facility: false,
           start_date: '',
@@ -343,7 +346,7 @@ const HydrationInfusionForm = forwardRef<
                 return ne;
               });
             }
-          } catch { }
+          } catch {}
           return next;
         });
       } else {
@@ -397,8 +400,9 @@ const HydrationInfusionForm = forwardRef<
         .filter(i => i !== -1);
 
       if (filledProductIndices.length === 0) {
-        newErrors['infusion_products[0].product_name'] =
-          t(STRING.atLeastOneProductRequired);
+        newErrors['infusion_products[0].product_name'] = t(
+          STRING.atLeastOneProductRequired,
+        );
       }
 
       setErrors(newErrors);
@@ -722,7 +726,7 @@ const HydrationInfusionForm = forwardRef<
               <View style={styles.checkboxGroup}>
                 <AppCheckBox
                   disabled={readOnly}
-                  label={(STRING.centralVenous)}
+                  label={STRING.centralVenous}
                   value={product.central_venous}
                   onValueChange={value => {
                     updateProduct(index, 'central_venous', value);
@@ -754,7 +758,9 @@ const HydrationInfusionForm = forwardRef<
                             'central_venous_options',
                             value
                               ? [...current, option]
-                              : current.filter((item: string) => item !== option),
+                              : current.filter(
+                                  (item: string) => item !== option,
+                                ),
                           );
                         }}
                       />
@@ -764,7 +770,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={(STRING.perineural)}
+                  label={STRING.perineural}
                   value={product.perineural_access}
                   onValueChange={value =>
                     updateProduct(index, 'perineural_access', value)
@@ -773,7 +779,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={(STRING.peripheralVenous)}
+                  label={STRING.peripheralVenous}
                   value={product.peripheral_venous_access}
                   onValueChange={value =>
                     updateProduct(index, 'peripheral_venous_access', value)
@@ -782,7 +788,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={(STRING.subcutaneous)}
+                  label={STRING.subcutaneous}
                   value={product.subcutaneous_access}
                   onValueChange={value =>
                     updateProduct(index, 'subcutaneous_access', value)
@@ -867,7 +873,9 @@ const HydrationInfusionForm = forwardRef<
                       index,
                     });
                     if (product.start_date) {
-                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                      setDate(
+                        moment(product.start_date, 'DD/MM/YYYY').toDate(),
+                      );
                     }
                     setOpen(true);
                   }}
@@ -893,7 +901,9 @@ const HydrationInfusionForm = forwardRef<
                     if (product.end_date) {
                       setDate(moment(product.end_date, 'DD/MM/YYYY').toDate());
                     } else {
-                      setDate(moment(product.start_date, 'DD/MM/YYYY').toDate());
+                      setDate(
+                        moment(product.start_date, 'DD/MM/YYYY').toDate(),
+                      );
                     }
                     setOpen(true);
                   }}
@@ -957,7 +967,7 @@ const HydrationInfusionForm = forwardRef<
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}
           modal
-          theme='light'
+          theme="light"
           open={open}
           date={date}
           mode="date"
@@ -977,7 +987,10 @@ const HydrationInfusionForm = forwardRef<
                   const startDate = moment(product.start_date, 'DD/MM/YYYY');
                   const endDate = moment(selectedDate);
 
-                  if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
+                  if (
+                    endDate.isBefore(startDate) ||
+                    endDate.isSame(startDate)
+                  ) {
                     SHOW_TOAST(t(STRING.endDateMustBeAfterStartDate), 'error');
                     return;
                   }
@@ -1025,6 +1038,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
 
@@ -1055,6 +1072,7 @@ const styles = StyleSheet.create({
   dateInputsRow: {
     flexDirection: 'row',
     gap: getScaleSize(12),
+    marginTop: getScaleSize(10),
   },
 
   halfWidthInput: {

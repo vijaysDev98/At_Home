@@ -850,6 +850,7 @@ export const STRING = {
   sessionExpired: 'Your session has expired. Please log in again.',
   securityAlertTitle: 'Security Setup Needed',
   securityAlertDescription:
-    'No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.',
-  stillProceed: 'Still Proceed',
+    'No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.',
+  proceedAnyWay: 'Proceed Anyway',
+  seeAll: 'See All',
 };

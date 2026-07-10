@@ -72,16 +72,16 @@ const RequestSummaryCard: React.FC<RequestSummaryCardProps> = ({
         {rightContent
           ? rightContent
           : showEdit && (
-            <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._526674}
-              >
-                {t(STRING.edit)}
-              </AppText>
-            </TouchableOpacity>
-          )}
+              <TouchableOpacity activeOpacity={0.8} onPress={onEditPatient}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._526674}
+                >
+                  {t(STRING.edit)}
+                </AppText>
+              </TouchableOpacity>
+            )}
       </View>
 
       <View style={styles.summaryRowDivider} />
@@ -171,6 +171,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: COLORS._1E293B80,
   },
   avatar: {
     height: getScaleSize(40),
@@ -179,7 +181,6 @@ const styles = StyleSheet.create({
   serviceIconWrap: {
     backgroundColor: COLORS._E7EEF3,
   },
-
 });
 
 export default RequestSummaryCard;

@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     borderBottomColor: COLORS._EFEFEF,
   },
   tabScroll: {

@@ -5,7 +5,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
 } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
@@ -94,7 +94,6 @@ const PersonalHygieneCare = forwardRef<
   // Use prescriber prop (selected doctor or profile data)
   const prescriberData = prescriber || profileData;
 
-
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(new Date());
   const [pickerType, setPickerType] = useState<{
@@ -111,8 +110,10 @@ const PersonalHygieneCare = forwardRef<
     dob: selectedPatient?.dateOfBirth
       ? moment(selectedPatient.dateOfBirth).format('DD/MM/YYYY')
       : '',
-    prescriber_last_name: capitalizeFirstLetter(prescriberData?.lName || '') || '',
-    prescriber_first_name: capitalizeFirstLetter(prescriberData?.fName || '') || '',
+    prescriber_last_name:
+      capitalizeFirstLetter(prescriberData?.lName || '') || '',
+    prescriber_first_name:
+      capitalizeFirstLetter(prescriberData?.fName || '') || '',
     prescription_date: moment().format('DD/MM/YYYY'),
 
     // Daily Care (Home Nurse)
@@ -207,7 +208,7 @@ const PersonalHygieneCare = forwardRef<
               return ne;
             });
           }
-        } catch { }
+        } catch {}
         return next;
       });
     } else {
@@ -249,21 +250,30 @@ const PersonalHygieneCare = forwardRef<
 
     // Treatment Administration — dependsOn glucose_monitoring
     if (state.glucose_monitoring) {
-      if (!state.glucose_frequency?.trim() || Number(state.glucose_frequency) <= 0) {
+      if (
+        !state.glucose_frequency?.trim() ||
+        Number(state.glucose_frequency) <= 0
+      ) {
         newErrors.glucoseFrequency = t(STRING.enterValidFrequency);
       }
     }
 
     // Procedures — dependsOn suture_removal
     if (state.suture_removal) {
-      if (!state.suture_removal_days?.trim() || Number(state.suture_removal_days) <= 0) {
+      if (
+        !state.suture_removal_days?.trim() ||
+        Number(state.suture_removal_days) <= 0
+      ) {
         newErrors.sutureRemovalDays = t(STRING.enterValidDays);
       }
     }
 
     // Procedures — dependsOn urinary_catheter_care
     if (state.urinary_catheter_care) {
-      if (!state.catheter_frequency?.trim() || Number(state.catheter_frequency) <= 0) {
+      if (
+        !state.catheter_frequency?.trim() ||
+        Number(state.catheter_frequency) <= 0
+      ) {
         newErrors.catheterFrequency = t(STRING.enterValidFrequency);
       }
     }
@@ -418,7 +428,9 @@ const PersonalHygieneCare = forwardRef<
               placeholder={t(STRING.enterFirstName)}
               isMandatory
               value={state.patient_first_name}
-              onChangeText={value => setFormState({ patient_first_name: value })}
+              onChangeText={value =>
+                setFormState({ patient_first_name: value })
+              }
               style={[styles.inputField, { flex: 1 }]}
               error={errors.patientFirstName}
               nameOnly={true}
@@ -458,7 +470,9 @@ const PersonalHygieneCare = forwardRef<
               label={t(STRING.firstName)}
               placeholder={t(STRING.enterFirstName)}
               value={state.prescriber_first_name}
-              onChangeText={value => setFormState({ prescriber_first_name: value })}
+              onChangeText={value =>
+                setFormState({ prescriber_first_name: value })
+              }
               style={[styles.inputField, { flex: 1 }]}
             />
             <Input
@@ -466,7 +480,9 @@ const PersonalHygieneCare = forwardRef<
               label={t(STRING.lastName)}
               placeholder={t(STRING.enterLastName)}
               value={state.prescriber_last_name}
-              onChangeText={value => setFormState({ prescriber_last_name: value })}
+              onChangeText={value =>
+                setFormState({ prescriber_last_name: value })
+              }
               style={[styles.inputField, { flex: 1 }]}
             />
           </View>
@@ -492,7 +508,11 @@ const PersonalHygieneCare = forwardRef<
           {renderSectionHeader(t(STRING.careInstructions))}
 
           <View style={styles.staticTextContainer}>
-            <AppText size={getScaleSize(13)} color={COLORS._6B7280} style={styles.staticText}>
+            <AppText
+              size={getScaleSize(13)}
+              color={COLORS._6B7280}
+              style={styles.staticText}
+            >
               {t(STRING.careLocationNote)}
             </AppText>
           </View>
@@ -572,7 +592,10 @@ const PersonalHygieneCare = forwardRef<
           />
 
           <View style={{ marginTop: getScaleSize(12) }}>
-            <AppText size={getScaleSize(13)} style={{ marginBottom: getScaleSize(8) }}>
+            <AppText
+              size={getScaleSize(13)}
+              style={{ marginBottom: getScaleSize(8) }}
+            >
               {t(STRING.timesPerDay)}
             </AppText>
             <Input
@@ -582,7 +605,7 @@ const PersonalHygieneCare = forwardRef<
               placeholder="0"
               keyboardType="numeric"
               style={styles.inputField}
-              error={errors.glucoseFrequency}   // ← add
+              error={errors.glucoseFrequency} // ← add
             />
           </View>
         </View>
@@ -616,7 +639,10 @@ const PersonalHygieneCare = forwardRef<
           </View>
 
           <View style={{ marginTop: getScaleSize(12) }}>
-            <AppText size={getScaleSize(13)} style={{ marginBottom: getScaleSize(8) }}>
+            <AppText
+              size={getScaleSize(13)}
+              style={{ marginBottom: getScaleSize(8) }}
+            >
               {t(STRING.timesPerDay)}
             </AppText>
             <Input
@@ -632,7 +658,10 @@ const PersonalHygieneCare = forwardRef<
           </View>
 
           <View style={{ marginTop: getScaleSize(12) }}>
-            <AppText size={getScaleSize(13)} style={{ marginBottom: getScaleSize(8) }}>
+            <AppText
+              size={getScaleSize(13)}
+              style={{ marginBottom: getScaleSize(8) }}
+            >
               {t(STRING.everyXDays)}
             </AppText>
             <Input
@@ -840,9 +869,7 @@ const PersonalHygieneCare = forwardRef<
               label={t(STRING.renewalNotes)}
               placeholder={t(STRING.enterRenewalNotes)}
               value={state.renewal_notes}
-              onChangeText={value =>
-                setFormState({ renewal_notes: value })
-              }
+              onChangeText={value => setFormState({ renewal_notes: value })}
               style={styles.inputField}
             />
           )}
@@ -858,7 +885,7 @@ const PersonalHygieneCare = forwardRef<
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
-        theme='light'
+        theme="light"
         open={open}
         date={date}
         mode="date"
@@ -907,6 +934,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
 
@@ -991,7 +1022,6 @@ const styles = StyleSheet.create({
   },
 
   staticTextContainer: {
-
     // padding: getScaleSize(12),
     // borderRadius: getScaleSize(8),
     // borderLeftWidth: 3,

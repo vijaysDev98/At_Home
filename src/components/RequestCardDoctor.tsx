@@ -34,7 +34,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   requestId,
   formStatus,
   buttonText,
-  onButtonPress = () => { },
+  onButtonPress = () => {},
   onPress,
 }) => {
   const { t } = useTranslation();
@@ -149,6 +149,11 @@ export default RequestCardDoctor;
 const styles = StyleSheet.create({
   requestCardContainer: {
     borderWidth: 1,
+    elevation: 5,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     borderColor: COLORS._EFEFEF,
     borderRadius: getScaleSize(16),
     padding: getScaleSize(16),

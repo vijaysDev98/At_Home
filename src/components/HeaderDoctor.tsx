@@ -49,7 +49,7 @@ const Header = ({
         {isBack && (
           <TouchableOpacity
             activeOpacity={0.8}
-            hitSlop={30}
+            hitSlop={20}
             style={backIcon ? {} : styles.backBtn}
             onPress={() => NavigationService.goBack()}
           >

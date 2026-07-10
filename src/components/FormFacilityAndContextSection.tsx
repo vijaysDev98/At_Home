@@ -14,12 +14,9 @@ export interface FacilityAndContextSectionProps {
   showFormsFor?: boolean;
 }
 
-const FormFacilityAndContextSection: React.FC<FacilityAndContextSectionProps> = ({
-  state,
-  setState,
-  readOnly = false,
-  showFormsFor = true,
-}) => {
+const FormFacilityAndContextSection: React.FC<
+  FacilityAndContextSectionProps
+> = ({ state, setState, readOnly = false, showFormsFor = true }) => {
   const { t } = useTranslation();
 
   const renderSectionHeader = (title: string) => (
@@ -72,7 +69,7 @@ const FormFacilityAndContextSection: React.FC<FacilityAndContextSectionProps> = 
             label={t(STRING.formsFor)}
             value={state.forms_for}
             onChangeText={value => setState({ forms_for: value })}
-            placeholder={t(STRING.enterFormsFor)}
+            placeholder={t(STRING.enterDetails)}
             style={styles.inputField}
           />
         </View>

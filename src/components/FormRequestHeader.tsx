@@ -38,8 +38,10 @@ const StatusBadges: React.FC<{
           font={FONTS.Inter.SemiBold}
           style={styles.statusValue}
         >
-          {t(DISPLAY_FORM_STATUS[requestData?.status] ||
-            t(DISPLAY_FORM_STATUS[FORM_STATUS.DRAFT]))}
+          {t(
+            DISPLAY_FORM_STATUS[requestData?.status] ||
+              t(DISPLAY_FORM_STATUS[FORM_STATUS.DRAFT]),
+          )}
         </AppText>
       </View>
 
@@ -55,9 +57,9 @@ const StatusBadges: React.FC<{
           size={getScaleSize(12)}
           color={
             COLORS[
-            fromReview
-              ? FORM_STATUS.AWAITING_SIGNATURE
-              : requestData?.formStatus
+              fromReview
+                ? FORM_STATUS.AWAITING_SIGNATURE
+                : requestData?.formStatus
             ]
           }
           font={FONTS.Inter.SemiBold}
@@ -103,8 +105,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             font={FONTS.Inter.Regular}
             numberOfLines={1}
           >
-            {serviceName} • ID #
-            {(requestData?.requestId) || ''}
+            {serviceName} • ID #{requestData?.requestId || ''}
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>
@@ -171,17 +172,17 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',       // badges wrap to next line instead of clipping
+    flexWrap: 'wrap', // badges wrap to next line instead of clipping
     gap: getScaleSize(8),
     marginTop: getScaleSize(4),
   },
   statusBadge: {
     flexDirection: 'row',
-    flexShrink: 1,          // shrink if not enough space before wrapping
+    flexShrink: 1, // shrink if not enough space before wrapping
     gap: getScaleSize(4),
     alignItems: 'center',
   },
   statusValue: {
-    flexShrink: 1,          // value text truncates gracefully if truly tight
+    flexShrink: 1, // value text truncates gracefully if truly tight
   },
 });

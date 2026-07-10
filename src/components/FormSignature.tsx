@@ -194,7 +194,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       } else {
         // result.error is a friendly message already
         console.log('error', result);
-        SHOW_TOAST(result.error, 'error');
+        // SHOW_TOAST(result.error, 'error');
         // Alert.alert('Authentication failed', result.error ?? 'Please try again');
       }
     }
@@ -332,6 +332,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F8F8F8,
     borderRadius: getScaleSize(22),
     borderWidth: 1,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
     borderColor: COLORS._E7E7E7,
     paddingVertical: getScaleSize(24),
     paddingHorizontal: getScaleSize(18),

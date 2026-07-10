@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
   header: {
     paddingBottom: getScaleSize(14),
     backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEF',
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   searchWrapper: {
     marginTop: 12,
@@ -390,6 +390,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    elevation: 5,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   cardLeft: {
     flexDirection: 'row',

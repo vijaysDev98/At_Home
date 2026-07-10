@@ -11,6 +11,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import moment from 'moment';
 
@@ -246,7 +247,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 return ne;
               });
             }
-          } catch { }
+          } catch {}
           return next;
         });
       } else {
@@ -826,6 +827,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
   sectionHeader: {

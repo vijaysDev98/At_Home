@@ -5,6 +5,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
@@ -30,8 +31,7 @@ const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
-  console.log("data route", route.params);
-
+  console.log('data route', route.params);
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
@@ -60,18 +60,21 @@ const ServiceCompletedScreen: React.FC = () => {
   };
 
   const patientName = requestData?.patientId
-    ? `${requestData?.patientId?.fName || ''} ${requestData?.patientId?.lName || ''
-    }`
+    ? `${requestData?.patientId?.fName || ''} ${
+        requestData?.patientId?.lName || ''
+      }`
     : '-';
 
   const providerName = requestData?.assignedProviderId
-    ? `${requestData?.assignedProviderId?.fName || ''} ${requestData?.assignedProviderId?.lName || ''
-    }`
+    ? `${requestData?.assignedProviderId?.fName || ''} ${
+        requestData?.assignedProviderId?.lName || ''
+      }`
     : '-';
 
   const doctorName = requestData?.doctorId
-    ? `${requestData?.doctorId?.fName || ''} ${requestData?.doctorId?.lName || ''
-    }`
+    ? `${requestData?.doctorId?.fName || ''} ${
+        requestData?.doctorId?.lName || ''
+      }`
     : '-';
 
   const completedDate = requestData?.updatedAt
@@ -85,7 +88,6 @@ const ServiceCompletedScreen: React.FC = () => {
     : '-';
 
   const weight = requestData?.patientId?.weight || '-';
-
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -286,7 +288,9 @@ const ServiceCompletedScreen: React.FC = () => {
             <View style={styles.vitalsRow}>
               <VitalsItem
                 label={t(STRING.gender)}
-                value={capitalizeFirstLetter(requestData?.patientId?.gender) || '-'}
+                value={
+                  capitalizeFirstLetter(requestData?.patientId?.gender) || '-'
+                }
               />
               <VitalsItem label={t(STRING.weight)} value={`${weight} kg`} />
             </View>
@@ -329,7 +333,9 @@ const ServiceCompletedScreen: React.FC = () => {
             style={styles.actionBtnSecondary}
             onPress={async () => {
               if (requestData?.signedPdfUrl) {
-                await downloadPdfFromUrl(API_BASE_URL + requestData?.signedPdfUrl);
+                await downloadPdfFromUrl(
+                  API_BASE_URL + requestData?.signedPdfUrl,
+                );
               }
             }}
           >
@@ -392,11 +398,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(12),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-    elevation: 1,
   },
   backBtn: {
     width: getScaleSize(32),
@@ -446,11 +447,11 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
     borderRadius: getScaleSize(16),
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
+    elevation: 4,
   },
   successTopBar: {
     height: 8,
@@ -523,11 +524,11 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
     borderRadius: getScaleSize(16),
     padding: getScaleSize(17),
-    shadowColor: '#000',
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
+    elevation: 4,
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -655,6 +656,11 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(12),
     height: getScaleSize(72),
     gap: getScaleSize(6),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
+    elevation: 4,
   },
   actionIcon: {
     width: getScaleSize(16),

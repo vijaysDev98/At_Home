@@ -88,7 +88,7 @@ const SecurityAlertModal: React.FC<SecurityAlertModalProps> = ({
                 color={COLORS.white}
                 align="center"
               >
-                {t(STRING.stillProceed)}
+                {t(STRING.proceedAnyWay)}
               </AppText>
             </TouchableOpacity>
           </View>

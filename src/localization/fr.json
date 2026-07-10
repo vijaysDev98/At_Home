@@ -437,7 +437,7 @@
   "To be carried out at home by a home care nurse (RN), every day, including Sundays and public holidays, for PCA morphine administration.": "À réaliser à domicile par un infirmier diplômé d'État (IDE), tous les jours, y compris les dimanches et jours fériés, pour l'administration de morphine par PCA.",
   "Prescription Context": "Contexte de la prescription",
   "Forms For": "Formulaires pour",
-  "Enter forms for": "Saisissez les formulaires pour",
+  "Enter Details": "Saisissez les formulaires pour",
   "Done At": "Fait à",
   "Enter done at": "Saisissez fait à",
   "Enter prescription date": "Saisissez la date de prescription",
@@ -716,6 +716,7 @@
   "Available To Claim": "Disponible à réclamer",
   "Your session has expired. Please log in again.": "Votre session a expiré. Veuillez vous reconnecter.",
   "Security Setup Needed": "Configuration de sécurité requise",
-  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.": "Aucune donnée biométrique enregistrée et aucun code d'accès défini sur l'appareil. Veuillez configurer un verrouillage d'écran (Face ID, empreinte digitale ou code d'accès) dans les paramètres de votre appareil pour une signature sécurisée, ou choisissez Continuer quand même sans cela.",
-  "Still Proceed": "Continuer quand même"
+  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.": "Aucune donnée biométrique n'est enregistrée et aucun code d'accès n'est configuré sur l'appareil. Veuillez configurer un verrouillage d'écran (Face ID, empreinte digitale ou code d'accès) dans les paramètres de votre appareil pour une signature sécurisée, ou choisissez Continuer quand même pour poursuivre sans cette protection.",
+  "Proceed Anyway": "Continuer quand même",
+  "See All": "Tout voir"
 }

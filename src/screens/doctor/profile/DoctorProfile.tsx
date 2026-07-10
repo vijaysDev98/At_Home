@@ -555,7 +555,7 @@ const DoctorProfile: React.FC = () => {
 const styles = StyleSheet.create({
   settingDivider: {
     height: 1,
-    backgroundColor: COLORS._E5E7EB,
+    backgroundColor: COLORS._EFEFEF,
     marginLeft: getScaleSize(30),
   },
   settingRow: {
@@ -633,8 +633,8 @@ const styles = StyleSheet.create({
     paddingVertical: getScaleSize(24),
     paddingHorizontal: getScaleSize(20),
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS._E5E7EB,
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   avatarWrap: {
     width: getScaleSize(96),
@@ -697,11 +697,12 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(16),
     padding: getScaleSize(16),
     borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 8,
+    elevation: 3,
     gap: getScaleSize(12),
   },
   sectionLabel: {
@@ -906,7 +907,12 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(8),
     backgroundColor: COLORS._F8F9FA,
     borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
     marginTop: getScaleSize(8),
   },
   editBtnIcon: {

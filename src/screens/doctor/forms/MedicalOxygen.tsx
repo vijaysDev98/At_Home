@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
   TextInput,
+  Platform,
 } from 'react-native';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
@@ -73,7 +74,10 @@ export interface MedicalOxygenRef {
 }
 
 const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
-  ({ serviceId = '', initialData, patient, readOnly = false, prescriber }, ref) => {
+  (
+    { serviceId = '', initialData, patient, readOnly = false, prescriber },
+    ref,
+  ) => {
     const dispatch = useDispatch();
     const locale = useSelector((state: any) => state.language.currentLanguage);
     const { t } = useTranslation();
@@ -117,9 +121,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
       // Prescriber Identification
       prescriber_last_name: prescriberData?.lName || '',
       prescriber_first_name: prescriberData?.fName || '',
-      prescriber_phone: getCountryCode(prescriberData?.country) +
-        ' ' +
-        prescriberData?.phoneNumber || '',
+      prescriber_phone:
+        getCountryCode(prescriberData?.country) +
+          ' ' +
+          prescriberData?.phoneNumber || '',
       rpps_id: prescriberData?.rppsNumber || '',
 
       // Facility Information
@@ -196,7 +201,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                 return ne;
               });
             }
-          } catch { }
+          } catch {}
           return next;
         });
       } else {
@@ -455,7 +460,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
               <AppCheckBox
                 disabled={readOnly}
-                value={state.ambulatory_cylinder === false && state.ambulatory_cylinder !== null}
+                value={
+                  state.ambulatory_cylinder === false &&
+                  state.ambulatory_cylinder !== null
+                }
                 onValueChange={value =>
                   setFormState({ ambulatory_cylinder: value ? false : null })
                 }
@@ -575,7 +583,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
               <AppCheckBox
                 disabled={readOnly}
-                value={state.humidifier_required === false && state.humidifier_required !== null}
+                value={
+                  state.humidifier_required === false &&
+                  state.humidifier_required !== null
+                }
                 onValueChange={value =>
                   setFormState({ humidifier_required: value ? false : null })
                 }
@@ -662,9 +673,9 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             </AppText>
 
             <AppText style={styles.instructionText}>
-              {
-                t(STRING.IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns)
-              }
+              {t(
+                STRING.IfOxygenComesIntoContactWithAFlameOrCombustibleMaterialThereIsARiskOfExplosionFireAndOrSeriousBurns,
+              )}
             </AppText>
 
             <AppText style={styles.instructionText}>
@@ -684,9 +695,9 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
             </AppText>
 
             <AppText style={styles.instructionText}>
-              {
-                t(STRING.NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands)
-              }
+              {t(
+                STRING.NEVERapplyGreasyOintmentToTheFaceAndNeverHandleTheEquipmentWithGreasyHands,
+              )}
             </AppText>
 
             <AppText style={styles.instructionText}>
@@ -722,7 +733,10 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
               <AppCheckBox
                 disabled={readOnly}
-                value={state.palliative_care === false && state.palliative_care !== null}
+                value={
+                  state.palliative_care === false &&
+                  state.palliative_care !== null
+                }
                 onValueChange={value =>
                   setFormState({ palliative_care: value ? false : null })
                 }
@@ -730,7 +744,6 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
               />
             </View>
           </View>
-
 
           {/* <FormSignature readOnly={readOnly} /> */}
         </KeyboardAwareScrollView>
@@ -741,7 +754,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}
           modal
-          theme='light'
+          theme="light"
           open={open}
           date={date}
           mode="date"
@@ -790,6 +803,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
 

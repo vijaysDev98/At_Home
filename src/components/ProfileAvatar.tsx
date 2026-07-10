@@ -59,6 +59,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
       justifyContent: 'center',
       alignItems: 'center',
       overflow: 'hidden',
+      borderWidth: 0.5,
+      borderColor: COLORS._1E293B80,
     },
     image: {
       width: '100%',

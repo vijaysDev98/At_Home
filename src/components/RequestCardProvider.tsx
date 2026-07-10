@@ -40,8 +40,8 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
   requestId,
   formStatus,
   buttonText,
-  onButtonPress = () => { },
-  onLeftButtonPress = () => { },
+  onButtonPress = () => {},
+  onLeftButtonPress = () => {},
   onPress,
 }) => {
   const { t } = useTranslation();
@@ -184,6 +184,11 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(16),
     padding: getScaleSize(16),
     backgroundColor: COLORS.white,
+    elevation: 5,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   // Request header row
   requestHeaderRow: {

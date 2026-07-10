@@ -82,12 +82,19 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   let role: string = profileData?.roles?.[0] || '';
   // console.log(profileData);
 
-  let serviceIDs = role === ROLES.DOCTOR ? null : profileData?.assignedServices?.map((service: any) => service.id);
+  let serviceIDs =
+    role === ROLES.DOCTOR
+      ? null
+      : profileData?.assignedServices?.map((service: any) => service.id);
 
   const fetchServices = async () => {
     try {
       setIsLoading(true);
-      const response: any = await getServicesService(1, 20, serviceIDs || undefined);
+      const response: any = await getServicesService(
+        1,
+        20,
+        serviceIDs || undefined,
+      );
 
       if (response?.status && response?.code === 200) {
         const list = response.data.data.services || [];
@@ -183,6 +190,9 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                           style={{
                             height: getScaleSize(40),
                             width: getScaleSize(40),
+                            borderWidth: 0.8,
+                            borderColor: COLORS._1E293B80,
+                            borderRadius: 40,
                           }}
                         />
                         <View
@@ -208,7 +218,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                         size={getScaleSize(12)}
                         font={FONTS.Inter.Regular}
                         color={COLORS._6F767E}
-                      // numberOfLines={3}
+                        // numberOfLines={3}
                       >
                         {t(service.description)}
                       </AppText>
@@ -426,7 +436,7 @@ const styles = StyleSheet.create({
   crossIcon: {
     width: getScaleSize(15),
     height: getScaleSize(15),
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
   bottomButtonContainer: {
     backgroundColor: COLORS.white,

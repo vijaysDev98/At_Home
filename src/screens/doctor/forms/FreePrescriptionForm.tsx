@@ -8,6 +8,7 @@ import React, {
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -107,9 +108,10 @@ const FreePrescriptionForm = forwardRef<
     // Prescriber Identification
     prescriber_last_name: prescriberData?.lName || '',
     prescriber_first_name: prescriberData?.fName || '',
-    prescriber_phone: getCountryCode(prescriberData?.country) +
-      ' ' +
-      prescriberData?.phoneNumber || '',
+    prescriber_phone:
+      getCountryCode(prescriberData?.country) +
+        ' ' +
+        prescriberData?.phoneNumber || '',
     rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
@@ -177,7 +179,7 @@ const FreePrescriptionForm = forwardRef<
               return ne;
             });
           }
-        } catch { }
+        } catch {}
         return next;
       });
     } else {
@@ -389,7 +391,7 @@ const FreePrescriptionForm = forwardRef<
           setState={setFormState}
         />
 
-        <View style={[styles.card, { elevation: 4 }]}>
+        <View style={[styles.card]}>
           {renderSectionHeader(t(STRING.additionalNotes))}
           <Input
             isLocked={readOnly}
@@ -432,6 +434,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',

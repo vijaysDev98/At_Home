@@ -83,8 +83,12 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const isNewRequest = !initialData && !requestStatus;
   const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
 
-  const leftButtonLabel = isNewRequest ? t(STRING.saveAsDraft) : t(STRING.saveProgress);
-  const rightButtonLabel = isSubmitted ? t(STRING.updateAndSign) : t(STRING.submitRequest);
+  const leftButtonLabel = isNewRequest
+    ? t(STRING.saveAsDraft)
+    : t(STRING.saveProgress);
+  const rightButtonLabel = isSubmitted
+    ? t(STRING.updateAndSign)
+    : t(STRING.submitRequest);
 
   // Button handlers - call the form's methods via ref
   const handleLeftButtonPress = async () => {
@@ -125,7 +129,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               size={getScaleSize(16)}
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
-              align='center'
+              align="center"
             >
               {t(role === ROLES.PROVIDER ? STRING.step4Of4 : STRING.step3Of3)}
             </AppText>
@@ -145,6 +149,8 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 paddingVertical: getScaleSize(18),
                 backgroundColor: COLORS.white,
                 paddingHorizontal: getScaleSize(16),
+                borderBottomWidth: 1.5,
+                borderColor: COLORS._EFEFEF,
               }}
             >
               <RequestSummaryCard
@@ -156,11 +162,11 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                 onEditPatient={() =>
                   NavigationService.navigate(SCREENS.ADD_PATIENT, { patient })
                 }
-              // rightContent={
-              //   <View style={{ flex: 1 }}>
-              //     {/* This will be handled by a context or global state */}
-              //   </View>
-              // }
+                // rightContent={
+                //   <View style={{ flex: 1 }}>
+                //     {/* This will be handled by a context or global state */}
+                //   </View>
+                // }
               />
             </View>
             <View>
@@ -194,7 +200,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
               // numberOfLines={1}
-              align='center'
+              align="center"
             >
               {leftButtonLabel}
             </AppText>
@@ -251,7 +257,7 @@ const styles = StyleSheet.create({
   crossIcon: {
     width: getScaleSize(15),
     height: getScaleSize(15),
-    resizeMode: 'contain'
+    resizeMode: 'contain',
   },
 
   headerCenter: {

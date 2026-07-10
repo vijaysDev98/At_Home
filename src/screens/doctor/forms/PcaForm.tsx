@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
@@ -59,7 +59,13 @@ export interface PcaFormRef {
 }
 
 const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
-  const { serviceId, initialData, patient, readOnly = false, prescriber } = props;
+  const {
+    serviceId,
+    initialData,
+    patient,
+    readOnly = false,
+    prescriber,
+  } = props;
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
@@ -103,9 +109,10 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
     // Prescriber Identification (Auto-filled from doctor profile)
     prescriber_last_name: prescriberData?.lName || '',
     prescriber_first_name: prescriberData?.fName || '',
-    prescriber_phone: getCountryCode(prescriberData?.country) +
-      ' ' +
-      prescriberData?.phoneNumber || '',
+    prescriber_phone:
+      getCountryCode(prescriberData?.country) +
+        ' ' +
+        prescriberData?.phoneNumber || '',
     rpps_id: prescriberData?.rppsNumber || '',
 
     // Facility Information
@@ -191,7 +198,7 @@ const PcaForm = forwardRef<PcaFormRef, PcaFormProps>((props, ref) => {
               return ne;
             });
           }
-        } catch { }
+        } catch {}
         return next;
       });
     } else {
@@ -827,6 +834,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
 

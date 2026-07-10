@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
@@ -110,9 +111,10 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
 
       prescriber_last_name: prescriberData?.lName || '',
       prescriber_first_name: prescriberData?.fName || '',
-      prescriber_phone: getCountryCode(prescriberData?.country) +
-        ' ' +
-        prescriberData?.phoneNumber || '',
+      prescriber_phone:
+        getCountryCode(prescriberData?.country) +
+          ' ' +
+          prescriberData?.phoneNumber || '',
       rpps_id: prescriberData?.rppsNumber || '',
 
       hospital_name: prescriberData?.facilityName || '',
@@ -238,7 +240,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
                 return ne;
               });
             }
-          } catch { }
+          } catch {}
           return next;
         });
       } else {
@@ -315,9 +317,9 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
             key: keyof typeof nutrient;
             label: string;
           }> = [
-              { key: 'volume_ml', label: t(STRING.volumeMl) },
-              { key: 'times_per_day', label: t(STRING.timesPerDay) },
-            ];
+            { key: 'volume_ml', label: t(STRING.volumeMl) },
+            { key: 'times_per_day', label: t(STRING.timesPerDay) },
+          ];
           numericFields.forEach(f => {
             const val = (nutrient as any)[f.key];
             if (
@@ -930,6 +932,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
   sectionHeader: {
@@ -1017,7 +1023,7 @@ const styles = StyleSheet.create({
   nutrientSmallInputRoot: {
     flex: 1,
     paddingHorizontal: 0,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   nutrientNameBox: {
     // height: getScaleSize(42),

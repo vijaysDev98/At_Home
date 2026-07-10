@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import AppText from './AppText';
 import Input from './Input';
 import { getScaleSize } from '../utils/scaleSize';
@@ -13,11 +13,9 @@ export interface FormPrescriptionContextSectionProps {
   readOnly?: boolean;
 }
 
-const FormPrescriptionContextSection: React.FC<FormPrescriptionContextSectionProps> = ({
-  state,
-  setState,
-  readOnly = false,
-}) => {
+const FormPrescriptionContextSection: React.FC<
+  FormPrescriptionContextSectionProps
+> = ({ state, setState, readOnly = false }) => {
   const { t } = useTranslation();
 
   const renderSectionHeader = (title: string) => (
@@ -40,7 +38,7 @@ const FormPrescriptionContextSection: React.FC<FormPrescriptionContextSectionPro
         label={t(STRING.formsFor)}
         value={state.forms_for}
         onChangeText={value => setState({ forms_for: value })}
-        placeholder={t(STRING.enterFormsFor)}
+        placeholder={t(STRING.enterDetails)}
         style={styles.inputField}
       />
     </View>
@@ -52,6 +50,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
     // marginBottom: getScaleSize(16),
   },

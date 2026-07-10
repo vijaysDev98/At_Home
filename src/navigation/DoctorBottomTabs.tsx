@@ -7,7 +7,14 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import HomeScreen from '../screens/doctor/home/HomeScreen';
 import PatientsScreen from '../screens/doctor/patients/PatientsScreen';
 import CreateRequest from '../screens/doctor/createRequest/createRequest';
@@ -180,7 +187,7 @@ export default DoctorBottomTabs;
 const styles = StyleSheet.create({
   barContainer: {
     backgroundColor: COLORS.white,
-    borderTopWidth: 1,
+    borderTopWidth: 1.5,
     borderTopColor: COLORS._EFEFEF,
   },
   icon: {
@@ -225,8 +232,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: Platform.OS == 'android' ? 0.1 : 0.3,
+    shadowRadius: 3,
     elevation: 4,
     bottom: getScaleSize(8),
   },

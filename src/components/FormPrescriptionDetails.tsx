@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import moment from 'moment';
 
 import DatePicker from 'react-native-date-picker';
@@ -99,7 +105,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
         modal
-        theme='light'
+        theme="light"
         mode="date"
         open={open}
         date={date}
@@ -154,6 +160,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: getScaleSize(17),
     borderRadius: getScaleSize(16),
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 3,
     elevation: 4,
   },
   sectionHeader: {

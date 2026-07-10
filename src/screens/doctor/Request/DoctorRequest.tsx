@@ -413,6 +413,8 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: getScaleSize(10),
     paddingHorizontal: getScaleSize(20),
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   searchInput: {
     paddingHorizontal: 0,

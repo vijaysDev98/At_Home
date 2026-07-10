@@ -7,7 +7,14 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { COLORS, FONTS } from '../utils';
 import { DOCTOR_TAB_SCREENS, PROVIDER_TAB_SCREENS } from './routes';
 import ProviderHome from '../screens/provider/home/providerhome';
@@ -185,7 +192,7 @@ export default ProviderBottomTabs;
 const styles = StyleSheet.create({
   barContainer: {
     backgroundColor: COLORS.white,
-    borderTopWidth: 0.5,
+    borderTopWidth: 1.5,
     borderTopColor: COLORS._EFEFEF,
   },
   icon: {
@@ -211,8 +218,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: Platform.OS == 'android' ? 0.1 : 0.3,
+    shadowRadius: 3,
     elevation: 4,
     bottom: getScaleSize(8),
   },

@@ -238,9 +238,9 @@ const ProviderHome: React.FC = () => {
           {/* Overview Section */}
           <View style={styles.sectionHeader}>
             <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.SemiBold}
-              color="#374151"
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
             >
               {t(STRING.overview)}
             </AppText>
@@ -344,9 +344,9 @@ const ProviderHome: React.FC = () => {
           {/* Recent Queue Section */}
           <View style={[styles.sectionHeader, { marginTop: getScaleSize(24) }]}>
             <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.SemiBold}
-              color="#374151"
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
             >
               {t(STRING.recentQueue)}
             </AppText>
@@ -481,8 +481,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(24),
     paddingVertical: getScaleSize(16),
     backgroundColor: COLORS.white,
-    borderBottomWidth: 0.5,
-    borderColor: COLORS._EFEFEF,
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -502,6 +502,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._F8F9FA,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS._EFEFEF,
   },
   notificationIcon: {
     width: getScaleSize(16),

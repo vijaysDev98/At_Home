@@ -439,7 +439,7 @@
   "To be carried out at home by a home care nurse (RN), every day, including Sundays and public holidays, for PCA morphine administration.": "To be carried out at home by a home care nurse (RN), every day, including Sundays and public holidays, for PCA morphine administration.",
   "Prescription Context": "Prescription Context",
   "Forms For": "Forms For",
-  "Enter forms for": "Enter forms for",
+  "Enter Details": "Enter Details",
   "Done At": "Done At",
   "Enter done at": "Enter done at",
   "Enter prescription date": "Enter prescription date",
@@ -718,6 +718,7 @@
   "Available To Claim": "Available To Claim",
   "Your session has expired. Please log in again.": "Your session has expired. Please log in again.",
   "Security Setup Needed": "Security Setup Needed",
-  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.": "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Still Proceed to continue without it.",
-  "Still Proceed": "Still Proceed"
+  "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.": "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.",
+  "Proceed Anyway": "Proceed Anyway",
+  "See All": "See All"
 }

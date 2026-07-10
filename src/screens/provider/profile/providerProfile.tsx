@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { COLORS, FONTS } from '../../../utils';
 import {
@@ -134,7 +135,7 @@ const ProviderProfile: React.FC = () => {
           >
             {t(STRING.profile)}
           </AppText>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => {
               NavigationService.navigate(SCREENS.EDIT_PROVIDER_PROFILE);
             }}
@@ -147,7 +148,7 @@ const ProviderProfile: React.FC = () => {
             >
               {t(STRING.edit)}
             </AppText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <ScrollView
@@ -191,6 +192,22 @@ const ProviderProfile: React.FC = () => {
             >
               {capitalizeFirstLetter(providerName || '')}
             </AppText>
+            <TouchableOpacity
+              style={styles.editBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                NavigationService.navigate(SCREENS.EDIT_PROVIDER_PROFILE);
+              }}
+            >
+              <Image source={IMAGES.ic_edit} style={styles.editBtnIcon} />
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._526674}
+              >
+                {t(STRING.editProfile)}
+              </AppText>
+            </TouchableOpacity>
             {/* <AppText
               size={getScaleSize(13)}
               font={FONTS.Inter.Medium}
@@ -213,12 +230,12 @@ const ProviderProfile: React.FC = () => {
           {/* Contact Information */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeaderRow}>
-              {/* <View style={styles.sectionIconWrap}> */}
-              <Image
-                source={IMAGES.ic_contactInfo}
-                style={styles.sectionIcon}
-              />
-              {/* </View> */}
+              <View style={styles.sectionIconWrap}>
+                <Image
+                  source={IMAGES.ic_contactInfo}
+                  style={styles.sectionIcon}
+                />
+              </View>
               <AppText
                 size={getScaleSize(15)}
                 font={FONTS.Inter.Bold}
@@ -262,9 +279,12 @@ const ProviderProfile: React.FC = () => {
             <View style={styles.sectionCard}>
               <View style={styles.servicesHeaderRow}>
                 <View style={styles.servicesHeaderLeft}>
-                  {/* <View style={styles.sectionIconWrap}> */}
-                  <Image source={IMAGES.ic_medKit} style={styles.sectionIcon} />
-                  {/* </View> */}
+                  <View style={styles.sectionIconWrap}>
+                    <Image
+                      source={IMAGES.ic_medKit}
+                      style={styles.sectionIcon}
+                    />
+                  </View>
                   <AppText
                     size={getScaleSize(15)}
                     font={FONTS.Inter.Bold}
@@ -273,6 +293,7 @@ const ProviderProfile: React.FC = () => {
                     {t(STRING.eligibleServices)}
                   </AppText>
                 </View>
+
                 <View style={styles.activeBadge}>
                   <AppText
                     size={getScaleSize(12)}
@@ -283,25 +304,29 @@ const ProviderProfile: React.FC = () => {
                   </AppText>
                 </View>
               </View>
+              <View style={styles.divider} />
               {/* <View style={styles.divider} /> */}
               {providerAssignedServices.map((item, idx, arr) => (
                 <View key={item.title}>
                   <View style={styles.serviceItem}>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                    >
-                      {t(item.serviceName)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._6F767E}
-                      style={{ marginTop: getScaleSize(4) }}
-                    >
-                      {t(item.description)}
-                    </AppText>
+                    <View style={styles.serviceAccent} />
+                    <View style={styles.serviceItemBody}>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                      >
+                        {t(item.serviceName)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Medium}
+                        color={COLORS._6F767E}
+                        style={{ marginTop: getScaleSize(4) }}
+                      >
+                        {t(item.description)}
+                      </AppText>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -310,9 +335,9 @@ const ProviderProfile: React.FC = () => {
 
           <View style={styles.sectionCard}>
             <View style={styles.servicesHeaderLeft}>
-              {/* <View style={styles.sectionIconWrap}> */}
-              <Image source={IMAGES.card} style={styles.sectionIcon} />
-              {/* </View> */}
+              <View style={styles.sectionIconWrap}>
+                <Image source={IMAGES.card} style={styles.sectionIcon} />
+              </View>
               <AppText
                 size={getScaleSize(15)}
                 font={FONTS.Inter.Bold}
@@ -467,6 +492,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: getScaleSize(8),
   },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(8),
+    backgroundColor: COLORS._F8F9FA,
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+    marginTop: getScaleSize(8),
+  },
+  editBtnIcon: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    tintColor: COLORS._526674,
+  },
+  serviceAccent: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: COLORS._526674,
+    marginRight: getScaleSize(8),
+  },
+  serviceItemBody: {
+    flex: 1,
+  },
   avatarWrap: {
     width: getScaleSize(96),
     height: getScaleSize(96),
@@ -542,10 +598,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(20),
     paddingVertical: getScaleSize(14),
     backgroundColor: COLORS.white,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS._EFEFEF,
-    // borderWidth: 1,
-    borderColor: COLORS._F3F4F6,
   },
   scroll: {
     // paddingHorizontal: getScaleSize(16),
@@ -558,6 +610,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: getScaleSize(24),
     gap: getScaleSize(6),
+    borderBottomWidth: 1.5,
+    borderBottomColor: COLORS._EFEFEF,
   },
   avatar: {
     width: getScaleSize(86),
@@ -579,9 +633,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#22c55e',
   },
   sectionCard: {
+    marginHorizontal: getScaleSize(15),
+    marginTop: getScaleSize(16),
     backgroundColor: COLORS.white,
-    paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(16),
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(16),
+    borderWidth: 1,
+    borderColor: COLORS._EFEFEF,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: Platform.OS == 'android' ? 0.03 : 0.15,
+    shadowRadius: 8,
+    elevation: 3,
     gap: getScaleSize(12),
   },
   sectionHeaderRow: {
@@ -623,12 +686,14 @@ const styles = StyleSheet.create({
     gap: getScaleSize(4),
   },
   serviceItem: {
+    flexDirection: 'row',
     paddingVertical: getScaleSize(14),
     backgroundColor: COLORS._F8F9FA,
     borderRadius: getScaleSize(12),
     paddingHorizontal: getScaleSize(13),
     borderWidth: 1,
     borderColor: COLORS._F3F4F6,
+    overflow: 'hidden',
   },
   itemDivider: {
     height: 1,
