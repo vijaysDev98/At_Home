@@ -853,4 +853,9 @@ export const STRING = {
     'No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.',
   proceedAnyWay: 'Proceed Anyway',
   seeAll: 'See All',
+  authorizeSignature: 'Authorize Signature',
+  confirmToSignThisDocument: 'Confirm to sign this document',
+  usePasscode: 'Use Passcode',
+  usePin: 'Use PIN',
+  authFailed: 'Authentication failed'
 };

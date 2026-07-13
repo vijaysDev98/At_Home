@@ -41,6 +41,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   onSigningStart,
   onSigningEnd,
 }) => {
+
+  const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
+  const { t } = useTranslation();
+  const requestId = requestData?._id || requestData?.id;
+  const dispatch = useDispatch();
   const {
     authenticate,
     isAuthenticating,
@@ -48,13 +53,8 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     biometryType,
     checkAvailability,
   } = useBiometricAuth({
-    title: 'Authorize Signature',
+    title: t(STRING.authorizeSignature),
   });
-  const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
-  const { t } = useTranslation();
-  const requestId = requestData?._id || requestData?.id;
-  const dispatch = useDispatch();
-
   if (!readOnly || readOnly === null) {
     return null;
   }
@@ -184,7 +184,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       setShowSecurityAlert(true);
     } else {
       const result = await authenticate({
-        reason: 'Confirm to sign this document',
+        reason: t(STRING.confirmToSignThisDocument),
       });
 
       if (result.success) {
@@ -286,11 +286,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           >
             {capitalizeFirstLetter(
               requestData?.doctorId?.fullName ||
-                capitalizeFirstLetter(
-                  requestData?.doctorId?.fName +
-                    ' ' +
-                    requestData?.doctorId?.lName,
-                ),
+              capitalizeFirstLetter(
+                requestData?.doctorId?.fName +
+                ' ' +
+                requestData?.doctorId?.lName,
+              ),
             )}
           </AppText>
 

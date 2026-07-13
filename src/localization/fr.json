@@ -718,5 +718,10 @@
   "Security Setup Needed": "Configuration de sécurité requise",
   "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.": "Aucune donnée biométrique n'est enregistrée et aucun code d'accès n'est configuré sur l'appareil. Veuillez configurer un verrouillage d'écran (Face ID, empreinte digitale ou code d'accès) dans les paramètres de votre appareil pour une signature sécurisée, ou choisissez Continuer quand même pour poursuivre sans cette protection.",
   "Proceed Anyway": "Continuer quand même",
-  "See All": "Tout voir"
+  "See All": "Tout voir",
+  "Authorize Signature": "Autoriser la signature",
+  "Confirm to sign this document": "Confirmer pour signer ce document",
+  "Use Passcode": "Utiliser le code d'accès",
+  "Use PIN": "Utiliser le code PIN",
+  "Authentication failed": "Échec de l'authentification"
 }

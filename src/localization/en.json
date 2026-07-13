@@ -720,5 +720,10 @@
   "Security Setup Needed": "Security Setup Needed",
   "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.": "No biometrics enrolled and no device passcode set. Please set up a screen lock (Face ID, fingerprint, or passcode) in your device settings for secure signing, or choose Proceed Anyway to continue without it.",
   "Proceed Anyway": "Proceed Anyway",
-  "See All": "See All"
+  "See All": "See All",
+  "Authorize Signature": "Authorize Signature",
+  "Confirm to sign this document": "Confirm to sign this document",
+  "Use Passcode": "Use Passcode",
+  "Use PIN": "Use PIN",
+  "Authentication failed": "Authentication failed"
 }

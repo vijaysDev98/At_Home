@@ -112,7 +112,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
           const label =
             route.name === DOCTOR_TAB_SCREENS.DOCTOR_REQUEST
-              ? t(STRING.request)
+              ? t(STRING.requests)
               : descriptors[route.key]?.options?.tabBarLabel ?? route.name;
           const icon = iconForRoute(route.name as keyof BottomTabParamList);
 

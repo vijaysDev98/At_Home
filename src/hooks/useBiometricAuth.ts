@@ -4,6 +4,8 @@ import {
   isSensorAvailable,
   authenticateWithOptions,
 } from '@sbaiahmed1/react-native-biometrics';
+import { useTranslation } from 'react-i18next';
+import { STRING } from '../constant';
 
 /**
  * useBiometricAuth
@@ -70,6 +72,7 @@ export function useBiometricAuth(defaultOptions: UseBiometricAuthOptions = {}) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [biometryType, setBiometryType] = useState<string | undefined>(undefined);
+  const { t } = useTranslation();
 
   // avoid double-trigger if the caller taps twice quickly
   const inFlight = useRef(false);
@@ -146,14 +149,14 @@ export function useBiometricAuth(defaultOptions: UseBiometricAuthOptions = {}) {
           subtitle: promptSubtitle,
           description: merged.description,
           cancelLabel: merged.cancelLabel,
-          fallbackLabel: Platform.select({ ios: 'Use Passcode', android: 'Use PIN' }),
+          fallbackLabel: Platform.select({ ios: t(STRING.usePasscode), android: t(STRING.usePin) }),
           allowDeviceCredentials: merged.allowDeviceCredentials,
           disableDeviceFallback: !merged.allowDeviceCredentials,
           returnAuthType: true,
         });
 
         if (!result.success) {
-          setError(result.error ?? 'Authentication failed');
+          setError(result.error ?? t(STRING.authFailed));
           return {
             success: false,
             method: 'none',
