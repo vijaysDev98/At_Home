@@ -68,6 +68,7 @@ import ServiceFormRenderer from './ServiceFormRenderer';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '../../../constant/getRole';
+import { viewSignedPdf } from '../../../hooks/pdfDownloader';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
   RootStackParamList,
@@ -315,6 +316,14 @@ const FormsScreen: React.FC = () => {
           title={t(STRING.medicalForm)}
           isBack={true}
           style={styles.header}
+          isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
+          onViewFormPress={() => {
+            viewSignedPdf(
+              requestData?.signedPdfUrl,
+              undefined,
+              requestData?.requestId || request?.requestId,
+            );
+          }}
         />
         {isFetched && hasError ? (
           <View

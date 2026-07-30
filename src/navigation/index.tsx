@@ -34,6 +34,7 @@ import FormReviewScreen from '../screens/doctor/forms/FormReviewScreen';
 import EditProviderProfile from '../screens/provider/profile/editProviderProfile';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import DoctorList from '../screens/provider/doctorList/DoctorList';
+import PdfViewerScreen from '../screens/common/PdfViewerScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -88,6 +89,12 @@ export type RootStackParamList = {
     duration?: string;
     doctorName?: string;
     completedDate?: string;
+  };
+  PdfViewer: {
+    pdfUrl?: string;
+    signedPdfUrl?: string | null;
+    title?: string;
+    requestId?: string;
   };
 };
 
@@ -229,6 +236,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.DOCTOR_LIST}
           component={DoctorList}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PDF_VIEWER}
+          component={PdfViewerScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

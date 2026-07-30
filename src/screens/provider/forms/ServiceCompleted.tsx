@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
@@ -17,15 +18,16 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import AppText from '../../../components/AppText';
 import NavigationService from '../../../navigation/NavigationService';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
-import { API_BASE_URL } from '../../../api/apiRoutes';
-import HeaderProvider, {
-  openPdfInBrowser,
-} from '../../../components/HeaderProvider';
+import HeaderProvider from '../../../components/HeaderProvider';
 import { AppLoader, ProfileAvatar } from '../../../components';
-import { downloadPdfFromUrl } from '../../../hooks/pdfDownloader';
+import {
+  downloadSignedPdf,
+  viewSignedPdf,
+} from '../../../hooks/pdfDownloader';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import { SHOW_TOAST } from '../../../constant/showToast';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -35,6 +37,7 @@ const ServiceCompletedScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (requestId) {
@@ -88,6 +91,27 @@ const ServiceCompletedScreen: React.FC = () => {
     : '-';
 
   const weight = requestData?.patientId?.weight || '-';
+
+  const pdfRequestId =
+    requestData?.requestId || route?.params?.request?.requestId;
+
+  const handleViewPdf = () => {
+    if (!requestData?.signedPdfUrl) {
+      SHOW_TOAST(t(STRING.failedToLoadPdf), 'error');
+      return;
+    }
+    viewSignedPdf(requestData.signedPdfUrl, undefined, pdfRequestId);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!requestData?.signedPdfUrl || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      await downloadSignedPdf(requestData.signedPdfUrl, pdfRequestId);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -309,11 +333,8 @@ const ServiceCompletedScreen: React.FC = () => {
         <View style={styles.bottomActions}>
           <TouchableOpacity
             style={styles.actionBtnSecondary}
-            onPress={() => {
-              if (requestData?.signedPdfUrl) {
-                openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl);
-              }
-            }}
+            onPress={handleViewPdf}
+            activeOpacity={0.8}
           >
             <Image
               source={IMAGES.serviceViewActionIcon}
@@ -331,18 +352,18 @@ const ServiceCompletedScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.actionBtnSecondary}
-            onPress={async () => {
-              if (requestData?.signedPdfUrl) {
-                await downloadPdfFromUrl(
-                  API_BASE_URL + requestData?.signedPdfUrl,
-                );
-              }
-            }}
+            onPress={handleDownloadPdf}
+            disabled={isDownloading}
+            activeOpacity={0.8}
           >
-            <Image
-              source={IMAGES.serviceDownloadActionIcon}
-              style={styles.actionIcon}
-            />
+            {isDownloading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Image
+                source={IMAGES.serviceDownloadActionIcon}
+                style={styles.actionIcon}
+              />
+            )}
 
             <AppText
               font={FONTS.Inter.SemiBold}

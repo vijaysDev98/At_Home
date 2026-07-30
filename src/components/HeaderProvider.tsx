@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextStyle,
   ViewStyle,
-  Linking,
 } from 'react-native';
 
 import { IMAGES } from '../assets/images';
@@ -19,39 +18,11 @@ import {
   getStatusBadgeColor,
 } from '../constant/RequestStatus';
 import AppButton from './AppButton';
-import InAppBrowser from 'react-native-inappbrowser-reborn';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
 
-export const openPdfInBrowser = async (pdfUrl: string) => {
-  try {
-    const isAvailable = await InAppBrowser.isAvailable();
-
-    if (isAvailable) {
-      await InAppBrowser.open(pdfUrl, {
-        dismissButtonStyle: 'close',
-        preferredBarTintColor: COLORS.white,
-        preferredControlTintColor: COLORS.primary,
-        readerMode: false,
-        animated: true,
-        modalPresentationStyle: 'fullScreen',
-        modalTransitionStyle: 'coverVertical',
-        enableBarCollapsing: false,
-        showTitle: true,
-        toolbarColor: COLORS.white,
-        secondaryToolbarColor: COLORS.white,
-        navigationBarColor: COLORS.white,
-        navigationBarDividerColor: COLORS.slate200,
-        enableDefaultShare: true,
-        forceCloseOnRedirection: false,
-      });
-    } else {
-      Linking.openURL(pdfUrl);
-    }
-  } catch (error) {
-    Linking.openURL(pdfUrl);
-  }
-};
+// Re-export for existing imports; prefer importing from hooks/pdfDownloader
+export { openPdfInBrowser } from '../hooks/pdfDownloader';
 
 const HeaderProvider = ({
   isBack = false,

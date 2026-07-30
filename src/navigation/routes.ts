@@ -27,6 +27,7 @@ export const SCREENS = {
   EDIT_PROVIDER_PROFILE: 'EditProviderProfile',
   ALERTS: "Alerts",
   DOCTOR_LIST: "DoctorList",
+  PDF_VIEWER: 'PdfViewer',
 } as const;
 
 // Doctor Bottom Tab Screen Names

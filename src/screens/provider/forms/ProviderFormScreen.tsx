@@ -43,15 +43,13 @@ import {
 // Import all form components
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import ServiceFormRenderer from '../../doctor/forms/ServiceFormRenderer';
-import HeaderProvider, {
-  openPdfInBrowser,
-} from '../../../components/HeaderProvider';
+import HeaderProvider from '../../../components/HeaderProvider';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { SCREENS } from '../../../navigation/routes';
-import { API_BASE_URL } from '../../../api/apiRoutes';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
 import { ROLES } from '../../../constant/getRole';
+import { viewSignedPdf } from '../../../hooks/pdfDownloader';
 
 export type ProviderFormScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -327,10 +325,14 @@ const ProviderFormScreen: React.FC = () => {
               : t(STRING.updateForm)
           }
           onViewFormPress={() => {
-            openPdfInBrowser(API_BASE_URL + requestData?.signedPdfUrl || '');
+            viewSignedPdf(
+              requestData?.signedPdfUrl,
+              undefined,
+              requestData?.requestId || request?.requestId,
+            );
           }}
           isBack
-          isViewForm={requestData?.status == REQUEST_STATUS.IN_PROGRESS}
+          isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
           formStatus={requestData?.formStatus}
           status={requestData?.status}
           style={

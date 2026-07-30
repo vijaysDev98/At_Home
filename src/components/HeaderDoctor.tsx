@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   TextStyle,
-  ActivityIndicator,
 } from 'react-native';
 import { IMAGES } from '../assets/images';
 import NavigationService from '../navigation/NavigationService';
@@ -16,6 +15,7 @@ import { getScaleSize } from '../utils/scaleSize';
 import { ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import AppButton from './AppButton';
 
 const Header = ({
   isBack = false,
@@ -29,6 +29,8 @@ const Header = ({
   isNotification = false,
   onNotificationPress,
   unreadCount = 0,
+  isViewForm = false,
+  onViewFormPress,
 }: {
   isBack?: boolean;
   title?: String;
@@ -41,6 +43,8 @@ const Header = ({
   isNotification?: boolean;
   onNotificationPress?: () => void;
   unreadCount?: number;
+  isViewForm?: boolean;
+  onViewFormPress?: () => void;
 }) => {
   const { t } = useTranslation();
   return (
@@ -59,17 +63,27 @@ const Header = ({
             />
           </TouchableOpacity>
         )}
-        <View style={titleContainerStyle}>
-          {title ? (
-            <AppText
-              size={getScaleSize(18)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-              style={titleStyle}
-            >
-              {title}
-            </AppText>
-          ) : null}
+        <View style={[styles.titleContainer, titleContainerStyle]}>
+          <View style={styles.titleRow}>
+            {title ? (
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={[styles.title, titleStyle]}
+              >
+                {title}
+              </AppText>
+            ) : null}
+            {isViewForm && (
+              <AppButton
+                style={styles.viewFormBtn}
+                textSize={getScaleSize(10)}
+                onPress={onViewFormPress || (() => {})}
+                title={t(STRING.viewForm)}
+              />
+            )}
+          </View>
           {subTitle ? (
             <AppText
               size={getScaleSize(12)}
@@ -109,6 +123,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(12),
+    flex: 1,
   },
   backBtn: {
     width: 40,
@@ -124,6 +139,27 @@ const styles = StyleSheet.create({
     width: getScaleSize(17),
     height: getScaleSize(15),
     resizeMode: 'contain',
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  title: {
+    flexShrink: 1,
+    marginRight: getScaleSize(8),
+  },
+  viewFormBtn: {
+    height: getScaleSize(28),
+    borderRadius: getScaleSize(6),
+    paddingHorizontal: getScaleSize(10),
+    minWidth: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   notificationBtn: {
     width: 'auto',

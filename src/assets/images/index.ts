@@ -99,4 +99,5 @@ export const IMAGES = {
   completedForm: require('./completedForm.png'),
   returnedForm: require('./returnedForm.png'),
   awaitingSign: require('./awaitingSign.png'),
+  share: require('./share.png'),
 };
