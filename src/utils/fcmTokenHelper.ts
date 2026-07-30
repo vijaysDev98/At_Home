@@ -19,6 +19,15 @@ export const uploadFcmToken = async (token?: string): Promise<boolean> => {
     // Store the token locally
     await Storage.save(Storage.FCM_TOKEN_KEY, fcmToken);
 
+    // updateFcm is an authenticated endpoint. On a fresh install Firebase emits
+    // a token before the user logs in, so skip the upload until a session
+    // exists; the stored token is sent with the login payload instead.
+    const accessToken = await Storage.get(Storage.USER_TOKEN);
+    if (!accessToken) {
+      console.log('Skipping FCM token upload: user is not authenticated');
+      return false;
+    }
+
     const response: any = await API.Instance.post(API.API_ROUTES.updateFcm, {
       fcmToken: fcmToken,
     });

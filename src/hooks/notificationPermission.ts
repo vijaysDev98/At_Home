@@ -68,6 +68,13 @@ export const getFcmToken = async () => {
   try {
     const token = await messaging().getToken();
     console.log('FCM Token:', token);
+
+    // Persist so login can register the device even after logout clears storage,
+    // or when onTokenRefresh never fires because the token is already stable.
+    if (token) {
+      await Storage.save(Storage.FCM_TOKEN_KEY, token);
+    }
+
     return token;
   } catch (error) {
     console.log('Error getting FCM token:', error);

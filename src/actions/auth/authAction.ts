@@ -9,6 +9,28 @@ import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
 import { fetchProfile } from '../profile/profileAction';
+import messaging from '@react-native-firebase/messaging';
+
+// Logout clears storage, so fall back to Firebase to keep the device
+// registered for notifications when logging in again in the same session.
+const resolveFcmToken = async (): Promise<string> => {
+  const storedToken = await Storage.get(Storage.FCM_TOKEN_KEY);
+  if (storedToken) {
+    return storedToken;
+  }
+
+  try {
+    const freshToken = await messaging().getToken();
+    if (freshToken) {
+      await Storage.save(Storage.FCM_TOKEN_KEY, freshToken);
+      return freshToken;
+    }
+  } catch (error) {
+    console.log('Unable to resolve FCM token for login:', error);
+  }
+
+  return 'no token found';
+};
 
 const getUserDataForRedux = (user: any) => {
   if (!user) {
@@ -51,8 +73,7 @@ const persistAuthInStorage = async (user: any) => {
 
 export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
   try {
-    data['fcm_token'] =
-      (await Storage.get(Storage.FCM_TOKEN_KEY)) ?? 'no token found';
+    data['fcm_token'] = await resolveFcmToken();
 
     dispatch(setLoading(true));
     const response: any = await API.Instance.post(API.API_ROUTES.login, data);

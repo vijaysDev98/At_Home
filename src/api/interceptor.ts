@@ -30,6 +30,17 @@ const handleTokenExpiration = async (customMessage?: string) => {
     return;
   }
 
+  // Nothing to expire when the user was never authenticated (e.g. a 401 from a
+  // fresh install or from the login screen). Surfacing a session toast and
+  // resetting navigation here would interrupt the pre-login flow.
+  const [existingToken, existingRefreshToken] = await Promise.all([
+    Storage.get(Storage.USER_TOKEN),
+    Storage.get(Storage.REFRESH_TOKEN),
+  ]);
+  if (!existingToken && !existingRefreshToken) {
+    return;
+  }
+
   isHandlingTokenExpiration = true;
 
   try {

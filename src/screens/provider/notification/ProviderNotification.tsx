@@ -7,14 +7,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
 import Header from '../../../components/HeaderDoctor';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { NotificationItem } from '../../../components/NotificationComponents';
+import {
+  NotificationItem,
+  formatNotificationTime,
+} from '../../../components/NotificationComponents';
 import {
   getNotificationsService,
   markNotificationAsReadService,
@@ -204,7 +206,7 @@ const ProviderNotification: React.FC = () => {
       <NotificationItem
         title={item.title}
         subtitle={item.message}
-        time={moment(item.createdAt).fromNow()}
+        time={formatNotificationTime(item.createdAt)}
         iconSource={getNotificationIcon(item.type)}
         unread={isUnread}
         action={getNotificationAction(item).txt}

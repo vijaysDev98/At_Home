@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import moment from 'moment';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, STRING } from '../../../constant';
@@ -18,7 +17,10 @@ import {
   AppLoader,
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
-import { NotificationItem } from '../../../components/NotificationComponents';
+import {
+  NotificationItem,
+  formatNotificationTime,
+} from '../../../components/NotificationComponents';
 import {
   getNotificationsService,
   markNotificationAsReadService,
@@ -283,7 +285,7 @@ const DoctorNotification: React.FC = () => {
       <NotificationItem
         title={item.title}
         subtitle={item.message}
-        time={moment(item.createdAt).fromNow()}
+        time={formatNotificationTime(item.createdAt)}
         iconSource={getNotificationIcon(
           item.type,
           item.metadata?.submitForReview || false,

@@ -737,6 +737,7 @@ export const STRING = {
   shareFailed: 'Unable to share PDF',
   failedToLoadPdf: 'Failed to load PDF',
   retry: 'Retry',
+  justNow: 'Just now',
   overview: 'Overview',
   inProgress: 'In Progress',
   completedToday: 'Completed Today',

@@ -1,8 +1,22 @@
 import React from 'react';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import moment from 'moment';
+import i18next from 'i18next';
 import { COLORS, FONTS } from '../utils';
 import { AppText, AppButton } from './index';
 import { getScaleSize } from '../utils/scaleSize';
+import { STRING } from '../constant';
+
+/** Compact relative time for notification rows (avoids long "a few seconds ago"). */
+export const formatNotificationTime = (date?: string | Date | null): string => {
+  if (!date) return '';
+  const created = moment(date);
+  if (!created.isValid()) return '';
+  if (moment().diff(created, 'seconds') < 60) {
+    return i18next.t(STRING.justNow);
+  }
+  return created.fromNow();
+};
 
 export const SectionHeader = ({ title }: { title: string }) => (
   <View style={styles.sectionHeaderContainer}>
@@ -69,7 +83,13 @@ export const NotificationItem = ({
           {title}
         </AppText>
         <View style={styles.timeRow}>
-          <AppText size={getScaleSize(11)} color={COLORS._6B7280}>
+          <AppText
+            size={getScaleSize(11)}
+            color={COLORS._6B7280}
+            align="right"
+            numberOfLines={2}
+            style={styles.timeText}
+          >
             {time}
           </AppText>
           {unread && <View style={styles.unreadDot} />}
@@ -127,11 +147,12 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems:'center',
     marginBottom: 4,
   },
   cardTitle: {
     flex: 1,
+    flexShrink: 1,
     marginRight: 12,
   },
   subtitle: {
@@ -141,12 +162,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
+    maxWidth: '42%',
+  },
+  timeText: {
+    flexShrink: 1,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: COLORS._3B82F6,
+    marginTop: 3,
   },
   actionWrap: {
     marginTop: 12,
