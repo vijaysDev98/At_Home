@@ -422,7 +422,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                   })
                 }
                 containerStyle={{ marginLeft: getScaleSize(10) }}
-                label={STRING.stationaryConcentrator}
+                label={t(STRING.stationaryConcentrator)}
               />
               <AppCheckBox
                 disabled={readOnly}
@@ -438,7 +438,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
                   })
                 }
                 containerStyle={{ marginLeft: getScaleSize(10) }}
-                label={STRING.compressedOxygenCylinder}
+                label={t(STRING.compressedOxygenCylinder)}
               />
             </View>
 

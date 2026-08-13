@@ -654,7 +654,7 @@
   "Hygiene Care": "Hygiene Care",
   "Assistance with hygiene care twice a day": "Assistance with hygiene care twice a day",
   "Complete bed hygiene care twice a day": "Complete bed hygiene care twice a day",
-  "Blood Pressure / Pulse": "Blood Pressure / Pulse",
+  "Blood pressure / Pulse": "Blood pressure / Pulse",
   "Temperature": "Temperature",
   "Oxygen Saturation": "Oxygen Saturation",
   "Simple": "Simple",
@@ -730,5 +730,6 @@
   "Confirm to sign this document": "Confirm to sign this document",
   "Use Passcode": "Use Passcode",
   "Use PIN": "Use PIN",
-  "Authentication failed": "Authentication failed"
+  "Authentication failed": "Authentication failed",
+  "Central Venous (CV)":"Central Venous (CV)"
 }

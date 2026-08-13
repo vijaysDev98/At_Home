@@ -53,7 +53,7 @@ const hygieneCareOptions = [
 const vitalSignsOptions = [
   'Blood pressure / Pulse',
   'Temperature',
-  'Oxygen saturation',
+  'Oxygen Saturation',
 ];
 
 const dressingType = ['Simple', 'Complex'];
@@ -535,7 +535,7 @@ const PersonalHygieneCare = forwardRef<
                     : state.hygiene_care.filter(c => c !== care);
                   setFormState({ hygiene_care: nextCare });
                 }}
-                label={care}
+                label={t(care)}
               />
             ))}
           </View>
@@ -559,7 +559,7 @@ const PersonalHygieneCare = forwardRef<
                     : state.vital_signs.filter(v => v !== vital);
                   setFormState({ vital_signs: nextVitals });
                 }}
-                label={vital}
+                label={t(vital)}
               />
             ))}
           </View>
@@ -633,7 +633,7 @@ const PersonalHygieneCare = forwardRef<
                 onValueChange={value =>
                   setFormState({ dressing_type: value ? type : '' })
                 }
-                label={type}
+                label={t(type)}
               />
             ))}
           </View>

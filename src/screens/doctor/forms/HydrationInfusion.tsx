@@ -726,7 +726,7 @@ const HydrationInfusionForm = forwardRef<
               <View style={styles.checkboxGroup}>
                 <AppCheckBox
                   disabled={readOnly}
-                  label={STRING.centralVenous}
+                  label={t(STRING.centralVenous)}
                   value={product.central_venous}
                   onValueChange={value => {
                     updateProduct(index, 'central_venous', value);
@@ -748,7 +748,7 @@ const HydrationInfusionForm = forwardRef<
                       <AppCheckBox
                         disabled={readOnly}
                         key={option}
-                        label={option}
+                        label={t(option)}
                         value={product.central_venous_options?.includes(option)}
                         onValueChange={value => {
                           const current = product.central_venous_options || [];
@@ -770,7 +770,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={STRING.perineural}
+                  label={t(STRING.perineural)}
                   value={product.perineural_access}
                   onValueChange={value =>
                     updateProduct(index, 'perineural_access', value)
@@ -779,7 +779,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={STRING.peripheralVenous}
+                  label={t(STRING.peripheralVenous)}
                   value={product.peripheral_venous_access}
                   onValueChange={value =>
                     updateProduct(index, 'peripheral_venous_access', value)
@@ -788,7 +788,7 @@ const HydrationInfusionForm = forwardRef<
 
                 <AppCheckBox
                   disabled={readOnly}
-                  label={STRING.subcutaneous}
+                  label={t(STRING.subcutaneous)}
                   value={product.subcutaneous_access}
                   onValueChange={value =>
                     updateProduct(index, 'subcutaneous_access', value)
@@ -810,7 +810,7 @@ const HydrationInfusionForm = forwardRef<
                   <AppCheckBox
                     disabled={readOnly}
                     key={mode}
-                    label={mode}
+                    label={t(mode)}
                     value={product.mode_of_administration === mode}
                     onValueChange={() =>
                       updateProduct(

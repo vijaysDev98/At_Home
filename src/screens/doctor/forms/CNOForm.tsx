@@ -788,7 +788,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                     : state.reassessment_criteria.filter(c => c !== criterion);
                   setFormState({ reassessment_criteria: updated });
                 }}
-                label={criterion}
+                label={t(criterion)}
               />
             ))}
           </View>

@@ -652,7 +652,7 @@
   "Hygiene Care": "Soins d'hygiène",
   "Assistance with hygiene care twice a day": "Aide pour l'hygiène deux fois par jour",
   "Complete bed hygiene care twice a day": "Soins d'hygiène complets au lit deux fois par jour",
-  "Blood Pressure / Pulse": "Tension artérielle / Pouls",
+  "Blood pressure / Pulse": "Tension artérielle / Pouls",
   "Temperature": "Température",
   "Oxygen Saturation": "Saturation en oxygène",
   "Simple": "Simple",
@@ -728,5 +728,6 @@
   "Confirm to sign this document": "Confirmer pour signer ce document",
   "Use Passcode": "Utiliser le code d'accès",
   "Use PIN": "Utiliser le code PIN",
-  "Authentication failed": "Échec de l'authentification"
+  "Authentication failed": "Échec de l'authentification",
+  "Central Venous (CV)": "Voie veineuse centrale (VVC)"
 }

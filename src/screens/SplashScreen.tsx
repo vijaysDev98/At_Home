@@ -104,7 +104,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         </Animated.View>
 
         <Animated.Text style={[styles.title, { opacity: fade }]}>
-          {t(STRING.atHome)}
+          {(STRING.atHome)}
         </Animated.Text>
         <Animated.Text style={[styles.tagline, { opacity: fade }]}>
           {t(STRING.healthcareEvolved)}

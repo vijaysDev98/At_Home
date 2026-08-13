@@ -792,7 +792,7 @@ export const STRING = {
   hygieneCare: 'Hygiene Care',
   assistanceWithHygieneCare: 'Assistance with hygiene care twice a day',
   completeBedHygieneCare: 'Complete bed hygiene care twice a day',
-  bloodPressurePulse: 'Blood Pressure / Pulse',
+  bloodPressurePulse: 'Blood pressure / Pulse',
   temperature: 'Temperature',
   oxygenSaturation: 'Oxygen Saturation',
   simple: 'Simple',
