@@ -59,6 +59,29 @@ const COLORS = {
   _EFF6FF4D: '#EFF6FF4D',
   _E7EEF3: '#E7EEF3',
 
+  // Service Card Theme Colors (Lighter & Softer Tones)
+  _87C038: '#98D148',
+  _0072CE: '#2B88D9',
+  _721C63: '#8C2E7C',
+  _008B8B: '#1CA3A3',
+  _EE6C20: '#F27E3B',
+  _F5B700: '#F7C426',
+  _0284C7: '#1EA1E1',
+  _059669: '#10B981',
+  _E11D48: '#E83B61',
+  _7C3AED: '#8B5CF6',
+  _D97706: '#E58B1F',
+  _EC4899: '#F472B6',
+
+  // New UI Accent & Button Colors (Lighter & Softer Tones)
+  _0D3A68: '#1A4D80',
+  _00509E: '#1A66B8',
+  _EBF1F7: '#EBF1F7',
+  _5BBA47: '#66C852',
+  _6C4A9C: '#7D5AAE',
+  _48B02C: '#54C236',
+  _E2E8F0: '#E2E8F0',
+
   // states
   error: '#ef4444',
   shadow: '#000000',

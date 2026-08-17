@@ -60,6 +60,7 @@ const API_ROUTES = {
   notifications: 'notifications',
   updateFcm: 'auth/update-fcm',
   getDoctors: 'providers/doctors',
+  getProviders: 'doctors/providers',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

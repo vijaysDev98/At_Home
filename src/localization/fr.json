@@ -729,5 +729,18 @@
   "Use Passcode": "Utiliser le code d'accès",
   "Use PIN": "Utiliser le code PIN",
   "Authentication failed": "Échec de l'authentification",
-  "Central Venous (CV)": "Voie veineuse centrale (VVC)"
+  "Central Venous (CV)": "Voie veineuse centrale (VVC)",
+  "Approved Providers": "Prestataires Agréés",
+  "Approved Provider": "Prestataire Agréé",
+  "Multidisciplinary Team": "Équipe Pluridisciplinaire",
+  "Response within 2 hours": "Réponse sous 2 heures",
+  "Search provider": "Rechercher un prestataire",
+  "No approved providers found.": "Aucun prestataire agréé trouvé.",
+  "CALL": "APPELER",
+  "Home Discharge": "Hospitalisation à Domicile",
+  "Support Services": "Services de Soins",
+  "Show Less": "Voir Moins",
+  "HOME DISCHARGE REQUEST": "DEMANDE DE SOINS À DOMICILE",
+  "NEW PATIENT": "NOUVEAU PATIENT",
+  "NEW FORM": "NOUVEAU FORMULAIRE"
 }

@@ -731,5 +731,18 @@
   "Use Passcode": "Use Passcode",
   "Use PIN": "Use PIN",
   "Authentication failed": "Authentication failed",
-  "Central Venous (CV)":"Central Venous (CV)"
+  "Central Venous (CV)": "Central Venous (CV)",
+  "Approved Providers": "Approved Providers",
+  "Approved Provider": "Approved Provider",
+  "Multidisciplinary Team": "Multidisciplinary Team",
+  "Response within 2 hours": "Response within 2 hours",
+  "Search provider": "Search provider",
+  "No approved providers found.": "No approved providers found.",
+  "CALL": "CALL",
+  "Home Discharge": "Home Discharge",
+  "Support Services": "Support Services",
+  "Show Less": "Show Less",
+  "HOME DISCHARGE REQUEST": "HOME DISCHARGE REQUEST",
+  "NEW PATIENT": "NEW PATIENT",
+  "NEW FORM": "NEW FORM"
 }

@@ -241,7 +241,8 @@ export interface ListServiceRequestsParams {
   page?: number;
   size?: number;
   status?: string;
-  string?: string;
+  search?: string;
+  serviceId?: string;
 }
 
 export const serviceRequestListApi = {
@@ -252,14 +253,25 @@ export const serviceRequestListApi = {
     params: ListServiceRequestsParams = { page: 1, size: 10 },
   ): Promise<ListServiceRequestsResponse | null> => {
     try {
+      const queryParams: any = {
+        page: params.page || 1,
+        size: params.size || 10,
+      };
+
+      if (params.search) {
+        queryParams.search = params.search;
+      }
+      if (params.status) {
+        queryParams.status = params.status;
+      }
+      if (params.serviceId) {
+        queryParams.serviceId = params.serviceId;
+      }
+
       const response: any = await API.Instance.get(
         API_ROUTES.listServiceRequests,
         {
-          params: {
-            page: params.page || 1,
-            size: params.size || 10,
-            search: params?.search || '',
-          },
+          params: queryParams,
         },
       );
 

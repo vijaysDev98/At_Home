@@ -35,6 +35,8 @@ import EditProviderProfile from '../screens/provider/profile/editProviderProfile
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import DoctorList from '../screens/provider/doctorList/DoctorList';
 import PdfViewerScreen from '../screens/common/PdfViewerScreen';
+import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
+import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -44,6 +46,7 @@ export type RootStackParamList = {
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
   Alerts: undefined;
+  ProvidersCallList: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
   ResetPassword:
   | {
@@ -96,6 +99,10 @@ export type RootStackParamList = {
     title?: string;
     requestId?: string;
   };
+  ServiceScreen: {
+    selectedService?: any;
+    serviceId?: string;
+  } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -241,6 +248,16 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.PDF_VIEWER}
           component={PdfViewerScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.SERVICE_SCREEN}
+          component={ServiceDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PROVIDERS_CALL_LIST}
+          component={ProvidersCallList}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

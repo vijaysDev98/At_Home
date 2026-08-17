@@ -100,4 +100,11 @@ export const IMAGES = {
   returnedForm: require('./returnedForm.png'),
   awaitingSign: require('./awaitingSign.png'),
   share: require('./share.png'),
+  add_form: require('./add_form.png'),
+  ic_hydration: require('./hydration.png'),
+  hygiene: require('./hygiene.png'),
+  ic_generic: require('./ic_generic.png'),
+  parenteral: require('./parenteral.png'),
+  pca: require('./pca.png'),
+  pregnancy: require('./pregnancy.png'),
 };

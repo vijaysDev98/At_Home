@@ -59,3 +59,24 @@ export const getDoctorsService = async (
     params,
   });
 };
+
+export const getProvidersService = async (
+  page: number,
+  size: number,
+  search?: string,
+  lang?: string,
+) => {
+  const params: any = { page, size };
+
+  if (search && search.trim()) {
+    params.search = search.trim();
+  }
+
+  if (lang) {
+    params.lang = lang;
+  }
+
+  return API.Instance.get(API.API_ROUTES.getProviders, {
+    params,
+  });
+};

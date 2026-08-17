@@ -862,5 +862,20 @@ export const STRING = {
   confirmToSignThisDocument: 'Confirm to sign this document',
   usePasscode: 'Use Passcode',
   usePin: 'Use PIN',
-  authFailed: 'Authentication failed'
+  authFailed: 'Authentication failed',
+
+  // Providers & Call Center
+  approvedProvidersCallCenter: 'Approved Providers',
+  approvedProvider: 'Approved Provider',
+  multidisciplinaryTeam: 'Multidisciplinary Team',
+  responseWithin2Hours: 'Response within 2 hours',
+  searchProviderPlaceholder: 'Search provider',
+  noApprovedProvidersFound: 'No approved providers found.',
+  call: 'CALL',
+  homeDischarge: 'Home Discharge',
+  supportServices: 'Support Services',
+  showLess: 'Show Less',
+  homeDischargeRequest: 'HOME DISCHARGE REQUEST',
+  newPatient: 'NEW PATIENT',
+  newForm: 'NEW FORM',
 };
