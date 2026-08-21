@@ -35,6 +35,8 @@ import {
   Header,
   FormSignature,
   REVIEW_REASONS,
+  ProviderOptionSheet,
+  SelectProviderSheet,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -104,15 +106,49 @@ const FormsScreen: React.FC = () => {
   const status = requestData?.status;
   const formStatus = requestData?.formStatus;
 
-  const serviceId = service?.id || service?._id || requestData?.serviceId._id;
+  const serviceId =
+    service?.id ||
+    service?._id ||
+    requestData?.serviceId?._id ||
+    (typeof requestData?.serviceId === 'string'
+      ? requestData?.serviceId
+      : (requestData?.serviceId as any)?.id) ||
+    (request?.service as any)?.id ||
+    (request?.service as any)?._id ||
+    (request as any)?.serviceId;
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
+  const providerOptionSheetRef = useRef<ActionSheetRef>(null);
+  const selectProviderSheetRef = useRef<ActionSheetRef>(null);
 
   // Use global loader state from Redux
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
 
   // Ref to store form ref
   const formRef = useRef<any>(null);
+
+  const handleSendToAllProviders = async () => {
+    providerOptionSheetRef.current?.hide();
+    if (formRef.current?.validateAndSubmit) {
+      await formRef.current.validateAndSubmit();
+    }
+  };
+
+  const handleSendToSpecificProvider = () => {
+    providerOptionSheetRef.current?.hide();
+    setTimeout(() => {
+      selectProviderSheetRef.current?.show(serviceId);
+    }, 250);
+  };
+
+  const handleProviderSelected = async (provider: any) => {
+    const selectedProviderId = provider?.id || provider?._id;
+    if (formRef.current?.validateAndSubmit) {
+      await formRef.current.validateAndSubmit({
+        providerId: selectedProviderId,
+      });
+    }
+  };
 
   const readOnly = useMemo(() => {
     return (
@@ -154,11 +190,15 @@ const FormsScreen: React.FC = () => {
       }
     },
 
-    // Doctor: first-time submit (draft → submitted)
+    // Doctor: first-time submit (draft → submitted) with provider selection
     submitRequest: async () => {
-      if (formRef.current?.validateAndSubmit) {
-        await formRef.current.validateAndSubmit();
+      if (formRef.current?.validateForm) {
+        const isValid = formRef.current.validateForm();
+        if (!isValid) {
+          return;
+        }
       }
+      providerOptionSheetRef.current?.show();
     },
 
     // Doctor: update already-submitted form and navigate to review / sign
@@ -414,6 +454,19 @@ const FormsScreen: React.FC = () => {
 
             {renderBottomBar()}
             {!readOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
+
+            {/* Provider Selection Bottom Sheets for submitting Drafts */}
+            <ProviderOptionSheet
+              ref={providerOptionSheetRef}
+              onSendToAll={handleSendToAllProviders}
+              onSendToSpecific={handleSendToSpecificProvider}
+            />
+
+            <SelectProviderSheet
+              ref={selectProviderSheetRef}
+              serviceId={serviceId}
+              onSelectProvider={handleProviderSelected}
+            />
           </>
         )}
       </View>

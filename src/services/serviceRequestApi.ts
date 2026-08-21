@@ -9,6 +9,8 @@ export interface CreateServiceRequestPayload {
   serviceId: string;
   patientId: string;
   doctorId?: string; // Optional doctor ID for provider-created requests
+  providerId?: string; // Optional provider ID when sending to specific provider
+  assignedProviderId?: string; // Optional provider ID when sending to specific provider
   requestedDate: string; // YYYY-MM-DD format
   requestedTime: string; // HH:mm format
   initialNotes?: string;
@@ -123,11 +125,12 @@ export const serviceRequestApi = {
    */
   submitForReview: async (
     requestId: string,
+    payload: any = {},
   ): Promise<ServiceRequestResponse> => {
     try {
       const response: any = await API.Instance.post(
         `/service-requests/${requestId}/submit-for-review`,
-        {},
+        payload,
       );
 
       // Handle nested response structure

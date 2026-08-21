@@ -19,6 +19,7 @@ export interface FormActionParams {
   serviceId: string;
   selectedPatient: any;
   doctorId?: string; // Optional doctor ID for provider-created requests
+  providerId?: string; // Optional provider ID when sending to specific provider
   validateForm: () => boolean;
   lastFirstErrorKey?: any;
   errors?: any;
@@ -36,6 +37,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
     serviceId,
     selectedPatient,
     doctorId,
+    providerId,
     validateForm,
     lastFirstErrorKey,
     errors = {},
@@ -62,7 +64,14 @@ export const handleFormSubmit = async (params: FormActionParams) => {
   try {
     if (isExistingDraft && requestId) {
       // Submit existing draft for review
-      const submitResponse = await serviceRequestApi.submitForReview(requestId);
+      const draftPayload: any = {};
+      if (providerId) {
+        draftPayload.assignedProviderId = providerId;
+      }
+      const submitResponse = await serviceRequestApi.submitForReview(
+        requestId,
+        draftPayload,
+      );
       if (submitResponse.success) {
         SHOW_SUCCESS_TOAST(submitResponse.message);
         dispatch(setLoading(false));
@@ -88,7 +97,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       }
     } else {
       // Create new service request
-      const payload = {
+      const payload: any = {
         serviceId: serviceId || '',
         patientId: selectedPatient?.id || selectedPatient?._id || '',
         doctorId: doctorId, // Include doctorId when provider creates request
@@ -101,6 +110,10 @@ export const handleFormSubmit = async (params: FormActionParams) => {
         initialNotes: '',
         formData: state,
       };
+
+      if (providerId) {
+        payload.assignedProviderId = providerId;
+      }
 
       const response = await serviceRequestApi.createServiceRequest(payload);
       dispatch(setLoading(false));

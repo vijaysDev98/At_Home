@@ -17,12 +17,15 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 import {
   AppSafeAreaView,
   AppText,
   Input,
   RequestSummaryCard,
   AppLoader,
+  ProviderOptionSheet,
+  SelectProviderSheet,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -54,8 +57,19 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const initialData = (route?.params as any)?.initialData; // Existing request data if editing
   const requestStatus = (route?.params as any)?.requestStatus; // 'draft', 'submitted', or undefined for new
 
-  const serviceId = service?.id;
-  const serviceName = service?.serviceName;
+  const serviceId =
+    service?.id ||
+    service?._id ||
+    initialData?.serviceId?._id ||
+    (typeof initialData?.serviceId === 'string'
+      ? initialData?.serviceId
+      : initialData?.serviceId?.id) ||
+    initialData?.service?.id ||
+    initialData?.service?._id;
+  const serviceName =
+    service?.serviceName ||
+    initialData?.serviceId?.serviceName ||
+    initialData?.service?.serviceName;
   const serviceIcon = getServiceIcon(serviceName);
 
   // Get profile data to determine role
@@ -79,8 +93,20 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   // Ref to store form ref
   const formRef = useRef<any>(null);
 
+  // Sheet refs for provider selection
+  const providerOptionSheetRef = useRef<ActionSheetRef>(null);
+  const selectProviderSheetRef = useRef<ActionSheetRef>(null);
+
   // Determine button labels based on request status
   const isNewRequest = !initialData && !requestStatus;
+  const isDraftRequest =
+    requestStatus === REQUEST_STATUS.DRAFT ||
+    requestStatus === 'draft' ||
+    initialData?.status === REQUEST_STATUS.DRAFT ||
+    initialData?.status === 'draft';
+  const isDoctor =
+    role === ROLES.DOCTOR || (role !== ROLES.PROVIDER && !selectedDoctor);
+  const isFirstTimeDoctorRequest = (isNewRequest || isDraftRequest) && isDoctor;
   const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
 
   const leftButtonLabel = isNewRequest
@@ -98,8 +124,44 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   const handleRightButtonPress = async () => {
+    if (isFirstTimeDoctorRequest) {
+      // 1. Validate form fields first if validateForm is available
+      if (formRef.current?.validateForm) {
+        const isValid = formRef.current.validateForm();
+        if (!isValid) {
+          return;
+        }
+      }
+      // 2. Open provider option selection sheet
+      providerOptionSheetRef.current?.show();
+    } else {
+      // Existing submission flow unchanged
+      if (formRef.current?.validateAndSubmit) {
+        await formRef.current.validateAndSubmit();
+      }
+    }
+  };
+
+  const handleSendToAllProviders = async () => {
+    providerOptionSheetRef.current?.hide();
     if (formRef.current?.validateAndSubmit) {
       await formRef.current.validateAndSubmit();
+    }
+  };
+
+  const handleSendToSpecificProvider = () => {
+    providerOptionSheetRef.current?.hide();
+    setTimeout(() => {
+      selectProviderSheetRef.current?.show(serviceId);
+    }, 250);
+  };
+
+  const handleProviderSelected = async (provider: any) => {
+    const selectedProviderId = provider?.id || provider?._id;
+    if (formRef.current?.validateAndSubmit) {
+      await formRef.current.validateAndSubmit({
+        providerId: selectedProviderId,
+      });
     }
   };
 
@@ -219,6 +281,20 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             </AppText>
           </TouchableOpacity>
         </View>
+
+        {/* Provider Selection Bottom Sheet (All vs Specific) */}
+        <ProviderOptionSheet
+          ref={providerOptionSheetRef}
+          onSendToAll={handleSendToAllProviders}
+          onSendToSpecific={handleSendToSpecificProvider}
+        />
+
+        {/* 80% Occupancy Non-Draggable Bottom Sheet with Selection and Submit/Cancel Buttons */}
+        <SelectProviderSheet
+          ref={selectProviderSheetRef}
+          serviceId={serviceId}
+          onSelectProvider={handleProviderSelected}
+        />
       </View>
     </AppSafeAreaView>
   );

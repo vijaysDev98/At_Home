@@ -878,4 +878,27 @@ export const STRING = {
   homeDischargeRequest: 'HOME DISCHARGE REQUEST',
   newPatient: 'NEW PATIENT',
   newForm: 'NEW FORM',
+
+  // Provider Selection Flow
+  sendToAllProviders: 'Send to All Providers',
+  sendToSpecificProvider: 'Send to Specific Provider',
+  sendToAllProvidersDesc: 'Request will be available to all registered healthcare providers',
+  sendToSpecificProviderDesc: 'Directly assign this request to a chosen healthcare provider',
+  howToSendRequest: 'How would you like to send this request?',
+  selectProvider: 'Select Provider',
+  selectProviderSubtitle: 'Choose a provider to assign this request to',
+  noProvidersFound: 'No providers found',
+  noProvidersFoundSubtitle: 'Try adjusting your search to find a provider',
+
+  // CNO Nutrition Categories & Product Types
+  onsDrink15KcalMl: 'ONS drink 1.5 kcal/ml',
+  onsDrink15KcalMlFiber: 'ONS drink 1.5 kcal/ml + fiber',
+  onsDrink2KcalMl: 'ONS drink 2 kcal/ml',
+  onsConcentrated2KcalMl: 'ONS concentrated 2 kcal/ml',
+  onsCream15KcalMl: 'ONS cream 1.5 kcal/ml',
+  onsSoup15Kcal: 'ONS soup 1.5 kcal',
+  blendedHighProteinMeal: 'Blended high-protein meal (300g, 500 kcal)',
+  fruitJuiceOns: 'Fruit juice ONS',
+  compote250Kcal: 'Compote (250 kcal, 6–9g protein)',
 };
+

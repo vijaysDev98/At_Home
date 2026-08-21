@@ -68,11 +68,12 @@ const keyToErrorMap: Record<string, string> = {
 };
 
 export interface PersonalHygieneCareRef {
-  validateAndSubmit: () => Promise<void>;
+  validateAndSubmit: (options?: { providerId?: string }) => Promise<void>;
   saveAsDraft: () => Promise<void>;
   updateAndSign: () => Promise<{ success: boolean; error?: string }>;
   saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
+  validateForm?: () => boolean;
 }
 
 const PersonalHygieneCare = forwardRef<
@@ -284,7 +285,7 @@ const PersonalHygieneCare = forwardRef<
   };
 
   // Handle form submission (using centralized handler)
-  const validateAndSubmit = async () => {
+  const validateAndSubmit = async (options?: { providerId?: string }) => {
     await handleFormSubmit({
       dispatch,
       state,
@@ -292,6 +293,7 @@ const PersonalHygieneCare = forwardRef<
       serviceId: serviceId || '',
       selectedPatient,
       doctorId: prescriber?.id, // Pass doctorId from prescriber
+      providerId: options?.providerId,
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -375,6 +377,17 @@ const PersonalHygieneCare = forwardRef<
 
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
+    validateForm: () => {
+      const isValid = validateForm();
+      if (!isValid) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+        SHOW_TOAST(firstErrorMessage, 'error');
+        return false;
+      }
+      return true;
+    },
     saveAsDraft,
     updateAndSign,
     editForm,

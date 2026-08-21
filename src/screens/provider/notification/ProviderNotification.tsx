@@ -156,6 +156,8 @@ const ProviderNotification: React.FC = () => {
         return IMAGES.resetRequest;
       case 'formSigned':
         return IMAGES.serviceClaimed;
+      case "formSubmission":
+        return IMAGES.alert_formUpdate;
       default:
         return IMAGES.ic_announcement;
     }
@@ -189,6 +191,14 @@ const ProviderNotification: React.FC = () => {
         return label;
       case 'formSigned':
         label.txt = t(STRING.claimService);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
+            request: request,
+            action: 'edit',
+          });
+        return label;
+        case 'formSubmission':
+        label.txt = t(STRING.viewService);
         label.onPress = () =>
           NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
             request: request,

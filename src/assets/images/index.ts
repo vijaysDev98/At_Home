@@ -107,4 +107,6 @@ export const IMAGES = {
   parenteral: require('./parenteral.png'),
   pca: require('./pca.png'),
   pregnancy: require('./pregnancy.png'),
+  provider: require('./provider.png'),
+  all_provider: require('./all_provider.png'),
 };

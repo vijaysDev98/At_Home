@@ -59,19 +59,19 @@ const COLORS = {
   _EFF6FF4D: '#EFF6FF4D',
   _E7EEF3: '#E7EEF3',
 
-  // Service Card Theme Colors (Lighter & Softer Tones)
-  _87C038: '#98D148',
-  _0072CE: '#2B88D9',
-  _721C63: '#8C2E7C',
-  _008B8B: '#1CA3A3',
-  _EE6C20: '#F27E3B',
-  _F5B700: '#F7C426',
-  _0284C7: '#1EA1E1',
-  _059669: '#10B981',
-  _E11D48: '#E83B61',
-  _7C3AED: '#8B5CF6',
-  _D97706: '#E58B1F',
-  _EC4899: '#F472B6',
+  // Service Card Theme Colors (Soft, Modern Healthcare Tones)
+  _87C038: '#82C341', // Soft Fresh Lime Green (Hydration Infusion)
+  _0072CE: '#4A90E2', // Soft Ocean Blue (Antibiotherapy Infusion)
+  _721C63: '#9B4D8E', // Soft Mulberry Plum (PCA)
+  _008B8B: '#26A69A', // Soft Seafoam Teal (Medical Oxygen)
+  _EE6C20: '#F07C3E', // Soft Warm Peach Orange (Wound Care)
+  _F5B700: '#F1A93B', // Soft Honey Amber Gold (Artificial Nutrition)
+  _0284C7: '#38A3DC', // Soft Sky Blue (Personal Hygiene Care)
+  _059669: '#2BB673', // Soft Emerald Mint (CNO)
+  _E11D48: '#E05A6D', // Soft Coral Rose (Generic)
+  _7C3AED: '#8A63D2', // Soft Lavender Violet (IV Therapy)
+  _D97706: '#5C6BC0', // Soft Indigo / Slate (Parenteral Nutrition - Replaced duplicate orange)
+  _EC4899: '#EA6C9E', // Soft Blossom Pink (Pregnancy Related Care)
 
   // New UI Accent & Button Colors (Lighter & Softer Tones)
   _0D3A68: '#1A4D80',

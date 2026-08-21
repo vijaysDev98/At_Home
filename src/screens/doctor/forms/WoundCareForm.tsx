@@ -87,11 +87,12 @@ const WOUND_DETAILS_OPTIONS = [
 ];
 
 export interface WoundCareFormRef {
-  validateAndSubmit: () => Promise<void>;
+  validateAndSubmit: (options?: { providerId?: string }) => Promise<void>;
   saveAsDraft: () => Promise<void>;
   updateAndSign: () => Promise<{ success: boolean; error?: string }>;
   saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
+  validateForm?: () => boolean;
 }
 
 const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
@@ -275,7 +276,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
     };
 
     // Handle form submission (using centralized handler)
-    const validateAndSubmit = async () => {
+    const validateAndSubmit = async (options?: { providerId?: string }) => {
       await handleFormSubmit({
         dispatch,
         state,
@@ -283,6 +284,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         serviceId: serviceId || '',
         selectedPatient,
         doctorId: prescriber?.id, // Pass doctorId from prescriber
+        providerId: options?.providerId,
         validateForm: () => validateForm().ok,
         lastFirstErrorKey,
         errors,
@@ -366,6 +368,17 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
 
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
+      validateForm: () => {
+        const res = validateForm();
+        if (!res.ok) {
+          const firstErrorKey = lastFirstErrorKey.current || '';
+          const firstErrorMessage =
+            errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+          SHOW_TOAST(firstErrorMessage, 'error');
+          return false;
+        }
+        return true;
+      },
       saveAsDraft,
       updateAndSign,
       editForm,
@@ -503,7 +516,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     }
                     setFormState({ wound_type: current });
                   }}
-                  label={item}
+                  label={t(item)}
                 />
               ))}
             </View>
@@ -542,7 +555,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
                     }
                     setFormState({ dressing_type: current });
                   }}
-                  label={item}
+                  label={t(item)}
                 />
               ))}
             </View>

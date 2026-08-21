@@ -26,13 +26,18 @@ import {
 } from '../../../components';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
-import { STRING } from '../../../constant';
+import {
+  STRING,
+  NUTRITION_CATEGORIES,
+  NUTRITION_PRODUCT_TYPES,
+  SHOW_TOAST,
+  SHOW_SUCCESS_TOAST,
+} from '../../../constant';
 import { IMAGES } from '../../../assets/images';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import FormPrescriptionDetails from '../../../components/FormPrescriptionDetails';
 import FormSignature from '../../../components/FormSignature';
-import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { setLoading } from '../../../actions/common/commonSlice';
@@ -53,35 +58,6 @@ import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../../../constant/getCountryCode';
 
-const NUTRITION_CATEGORIES = [
-  { label: 'Diabetic Range', value: 'Diabetic Range' },
-  {
-    label: 'Standard Carbohydrate Range',
-    value: 'Standard Carbohydrate Range',
-  },
-];
-
-const NUTRITION_PRODUCT_TYPES = [
-  { label: 'ONS drink 1.5 kcal/ml', value: 'ONS drink 1.5 kcal/ml' },
-  {
-    label: 'ONS drink 1.5 kcal/ml + fiber',
-    value: 'ONS drink 1.5 kcal/ml + fiber',
-  },
-  { label: 'ONS drink 2 kcal/ml', value: 'ONS drink 2 kcal/ml' },
-  { label: 'ONS concentrated 2 kcal/ml', value: 'ONS concentrated 2 kcal/ml' },
-  { label: 'ONS cream 1.5 kcal/ml', value: 'ONS cream 1.5 kcal/ml' },
-  { label: 'ONS soup 1.5 kcal', value: 'ONS soup 1.5 kcal' },
-  {
-    label: 'Blended high-protein meal (300g, 500 kcal)',
-    value: 'Blended high-protein meal (300g, 500 kcal)',
-  },
-  { label: 'Fruit juice ONS', value: 'Fruit juice ONS' },
-  {
-    label: 'Compote (250 kcal, 6–9g protein)',
-    value: 'Compote (250 kcal, 6–9g protein)',
-  },
-];
-
 const CNO_REASSESSMENT_CRITERIA = [
   STRING.weight,
   STRING.nutritionalStatus,
@@ -100,17 +76,37 @@ export interface CNOFormProps {
 }
 
 export interface CNOFormRef {
-  validateAndSubmit: () => Promise<void>;
+  validateAndSubmit: (options?: { providerId?: string }) => Promise<void>;
   saveAsDraft: () => Promise<void>;
   updateAndSign: () => Promise<{ success: boolean; error?: string }>;
   saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
+  validateForm?: () => boolean;
 }
 
 const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
   ({ serviceId, initialData, patient, readOnly = false, prescriber }, ref) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
+
+    const nutritionCategories = useMemo(
+      () =>
+        NUTRITION_CATEGORIES.map(item => ({
+          label: t(item.label),
+          value: item.value,
+        })),
+      [t],
+    );
+
+    const nutritionProductTypes = useMemo(
+      () =>
+        NUTRITION_PRODUCT_TYPES.map(item => ({
+          label: t(item.label),
+          value: item.value,
+        })),
+      [t],
+    );
+
     const reduxPatient = useSelector(
       (state: RootState) => state.patient.selectedPatient,
     );
@@ -407,7 +403,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
     };
 
     // Handle form submission (using centralized handler)
-    const validateAndSubmit = async () => {
+    const validateAndSubmit = async (options?: { providerId?: string }) => {
       await handleFormSubmit({
         dispatch,
         state,
@@ -415,6 +411,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         serviceId,
         selectedPatient,
         doctorId: prescriber?.id, // Pass doctorId from prescriber
+        providerId: options?.providerId,
         validateForm,
         lastFirstErrorKey,
         errors,
@@ -499,6 +496,17 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
 
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
+      validateForm: () => {
+        const isValid = validateForm();
+        if (!isValid) {
+          const firstErrorKey = lastFirstErrorKey.current || '';
+          const firstErrorMessage =
+            errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+          SHOW_TOAST(firstErrorMessage, 'error');
+          return false;
+        }
+        return true;
+      },
       saveAsDraft,
       updateAndSign,
       saveProgress,
@@ -647,7 +655,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 <AppDropDown
                   disabled={readOnly}
                   label={t(STRING.category)}
-                  data={NUTRITION_CATEGORIES}
+                  data={nutritionCategories}
                   value={product.category}
                   onChange={value => updateProduct(index, 'category', value)}
                   style={styles.productInputRoot}
@@ -656,7 +664,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
                 <AppDropDown
                   disabled={readOnly}
                   label={t(STRING.productType)}
-                  data={NUTRITION_PRODUCT_TYPES}
+                  data={nutritionProductTypes}
                   value={product.product_type}
                   onChange={value =>
                     updateProduct(index, 'product_type', value)

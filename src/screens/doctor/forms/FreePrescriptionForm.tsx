@@ -65,11 +65,12 @@ export interface FreePrescriptionFormProps {
 }
 
 export interface FreePrescriptionFormRef {
-  validateAndSubmit: () => Promise<void>;
+  validateAndSubmit: (options?: { providerId?: string }) => Promise<void>;
   saveAsDraft: () => Promise<void>;
   updateAndSign: () => Promise<{ success: boolean; error?: string }>;
   saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
+  validateForm?: () => boolean;
 }
 
 const FreePrescriptionForm = forwardRef<
@@ -232,7 +233,7 @@ const FreePrescriptionForm = forwardRef<
   };
 
   // Handle form submission (using centralized handler)
-  const validateAndSubmit = async () => {
+  const validateAndSubmit = async (options?: { providerId?: string }) => {
     await handleFormSubmit({
       dispatch,
       state,
@@ -240,6 +241,7 @@ const FreePrescriptionForm = forwardRef<
       serviceId,
       selectedPatient,
       doctorId: prescriber?.id, // Pass doctorId from prescriber
+      providerId: options?.providerId,
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -318,6 +320,17 @@ const FreePrescriptionForm = forwardRef<
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
+    validateForm: () => {
+      const isValid = validateForm();
+      if (!isValid) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+        SHOW_TOAST(firstErrorMessage, 'error');
+        return false;
+      }
+      return true;
+    },
     saveAsDraft,
     saveProgress,
     editForm,

@@ -77,11 +77,12 @@ const MODE_OF_ADMINISTRATION = [
 ];
 
 export interface AntibiotherapyInfusionFormRef {
-  validateAndSubmit: () => Promise<void>;
+  validateAndSubmit: (options?: { providerId?: string }) => Promise<void>;
   saveAsDraft: () => Promise<void>;
   updateAndSign: () => Promise<{ success: boolean; error?: string }>;
   saveProgress: () => Promise<{ success: boolean; error?: string }>;
   getFormData: () => any;
+  validateForm?: () => boolean;
 }
 
 const AntibiotherapyInfusionForm = forwardRef<
@@ -201,7 +202,7 @@ const AntibiotherapyInfusionForm = forwardRef<
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Handle form submission (using centralized handler)
-  const validateAndSubmit = async () => {
+  const validateAndSubmit = async (options?: { providerId?: string }) => {
     await handleFormSubmit({
       dispatch,
       state,
@@ -209,6 +210,7 @@ const AntibiotherapyInfusionForm = forwardRef<
       serviceId,
       selectedPatient,
       doctorId: prescriber?.id, // Pass doctorId from prescriber
+      providerId: options?.providerId,
       validateForm,
       lastFirstErrorKey,
       errors,
@@ -293,6 +295,17 @@ const AntibiotherapyInfusionForm = forwardRef<
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
     validateAndSubmit,
+    validateForm: () => {
+      const isValid = validateForm();
+      if (!isValid) {
+        const firstErrorKey = lastFirstErrorKey.current || '';
+        const firstErrorMessage =
+          errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+        SHOW_TOAST(firstErrorMessage, 'error');
+        return false;
+      }
+      return true;
+    },
     saveAsDraft,
     updateAndSign,
     editForm,

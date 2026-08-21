@@ -342,7 +342,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     };
 
     // Handle form submission (using centralized handler)
-    const validateAndSubmit = async () => {
+    const validateAndSubmit = async (options?: { providerId?: string }) => {
       await handleFormSubmit({
         dispatch,
         state,
@@ -350,6 +350,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         serviceId,
         selectedPatient,
         doctorId: prescriber?.id, // Pass doctorId from prescriber
+        providerId: options?.providerId,
         validateForm,
         lastFirstErrorKey,
         errors,
@@ -434,6 +435,17 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
       validateAndSubmit,
+      validateForm: () => {
+        const isValid = validateForm();
+        if (!isValid) {
+          const firstErrorKey = lastFirstErrorKey.current || '';
+          const firstErrorMessage =
+            errors[firstErrorKey] || t(STRING.pleaseFillAllRequiredFields);
+          SHOW_TOAST(firstErrorMessage, 'error');
+          return false;
+        }
+        return true;
+      },
       saveAsDraft,
       saveProgress,
       submitForReview,

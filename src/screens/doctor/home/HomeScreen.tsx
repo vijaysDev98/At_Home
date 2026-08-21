@@ -219,7 +219,7 @@ const HomeScreen: React.FC = () => {
             <AppText
               size={getScaleSize(24)}
               font={FONTS.Inter.Bold}
-              color={COLORS._0D3A68}
+              color={COLORS.primary}
               style={styles.titleLine}
             >
               {t(STRING.homeDischarge)}
@@ -227,7 +227,7 @@ const HomeScreen: React.FC = () => {
             <AppText
               size={getScaleSize(24)}
               font={FONTS.Inter.Bold}
-              color={COLORS._0D3A68}
+              color={COLORS.primary}
               style={styles.titleLine}
             >
               {t(STRING.supportServices)}
@@ -239,7 +239,7 @@ const HomeScreen: React.FC = () => {
             <AppText
               size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              color={COLORS.primary}
             >
               {t(STRING.services)} ({displayedServices.length}/12)
             </AppText>
@@ -252,7 +252,7 @@ const HomeScreen: React.FC = () => {
               <AppText
                 size={getScaleSize(13)}
                 font={FONTS.Inter.Bold}
-                color={COLORS._00509E}
+                color={COLORS.primary}
               >
                 {showAllServices ? t(STRING.showLess) : t(STRING.seeAll)}
               </AppText>

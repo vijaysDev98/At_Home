@@ -65,6 +65,7 @@ export const getProvidersService = async (
   size: number,
   search?: string,
   lang?: string,
+  serviceId?: string,
 ) => {
   const params: any = { page, size };
 
@@ -74,6 +75,10 @@ export const getProvidersService = async (
 
   if (lang) {
     params.lang = lang;
+  }
+
+  if (serviceId) {
+    params.serviceId = serviceId;
   }
 
   return API.Instance.get(API.API_ROUTES.getProviders, {
