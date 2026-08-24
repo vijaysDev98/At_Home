@@ -318,7 +318,7 @@ const HomeScreen: React.FC = () => {
           {/* Main CTA Button: HOME DISCHARGE REQUEST */}
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST)}
+            onPress={() => NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST)}
             style={styles.mainCtaBtn}
           >
             <View style={styles.ctaIconCircle}>

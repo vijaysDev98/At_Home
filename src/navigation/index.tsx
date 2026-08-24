@@ -37,6 +37,7 @@ import DoctorList from '../screens/provider/doctorList/DoctorList';
 import PdfViewerScreen from '../screens/common/PdfViewerScreen';
 import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
+import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDischargeRequestScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -58,6 +59,7 @@ export type RootStackParamList = {
   | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
+  CreateDischargeRequest: undefined;
   DoctorRequest: undefined;
   CreateRequestStep2: {
     patientId?: string;
@@ -173,6 +175,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.CREATE_REQUEST}
           component={CreateRequest}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.CREATE_DISCHARGE_REQUEST}
+          component={CreateDischargeRequestScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

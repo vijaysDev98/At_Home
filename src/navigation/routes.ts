@@ -11,6 +11,7 @@ export const SCREENS = {
   CREATE_REQUEST: 'CreateRequest',
   CREATE_REQUEST_STEP2: 'CreateRequestStep2',
   CREATE_REQUEST_STEP3: 'CreateRequestStep3',
+  CREATE_DISCHARGE_REQUEST: 'CreateDischargeRequest',
   DOCTOR_BOTTOM_TABS: 'DoctorBottomTabs',
   PROVIDER_BOTTOM_TABS: 'ProviderBottomTabs',
   PROVIDER_AVAILABLE_REQUESTS: 'ProviderAvailableRequests',

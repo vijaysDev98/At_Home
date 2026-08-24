@@ -2102,6 +2102,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-12.0.1.tgz#fec75f4093c27778479d8927b4f51f133b8a13a4"
   integrity sha512-P/3caXIvfYSJG8AWJVefukg+ZGRPs+M4Lp3pNJtgcTYoJxCjWrKQGNnCkj/Cz//zWa/avGed0i/wzm0T8vV2IQ==
 
+"@react-native-community/slider@^5.2.0":
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-5.2.1.tgz#163243898394256af76dcaabde994a9ff1464717"
+  integrity sha512-HBDPRFRIN47hRtd5tdDWZp3kkVN1z98jGbK9wHOfUfVO+PbBDZzD7xjiiyBqNpg6Rom2QPFOpBZzsB2bHy4yAQ==
+
 "@react-native-firebase/analytics@^24.1.1":
   version "24.1.1"
   resolved "https://registry.yarnpkg.com/@react-native-firebase/analytics/-/analytics-24.1.1.tgz#b7c789ec9930a8cd0235a9dc3a7a066f2dd4c734"
@@ -5605,6 +5610,11 @@ loose-envify@^1.0.0, loose-envify@^1.4.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
+lottie-react-native@^7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/lottie-react-native/-/lottie-react-native-7.5.0.tgz#4722f2ad3740735a81ffafe6380312844abfcb9a"
+  integrity sha512-pT9JdskrRpsdBWGUTdPIQfdY+AoJHvp9F392kfNW4ucjoTfa7Y46iv0wQ/AXmzVN+4SzXjwtXeQM/nMKNd2+jg==
+
 lru-cache@^11.0.0:
   version "11.5.1"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-11.5.1.tgz#f3daa3540847b9737ebc02499ddb36765e54db4a"
@@ -6565,6 +6575,18 @@ react-native-localize@^3.7.0:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/react-native-localize/-/react-native-localize-3.7.0.tgz#4ad7347bf7a1756627f491f48cf7507e7356cf13"
   integrity sha512-6Ohx+zZzycC6zhNVBGM/u1U+O6Ww29YIFseeyXqsKcO/pTfjLcdE40IUJF4SVVwrdh00IMJwy90HjLGUaeqK7Q==
+
+react-native-nitro-modules@^0.37.0:
+  version "0.37.0"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-modules/-/react-native-nitro-modules-0.37.0.tgz#9ded1451fb517176bf388436c7c52dbed6b6e9b9"
+  integrity sha512-ULS2CBZcdwGw5d4Y35EV/tbCOsNsQOnQ9LC9CehMhDNm5c90lwF/LxRamzKuFpjI547G7teTQgD0peqYSGnP9g==
+
+react-native-nitro-sound@^0.2.19:
+  version "0.2.19"
+  resolved "https://registry.yarnpkg.com/react-native-nitro-sound/-/react-native-nitro-sound-0.2.19.tgz#63aa0f7f45046cf8b3ba124416241fe012f1dd64"
+  integrity sha512-8ncrfOZf7MK/KWUXvFvrh2oBf+tqBBoUJqwBipPpRXx8gS9scZfl3E9hY20jNespdSqEID+017lBwRU2QNNeqQ==
+  dependencies:
+    "@react-native-community/slider" "^5.2.0"
 
 react-native-pdf@^7.0.4:
   version "7.0.4"
