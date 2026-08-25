@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useSound } from 'react-native-nitro-sound';
 import LottieView from 'lottie-react-native';
 import { ANIMATION } from '../../../assets/lottie';
+import { useRoute } from '@react-navigation/native';
 import {
   AppSafeAreaView,
   AppText,
@@ -33,6 +34,11 @@ import {
   SelectProviderSheet,
 } from '../../../components/ActionSheets';
 import { Provider } from '../providers/ProvidersCallList';
+import { uploadAudioDirectToS3 } from '../../../services/uploadService';
+import {
+  serviceRequestApi,
+  CreateServiceRequestPayload,
+} from '../../../services/serviceRequestApi';
 
 export type CreateDischargeRequestScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -45,12 +51,21 @@ const MAX_TEXT_LENGTH = 1500;
 
 const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> = () => {
   const { t } = useTranslation();
+  const route = useRoute<any>();
+  const isEdit = !!route.params?.isEdit;
+  const editRequest = route.params?.request;
 
-  // State management
-  const [instructionsText, setInstructionsText] = useState<string>('');
-  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  // State management (initialized with editRequest data when in edit mode)
+  const [instructionsText, setInstructionsText] = useState<string>(
+    editRequest?.initialNotes || '',
+  );
+  const [recordingState, setRecordingState] = useState<RecordingState>(
+    editRequest?.voiceMessageUrl ? 'recorded' : 'idle',
+  );
   const [recordDurationSeconds, setRecordDurationSeconds] = useState<number>(0);
-  const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
+  const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(
+    editRequest?.voiceMessageUrl || null,
+  );
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -242,20 +257,157 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       return;
     }
 
-    // Open recipient selection sheet (All vs Specific)
+    // When editing, do NOT ask specific or all provider - directly submit keeping whatever it was earlier!
+    if (isEdit) {
+      const prevProviderId =
+        editRequest?.providerId ||
+        editRequest?.assignedProviderId ||
+        editRequest?.provider?.id ||
+        editRequest?.provider?._id;
+
+      const recipientType = prevProviderId ? 'specific' : 'all';
+      const providerObj = prevProviderId
+        ? ({
+            id: prevProviderId,
+            fullName:
+              editRequest?.provider?.fullName ||
+              editRequest?.provider?.name ||
+              '',
+          } as Provider)
+        : undefined;
+
+      processDischargeSubmission(recipientType, providerObj);
+      return;
+    }
+
+    // Open recipient selection sheet (All vs Specific) for new requests
     providerOptionSheetRef.current?.show();
   };
 
-  // Option 1: Send to All Providers
-  const handleSendToAllProviders = () => {
-    providerOptionSheetRef.current?.hide();
+  // Core handler to upload audio to S3 and process discharge submission
+  const processDischargeSubmission = async (
+    recipientType: 'all' | 'specific',
+    provider?: Provider,
+  ) => {
     setIsSubmitting(true);
+    let audioS3Url = '';
 
-    setTimeout(() => {
+    try {
+      // 1. Upload audio directly to AWS S3 bucket if recorded
+      if (recordingState === 'recorded' && recordedAudioUri) {
+        if (
+          recordedAudioUri.startsWith('http://') ||
+          recordedAudioUri.startsWith('https://')
+        ) {
+          // Already an uploaded S3 URL from existing request
+          audioS3Url = recordedAudioUri;
+        } else {
+          console.log('📤 Uploading recorded audio note to S3...', recordedAudioUri);
+          const uploadRes = await uploadAudioDirectToS3(recordedAudioUri, 'm4a');
+          audioS3Url = uploadRes?.fileUrl || '';
+          console.log('✅ Audio uploaded to S3 successfully:', audioS3Url);
+        }
+      }
+
+      // 2. Prepare API payload matching the exact backend spec
+      const apiPayload: CreateServiceRequestPayload = {
+        isPreRequest: true,
+      };
+
+      if (instructionsText.trim()) {
+        apiPayload.initialNotes = instructionsText.trim();
+      }
+
+      if (audioS3Url) {
+        apiPayload.voiceMessageUrl = audioS3Url;
+      }
+
+      if (recipientType === 'specific' && provider?.id) {
+        apiPayload.providerId = provider.id;
+        apiPayload.assignedProviderId = provider.id;
+      }
+
+      const providerName =
+        provider?.fullName ||
+        provider?.providerName ||
+        (provider
+          ? `${provider.fName || ''} ${provider.lName || ''}`.trim()
+          : null);
+
+      console.log('====================================================');
+      console.log(
+        isEdit
+          ? '🚀 [CALLING UPDATE PRE-REQUEST API]'
+          : '🚀 [CALLING CREATE PRE-REQUEST API]',
+      );
+      console.log('📝 Written Note / Text:', apiPayload.initialNotes || '(None)');
+      console.log('🎙️ Audio S3 URL:', apiPayload.voiceMessageUrl || '(None)');
+      console.log('👥 Recipient Option:', recipientType);
+      if (provider) {
+        console.log('👤 Selected Provider:', {
+          id: provider.id,
+          name: providerName,
+        });
+      }
+      console.log('📦 API Request Body:', JSON.stringify(apiPayload, null, 2));
+      console.log('====================================================');
+
+      // 3. Call backend API to create or update pre-request
+      let response;
+      if (
+        isEdit &&
+        (editRequest?.id || editRequest?._id || editRequest?.requestId)
+      ) {
+        const targetId =
+          editRequest?.id || editRequest?._id || editRequest?.requestId;
+        response = await serviceRequestApi.updatePreRequest(
+          targetId,
+          apiPayload,
+        );
+        // Fallback to create if update route returns error
+        if (!response.success && response.message?.includes('404')) {
+          response = await serviceRequestApi.createServiceRequest(apiPayload);
+        }
+      } else {
+        response = await serviceRequestApi.createServiceRequest(apiPayload);
+      }
+      console.log('📥 Service Request Response:', response);
+
       setIsSubmitting(false);
-      SHOW_TOAST(t(STRING.dischargeRequestSubmitted), 'success');
-      NavigationService.goBack();
-    }, 800);
+
+      if (response.success) {
+        SHOW_TOAST(
+          response.message ||
+            (isEdit
+              ? t(STRING.dischargeRequestUpdated)
+              : t(STRING.dischargeRequestSubmitted)),
+          'success',
+        );
+        NavigationService.goBack();
+      } else {
+        SHOW_TOAST(
+          response.error ||
+            response.message ||
+            'Failed to submit discharge request',
+          'error',
+        );
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to process discharge request:', error);
+      setIsSubmitting(false);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error?.message ||
+        'Failed to upload audio or submit request';
+      SHOW_TOAST(errorMessage, 'error');
+    }
+  };
+
+  // Option 1: Send to All Providers
+  const handleSendToAllProviders = async () => {
+    providerOptionSheetRef.current?.hide();
+    await processDischargeSubmission('all');
   };
 
   // Option 2: Send to Specific Provider
@@ -268,24 +420,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   };
 
   // Callback when a specific provider is chosen from the sheet
-  const handleProviderSelected = (provider: Provider) => {
+  const handleProviderSelected = async (provider: Provider) => {
     selectProviderSheetRef.current?.hide();
-    setIsSubmitting(true);
-
-    const providerName =
-      provider.fullName ||
-      provider.providerName ||
-      `${provider.fName || ''} ${provider.lName || ''}`.trim() ||
-      'Healthcare Provider';
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      SHOW_TOAST(
-        `${t(STRING.dischargeRequestCreated)}: ${providerName}`,
-        'success',
-      );
-      NavigationService.goBack();
-    }, 800);
+    await processDischargeSubmission('specific', provider);
   };
 
   return (
@@ -308,7 +445,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {t(STRING.createDischargeRequest)}
+            {isEdit
+              ? t(STRING.editDischargeRequest) || 'Edit Discharge Request'
+              : t(STRING.createDischargeRequest)}
           </AppText>
         </View>
 
@@ -332,24 +471,26 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           <View style={styles.introIconWrap}>
             <Image source={IMAGES.info} style={styles.introIcon} />
           </View>
-            <View style={styles.introTextCol}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS.primary}
-              >
-                {t(STRING.createDischargeRequest)}
-              </AppText>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._526674}
-                style={{ marginTop: 2 }}
-              >
-                {t(STRING.dischargeInstructionsSubtitle)}
-              </AppText>
-            </View>
+          <View style={styles.introTextCol}>
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.primary}
+            >
+              {isEdit
+                ? t(STRING.editDischargeRequest) || 'Edit Discharge Request'
+                : t(STRING.createDischargeRequest)}
+            </AppText>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._526674}
+              style={{ marginTop: 2 }}
+            >
+              {t(STRING.dischargeInstructionsSubtitle)}
+            </AppText>
           </View>
+        </View>
 
           {/* ──────────────────────────────────────────────────────────
               SECTION 1: VOICE RECORDING (POWERED BY NITRO-SOUND)
@@ -670,7 +811,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               color={COLORS.white}
               font={FONTS.Inter.Bold}
             >
-              {t(STRING.submitRequest)}
+              {isEdit
+                ? t(STRING.updateRequest) || 'Update Request'
+                : t(STRING.submitRequest)}
             </AppText>
           </TouchableOpacity>
         </View>

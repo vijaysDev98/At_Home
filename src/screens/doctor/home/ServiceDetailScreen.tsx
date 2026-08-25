@@ -204,7 +204,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
                 ) : null
               }
               renderItem={({ item }) => {
-                const formStatus = item.formStatus;
+                const formStatus = item.formStatus || '';
                 const buttonConfig = getButtonConfig(formStatus, item.status || '');
                 return (
                   <View style={styles.cardItem}>

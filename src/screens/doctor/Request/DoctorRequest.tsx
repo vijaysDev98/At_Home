@@ -37,6 +37,8 @@ import { getButtonConfig, STRING } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { useRoute, useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { PreRequestDetailSheet } from '../../../components/ActionSheets';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -111,9 +113,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchIdRef = useRef(0);
-  const searchInputRef = useRef<any>(null);
   const searchTextRef = useRef('');
   const currentPageRef = useRef(1);
+  const preRequestDetailSheetRef = useRef<ActionSheetRef>(null);
 
   const fetchServiceRequests = useCallback(
     async (
@@ -187,7 +189,6 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     if (isFocused) {
       setSearchText('');
       searchTextRef.current = '';
-      searchInputRef.current?.clear();
       fetchServiceRequests(1, '');
     }
   }, [isFocused, fetchServiceRequests]);
@@ -250,22 +251,43 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   const renderItem = useCallback(
     ({ item }: { item: ServiceRequest }) => {
-      const formStatus = item?.formStatus;
-      const buttonConfig = getButtonConfig(formStatus || '', item?.status);
+      const isPreReq = !!item?.isPreRequest;
+      const formStatus = item?.formStatus || item?.preRequestStatus || item?.status;
+      const buttonConfig = isPreReq
+        ? { show: true, label: STRING.editInstructions, action: 'edit' }
+        : getButtonConfig(formStatus || '', item?.status);
 
       return (
         <RequestCardDoctor
-          name={item?.patient?.fullName || ''}
+          name={
+            item?.patient?.fullName ||
+            (isPreReq
+              ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+              : '')
+          }
           requestId={item.requestId}
-          requestType={item.service.serviceName}
+          requestType={
+            item?.service?.serviceName ||
+            (isPreReq ? t(STRING.homeDischarge) || 'Home Discharge' : '')
+          }
           formStatus={formStatus}
           status={item.status}
+          isPreRequest={isPreReq}
+          preRequestStatus={item.preRequestStatus}
+          voiceMessageUrl={item.voiceMessageUrl}
+          initialNotes={item.initialNotes}
+          priorityLevel={item.priorityLevel}
           buttonText={
             buttonConfig.show
               ? t(buttonConfig.label || '') || undefined
               : undefined
           }
           onPress={() => {
+            if (isPreReq) {
+              (preRequestDetailSheetRef.current as any)?.show(item);
+              return;
+            }
+
             if (item.status === REQUEST_STATUS.COMPLETED) {
               NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
                 request: item,
@@ -279,6 +301,13 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
             });
           }}
           onButtonPress={() => {
+            if (isPreReq) {
+              NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+                request: item,
+                isEdit: true,
+              });
+              return;
+            }
             const targetScreen =
               buttonConfig.action === 'sign'
                 ? SCREENS.FORM_REVIEW_SCREEN
@@ -321,19 +350,20 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     [isLoading, t],
   );
 
-  const keyExtractor = useCallback((item: ServiceRequest) => item.id, []);
+  const keyExtractor = useCallback((item: ServiceRequest) => {
+    return item.id || (item as any)._id || item.requestId;
+  }, []);
 
   return (
     <AppSafeAreaView edges={['top']} style={styles.safeArea}>
       <Header
-        title={t(STRING.serviceRequest)}
+        title={t(STRING.requests)}
         subTitle={t(STRING.manageYourServiceRequests)}
         style={{ paddingHorizontal: getScaleSize(20) }}
       />
 
       <View style={styles.container}>
         <Input
-          ref={searchInputRef}
           value={searchText}
           leftIcon={IMAGES.search}
           style={styles.searchInput}
@@ -399,6 +429,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           />
         )}
       </View>
+
+      {/* Pre-Request Detail Bottom Sheet */}
+      <PreRequestDetailSheet ref={preRequestDetailSheetRef} />
     </AppSafeAreaView>
   );
 };

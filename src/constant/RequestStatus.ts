@@ -28,7 +28,7 @@ export const FORM_STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
-export const DISPLAY_FORM_STATUS = {
+export const DISPLAY_FORM_STATUS: Record<string, string> = {
   [FORM_STATUS.DRAFT]: STRING.Draft,
   [FORM_STATUS.SUBMITTED]: STRING.Submitted,
   [FORM_STATUS.APPROVED]: STRING.Approved,
@@ -39,6 +39,9 @@ export const DISPLAY_FORM_STATUS = {
   [FORM_STATUS.RETURNED]: STRING.Returned,
   [FORM_STATUS.COMPLETED]: STRING.Completed,
   [FORM_STATUS.CANCELLED]: STRING.cancelled,
+  pending: STRING.Submitted,
+  inprogress: STRING.InProgress,
+  awaitingsignature: STRING.AwaitingSignature,
 };
 
 export const getButtonConfig = (formStatus: string, status: string) => {
@@ -306,27 +309,50 @@ export const getFormScreenButtons = (
   return {};
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+export const getStatusBadgeColor = (status?: string | null): string => {
+  if (!status) return COLORS.submitted;
 
-export const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case REQUEST_STATUS.DRAFT:
-      return COLORS.draft;
-    case REQUEST_STATUS.IN_PROGRESS:
-      return COLORS.inProgress;
-    case REQUEST_STATUS.SUBMITTED:
-      return COLORS.submitted;
-    case REQUEST_STATUS.AWAITING_SIGNATURE:
-      return COLORS.awaitingSignature;
-    case REQUEST_STATUS.SIGNED:
-      return COLORS.signed; // Green
-    case REQUEST_STATUS.RETURNED:
-      return COLORS.returned; // Red
-    case REQUEST_STATUS.COMPLETED:
-      return COLORS.completed; // Green
-    case REQUEST_STATUS.CANCELLED:
-      return COLORS.cancelled;
+  const normalized = status.toString().trim().toLowerCase().replace(/[-_\s]/g, '');
+
+  switch (normalized) {
+    case 'draft':
+      return COLORS.draft; // #FFB800 (Amber)
+    case 'inprogress':
+      return COLORS.inProgress; // #FFB800 (Amber)
+    case 'submitted':
+    case 'pending':
+      return COLORS.submitted; // #2563EB (Blue theme)
+    case 'awaitingsignature':
+      return COLORS.awaitingSignature; // #1E3A8A
+    case 'signed':
+      return COLORS.signed; // #629DFF
+    case 'returned':
+      return COLORS.returned; // #EF4444
+    case 'completed':
+    case 'approved':
+      return COLORS.completed; // #10B981
+    case 'rejected':
+    case 'cancelled':
+      return COLORS.cancelled; // #EF4444
     default:
-      return COLORS.primary; // Gray
+      return (COLORS as any)[status] || COLORS.submitted;
   }
 };
+
+export const getStatusBadgeBgColor = (status?: string | null): string => {
+  const textColor = getStatusBadgeColor(status);
+  if (textColor === COLORS.submitted || textColor === '#2563EB') {
+    return '#EFF6FF'; // Soft blue badge background
+  }
+  if (textColor === COLORS.completed || textColor === '#10B981') {
+    return '#ECFDF5'; // Soft green badge background
+  }
+  if (textColor === COLORS.returned || textColor === COLORS.cancelled || textColor === '#ef4444' || textColor === '#EF4444') {
+    return '#FEF2F2'; // Soft red badge background
+  }
+  if (textColor === COLORS.draft || textColor === COLORS.inProgress || textColor === '#FFB800') {
+    return '#FFFBEB'; // Soft yellow badge background
+  }
+  return `${textColor}18`;
+};
+

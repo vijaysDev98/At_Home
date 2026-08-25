@@ -47,21 +47,28 @@ export interface ServiceInfo {
 
 export interface ServiceRequest {
   id: string;
+  _id?: string;
   requestId: string;
-  requestedDate: string;
-  requestedTime: string;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  requestedDate?: string | null;
+  requestedTime?: string | null;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | string;
   formStatus?:
   | 'draft'
   | 'submitted'
   | 'awaitingSignature'
   | 'signed'
   | 'returned'
-  | 'completed';
+  | 'completed'
+  | string;
+  isPreRequest?: boolean;
+  preRequestStatus?: string;
+  priorityLevel?: string;
+  initialNotes?: string;
+  voiceMessageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
-  patient: PatientInfo;
-  service: ServiceInfo;
+  patient?: PatientInfo | null;
+  service?: ServiceInfo | null;
 }
 
 // ===== FOR DETAILED VIEW (FormsScreen after API fetch) =====

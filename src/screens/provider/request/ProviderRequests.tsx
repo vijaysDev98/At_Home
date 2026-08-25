@@ -21,6 +21,7 @@ import {
   AppText,
   AppLoader,
   ReviewRequestSheet,
+  ProviderPreRequestDetailSheet,
   AppSafeAreaView,
   Header,
 } from '../../../components';
@@ -65,6 +66,7 @@ const ProviderRequests = () => {
     null,
   );
   const reviewSheetRef = useRef<ActionSheetRef>(null);
+  const providerPreRequestDetailSheetRef = useRef<ActionSheetRef>(null);
   const PAGE_SIZE = 10;
 
   // Fetch provider initiated requests
@@ -162,23 +164,54 @@ const ProviderRequests = () => {
   }, [requests, activeTab]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item?.formStatus || '';
+    const isPreReq = Boolean(
+      item?.isPreRequest || (!item?.patient && !item?.service),
+    );
+    const formStatus =
+      item?.formStatus || item?.preRequestStatus || item?.status || '';
 
-    const buttonConfig = getButtonConfigProvider(formStatus, item?.status);
+    const doctor = (item as any)?.doctor;
+    const doctorName =
+      doctor?.fullName ||
+      (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null);
+
+    const buttonConfig = isPreReq
+      ? {
+          show:
+            item?.status === 'submitted' || item?.preRequestStatus === 'pending',
+          label: STRING.accept,
+          action: 'accept',
+        }
+      : getButtonConfigProvider(formStatus, item?.status);
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>
         <RequestCardProvider
-          name={item.patient.fullName}
+          name={
+            item?.patient?.fullName ||
+            (isPreReq
+              ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+              : '')
+          }
           requestId={item.requestId}
-          requestType={item.service.serviceName}
+          requestType={item?.service?.serviceName || ''}
           formStatus={formStatus}
           status={item.status}
+          isPreRequest={isPreReq}
+          preRequestStatus={item.preRequestStatus}
+          voiceMessageUrl={item.voiceMessageUrl}
+          initialNotes={item.initialNotes}
+          priorityLevel={item.priorityLevel}
+          doctorName={doctorName}
+          doctorSpecialty={doctor?.specialty}
           buttonText={
             buttonConfig.show ? buttonConfig.label || undefined : undefined
           }
           onPress={() => {
+            if (isPreReq) {
+              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              return;
+            }
             if (item.status === REQUEST_STATUS.COMPLETED) {
               NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
                 request: item,
@@ -198,6 +231,10 @@ const ProviderRequests = () => {
             });
           }}
           onButtonPress={() => {
+            if (isPreReq) {
+              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              return;
+            }
             if (item.status === REQUEST_STATUS.DRAFT) {
               NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                 request: item,
@@ -298,7 +335,9 @@ const ProviderRequests = () => {
         <FlatList
           data={filteredRequests}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item =>
+            item?.id || (item as any)?._id || item?.requestId
+          }
           contentContainerStyle={styles.scroll}
           refreshControl={
             <RefreshControl
@@ -344,6 +383,10 @@ const ProviderRequests = () => {
           onSend={async (reason, details) => {
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
+        />
+        <ProviderPreRequestDetailSheet
+          ref={providerPreRequestDetailSheetRef}
+          onAcceptSuccess={() => fetchProviderRequests(1, true, activeTab)}
         />
       </View>
     </AppSafeAreaView>

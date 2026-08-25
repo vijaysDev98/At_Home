@@ -21,6 +21,8 @@ import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
+import { ActionSheetRef } from 'react-native-actions-sheet';
+import { PreRequestDetailSheet } from '../../../components/ActionSheets';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
@@ -50,8 +52,13 @@ interface DashboardRecentQueue {
   status: string;
   formStatus: string;
   updatedAt: string;
-  patient: DashboardPatient;
-  service: DashboardService;
+  patient?: DashboardPatient | null;
+  service?: DashboardService | null;
+  isPreRequest?: boolean;
+  preRequestStatus?: string;
+  initialNotes?: string;
+  voiceMessageUrl?: string | null;
+  priorityLevel?: string;
 }
 
 interface DashboardRequestsOverview {
@@ -84,6 +91,7 @@ const HomeScreen: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
+  const preRequestDetailSheetRef = React.useRef<ActionSheetRef>(null);
 
   const doctorName =
     (profileData?.fName || '') + ' ' + (profileData?.lName || '');
@@ -411,22 +419,47 @@ const HomeScreen: React.FC = () => {
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const formStatus = item.formStatus;
-                const buttonConfig = getButtonConfig(formStatus, item.status);
+                const isPreReq = !!item.isPreRequest;
+                const formStatus =
+                  item.formStatus || item.preRequestStatus || item.status;
+                const buttonConfig = isPreReq
+                  ? { show: true, label: STRING.editInstructions, action: 'edit' }
+                  : getButtonConfig(formStatus, item.status);
                 return (
                   <View key={item.id || index} style={styles.queueCardWrapper}>
                     <RequestCardDoctor
-                      name={item.patient?.fullName || ''}
+                      name={
+                        item.patient?.fullName ||
+                        (isPreReq
+                          ? t(STRING.dischargePreRequest) ||
+                            'Discharge Pre-Request'
+                          : '')
+                      }
                       requestId={item.requestId}
-                      requestType={item.service?.serviceName || ''}
+                      requestType={
+                        item.service?.serviceName ||
+                        (isPreReq
+                          ? t(STRING.homeDischarge) || 'Home Discharge'
+                          : '')
+                      }
                       formStatus={formStatus}
                       status={item.status}
+                      isPreRequest={isPreReq}
+                      preRequestStatus={item.preRequestStatus}
+                      voiceMessageUrl={item.voiceMessageUrl}
+                      initialNotes={item.initialNotes}
+                      priorityLevel={item.priorityLevel}
                       buttonText={
                         buttonConfig.show
                           ? t(buttonConfig.label || '') || undefined
                           : undefined
                       }
                       onPress={() => {
+                        if (isPreReq) {
+                          (preRequestDetailSheetRef.current as any)?.show(item);
+                          return;
+                        }
+
                         if (item.status === REQUEST_STATUS.COMPLETED) {
                           NavigationService.navigate(
                             SCREENS.SERVICE_COMPLETED,
@@ -440,6 +473,16 @@ const HomeScreen: React.FC = () => {
                         });
                       }}
                       onButtonPress={() => {
+                        if (isPreReq) {
+                          NavigationService.navigate(
+                            SCREENS.CREATE_DISCHARGE_REQUEST,
+                            {
+                              request: item,
+                              isEdit: true,
+                            },
+                          );
+                          return;
+                        }
                         if (buttonConfig.action === 'edit') {
                           NavigationService.navigate(SCREENS.FORMS_SCREEN, {
                             request: item,
@@ -478,6 +521,9 @@ const HomeScreen: React.FC = () => {
           </View> */}
         </ScrollView>
       </View>
+
+      {/* Pre-Request Detail Bottom Sheet */}
+      <PreRequestDetailSheet ref={preRequestDetailSheetRef} />
     </AppSafeAreaView>
   );
 };

@@ -15,6 +15,7 @@ import { IMAGES } from '../../../assets/images';
 import {
   AppText,
   ReviewRequestSheet,
+  ProviderPreRequestDetailSheet,
   AppLoader,
   ProfileAvatar,
   AppSafeAreaView,
@@ -61,8 +62,14 @@ interface DashboardRecentQueue {
   status: string;
   formStatus: string;
   updatedAt: string;
-  patient: DashboardPatient;
-  service: DashboardService;
+  patient?: DashboardPatient | null;
+  service?: DashboardService | null;
+  isPreRequest?: boolean;
+  preRequestStatus?: string;
+  voiceMessageUrl?: string | null;
+  initialNotes?: string | null;
+  priorityLevel?: string | null;
+  doctor?: any;
 }
 
 interface DashboardRequestsOverview {
@@ -83,6 +90,7 @@ const ProviderHome: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const reviewSheetRef = useRef<ActionSheetRef>(null);
+  const providerPreRequestDetailSheetRef = useRef<ActionSheetRef>(null);
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
@@ -367,11 +375,29 @@ const ProviderHome: React.FC = () => {
 
           {recentQueue.length > 0 ? (
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
-              const formStatus = item.formStatus;
-              const buttonConfig = getButtonConfigProvider(
-                formStatus,
-                item?.status,
+              const isPreReq = Boolean(
+                item.isPreRequest || (!item.patient && !item.service),
               );
+              const formStatus =
+                item.formStatus || item.preRequestStatus || item.status || '';
+
+              const doctor = (item as any)?.doctor;
+              const doctorName =
+                doctor?.fullName ||
+                (doctor
+                  ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim()
+                  : null);
+
+              const buttonConfig = isPreReq
+                ? {
+                    show:
+                      item?.status === 'submitted' ||
+                      item?.preRequestStatus === 'pending',
+                    label: STRING.accept,
+                    action: 'accept',
+                  }
+                : getButtonConfigProvider(formStatus, item?.status);
+
               return (
                 <View
                   key={item.id || index}
@@ -380,17 +406,36 @@ const ProviderHome: React.FC = () => {
                   }}
                 >
                   <RequestCardProvider
-                    name={item?.patient?.fullName || ''}
+                    name={
+                      item?.patient?.fullName ||
+                      (isPreReq
+                        ? t(STRING.dischargePreRequest) ||
+                          'Discharge Pre-Request'
+                        : '')
+                    }
                     requestId={item?.requestId}
                     requestType={item?.service?.serviceName || ''}
-                    formStatus={item?.formStatus}
+                    formStatus={formStatus}
                     status={item?.status}
+                    isPreRequest={isPreReq}
+                    preRequestStatus={item?.preRequestStatus}
+                    voiceMessageUrl={item?.voiceMessageUrl}
+                    initialNotes={item?.initialNotes}
+                    priorityLevel={item?.priorityLevel}
+                    doctorName={doctorName}
+                    doctorSpecialty={doctor?.specialty}
                     buttonText={
                       buttonConfig.show && buttonConfig.label
                         ? t(buttonConfig.label)
                         : undefined
                     }
                     onPress={() => {
+                      if (isPreReq) {
+                        (
+                          providerPreRequestDetailSheetRef.current as any
+                        )?.show(item);
+                        return;
+                      }
                       if (item.status == REQUEST_STATUS.COMPLETED) {
                         NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
                           request: item,
@@ -405,7 +450,13 @@ const ProviderHome: React.FC = () => {
                         },
                       );
                     }}
-                    onButtonPress={() =>
+                    onButtonPress={() => {
+                      if (isPreReq) {
+                        (
+                          providerPreRequestDetailSheetRef.current as any
+                        )?.show(item);
+                        return;
+                      }
                       NavigationService.navigate(
                         SCREENS.PROVIDER_FORMS_SCREEN,
                         {
@@ -415,8 +466,8 @@ const ProviderHome: React.FC = () => {
                             isComplete: buttonConfig.isComplete,
                           }),
                         },
-                      )
-                    }
+                      );
+                    }}
                     onLeftButtonPress={() => {
                       setSelectedRequest(item);
                       reviewSheetRef.current?.show();
@@ -458,6 +509,10 @@ const ProviderHome: React.FC = () => {
             // });
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
+        />
+        <ProviderPreRequestDetailSheet
+          ref={providerPreRequestDetailSheetRef}
+          onAcceptSuccess={() => fetchDashboardData()}
         />
       </View>
     </AppSafeAreaView>

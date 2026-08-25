@@ -21,6 +21,7 @@ import {
   AppText,
   AppLoader,
   ReviewRequestSheet,
+  ProviderPreRequestDetailSheet,
   AppSafeAreaView,
   Header,
 } from '../../../components';
@@ -57,6 +58,7 @@ const AvailableRequest: React.FC = () => {
     (state: RootState) => state.common.isLoading,
   );
   const reviewSheetRef = useRef<ActionSheetRef>(null);
+  const providerPreRequestDetailSheetRef = useRef<ActionSheetRef>(null);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
     null,
   );
@@ -152,20 +154,37 @@ const AvailableRequest: React.FC = () => {
         }
 
         const combined = [...assignedRequests, ...availableRequests];
+        const getItemId = (item: any) =>
+          item?.id || item?._id || item?.requestId;
+
         // Deduplicate requests by id
         const uniqueCombined = combined.filter(
-          (item, idx, self) => self.findIndex(t => t.id === item.id) === idx,
+          (item, idx, self) =>
+            self.findIndex(t => getItemId(t) === getItemId(item)) === idx,
         );
+
+        // Sort by createdAt descending so newest requests / pre-requests appear at the top
+        uniqueCombined.sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return timeB - timeA;
+        });
 
         if (page === 1) {
           setRequests(uniqueCombined);
         } else {
           setRequests(prev => {
             const combinedPrev = [...prev, ...uniqueCombined];
-            return combinedPrev.filter(
+            const deduped = combinedPrev.filter(
               (item, idx, self) =>
-                self.findIndex(t => t.id === item.id) === idx,
+                self.findIndex(t => getItemId(t) === getItemId(item)) === idx,
             );
+            deduped.sort((a, b) => {
+              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return timeB - timeA;
+            });
+            return deduped;
           });
         }
 
@@ -247,23 +266,54 @@ const AvailableRequest: React.FC = () => {
   }, [requests, activeTab]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
-    // Get button configuration based on form status (default to status if formStatus not available)
-    const formStatus = item?.formStatus || '';
+    const isPreReq = Boolean(
+      item?.isPreRequest || (!item?.patient && !item?.service),
+    );
+    const formStatus =
+      item?.formStatus || item?.preRequestStatus || item?.status || '';
 
-    const buttonConfig = getButtonConfigProvider(formStatus, item?.status);
+    const doctor = (item as any)?.doctor;
+    const doctorName =
+      doctor?.fullName ||
+      (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null);
+
+    const buttonConfig = isPreReq
+      ? {
+          show:
+            item?.status === 'submitted' || item?.preRequestStatus === 'pending',
+          label: STRING.accept,
+          action: 'accept',
+        }
+      : getButtonConfigProvider(formStatus, item?.status);
 
     return (
       <View style={{ marginBottom: getScaleSize(16) }}>
         <RequestCardProvider
-          name={item.patient.fullName}
+          name={
+            item?.patient?.fullName ||
+            (isPreReq
+              ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+              : '')
+          }
           requestId={item.requestId}
-          requestType={item.service.serviceName}
+          requestType={item?.service?.serviceName || ''}
           formStatus={formStatus}
           status={item.status}
+          isPreRequest={isPreReq}
+          preRequestStatus={item.preRequestStatus}
+          voiceMessageUrl={item.voiceMessageUrl}
+          initialNotes={item.initialNotes}
+          priorityLevel={item.priorityLevel}
+          doctorName={doctorName}
+          doctorSpecialty={doctor?.specialty}
           buttonText={
             buttonConfig.show ? buttonConfig.label || undefined : undefined
           }
           onPress={() => {
+            if (isPreReq) {
+              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              return;
+            }
             if (item.status == REQUEST_STATUS.COMPLETED) {
               NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
                 request: item,
@@ -275,15 +325,19 @@ const AvailableRequest: React.FC = () => {
               action: 'view',
             });
           }}
-          onButtonPress={() =>
+          onButtonPress={() => {
+            if (isPreReq) {
+              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              return;
+            }
             NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
               request: item,
               action: buttonConfig.action,
               ...(buttonConfig.isComplete && {
                 isComplete: buttonConfig.isComplete,
               }),
-            })
-          }
+            });
+          }}
           onLeftButtonPress={() => {
             setSelectedRequest(item);
             reviewSheetRef.current?.show();
@@ -414,7 +468,9 @@ const AvailableRequest: React.FC = () => {
                   tintColor={COLORS._526674}
                 />
               }
-              keyExtractor={item => item.id}
+              keyExtractor={item =>
+                item?.id || (item as any)?._id || item?.requestId
+              }
               showsVerticalScrollIndicator={false}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
@@ -446,6 +502,12 @@ const AvailableRequest: React.FC = () => {
           onSend={async (reason, details) => {
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
+        />
+        <ProviderPreRequestDetailSheet
+          ref={providerPreRequestDetailSheetRef}
+          onAcceptSuccess={() =>
+            fetchAvailableRequests(1, true, activeTabRef.current)
+          }
         />
       </View>
     </AppSafeAreaView>

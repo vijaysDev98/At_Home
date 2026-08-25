@@ -473,7 +473,7 @@ const PatientDetail: React.FC = () => {
                     <RequestCardProvider
                       name={patient?.fullName || ''}
                       requestId={item.requestId}
-                      requestType={item.service.serviceName}
+                      requestType={item?.service?.serviceName || ''}
                       formStatus={formStatus}
                       status={item.status}
                       buttonText={

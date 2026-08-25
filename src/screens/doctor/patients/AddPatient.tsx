@@ -574,7 +574,6 @@ const AddPatient: React.FC = () => {
                   labelFont={FONTS.Inter.SemiBold}
                   labelSize={getScaleSize(13)}
                   isMandatory={true}
-                  error={errors.phone}
                   leftIcon={IMAGES.phone}
                   style={styles.inputContainer}
                 />

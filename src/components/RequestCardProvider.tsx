@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -14,12 +13,13 @@ import {
   DISPLAY_FORM_STATUS,
   FORM_STATUS,
   REQUEST_STATUS,
+  getStatusBadgeColor,
+  getStatusBadgeBgColor,
 } from '../constant/RequestStatus';
-import NavigationService from '../navigation/NavigationService';
-import { SCREENS } from '../navigation/routes';
 import ProfileAvatar from './ProfileAvatar';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import { IMAGES } from '../assets/images';
 
 interface RequestCardProps {
   name?: string;
@@ -31,6 +31,13 @@ interface RequestCardProps {
   onButtonPress?: () => void;
   onLeftButtonPress?: () => void;
   onPress?: () => void;
+  isPreRequest?: boolean;
+  preRequestStatus?: string;
+  voiceMessageUrl?: string | null;
+  initialNotes?: string | null;
+  priorityLevel?: string | null;
+  doctorName?: string | null;
+  doctorSpecialty?: string | null;
 }
 
 const RequestCardProvider: React.FC<RequestCardProps> = ({
@@ -43,16 +50,55 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
   onButtonPress = () => {},
   onLeftButtonPress = () => {},
   onPress,
+  isPreRequest,
+  preRequestStatus,
+  voiceMessageUrl,
+  initialNotes,
+  priorityLevel,
+  doctorName,
+  doctorSpecialty,
 }) => {
   const { t } = useTranslation();
+
+  // Top right status badge follows `status` directly as it was originally
+  const badgeColor = getStatusBadgeColor(status || 'submitted');
+  const badgeBgColor = getStatusBadgeBgColor(status || 'submitted');
+
+  const statusKey = (status || 'submitted').toLowerCase().replace(/[-_ ]/g, '');
+  const displayStatus =
+    (DISPLAY_FORM_STATUS as Record<string, string>)[statusKey] ||
+    (status ? (DISPLAY_FORM_STATUS as Record<string, string>)[status] : '') ||
+    status ||
+    '';
+
+  // Title and subtitle
+  const displayName = isPreRequest
+    ? name || t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+    : name || '';
+
+  const displaySubtitle = isPreRequest
+    ? requestType
+      ? t(requestType)
+      : voiceMessageUrl && initialNotes
+      ? t(STRING.voiceAndTextInstructions) || 'Voice & Written Summary'
+      : voiceMessageUrl
+      ? t(STRING.voiceInstructions) || 'Voice Instructions'
+      : initialNotes
+      ? t(STRING.textInstructions) || 'Written Notes'
+      : t(STRING.preRequest) || 'Pre-Request'
+    : t(requestType || '');
+
   let initials = '';
-  if (name) {
-    initials = name
-      .split('')
+  if (displayName) {
+    initials = displayName
+      .split(' ')
+      .filter(Boolean)
       .map(n => n[0])
+      .slice(0, 2)
       .join('')
       .toUpperCase();
   }
+
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.7 : 1}
@@ -60,47 +106,101 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
       disabled={!onPress}
       style={styles.requestCardContainer}
     >
+      {/* Header Row */}
       <View style={styles.requestHeaderRow}>
-        <ProfileAvatar
-          name={initials}
-          size="small"
-          backgroundColor={COLORS._E5E7EB}
-        />
+        {isPreRequest ? (
+          <View style={styles.preRequestIconBadge}>
+            <Image
+              source={
+                voiceMessageUrl
+                  ? IMAGES.ic_mic
+                  : IMAGES.ic_file
+              }
+              style={styles.preRequestIcon}
+            />
+          </View>
+        ) : (
+          <ProfileAvatar
+            name={initials}
+            size="small"
+            backgroundColor={COLORS._E5E7EB}
+          />
+        )}
 
         <View style={styles.patientInfoContainer}>
           <AppText
-            size={getScaleSize(16)}
+            size={getScaleSize(15)}
             font={FONTS.Inter.Bold}
             color={COLORS._1A1A1A}
+            numberOfLines={1}
           >
-            {name}
+            {displayName}
           </AppText>
           <AppText
-            size={getScaleSize(14)}
+            size={getScaleSize(13)}
             font={FONTS.Inter.Regular}
             color={COLORS._6B7280}
+            numberOfLines={1}
           >
-            {t(requestType || '')}
+            {displaySubtitle}
           </AppText>
         </View>
+
         <View
           style={[
             styles.statusBadgeContainer,
-            { backgroundColor: `${COLORS[status]}10` },
+            { backgroundColor: badgeBgColor },
           ]}
         >
           <AppText
             size={getScaleSize(11)}
             font={FONTS.Inter.Regular}
-            color={COLORS[status]}
+            color={badgeColor}
           >
-            {t(DISPLAY_FORM_STATUS[status])}
+            {t(
+              (DISPLAY_FORM_STATUS as Record<string, string>)[status || ''] ||
+                displayStatus,
+            )}
           </AppText>
         </View>
       </View>
 
+      {/* Voice note indicator pill */}
+      {isPreRequest && !!voiceMessageUrl && (
+        <View style={styles.voiceNotePill}>
+          <Image source={IMAGES.ic_mic} style={styles.voiceIcon} />
+          <AppText
+            size={getScaleSize(11)}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS.primary}
+          >
+            {t(STRING.voiceNoteAttached)}
+          </AppText>
+        </View>
+      )}
+
+      {/* Notes snippet preview */}
+      {isPreRequest && !!initialNotes && (
+        <View style={styles.noteSnippetContainer}>
+          <Image
+            source={IMAGES.ic_file}
+            style={styles.noteSnippetIcon}
+          />
+          <AppText
+            size={getScaleSize(12)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._526674}
+            numberOfLines={2}
+            style={{ flex: 1 }}
+          >
+            {initialNotes}
+          </AppText>
+        </View>
+      )}
+
       <View style={styles.dividerLine} />
 
+      {/* Details Row */}
       <View style={styles.requestDetailsRow}>
         <View>
           <AppText
@@ -117,9 +217,10 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'left'}
           >
-            {requestId}
+            {requestId || '—'}
           </AppText>
         </View>
+
         <View>
           <AppText
             size={getScaleSize(11)}
@@ -127,7 +228,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             color={COLORS._6F767E}
             align={'right'}
           >
-            {t(STRING.formStatus)}
+            {isPreRequest && doctorName ? t('Doctor') : t(STRING.formStatus)}
           </AppText>
           <AppText
             size={getScaleSize(13)}
@@ -135,13 +236,29 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'right'}
           >
-            {t(DISPLAY_FORM_STATUS[formStatus])}
+            {isPreRequest && doctorName
+              ? `Dr. ${doctorName.replace(/^Dr\.?\s*/i, '')}`
+              : t(
+                  (DISPLAY_FORM_STATUS as Record<string, string>)[
+                    (formStatus || '').toLowerCase().replace(/[-_ ]/g, '')
+                  ] ||
+                    (formStatus
+                      ? (DISPLAY_FORM_STATUS as Record<string, string>)[
+                          formStatus
+                        ]
+                      : '') ||
+                    formStatus ||
+                    '—',
+                )}
           </AppText>
         </View>
       </View>
+
+      {/* Buttons Row */}
       <View style={{ flexDirection: 'row', gap: getScaleSize(12) }}>
-        {formStatus == FORM_STATUS.SIGNED &&
-          status == REQUEST_STATUS.SUBMITTED && (
+        {!isPreRequest &&
+          formStatus === FORM_STATUS.SIGNED &&
+          status === REQUEST_STATUS.SUBMITTED && (
             <AppButton
               title={t(STRING.returnRequest)}
               textSize={getScaleSize(13)}
@@ -160,7 +277,8 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
               ]}
             />
           )}
-        {buttonText && (
+
+        {!!buttonText && (
           <AppButton
             title={t(buttonText)}
             textSize={getScaleSize(13)}
@@ -184,57 +302,92 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(16),
     padding: getScaleSize(16),
     backgroundColor: COLORS.white,
-    elevation: 5,
+    elevation: 3,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
   },
-  // Request header row
   requestHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  // Avatar container
-  avatarContainer: {
+  preRequestIconBadge: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: '#e8edf1',
     alignItems: 'center',
     justifyContent: 'center',
-    height: getScaleSize(40),
-    width: getScaleSize(40),
     borderWidth: 1,
-    borderColor: COLORS._DBEAFE,
-    backgroundColor: COLORS._EFF6FF,
-    borderRadius: getScaleSize(20),
+    borderColor: '#E5E7EB',
   },
-  // Patient info container
+  preRequestIcon: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    tintColor: COLORS.primary,
+    resizeMode: 'contain',
+  },
   patientInfoContainer: {
     marginLeft: getScaleSize(12),
     flex: 1,
   },
-  // Status badge container
   statusBadgeContainer: {
     alignItems: 'center',
-    backgroundColor: COLORS._EFF6FF,
     borderRadius: getScaleSize(20),
-    paddingHorizontal: getScaleSize(8),
-    paddingVertical: getScaleSize(3),
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(4),
   },
-  // Divider line
+  voiceNotePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    backgroundColor: '#e8edf1',
+    borderRadius: getScaleSize(8),
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(4),
+    alignSelf: 'flex-start',
+    marginTop: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  voiceIcon: {
+    width: getScaleSize(13),
+    height: getScaleSize(13),
+    tintColor: COLORS.primary,
+    resizeMode: 'contain',
+  },
+  noteSnippetContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: getScaleSize(6),
+    backgroundColor: '#F8FAFC',
+    borderRadius: getScaleSize(8),
+    padding: getScaleSize(8),
+    marginTop: getScaleSize(8),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  noteSnippetIcon: {
+    width: getScaleSize(13),
+    height: getScaleSize(13),
+    tintColor: COLORS._6F767E,
+    resizeMode: 'contain',
+    marginTop: getScaleSize(2),
+  },
   dividerLine: {
     height: 1,
     backgroundColor: COLORS._E5E7EB,
     marginVertical: getScaleSize(12),
   },
-  // Request details row
   requestDetailsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  // Update button style
   updateButtonStyle: {
     marginTop: getScaleSize(12),
-    height: getScaleSize(48),
+    height: getScaleSize(46),
     borderRadius: getScaleSize(8),
   },
 });

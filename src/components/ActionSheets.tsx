@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   View,
   TouchableOpacity,
@@ -16,13 +17,22 @@ import ProfileAvatar from './ProfileAvatar';
 import { getScaleSize } from '../utils/scaleSize';
 import { IMAGES } from '../assets/images';
 import { COLORS, FONTS } from '../utils';
-import React from 'react';
 import NavigationService from '../navigation/NavigationService';
+import { SCREENS } from '../navigation/routes';
 import { SHOW_TOAST, STRING } from '../constant';
 import { useTranslation } from 'react-i18next';
 import { getProvidersService } from '../services/patientService';
 import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { Provider } from '../screens/doctor/providers/ProvidersCallList';
+import moment from 'moment';
+import { useSound } from 'react-native-nitro-sound';
+import { serviceRequestApi } from '../services/serviceRequestApi';
+import { ServiceRequest } from '../services/serviceRequestListApi';
+import {
+  DISPLAY_FORM_STATUS,
+  getStatusBadgeColor,
+  getStatusBadgeBgColor,
+} from '../constant/RequestStatus';
 
 /**
  * Constants
@@ -1373,6 +1383,681 @@ export const SelectProviderSheet = React.forwardRef<
   );
 });
 
+/**
+ * Pre-Request Detail Bottom Sheet
+ * Displays full details of a discharge pre-request with audio playback and written notes
+ */
+export interface PreRequestDetailSheetProps {
+  onClose?: () => void;
+}
+
+export const PreRequestDetailSheet = React.forwardRef<
+  ActionSheetRef,
+  PreRequestDetailSheetProps
+>(({ onClose }, ref) => {
+  const sheetRef = React.useRef<ActionSheetRef>(null);
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+
+  const [request, setRequest] = React.useState<any>(null);
+  const [isPlaying, setIsPlaying] = React.useState<boolean>(false);
+  const [playbackProgress, setPlaybackProgress] = React.useState<number>(0);
+  const [currentSecs, setCurrentSecs] = React.useState<number>(0);
+  const [totalSecs, setTotalSecs] = React.useState<number>(0);
+
+  const sound = useSound({
+    subscriptionDuration: 0.1,
+    onPlayback: e => {
+      if (e.duration > 0 && e.currentPosition != null) {
+        setTotalSecs(Math.floor(e.duration / 1000));
+        setCurrentSecs(Math.floor(e.currentPosition / 1000));
+        const prog = (e.currentPosition / e.duration) * 100;
+        setPlaybackProgress(Math.min(prog, 100));
+      }
+    },
+    onPlaybackEnd: () => {
+      setIsPlaying(false);
+      setPlaybackProgress(0);
+      setCurrentSecs(0);
+    },
+  });
+
+  React.useImperativeHandle(
+    ref,
+    () =>
+      ({
+        show: (data?: any) => {
+          if (data) {
+            setRequest(data);
+          }
+          setIsPlaying(false);
+          setPlaybackProgress(0);
+          setCurrentSecs(0);
+          setTotalSecs(0);
+          sheetRef.current?.show();
+        },
+        hide: () => {
+          handleClose();
+        },
+        snapToOffset: (offset: number) =>
+          sheetRef.current?.snapToOffset(offset),
+        snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
+      } as ActionSheetRef),
+  );
+
+  const handleClose = async () => {
+    if (isPlaying) {
+      try {
+        await sound.stopPlayer();
+      } catch (e) {}
+      setIsPlaying(false);
+    }
+    sheetRef.current?.hide();
+    onClose?.();
+  };
+
+  const handleTogglePlay = async () => {
+    if (!request?.voiceMessageUrl) return;
+    try {
+      if (isPlaying) {
+        await sound.pausePlayer();
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+        await sound.startPlayer(request.voiceMessageUrl);
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
+      setIsPlaying(false);
+    }
+  };
+
+  const formatSeconds = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s
+      .toString()
+      .padStart(2, '0')}`;
+  };
+
+  const effectiveStatus =
+    request?.preRequestStatus ||
+    request?.status ||
+    request?.formStatus ||
+    'submitted';
+
+  const badgeColor = getStatusBadgeColor(effectiveStatus);
+  const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
+
+  const displayStatus =
+    DISPLAY_FORM_STATUS[effectiveStatus.toLowerCase()] ||
+    (request?.status ? t(request.status) : 'Submitted');
+
+  return (
+    <ActionSheet
+      ref={sheetRef}
+      onClose={handleClose}
+      gestureEnabled={true}
+      containerStyle={styles.preRequestSheetContainer}
+    >
+      <View
+        style={[
+          styles.preRequestSheetContent,
+          { paddingBottom: Math.max(insets.bottom, getScaleSize(20)) },
+        ]}
+      >
+        {/* Header with Title & Close Button */}
+        <View style={styles.preRequestSheetHeader}>
+          <View style={styles.preRequestHeaderLeft}>
+            <View style={styles.preRequestBadgeWrapper}>
+              <Image
+                source={
+                  request?.voiceMessageUrl ? IMAGES.ic_mic : IMAGES.ic_file
+                }
+                style={styles.preRequestBadgeIcon}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.dischargePreRequest) || 'Discharge Pre-Request'}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: getScaleSize(2) }}
+              >
+                {request?.requestId || '—'}
+              </AppText>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.preRequestCloseCircle}
+            onPress={handleClose}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={IMAGES.crossIcon}
+              style={styles.preRequestCloseIcon}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.preRequestDivider} />
+
+        {/* Voice Recording Player (if voice message exists) */}
+        {!!request?.voiceMessageUrl && (
+          <View style={styles.preRequestVoiceSection}>
+            <View style={styles.preRequestSectionTitleRow}>
+              <Image
+                source={IMAGES.ic_mic}
+                style={styles.preRequestSectionIcon}
+              />
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.voiceInstructions)}
+              </AppText>
+            </View>
+
+            <View style={styles.preRequestAudioPlayerCard}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.preRequestPlayPauseBtn}
+                onPress={handleTogglePlay}
+              >
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
+                >
+                  {isPlaying ? '⏸' : '▶'}
+                </AppText>
+              </TouchableOpacity>
+
+              <View style={styles.preRequestAudioInfoCol}>
+                <View style={styles.preRequestProgressBarBg}>
+                  <View
+                    style={[
+                      styles.preRequestProgressBarFill,
+                      { width: `${playbackProgress}%` },
+                    ]}
+                  />
+                </View>
+
+                <View style={styles.preRequestAudioTimeRow}>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                  >
+                    {formatSeconds(currentSecs)}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                  >
+                    {totalSecs > 0 ? formatSeconds(totalSecs) : '--:--'}
+                  </AppText>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Written Notes Section (if notes exist) */}
+        {!!request?.initialNotes && (
+          <View style={styles.preRequestNotesSection}>
+            <View style={styles.preRequestSectionTitleRow}>
+              <Image
+                source={IMAGES.ic_file}
+                style={styles.preRequestSectionIcon}
+              />
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.textInstructions)}
+              </AppText>
+            </View>
+
+            <View style={styles.preRequestNotesContentBox}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._1A1D1F}
+                style={{ lineHeight: getScaleSize(19) }}
+              >
+                {request.initialNotes}
+              </AppText>
+            </View>
+          </View>
+        )}
+
+        {/* Meta Info Row: Created Date */}
+        {!!request?.createdAt && (
+          <View style={styles.preRequestMetaRow}>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._6F767E}
+            >
+              Created:{' '}
+              {moment(request.createdAt).format('DD MMM YYYY, hh:mm A')}
+            </AppText>
+          </View>
+        )}
+
+        {/* Action Buttons: Close and Edit */}
+        <View style={styles.preRequestBtnRow}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.preRequestCancelBtn}
+            onPress={handleClose}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t('Close')}
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.preRequestEditBtn}
+            onPress={() => {
+              handleClose();
+              NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+                request,
+                isEdit: true,
+              });
+            }}
+          >
+            <Image
+              source={IMAGES.ic_edit}
+              style={styles.preRequestEditBtnIcon}
+            />
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.white}
+            >
+              {t(STRING.editInstructions)}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ActionSheet>
+  );
+});
+
+/**
+ * Provider Pre-Request Detail Action Sheet
+ * Displays pre-request audio recording, text notes, doctor information,
+ * and allows the provider to either Cancel or Accept the request via PUT /service-requests/:id/accept
+ */
+export interface ProviderPreRequestDetailSheetProps {
+  onAcceptSuccess?: () => void;
+}
+
+export const ProviderPreRequestDetailSheet = React.forwardRef<
+  ActionSheetRef,
+  ProviderPreRequestDetailSheetProps
+>(({ onAcceptSuccess }, ref) => {
+  const { t } = useTranslation();
+  const sheetRef = React.useRef<ActionSheetRef>(null);
+  const [request, setRequest] = React.useState<ServiceRequest | null>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [playbackProgress, setPlaybackProgress] = React.useState(0);
+  const [currentSecs, setCurrentSecs] = React.useState(0);
+  const [totalSecs, setTotalSecs] = React.useState(0);
+  const [isAccepting, setIsAccepting] = React.useState(false);
+
+  const sound = useSound({
+    subscriptionDuration: 0.1,
+    onPlayback: e => {
+      if (e.duration > 0 && e.currentPosition != null) {
+        const progress = (e.currentPosition / e.duration) * 100;
+        setPlaybackProgress(Math.min(progress, 100));
+        setCurrentSecs(Math.floor(e.currentPosition / 1000));
+        setTotalSecs(Math.floor(e.duration / 1000));
+      }
+    },
+    onPlaybackEnd: () => {
+      setIsPlaying(false);
+      setPlaybackProgress(0);
+      setCurrentSecs(0);
+    },
+  });
+
+  React.useImperativeHandle(ref, () => ({
+    show: (req?: ServiceRequest) => {
+      if (req) {
+        setRequest(req);
+      }
+      setIsPlaying(false);
+      setPlaybackProgress(0);
+      setCurrentSecs(0);
+      setTotalSecs(0);
+      setIsAccepting(false);
+      sheetRef.current?.show();
+    },
+    hide: () => {
+      handleClose();
+    },
+  } as any));
+
+  const handleClose = () => {
+    try {
+      if (isPlaying) {
+        sound.stopPlayer();
+      }
+    } catch (_) {}
+    setIsPlaying(false);
+    sheetRef.current?.hide();
+  };
+
+  const handleTogglePlay = async () => {
+    if (!request?.voiceMessageUrl) return;
+    if (isPlaying) {
+      await sound.pausePlayer();
+      setIsPlaying(false);
+    } else {
+      await sound.startPlayer(request.voiceMessageUrl);
+      setIsPlaying(true);
+    }
+  };
+
+  const handleAccept = async () => {
+    const targetId = request?.id || (request as any)?._id || request?.requestId;
+    if (!targetId) {
+      SHOW_TOAST('Request ID is missing', 'error');
+      return;
+    }
+
+    setIsAccepting(true);
+    try {
+      const res = await serviceRequestApi.acceptRequest(targetId);
+      setIsAccepting(false);
+      if (res.success) {
+        SHOW_TOAST(res.message || t(STRING.requestAccepted), 'success');
+        handleClose();
+        onAcceptSuccess?.();
+      } else {
+        SHOW_TOAST(
+          res.error || res.message || 'Failed to accept request',
+          'error',
+        );
+      }
+    } catch (e: any) {
+      setIsAccepting(false);
+      SHOW_TOAST(e?.message || 'Failed to accept request', 'error');
+    }
+  };
+
+  const formatSeconds = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const doctor = (request as any)?.doctor;
+  const doctorName =
+    doctor?.fullName ||
+    (doctor ? `${doctor?.fName || ''} ${doctor?.lName || ''}`.trim() : null);
+
+  return (
+    <ActionSheet
+      ref={sheetRef}
+      gestureEnabled
+      containerStyle={[
+        styles.sheetContainer,
+        { backgroundColor: COLORS.white },
+      ]}
+      indicatorStyle={styles.indicator}
+      onClose={handleClose}
+    >
+      <View style={styles.sheetContent}>
+        {/* Header */}
+        <View style={styles.preRequestSheetHeader}>
+          <View style={styles.preRequestHeaderLeft}>
+            <View style={styles.preRequestBadgeWrapper}>
+              <Image
+                source={
+                  request?.voiceMessageUrl
+                    ? IMAGES.ic_mic
+                    : IMAGES.ic_file
+                }
+                style={styles.preRequestBadgeIcon}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.dischargePreRequest) || 'Discharge Pre-Request'}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: getScaleSize(2) }}
+              >
+                {request?.requestId || '—'}
+              </AppText>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.preRequestCloseCircle}
+            onPress={handleClose}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={IMAGES.crossIcon}
+              style={styles.preRequestCloseIcon}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.preRequestDivider} />
+
+        {/* Doctor Information Card (if present) */}
+        {!!doctorName && (
+          <View style={styles.providerDoctorCard}>
+            <View style={styles.providerDoctorAvatarWrap}>
+              <ProfileAvatar
+                name={doctorName}
+                size="small"
+                backgroundColor={COLORS._EFF6FF}
+              />
+            </View>
+            <View style={{ flex: 1, marginLeft: getScaleSize(10) }}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {`Dr. ${doctorName.replace(/^Dr\.?\s*/i, '')}`}
+              </AppText>
+              {!!doctor?.specialty && (
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS.primary}
+                  style={{
+                    marginTop: getScaleSize(2),
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {doctor.specialty}
+                </AppText>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Voice Recording Player (if voice message exists) */}
+        {!!request?.voiceMessageUrl && (
+          <View style={styles.preRequestVoiceSection}>
+            <View style={styles.preRequestSectionTitleRow}>
+              <Image
+                source={IMAGES.ic_mic}
+                style={styles.preRequestSectionIcon}
+              />
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.voiceInstructions)}
+              </AppText>
+            </View>
+
+            <View style={styles.preRequestAudioPlayerCard}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.preRequestPlayPauseBtn}
+                onPress={handleTogglePlay}
+              >
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
+                >
+                  {isPlaying ? '⏸' : '▶'}
+                </AppText>
+              </TouchableOpacity>
+
+              <View style={styles.preRequestAudioInfoCol}>
+                <View style={styles.preRequestProgressBarBg}>
+                  <View
+                    style={[
+                      styles.preRequestProgressBarFill,
+                      { width: `${playbackProgress}%` },
+                    ]}
+                  />
+                </View>
+
+                <View style={styles.preRequestAudioTimeRow}>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                  >
+                    {formatSeconds(currentSecs)}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                  >
+                    {totalSecs > 0 ? formatSeconds(totalSecs) : '--:--'}
+                  </AppText>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Written Notes Section (if notes exist) */}
+        {!!request?.initialNotes && (
+          <View style={styles.preRequestNotesSection}>
+            <View style={styles.preRequestSectionTitleRow}>
+              <Image
+                source={IMAGES.ic_file}
+                style={styles.preRequestSectionIcon}
+              />
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.textInstructions)}
+              </AppText>
+            </View>
+
+            <View style={styles.preRequestNotesContentBox}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._1A1D1F}
+                style={{ lineHeight: getScaleSize(19) }}
+              >
+                {request.initialNotes}
+              </AppText>
+            </View>
+          </View>
+        )}
+
+        {/* Meta Info Row: Created Date */}
+        {!!request?.createdAt && (
+          <View style={styles.preRequestMetaRow}>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._6F767E}
+            >
+              Created:{' '}
+              {moment(request.createdAt).format('DD MMM YYYY, hh:mm A')}
+            </AppText>
+          </View>
+        )}
+
+        {/* Action Buttons: Cancel and Accept */}
+        <View style={styles.preRequestBtnRow}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.preRequestCancelBtn}
+            onPress={handleClose}
+            disabled={isAccepting}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t(STRING.cancel || 'Cancel')}
+            </AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[
+              styles.preRequestAcceptBtn,
+              isAccepting && { opacity: 0.7 },
+            ]}
+            onPress={handleAccept}
+            disabled={isAccepting}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.white}
+            >
+              {isAccepting
+                ? t(STRING.accepting || 'Accepting...')
+                : t(STRING.accept || 'Accept')}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ActionSheet>
+  );
+});
 
 const styles = StyleSheet.create({
   sheetContainer: {
@@ -1683,5 +2368,189 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.white,
+  },
+  preRequestSheetContainer: {
+    borderTopLeftRadius: getScaleSize(24),
+    borderTopRightRadius: getScaleSize(24),
+    backgroundColor: COLORS.white,
+  },
+  preRequestSheetContent: {
+    paddingHorizontal: getScaleSize(20),
+    paddingTop: getScaleSize(16),
+  },
+  preRequestSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: getScaleSize(12),
+  },
+  preRequestHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
+    flex: 1,
+  },
+  preRequestBadgeWrapper: {
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    borderRadius: getScaleSize(21),
+    backgroundColor: '#e8edf1',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  preRequestBadgeIcon: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  preRequestCloseCircle: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  preRequestCloseIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: COLORS._1A1D1F,
+    resizeMode: 'contain',
+  },
+  preRequestPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+    marginBottom: getScaleSize(12),
+  },
+  preRequestStatusPill: {
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+  },
+  preRequestDivider: {
+    height: 1,
+    backgroundColor: COLORS._EFEFEF,
+    marginVertical: getScaleSize(10),
+  },
+  preRequestVoiceSection: {
+    marginBottom: getScaleSize(14),
+  },
+  preRequestSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    marginBottom: getScaleSize(8),
+  },
+  preRequestSectionIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  preRequestAudioPlayerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: getScaleSize(12),
+  },
+  preRequestPlayPauseBtn: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  preRequestAudioInfoCol: {
+    flex: 1,
+    gap: getScaleSize(6),
+  },
+  preRequestProgressBarBg: {
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  preRequestProgressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+  },
+  preRequestAudioTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  preRequestNotesSection: {
+    marginBottom: getScaleSize(14),
+  },
+  preRequestNotesContentBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  preRequestMetaRow: {
+    marginBottom: getScaleSize(16),
+  },
+  preRequestBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+  },
+  preRequestCancelBtn: {
+    flex: 1,
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  preRequestEditBtn: {
+    flex: 1.6,
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+  },
+  preRequestEditBtnIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
+  },
+  providerDoctorCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(12),
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: getScaleSize(14),
+  },
+  providerDoctorAvatarWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  preRequestAcceptBtn: {
+    flex: 1.6,
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

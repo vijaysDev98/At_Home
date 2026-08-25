@@ -6,15 +6,17 @@ import { setLoading } from '../actions/common/commonSlice';
 import { SHOW_TOAST } from '../constant/showToast';
 
 export interface CreateServiceRequestPayload {
-  serviceId: string;
-  patientId: string;
+  serviceId?: string;
+  patientId?: string;
   doctorId?: string; // Optional doctor ID for provider-created requests
   providerId?: string; // Optional provider ID when sending to specific provider
   assignedProviderId?: string; // Optional provider ID when sending to specific provider
-  requestedDate: string; // YYYY-MM-DD format
-  requestedTime: string; // HH:mm format
+  requestedDate?: string; // YYYY-MM-DD format
+  requestedTime?: string; // HH:mm format
   initialNotes?: string;
-  formData: any;
+  formData?: any;
+  isPreRequest?: boolean;
+  voiceMessageUrl?: string;
 }
 
 export interface UpdateServiceRequestPayload {
@@ -111,6 +113,51 @@ export const serviceRequestApi = {
       }
     } catch (error: any) {
       const errorMessage = error.message;
+
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Update an existing pre-request / service request
+   */
+  updatePreRequest: async (
+    requestId: string,
+    payload: CreateServiceRequestPayload,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}`,
+        payload,
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Discharge request updated successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to update discharge request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.message || 'Failed to update discharge request';
 
       return {
         success: false,
@@ -535,6 +582,50 @@ export const serviceRequestApi = {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to claim request';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Accept an available service request / pre-request for provider
+   */
+  acceptRequest: async (requestId: string): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}/accept`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request accepted successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to accept request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error.message ||
+        'Failed to accept request';
       return {
         success: false,
         message: errorMessage,

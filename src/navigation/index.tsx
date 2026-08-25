@@ -59,7 +59,7 @@ export type RootStackParamList = {
   | undefined;
   DoctorNotification: undefined;
   CreateRequest: undefined;
-  CreateDischargeRequest: undefined;
+  CreateDischargeRequest: { request?: any; isEdit?: boolean } | undefined;
   DoctorRequest: undefined;
   CreateRequestStep2: {
     patientId?: string;
