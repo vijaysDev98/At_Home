@@ -43,7 +43,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
 }) => {
 
   const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const requestId = requestData?._id || requestData?.id;
   const dispatch = useDispatch();
   const {
@@ -300,9 +300,9 @@ const FormSignature: React.FC<FormSignatureProps> = ({
               color={COLORS._6B7280}
               font={FONTS.Inter.Medium}
             >
-              {moment(requestData?.digitalSignature?.signedAt).format(
-                'DD MMM YYYY',
-              )}
+              {moment(requestData?.digitalSignature?.signedAt)
+                .locale(i18n?.language || 'en')
+                .format('DD MMM YYYY')}
             </AppText>
           )}
         </View>

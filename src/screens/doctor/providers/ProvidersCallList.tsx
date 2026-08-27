@@ -45,9 +45,7 @@ export interface Provider {
 const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(({ provider }) => {
   const { t } = useTranslation();
   const name =
-    provider.fullName ||
     provider.providerName ||
-    `${provider.fName || ''} ${provider.lName || ''}`.trim() ||
     'Healthcare Provider';
 
   const handleCall = () => {

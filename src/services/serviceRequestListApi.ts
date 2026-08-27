@@ -69,6 +69,7 @@ export interface ServiceRequest {
   updatedAt: string;
   patient?: PatientInfo | null;
   service?: ServiceInfo | null;
+  assignedProvider?: any;
 }
 
 // ===== FOR DETAILED VIEW (FormsScreen after API fetch) =====

@@ -278,7 +278,7 @@ const Input: React.FC<InputProps> = ({
             color={COLORS.error}
             style={[styles.helperText]}
           >
-            {error}
+            {typeof error === 'string' ? t(error) : error}
           </AppText>
         </View>
       ) : helper ? (
@@ -287,7 +287,7 @@ const Input: React.FC<InputProps> = ({
           color="#64748b"
           style={[styles.helperText, helperStyle]}
         >
-          {helper}
+          {typeof helper === 'string' ? t(helper) : helper}
         </AppText>
       ) : null}
 

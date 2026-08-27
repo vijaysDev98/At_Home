@@ -13,6 +13,7 @@ export const REQUEST_STATUS = {
   RETURNED: 'returned',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  ACCEPTED: 'accepted',
 } as const;
 
 export const FORM_STATUS = {
@@ -26,6 +27,7 @@ export const FORM_STATUS = {
   RETURNED: 'returned',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  ACCEPTED: 'accepted',
 } as const;
 
 export const DISPLAY_FORM_STATUS: Record<string, string> = {
@@ -39,9 +41,11 @@ export const DISPLAY_FORM_STATUS: Record<string, string> = {
   [FORM_STATUS.RETURNED]: STRING.Returned,
   [FORM_STATUS.COMPLETED]: STRING.Completed,
   [FORM_STATUS.CANCELLED]: STRING.cancelled,
-  pending: STRING.Submitted,
+  [FORM_STATUS.ACCEPTED]: STRING.Accepted,
+  pending: STRING.Pending,
   inprogress: STRING.InProgress,
   awaitingsignature: STRING.AwaitingSignature,
+  unassigned: STRING.Pending,
 };
 
 export const getButtonConfig = (formStatus: string, status: string) => {
@@ -316,11 +320,13 @@ export const getStatusBadgeColor = (status?: string | null): string => {
 
   switch (normalized) {
     case 'draft':
-      return COLORS.draft; // #FFB800 (Amber)
+      return COLORS.draft; // #FFB800 (Yellow / Amber)
     case 'inprogress':
-      return COLORS.inProgress; // #FFB800 (Amber)
-    case 'submitted':
+      return COLORS.inProgress; // #FFB800 (Yellow / Amber)
     case 'pending':
+    case 'unassigned':
+      return COLORS.draft; // #FFB800 (Yellow / Amber)
+    case 'submitted':
       return COLORS.submitted; // #2563EB (Blue theme)
     case 'awaitingsignature':
       return COLORS.awaitingSignature; // #1E3A8A
@@ -328,6 +334,7 @@ export const getStatusBadgeColor = (status?: string | null): string => {
       return COLORS.signed; // #629DFF
     case 'returned':
       return COLORS.returned; // #EF4444
+    case 'accepted':
     case 'completed':
     case 'approved':
       return COLORS.completed; // #10B981

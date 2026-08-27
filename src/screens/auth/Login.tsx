@@ -45,7 +45,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { isLoading } = useSelector((state: RootState) => state.common);
   const { currentLanguage } = useSelector((state: RootState) => state.language);
   const languageSheetRef = useRef<ActionSheetRef>(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState({
@@ -70,9 +70,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   }) => {
     const success = await dispatch(updateLanguage(language.key) as any);
     if (success) {
-      SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
+      const msg = i18n.t(STRING.languageChanged, { lng: language.key });
+      SHOW_TOAST(`${msg} ${language.value}`, 'success');
     } else {
-      SHOW_TOAST(t(STRING.failedToChangeLanguage), 'error');
+      const errMsg = i18n.t(STRING.failedToChangeLanguage, { lng: language.key });
+      SHOW_TOAST(errMsg, 'error');
     }
   };
 
@@ -174,7 +176,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             autoCapitalize="none"
             autoCorrect={false}
             label={t(STRING.emailAddress)}
-            error={error?.email || ''}
+            error={error?.email ? t(error.email) : ''}
             style={styles.field}
             containerBackgroundColor={COLORS._F8F9FA}
           />
@@ -189,7 +191,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             placeholder={t(STRING.enterPassword)}
             label={t(STRING.password)}
             containerBackgroundColor={COLORS._F8F9FA}
-            error={error?.password || ''}
+            error={error?.password ? t(error.password) : ''}
             secureTextEntry={true}
             isPasswordVisible={isPasswordVisible}
             handlePasswordVisibility={() => setIsPasswordVisible(prev => !prev)}

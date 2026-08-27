@@ -60,32 +60,27 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Top right status badge follows `status` directly as it was originally
-  const badgeColor = getStatusBadgeColor(status || 'submitted');
-  const badgeBgColor = getStatusBadgeBgColor(status || 'submitted');
+  // Top right status badge: if it is pre-request, display preRequestStatus, else as it is
+  const effectiveStatus = isPreRequest
+    ? preRequestStatus || 'submitted'
+    : status || 'submitted';
 
-  const statusKey = (status || 'submitted').toLowerCase().replace(/[-_ ]/g, '');
+  const badgeColor = getStatusBadgeColor(effectiveStatus);
+  const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
+
+  const statusKey = effectiveStatus.toLowerCase().replace(/[-_ ]/g, '');
   const displayStatus =
     (DISPLAY_FORM_STATUS as Record<string, string>)[statusKey] ||
-    (status ? (DISPLAY_FORM_STATUS as Record<string, string>)[status] : '') ||
-    status ||
-    '';
+    (DISPLAY_FORM_STATUS as Record<string, string>)[effectiveStatus] ||
+    (effectiveStatus ? t(effectiveStatus) : 'Submitted');
 
   // Title and subtitle
   const displayName = isPreRequest
-    ? name || t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+    ? t(STRING.preRequest) || 'Pre-Request'
     : name || '';
 
   const displaySubtitle = isPreRequest
-    ? requestType
-      ? t(requestType)
-      : voiceMessageUrl && initialNotes
-      ? t(STRING.voiceAndTextInstructions) || 'Voice & Written Summary'
-      : voiceMessageUrl
-      ? t(STRING.voiceInstructions) || 'Voice Instructions'
-      : initialNotes
-      ? t(STRING.textInstructions) || 'Written Notes'
-      : t(STRING.preRequest) || 'Pre-Request'
+    ? ''
     : t(requestType || '');
 
   let initials = '';
@@ -109,19 +104,15 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
       {/* Header Row */}
       <View style={styles.requestHeaderRow}>
         {isPreRequest ? (
-          <View style={styles.preRequestIconBadge}>
+          <View style={styles.avatarContainer}>
             <Image
-              source={
-                voiceMessageUrl
-                  ? IMAGES.ic_mic
-                  : IMAGES.ic_file
-              }
-              style={styles.preRequestIcon}
+              source={IMAGES.ic_file}
+              style={styles.avatarIcon}
             />
           </View>
         ) : (
           <ProfileAvatar
-            name={initials}
+            name={displayName}
             size="small"
             backgroundColor={COLORS._E5E7EB}
           />
@@ -136,14 +127,16 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           >
             {displayName}
           </AppText>
-          <AppText
-            size={getScaleSize(13)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._6B7280}
-            numberOfLines={1}
-          >
-            {displaySubtitle}
-          </AppText>
+          {!isPreRequest && !!displaySubtitle && (
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6B7280}
+              numberOfLines={1}
+            >
+              {displaySubtitle}
+            </AppText>
+          )}
         </View>
 
         <View
@@ -154,49 +147,13 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
         >
           <AppText
             size={getScaleSize(11)}
-            font={FONTS.Inter.Regular}
+            font={FONTS.Inter.SemiBold}
             color={badgeColor}
           >
-            {t(
-              (DISPLAY_FORM_STATUS as Record<string, string>)[status || ''] ||
-                displayStatus,
-            )}
+            {t(displayStatus)}
           </AppText>
         </View>
       </View>
-
-      {/* Voice note indicator pill */}
-      {isPreRequest && !!voiceMessageUrl && (
-        <View style={styles.voiceNotePill}>
-          <Image source={IMAGES.ic_mic} style={styles.voiceIcon} />
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.SemiBold}
-            color={COLORS.primary}
-          >
-            {t(STRING.voiceNoteAttached)}
-          </AppText>
-        </View>
-      )}
-
-      {/* Notes snippet preview */}
-      {isPreRequest && !!initialNotes && (
-        <View style={styles.noteSnippetContainer}>
-          <Image
-            source={IMAGES.ic_file}
-            style={styles.noteSnippetIcon}
-          />
-          <AppText
-            size={getScaleSize(12)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._526674}
-            numberOfLines={2}
-            style={{ flex: 1 }}
-          >
-            {initialNotes}
-          </AppText>
-        </View>
-      )}
 
       <View style={styles.dividerLine} />
 
@@ -253,6 +210,21 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           </AppText>
         </View>
       </View>
+
+      {/* Awaiting Physician Banner for Accepted Pre-Requests */}
+      {isPreRequest && (effectiveStatus === 'accepted' || preRequestStatus === 'accepted') && (
+        <View style={styles.awaitingPhysicianBanner}>
+          <Image source={IMAGES.info} style={styles.awaitingPhysicianIcon} />
+          <AppText
+            size={getScaleSize(12)}
+            font={FONTS.Inter.Medium}
+            color={COLORS._2563EB}
+            style={{ flex: 1, lineHeight: getScaleSize(16) }}
+          >
+            {t(STRING.awaitingPhysicianToAssignPatient)}
+          </AppText>
+        </View>
+      )}
 
       {/* Buttons Row */}
       <View style={{ flexDirection: 'row', gap: getScaleSize(12) }}>
@@ -312,20 +284,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  preRequestIconBadge: {
+  avatarContainer: {
     width: getScaleSize(40),
     height: getScaleSize(40),
     borderRadius: getScaleSize(20),
-    backgroundColor: '#e8edf1',
+    backgroundColor: COLORS._E5E7EB,
+    borderWidth: 0.5,
+    borderColor: COLORS._1E293B80,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
-  preRequestIcon: {
-    width: getScaleSize(20),
-    height: getScaleSize(20),
-    tintColor: COLORS.primary,
+  avatarIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    tintColor: COLORS._1A1D1F,
     resizeMode: 'contain',
   },
   patientInfoContainer: {
@@ -337,43 +309,6 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(20),
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(4),
-  },
-  voiceNotePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: getScaleSize(6),
-    backgroundColor: '#e8edf1',
-    borderRadius: getScaleSize(8),
-    paddingHorizontal: getScaleSize(8),
-    paddingVertical: getScaleSize(4),
-    alignSelf: 'flex-start',
-    marginTop: getScaleSize(10),
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  voiceIcon: {
-    width: getScaleSize(13),
-    height: getScaleSize(13),
-    tintColor: COLORS.primary,
-    resizeMode: 'contain',
-  },
-  noteSnippetContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: getScaleSize(6),
-    backgroundColor: '#F8FAFC',
-    borderRadius: getScaleSize(8),
-    padding: getScaleSize(8),
-    marginTop: getScaleSize(8),
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  noteSnippetIcon: {
-    width: getScaleSize(13),
-    height: getScaleSize(13),
-    tintColor: COLORS._6F767E,
-    resizeMode: 'contain',
-    marginTop: getScaleSize(2),
   },
   dividerLine: {
     height: 1,
@@ -389,5 +324,23 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(12),
     height: getScaleSize(46),
     borderRadius: getScaleSize(8),
+  },
+  awaitingPhysicianBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    borderRadius: getScaleSize(10),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    marginTop: getScaleSize(12),
+    gap: getScaleSize(8),
+  },
+  awaitingPhysicianIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    resizeMode: 'contain',
+    tintColor: '#2563EB',
   },
 });

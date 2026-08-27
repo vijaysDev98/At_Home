@@ -46,7 +46,7 @@ import FastImage from 'react-native-fast-image';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 
 const ProviderProfile: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
@@ -113,9 +113,11 @@ const ProviderProfile: React.FC = () => {
     const { SHOW_TOAST } = require('../../../constant');
     const success = await dispatch(updateLanguage(language.key));
     if (success) {
-      SHOW_TOAST(`${t(STRING.languageChanged)} ${language.value}`, 'success');
+      const msg = i18n.t(STRING.languageChanged, { lng: language.key });
+      SHOW_TOAST(`${msg} ${language.value}`, 'success');
     } else {
-      SHOW_TOAST(t(STRING.failedToChangeLanguage), 'error');
+      const errMsg = i18n.t(STRING.failedToChangeLanguage, { lng: language.key });
+      SHOW_TOAST(errMsg, 'error');
     }
   };
 

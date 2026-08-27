@@ -41,14 +41,22 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 
   const config = sizeConfig[size];
 
-  // Get first letter of first name
-  const initials =
-    name
-      ?.trim()
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase() || 'U';
+  // Generate initials (1-2 letters)
+  const getInitials = (str: string): string => {
+    const trimmed = (str || '').trim();
+    if (!trimmed) return 'U';
+    // If already pre-formatted initials (1-2 letters without spaces)
+    if (trimmed.length <= 2 && !trimmed.includes(' ')) {
+      return trimmed.toUpperCase();
+    }
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const initials = getInitials(name);
 
   const styles = StyleSheet.create({
     container: {

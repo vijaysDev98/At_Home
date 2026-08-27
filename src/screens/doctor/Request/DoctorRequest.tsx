@@ -252,24 +252,35 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const renderItem = useCallback(
     ({ item }: { item: ServiceRequest }) => {
       const isPreReq = !!item?.isPreRequest;
-      const formStatus = item?.formStatus || item?.preRequestStatus || item?.status;
-      const buttonConfig = isPreReq
-        ? { show: true, label: STRING.editInstructions, action: 'edit' }
+      const isAcceptedPreReq =
+        isPreReq && item?.preRequestStatus === 'accepted';
+      const formStatus =
+        item?.formStatus || item?.preRequestStatus || item?.status;
+
+      const buttonConfig: { show: boolean; label?: string | null; action?: string | null } = isAcceptedPreReq
+        ? { show: true, label: STRING.completeRequest, action: 'completeRequest' }
+        : isPreReq
+        ? { show: false }
         : getButtonConfig(formStatus || '', item?.status);
+
+      const handleAcceptedPreRequestPress = () => {
+        NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+          request: item,
+          isEdit: true,
+          isAccepted: true,
+        });
+      };
 
       return (
         <RequestCardDoctor
           name={
             item?.patient?.fullName ||
             (isPreReq
-              ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+              ? t(STRING.preRequest) || 'Pre-Request'
               : '')
           }
           requestId={item.requestId}
-          requestType={
-            item?.service?.serviceName ||
-            (isPreReq ? t(STRING.homeDischarge) || 'Home Discharge' : '')
-          }
+          requestType={isPreReq ? '' : (item?.service?.serviceName || '')}
           formStatus={formStatus}
           status={item.status}
           isPreRequest={isPreReq}
@@ -283,6 +294,11 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
               : undefined
           }
           onPress={() => {
+            if (isAcceptedPreReq) {
+              handleAcceptedPreRequestPress();
+              return;
+            }
+
             if (isPreReq) {
               (preRequestDetailSheetRef.current as any)?.show(item);
               return;
@@ -301,11 +317,8 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
             });
           }}
           onButtonPress={() => {
-            if (isPreReq) {
-              NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
-                request: item,
-                isEdit: true,
-              });
+            if (isAcceptedPreReq) {
+              handleAcceptedPreRequestPress();
               return;
             }
             const targetScreen =

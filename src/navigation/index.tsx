@@ -32,12 +32,13 @@ import FormsScreen from '../screens/doctor/forms/FormsScreen';
 import ProviderFormScreen from '../screens/provider/forms/ProviderFormScreen';
 import FormReviewScreen from '../screens/doctor/forms/FormReviewScreen';
 import EditProviderProfile from '../screens/provider/profile/editProviderProfile';
-import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import DoctorList from '../screens/provider/doctorList/DoctorList';
 import PdfViewerScreen from '../screens/common/PdfViewerScreen';
 import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
+import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
 import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDischargeRequestScreen';
+import ProviderPreRequestDetailScreen from '../screens/provider/request/ProviderPreRequestDetailScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -104,6 +105,10 @@ export type RootStackParamList = {
   ServiceScreen: {
     selectedService?: any;
     serviceId?: string;
+  } | undefined;
+  ProviderPreRequestDetail: {
+    request?: any;
+    action?: string;
   } | undefined;
 };
 
@@ -265,6 +270,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.PROVIDERS_CALL_LIST}
           component={ProvidersCallList}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PROVIDER_PRE_REQUEST_DETAIL}
+          component={ProviderPreRequestDetailScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

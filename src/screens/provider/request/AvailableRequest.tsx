@@ -21,7 +21,6 @@ import {
   AppText,
   AppLoader,
   ReviewRequestSheet,
-  ProviderPreRequestDetailSheet,
   AppSafeAreaView,
   Header,
 } from '../../../components';
@@ -58,7 +57,6 @@ const AvailableRequest: React.FC = () => {
     (state: RootState) => state.common.isLoading,
   );
   const reviewSheetRef = useRef<ActionSheetRef>(null);
-  const providerPreRequestDetailSheetRef = useRef<ActionSheetRef>(null);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
     null,
   );
@@ -277,7 +275,13 @@ const AvailableRequest: React.FC = () => {
       doctor?.fullName ||
       (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null);
 
-    const buttonConfig = isPreReq
+    const isAcceptedPreReq =
+      isPreReq &&
+      (item?.preRequestStatus === 'accepted' || item?.status === 'accepted');
+
+    const buttonConfig = isAcceptedPreReq
+      ? { show: false, label: null, action: null }
+      : isPreReq
       ? {
           show:
             item?.status === 'submitted' || item?.preRequestStatus === 'pending',
@@ -292,7 +296,7 @@ const AvailableRequest: React.FC = () => {
           name={
             item?.patient?.fullName ||
             (isPreReq
-              ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
+              ? t(STRING.preRequest) || 'Pre-Request'
               : '')
           }
           requestId={item.requestId}
@@ -307,11 +311,16 @@ const AvailableRequest: React.FC = () => {
           doctorName={doctorName}
           doctorSpecialty={doctor?.specialty}
           buttonText={
-            buttonConfig.show ? buttonConfig.label || undefined : undefined
+            buttonConfig.show && buttonConfig.label
+              ? t(buttonConfig.label)
+              : undefined
           }
           onPress={() => {
             if (isPreReq) {
-              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+                request: item,
+                action: isAcceptedPreReq ? 'view' : 'accept',
+              });
               return;
             }
             if (item.status == REQUEST_STATUS.COMPLETED) {
@@ -327,7 +336,10 @@ const AvailableRequest: React.FC = () => {
           }}
           onButtonPress={() => {
             if (isPreReq) {
-              (providerPreRequestDetailSheetRef.current as any)?.show(item);
+              NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+                request: item,
+                action: 'accept',
+              });
               return;
             }
             NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
@@ -502,12 +514,6 @@ const AvailableRequest: React.FC = () => {
           onSend={async (reason, details) => {
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
-        />
-        <ProviderPreRequestDetailSheet
-          ref={providerPreRequestDetailSheetRef}
-          onAcceptSuccess={() =>
-            fetchAvailableRequests(1, true, activeTabRef.current)
-          }
         />
       </View>
     </AppSafeAreaView>

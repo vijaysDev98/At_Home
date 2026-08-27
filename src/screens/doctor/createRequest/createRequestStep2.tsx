@@ -243,6 +243,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
                   patientId,
                   doctorId,
                   selectedDoctor,
+                  ...(route?.params as any),
                 });
               }}
             />

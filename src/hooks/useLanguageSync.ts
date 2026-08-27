@@ -18,7 +18,7 @@ export const useLanguageSync = () => {
     // Sync i18n language with Redux language state
     if (currentLanguage) {
       changeLanguage(currentLanguage);
-      // syncMomentLocale(currentLanguage);
+      syncMomentLocale(currentLanguage);
     }
   }, [currentLanguage]);
 

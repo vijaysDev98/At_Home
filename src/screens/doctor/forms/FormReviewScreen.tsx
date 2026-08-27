@@ -38,7 +38,8 @@ const FormReviewScreen: React.FC = () => {
   const { t } = useTranslation();
   const request: ServiceRequest = (route.params as any)?.request;
 
-  const requestId = request?.id;
+  const requestId =
+    request?.id || (request as any)?._id || (route.params as any)?.requestId;
 
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
     null,

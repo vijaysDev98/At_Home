@@ -116,7 +116,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
               leftIcon={IMAGES.email_icon}
               containerBackgroundColor={COLORS._F8F9FA}
               style={{ paddingHorizontal: 0 }}
-              error={showError ? STRING.invalidEmail : undefined}
+              error={showError ? t(STRING.invalidEmail) : undefined}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}

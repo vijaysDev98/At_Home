@@ -22,7 +22,7 @@ export type AuthWelcomeProps = NativeStackScreenProps<
 >;
 
 const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
   const languageSheetRef = useRef<ActionSheetRef>(null);
@@ -39,9 +39,11 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
   const handleLanguageSelect = async (language: { key: string; value: string; flag: string }) => {
     const success = await dispatch(updateLanguage(language.key) as any);
     if (success) {
-      SHOW_TOAST(`Language changed to ${language.value}`, 'success');
+      const msg = i18n.t(STRING.languageChanged, { lng: language.key });
+      SHOW_TOAST(`${msg} ${language.value}`, 'success');
     } else {
-      SHOW_TOAST('Failed to change language', 'error');
+      const errMsg = i18n.t(STRING.failedToChangeLanguage, { lng: language.key });
+      SHOW_TOAST(errMsg, 'error');
     }
   };
 

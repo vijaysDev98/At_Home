@@ -10,7 +10,8 @@ import { STRING } from '../constant';
 /** Compact relative time for notification rows (avoids long "a few seconds ago"). */
 export const formatNotificationTime = (date?: string | Date | null): string => {
   if (!date) return '';
-  const created = moment(date);
+  const lang = i18next.language === 'fr' ? 'fr' : 'en';
+  const created = moment(date).locale(lang);
   if (!created.isValid()) return '';
   if (moment().diff(created, 'seconds') < 60) {
     return i18next.t(STRING.justNow);

@@ -1,5 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import moment from 'moment';
+import 'moment/locale/fr';
 import en from './en.json';
 import fr from './fr.json';
 
@@ -21,7 +23,9 @@ i18n.use(initReactI18next).init({
 });
 
 export const changeLanguage = (language: string) => {
-  i18n.changeLanguage(language);
+  const lang = language === 'fr' ? 'fr' : 'en';
+  i18n.changeLanguage(lang);
+  moment.locale(lang);
 };
 
 export const i18nLocale = i18n;

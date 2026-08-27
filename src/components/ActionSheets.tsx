@@ -7,6 +7,10 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Platform,
+  AppState,
+  AppStateStatus,
+  ScrollView,
 } from 'react-native';
 import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +25,8 @@ import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import { SHOW_TOAST, STRING } from '../constant';
 import { useTranslation } from 'react-i18next';
-import { getProvidersService } from '../services/patientService';
+import { getProvidersService, getServicesService } from '../services/patientService';
+import { MASTER_SERVICES_LIST } from '../constant/services';
 import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { Provider } from '../screens/doctor/providers/ProvidersCallList';
 import moment from 'moment';
@@ -992,7 +997,7 @@ export const ProviderOptionSheet = React.forwardRef<
  */
 interface SelectProviderSheetProps {
   serviceId?: string;
-  onSelectProvider: (provider: Provider) => void;
+  onSelectProvider: (provider: Provider, serviceId?: string) => void;
 }
 
 export const SelectProviderSheet = React.forwardRef<
@@ -1003,9 +1008,30 @@ export const SelectProviderSheet = React.forwardRef<
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  const [servicesList, setServicesList] = React.useState<any[]>(MASTER_SERVICES_LIST);
+  const [selectedServiceId, setSelectedServiceId] = React.useState<string>(
+    serviceId || '',
+  );
   const currentServiceIdRef = React.useRef<string | undefined>(serviceId);
+
   React.useEffect(() => {
-    currentServiceIdRef.current = serviceId;
+    // Fetch live services from backend
+    getServicesService(1, 50)
+      .then((res: any) => {
+        if (res?.status && res?.data?.data?.services) {
+          setServicesList(res.data.data.services);
+        }
+      })
+      .catch(err => {
+        console.log('Error loading services for filter:', err);
+      });
+  }, []);
+
+  React.useEffect(() => {
+    if (serviceId !== undefined) {
+      setSelectedServiceId(serviceId);
+      currentServiceIdRef.current = serviceId || undefined;
+    }
   }, [serviceId]);
 
   const [providers, setProviders] = React.useState<Provider[]>([]);
@@ -1031,13 +1057,15 @@ export const SelectProviderSheet = React.forwardRef<
 
       const langParam = i18n?.language || 'en';
       const activeServiceId =
-        overrideServiceId || currentServiceIdRef.current || serviceId;
+        overrideServiceId !== undefined
+          ? overrideServiceId
+          : currentServiceIdRef.current || serviceId;
       const response: any = await getProvidersService(
         pageNum,
         10,
         searchQuery,
         langParam,
-        activeServiceId,
+        activeServiceId || undefined,
       );
 
       if (
@@ -1080,13 +1108,16 @@ export const SelectProviderSheet = React.forwardRef<
     () =>
       ({
         show: (customServiceId?: string) => {
-          if (customServiceId && typeof customServiceId === 'string') {
-            currentServiceIdRef.current = customServiceId;
-          }
+          const targetServiceId =
+            customServiceId !== undefined
+              ? customServiceId
+              : serviceId || '';
+          currentServiceIdRef.current = targetServiceId || undefined;
+          setSelectedServiceId(targetServiceId);
           sheetRef.current?.show();
           setSearch('');
           setSelectedProvider(null);
-          fetchProviders(1, '', false, currentServiceIdRef.current);
+          fetchProviders(1, '', false, targetServiceId || undefined);
         },
         hide: () => sheetRef.current?.hide(),
         snapToOffset: (offset: number) =>
@@ -1108,6 +1139,15 @@ export const SelectProviderSheet = React.forwardRef<
     setSearch(text);
   };
 
+  const handleServiceFilterPress = (targetId: string) => {
+    const nextId = targetId === selectedServiceId ? '' : targetId;
+    setSelectedServiceId(nextId);
+    currentServiceIdRef.current = nextId || undefined;
+    setSelectedProvider(null);
+    setPage(1);
+    fetchProviders(1, search, true, nextId || undefined);
+  };
+
   const onRefresh = () => {
     setIsRefreshing(true);
     fetchProviders(1, search, true, currentServiceIdRef.current);
@@ -1127,7 +1167,7 @@ export const SelectProviderSheet = React.forwardRef<
   const handleSubmit = () => {
     if (selectedProvider) {
       sheetRef.current?.hide();
-      onSelectProvider(selectedProvider);
+      onSelectProvider(selectedProvider, selectedServiceId || undefined);
     }
   };
 
@@ -1141,7 +1181,7 @@ export const SelectProviderSheet = React.forwardRef<
         styles.sheetContainer,
         {
           backgroundColor: COLORS.white,
-          height: '80%',
+          height: '82%',
           paddingBottom: Math.max(insets.bottom, getScaleSize(20)),
         },
       ]}
@@ -1173,7 +1213,7 @@ export const SelectProviderSheet = React.forwardRef<
         <View
           style={{
             marginTop: getScaleSize(12),
-            marginBottom: getScaleSize(10),
+            marginBottom: getScaleSize(8),
           }}
         >
           <Input
@@ -1186,6 +1226,79 @@ export const SelectProviderSheet = React.forwardRef<
             inputWrapperStyle={styles.providerSearchInputWrapper}
             inputStyle={styles.providerSearchInput}
           />
+        </View>
+
+        {/* Service Filter Chips */}
+        <View style={styles.serviceFilterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.serviceFilterScrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* All Services Option */}
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => handleServiceFilterPress('')}
+              style={[
+                styles.serviceFilterChip,
+                selectedServiceId === '' && styles.serviceFilterChipActive,
+              ]}
+            >
+              <View
+                style={[
+                  styles.serviceFilterDot,
+                  selectedServiceId === '' && styles.serviceFilterDotActive,
+                ]}
+              />
+              <AppText
+                size={getScaleSize(12)}
+                font={
+                  selectedServiceId === ''
+                    ? FONTS.Inter.Bold
+                    : FONTS.Inter.Medium
+                }
+                color={selectedServiceId === '' ? COLORS.white : '#475569'}
+              >
+                {t(STRING.allServices) || 'All Services'}
+              </AppText>
+            </TouchableOpacity>
+
+            {/* Individual Service Chips */}
+            {servicesList.map((svc: any) => {
+              const svcId = svc.id || svc._id;
+              const svcName = svc.serviceName || svc.name || '';
+              const isChipActive = selectedServiceId === svcId;
+
+              return (
+                <TouchableOpacity
+                  key={svcId}
+                  activeOpacity={0.75}
+                  onPress={() => handleServiceFilterPress(svcId)}
+                  style={[
+                    styles.serviceFilterChip,
+                    isChipActive && styles.serviceFilterChipActive,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.serviceFilterDot,
+                      isChipActive && styles.serviceFilterDotActive,
+                    ]}
+                  />
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={
+                      isChipActive ? FONTS.Inter.Bold : FONTS.Inter.Medium
+                    }
+                    color={isChipActive ? COLORS.white : '#475569'}
+                  >
+                    {t(svcName) || svcName}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Provider List / States */}
@@ -1397,7 +1510,7 @@ export const PreRequestDetailSheet = React.forwardRef<
 >(({ onClose }, ref) => {
   const sheetRef = React.useRef<ActionSheetRef>(null);
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [request, setRequest] = React.useState<any>(null);
   const [isPlaying, setIsPlaying] = React.useState<boolean>(false);
@@ -1445,15 +1558,53 @@ export const PreRequestDetailSheet = React.forwardRef<
       } as ActionSheetRef),
   );
 
-  const handleClose = async () => {
-    if (isPlaying) {
+  const soundRef = React.useRef(sound);
+  React.useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
+
+  const isPlayingRef = React.useRef(isPlaying);
+  React.useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const stopAudio = React.useCallback(async () => {
+    if (isPlayingRef.current) {
       try {
-        await sound.stopPlayer();
-      } catch (e) {}
+        await soundRef.current?.stopPlayer();
+      } catch (e) {
+        // ignore
+      }
       setIsPlaying(false);
+      setPlaybackProgress(0);
+      setCurrentSecs(0);
     }
-    sheetRef.current?.hide();
+  }, []);
+
+  // Stop playback when phone is locked, app minimized, or phone call arrives
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState !== 'active') {
+          stopAudio();
+        }
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [stopAudio]);
+
+  const handleSheetClose = () => {
+    stopAudio();
     onClose?.();
+  };
+
+  const handleClose = () => {
+    stopAudio();
+    sheetRef.current?.hide();
   };
 
   const handleTogglePlay = async () => {
@@ -1496,14 +1647,19 @@ export const PreRequestDetailSheet = React.forwardRef<
   return (
     <ActionSheet
       ref={sheetRef}
-      onClose={handleClose}
+      onClose={handleSheetClose}
       gestureEnabled={true}
+      closeOnTouchBackdrop={true}
+      closeOnPressBack={true}
+      useBottomSafeAreaPadding={false}
       containerStyle={styles.preRequestSheetContainer}
     >
       <View
         style={[
           styles.preRequestSheetContent,
-          { paddingBottom: Math.max(insets.bottom, getScaleSize(20)) },
+          {
+            paddingBottom: (insets.bottom || 0) + getScaleSize(12),
+          },
         ]}
       >
         {/* Header with Title & Close Button */}
@@ -1523,7 +1679,7 @@ export const PreRequestDetailSheet = React.forwardRef<
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
               >
-                {t(STRING.dischargePreRequest) || 'Discharge Pre-Request'}
+                {t(STRING.preRequest) || 'Pre-Request'}
               </AppText>
               <AppText
                 size={getScaleSize(12)}
@@ -1573,13 +1729,21 @@ export const PreRequestDetailSheet = React.forwardRef<
                 style={styles.preRequestPlayPauseBtn}
                 onPress={handleTogglePlay}
               >
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.white}
-                >
-                  {isPlaying ? '⏸' : '▶'}
-                </AppText>
+                {isPlaying ? (
+                  <Image
+                    source={IMAGES.ic_pause}
+                    style={styles.preRequestPlayPauseIcon}
+                  />
+                ) : (
+                  <AppText
+                    size={getScaleSize(16)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.white}
+                    style={{ marginLeft: getScaleSize(2) }}
+                  >
+                    {'▶'}
+                  </AppText>
+                )}
               </TouchableOpacity>
 
               <View style={styles.preRequestAudioInfoCol}>
@@ -1651,13 +1815,15 @@ export const PreRequestDetailSheet = React.forwardRef<
               font={FONTS.Inter.Medium}
               color={COLORS._6F767E}
             >
-              Created:{' '}
-              {moment(request.createdAt).format('DD MMM YYYY, hh:mm A')}
+              {t('Created') || 'Created'}:{' '}
+              {moment(request.createdAt)
+                .locale(i18n?.language || 'en')
+                .format('DD MMM YYYY, HH:mm')}
             </AppText>
           </View>
         )}
 
-        {/* Action Buttons: Close and Edit */}
+        {/* Action Buttons: Close and Complete Request (if accepted) */}
         <View style={styles.preRequestBtnRow}>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -1673,386 +1839,28 @@ export const PreRequestDetailSheet = React.forwardRef<
             </AppText>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.preRequestEditBtn}
-            onPress={() => {
-              handleClose();
-              NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
-                request,
-                isEdit: true,
-              });
-            }}
-          >
-            <Image
-              source={IMAGES.ic_edit}
-              style={styles.preRequestEditBtnIcon}
-            />
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.white}
+          {effectiveStatus === 'accepted' && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.preRequestAcceptBtn}
+              onPress={() => {
+                handleClose();
+                NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+                  request,
+                  isEdit: true,
+                  isAccepted: true,
+                });
+              }}
             >
-              {t(STRING.editInstructions)}
-            </AppText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ActionSheet>
-  );
-});
-
-/**
- * Provider Pre-Request Detail Action Sheet
- * Displays pre-request audio recording, text notes, doctor information,
- * and allows the provider to either Cancel or Accept the request via PUT /service-requests/:id/accept
- */
-export interface ProviderPreRequestDetailSheetProps {
-  onAcceptSuccess?: () => void;
-}
-
-export const ProviderPreRequestDetailSheet = React.forwardRef<
-  ActionSheetRef,
-  ProviderPreRequestDetailSheetProps
->(({ onAcceptSuccess }, ref) => {
-  const { t } = useTranslation();
-  const sheetRef = React.useRef<ActionSheetRef>(null);
-  const [request, setRequest] = React.useState<ServiceRequest | null>(null);
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [playbackProgress, setPlaybackProgress] = React.useState(0);
-  const [currentSecs, setCurrentSecs] = React.useState(0);
-  const [totalSecs, setTotalSecs] = React.useState(0);
-  const [isAccepting, setIsAccepting] = React.useState(false);
-
-  const sound = useSound({
-    subscriptionDuration: 0.1,
-    onPlayback: e => {
-      if (e.duration > 0 && e.currentPosition != null) {
-        const progress = (e.currentPosition / e.duration) * 100;
-        setPlaybackProgress(Math.min(progress, 100));
-        setCurrentSecs(Math.floor(e.currentPosition / 1000));
-        setTotalSecs(Math.floor(e.duration / 1000));
-      }
-    },
-    onPlaybackEnd: () => {
-      setIsPlaying(false);
-      setPlaybackProgress(0);
-      setCurrentSecs(0);
-    },
-  });
-
-  React.useImperativeHandle(ref, () => ({
-    show: (req?: ServiceRequest) => {
-      if (req) {
-        setRequest(req);
-      }
-      setIsPlaying(false);
-      setPlaybackProgress(0);
-      setCurrentSecs(0);
-      setTotalSecs(0);
-      setIsAccepting(false);
-      sheetRef.current?.show();
-    },
-    hide: () => {
-      handleClose();
-    },
-  } as any));
-
-  const handleClose = () => {
-    try {
-      if (isPlaying) {
-        sound.stopPlayer();
-      }
-    } catch (_) {}
-    setIsPlaying(false);
-    sheetRef.current?.hide();
-  };
-
-  const handleTogglePlay = async () => {
-    if (!request?.voiceMessageUrl) return;
-    if (isPlaying) {
-      await sound.pausePlayer();
-      setIsPlaying(false);
-    } else {
-      await sound.startPlayer(request.voiceMessageUrl);
-      setIsPlaying(true);
-    }
-  };
-
-  const handleAccept = async () => {
-    const targetId = request?.id || (request as any)?._id || request?.requestId;
-    if (!targetId) {
-      SHOW_TOAST('Request ID is missing', 'error');
-      return;
-    }
-
-    setIsAccepting(true);
-    try {
-      const res = await serviceRequestApi.acceptRequest(targetId);
-      setIsAccepting(false);
-      if (res.success) {
-        SHOW_TOAST(res.message || t(STRING.requestAccepted), 'success');
-        handleClose();
-        onAcceptSuccess?.();
-      } else {
-        SHOW_TOAST(
-          res.error || res.message || 'Failed to accept request',
-          'error',
-        );
-      }
-    } catch (e: any) {
-      setIsAccepting(false);
-      SHOW_TOAST(e?.message || 'Failed to accept request', 'error');
-    }
-  };
-
-  const formatSeconds = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const doctor = (request as any)?.doctor;
-  const doctorName =
-    doctor?.fullName ||
-    (doctor ? `${doctor?.fName || ''} ${doctor?.lName || ''}`.trim() : null);
-
-  return (
-    <ActionSheet
-      ref={sheetRef}
-      gestureEnabled
-      containerStyle={[
-        styles.sheetContainer,
-        { backgroundColor: COLORS.white },
-      ]}
-      indicatorStyle={styles.indicator}
-      onClose={handleClose}
-    >
-      <View style={styles.sheetContent}>
-        {/* Header */}
-        <View style={styles.preRequestSheetHeader}>
-          <View style={styles.preRequestHeaderLeft}>
-            <View style={styles.preRequestBadgeWrapper}>
-              <Image
-                source={
-                  request?.voiceMessageUrl
-                    ? IMAGES.ic_mic
-                    : IMAGES.ic_file
-                }
-                style={styles.preRequestBadgeIcon}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText
-                size={getScaleSize(16)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.dischargePreRequest) || 'Discharge Pre-Request'}
-              </AppText>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._6F767E}
-                style={{ marginTop: getScaleSize(2) }}
-              >
-                {request?.requestId || '—'}
-              </AppText>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.preRequestCloseCircle}
-            onPress={handleClose}
-            activeOpacity={0.7}
-          >
-            <Image
-              source={IMAGES.crossIcon}
-              style={styles.preRequestCloseIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.preRequestDivider} />
-
-        {/* Doctor Information Card (if present) */}
-        {!!doctorName && (
-          <View style={styles.providerDoctorCard}>
-            <View style={styles.providerDoctorAvatarWrap}>
-              <ProfileAvatar
-                name={doctorName}
-                size="small"
-                backgroundColor={COLORS._EFF6FF}
-              />
-            </View>
-            <View style={{ flex: 1, marginLeft: getScaleSize(10) }}>
               <AppText
                 size={getScaleSize(14)}
                 font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
+                color={COLORS.white}
               >
-                {`Dr. ${doctorName.replace(/^Dr\.?\s*/i, '')}`}
+                {t(STRING.completeRequest) || 'Complete Request'}
               </AppText>
-              {!!doctor?.specialty && (
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS.primary}
-                  style={{
-                    marginTop: getScaleSize(2),
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {doctor.specialty}
-                </AppText>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Voice Recording Player (if voice message exists) */}
-        {!!request?.voiceMessageUrl && (
-          <View style={styles.preRequestVoiceSection}>
-            <View style={styles.preRequestSectionTitleRow}>
-              <Image
-                source={IMAGES.ic_mic}
-                style={styles.preRequestSectionIcon}
-              />
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.voiceInstructions)}
-              </AppText>
-            </View>
-
-            <View style={styles.preRequestAudioPlayerCard}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.preRequestPlayPauseBtn}
-                onPress={handleTogglePlay}
-              >
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.white}
-                >
-                  {isPlaying ? '⏸' : '▶'}
-                </AppText>
-              </TouchableOpacity>
-
-              <View style={styles.preRequestAudioInfoCol}>
-                <View style={styles.preRequestProgressBarBg}>
-                  <View
-                    style={[
-                      styles.preRequestProgressBarFill,
-                      { width: `${playbackProgress}%` },
-                    ]}
-                  />
-                </View>
-
-                <View style={styles.preRequestAudioTimeRow}>
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                  >
-                    {formatSeconds(currentSecs)}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                  >
-                    {totalSecs > 0 ? formatSeconds(totalSecs) : '--:--'}
-                  </AppText>
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Written Notes Section (if notes exist) */}
-        {!!request?.initialNotes && (
-          <View style={styles.preRequestNotesSection}>
-            <View style={styles.preRequestSectionTitleRow}>
-              <Image
-                source={IMAGES.ic_file}
-                style={styles.preRequestSectionIcon}
-              />
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.textInstructions)}
-              </AppText>
-            </View>
-
-            <View style={styles.preRequestNotesContentBox}>
-              <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._1A1D1F}
-                style={{ lineHeight: getScaleSize(19) }}
-              >
-                {request.initialNotes}
-              </AppText>
-            </View>
-          </View>
-        )}
-
-        {/* Meta Info Row: Created Date */}
-        {!!request?.createdAt && (
-          <View style={styles.preRequestMetaRow}>
-            <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Medium}
-              color={COLORS._6F767E}
-            >
-              Created:{' '}
-              {moment(request.createdAt).format('DD MMM YYYY, hh:mm A')}
-            </AppText>
-          </View>
-        )}
-
-        {/* Action Buttons: Cancel and Accept */}
-        <View style={styles.preRequestBtnRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.preRequestCancelBtn}
-            onPress={handleClose}
-            disabled={isAccepting}
-          >
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              {t(STRING.cancel || 'Cancel')}
-            </AppText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[
-              styles.preRequestAcceptBtn,
-              isAccepting && { opacity: 0.7 },
-            ]}
-            onPress={handleAccept}
-            disabled={isAccepting}
-          >
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.white}
-            >
-              {isAccepting
-                ? t(STRING.accepting || 'Accepting...')
-                : t(STRING.accept || 'Accept')}
-            </AppText>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </ActionSheet>
@@ -2276,6 +2084,38 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Inter.Regular,
     color: COLORS._1A1D1F,
   },
+  serviceFilterContainer: {
+    marginBottom: getScaleSize(10),
+  },
+  serviceFilterScrollContent: {
+    paddingRight: getScaleSize(10),
+    alignItems: 'center',
+  },
+  serviceFilterChip: {
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(7),
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+    marginRight: getScaleSize(8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+  },
+  serviceFilterChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  serviceFilterDot: {
+    width: getScaleSize(6),
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: COLORS.primary,
+  },
+  serviceFilterDotActive: {
+    backgroundColor: COLORS.white,
+  },
   providerLoaderContainer: {
     flex: 1,
     alignItems: 'center',
@@ -2462,12 +2302,23 @@ const styles = StyleSheet.create({
     gap: getScaleSize(12),
   },
   preRequestPlayPauseBtn: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    borderRadius: getScaleSize(22),
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  preRequestPlayPauseIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
   },
   preRequestAudioInfoCol: {
     flex: 1,

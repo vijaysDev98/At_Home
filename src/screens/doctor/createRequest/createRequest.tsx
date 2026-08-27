@@ -212,10 +212,11 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
           : SCREENS.CREATE_REQUEST_STEP2,
         {
           patientId: selectedId,
+          ...(route.params as any),
         },
       );
     }
-  }, [selectedId, patients, dispatch]);
+  }, [selectedId, patients, dispatch, role, route.params]);
 
   const handleCreateNewPatient = useCallback(() => {
     NavigationService.navigate(SCREENS.ADD_PATIENT);

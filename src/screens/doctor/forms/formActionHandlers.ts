@@ -20,6 +20,7 @@ export interface FormActionParams {
   selectedPatient: any;
   doctorId?: string; // Optional doctor ID for provider-created requests
   providerId?: string; // Optional provider ID when sending to specific provider
+  preRequestId?: string; // Optional pre-request ID to update accepted pre-request
   validateForm: () => boolean;
   lastFirstErrorKey?: any;
   errors?: any;
@@ -38,6 +39,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
     selectedPatient,
     doctorId,
     providerId,
+    preRequestId,
     validateForm,
     lastFirstErrorKey,
     errors = {},
@@ -56,6 +58,43 @@ export const handleFormSubmit = async (params: FormActionParams) => {
   }
 
   dispatch(setLoading(true));
+
+  // Check if updating an accepted pre-request
+  if (preRequestId) {
+    try {
+      const updatePayload: any = {
+        patientId: selectedPatient?.id || selectedPatient?._id || '',
+        serviceId: serviceId || '',
+        priorityLevel: state?.priorityLevel || 'routine',
+        requestedDate: moment().format('YYYY-MM-DD'),
+        requestedTime: moment().format('HH:mm'),
+        formData: state,
+      };
+
+      const response = await serviceRequestApi.updatePreRequestWithForm(
+        preRequestId,
+        updatePayload,
+      );
+      dispatch(setLoading(false));
+
+      if (response.success) {
+        SHOW_SUCCESS_TOAST(
+          response.message || 'Pre-request updated successfully',
+        );
+        setTimeout(() => {
+          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+            screen: SCREENS.DOCTOR_REQUEST,
+          });
+        }, 500);
+      } else {
+        SHOW_TOAST(response.error || response.message, 'error');
+      }
+    } catch (error: any) {
+      dispatch(setLoading(false));
+      SHOW_TOAST(error?.message || 'Failed to update pre-request', 'error');
+    }
+    return;
+  }
 
   // Check if it's an existing draft
   const isExistingDraft = initialData && initialData._id;

@@ -276,7 +276,10 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
     };
 
     // Handle form submission (using centralized handler)
-    const validateAndSubmit = async (options?: { providerId?: string }) => {
+    const validateAndSubmit = async (options?: {
+      providerId?: string;
+      preRequestId?: string;
+    }) => {
       await handleFormSubmit({
         dispatch,
         state,
@@ -285,6 +288,7 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         selectedPatient,
         doctorId: prescriber?.id, // Pass doctorId from prescriber
         providerId: options?.providerId,
+        preRequestId: options?.preRequestId,
         validateForm: () => validateForm().ok,
         lastFirstErrorKey,
         errors,

@@ -31,7 +31,7 @@ import { SHOW_TOAST } from '../../../constant/showToast';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const requestId = route?.params?.request?.id || route?.params?.requestId;
   console.log('data route', route.params);
 
@@ -81,13 +81,17 @@ const ServiceCompletedScreen: React.FC = () => {
     : '-';
 
   const completedDate = requestData?.updatedAt
-    ? moment(requestData?.updatedAt).format('MMM DD, YYYY')
+    ? moment(requestData?.updatedAt)
+        .locale(i18n?.language || 'en')
+        .format('DD MMM YYYY')
     : '-';
 
   const serviceType = requestData?.serviceId?.serviceName || '-';
 
   const dob = requestData?.patientId?.dateOfBirth
-    ? moment(requestData?.patientId?.dateOfBirth).format('DD/MM/YYYY')
+    ? moment(requestData?.patientId?.dateOfBirth)
+        .locale(i18n?.language || 'en')
+        .format('DD/MM/YYYY')
     : '-';
 
   const weight = requestData?.patientId?.weight || '-';

@@ -142,7 +142,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
                   font={FONTS.Inter.Bold}
                   color={COLORS.white}
                 >
-                  {selectedService.name}
+                  {t(selectedService.name)}
                 </AppText>
                 <AppText
                   size={getScaleSize(12)}
@@ -150,7 +150,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
                   color="rgba(255, 255, 255, 0.9)"
                   style={{ marginTop: 4 }}
                 >
-                  {selectedService.description}
+                  {t(selectedService.description)}
                 </AppText>
               </View>
             </View>
@@ -211,7 +211,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
                     <RequestCardDoctor
                       name={item.patient?.fullName || 'Patient'}
                       requestId={item.requestId}
-                      requestType={item.service?.serviceName || selectedService.name}
+                      requestType={item.service?.serviceName ? t(item.service.serviceName) : t(selectedService.name)}
                       formStatus={formStatus}
                       status={item.status}
                       buttonText={

@@ -145,19 +145,77 @@ export const serviceRequestApi = {
       ) {
         return {
           success: true,
-          message: nestedMessage || 'Discharge request updated successfully',
+          message: nestedMessage || 'Pre-request updated successfully',
           data: nestedData,
         };
       } else {
         return {
           success: false,
-          message: nestedMessage || 'Failed to update discharge request',
+          message: nestedMessage || 'Failed to update pre-request',
           error: nestedMessage,
         };
       }
     } catch (error: any) {
       const errorMessage =
-        error.message || 'Failed to update discharge request';
+        error.message || 'Failed to update pre-request';
+
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Update accepted pre-request with patient, service and medical form data
+   */
+  updatePreRequestWithForm: async (
+    requestId: string,
+    payload: {
+      patientId: string;
+      serviceId: string;
+      priorityLevel?: string;
+      requestedDate?: string;
+      requestedTime?: string;
+      formData: any;
+    },
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}/update-pre-request`,
+        payload,
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Pre-request updated successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message:
+            nestedMessage ||
+            response.message ||
+            'Failed to update pre-request',
+          error: nestedMessage || response.message,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to update pre-request';
 
       return {
         success: false,
@@ -626,6 +684,50 @@ export const serviceRequestApi = {
         error?.data?.message ||
         error.message ||
         'Failed to accept request';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Reject a service request / pre-request for provider
+   */
+  rejectRequest: async (requestId: string): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}/reject`,
+        {},
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Request rejected successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to reject request',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.data?.message ||
+        error.message ||
+        'Failed to reject request';
       return {
         success: false,
         message: errorMessage,

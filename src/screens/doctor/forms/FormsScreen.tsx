@@ -23,6 +23,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -84,38 +85,31 @@ const FormsScreen: React.FC = () => {
   const dispatch = useDispatch();
 
   const request: ServiceRequest = (route.params as any)?.request;
-  const service: ServiceInfo = request?.service || {};
   const action = (route.params as any)?.action;
   const from = (route.params as any)?.from;
   const { profileData } = useSelector((state: RootState) => state.profile);
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
-  const requestId = request?.id;
 
-  // Extract service and patient from request object
-  const patientData = request?.patient || {};
+  const requestId =
+    request?.id || (request as any)?._id || (route.params as any)?.requestId;
 
-  // Use patient from request, or fallback to Redux
   const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
-    null,
+    (request as any)?.formData ? (request as any) : null,
   );
-  const serviceName =
-    service?.serviceName || requestData?.serviceId?.serviceName;
 
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
-  const status = requestData?.status;
-  const formStatus = requestData?.formStatus;
+  const status = requestData?.status || request?.status;
+  const formStatus = requestData?.formStatus || request?.formStatus;
 
+  const currentReq = (requestData || request) as any;
+  const serviceObj = currentReq?.service || currentReq?.serviceId;
   const serviceId =
-    service?.id ||
-    service?._id ||
-    requestData?.serviceId?._id ||
-    (typeof requestData?.serviceId === 'string'
-      ? requestData?.serviceId
-      : (requestData?.serviceId as any)?.id) ||
-    (request?.service as any)?.id ||
-    (request?.service as any)?._id ||
-    (request as any)?.serviceId;
+    typeof serviceObj === 'string'
+      ? serviceObj
+      : serviceObj?.id || serviceObj?._id || '';
+  const serviceName = serviceObj?.serviceName || '';
+  const patientData = currentReq?.patient || currentReq?.patientId || {};
 
   const warningSheetRef = useRef<ActionSheetRef>(null);
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
@@ -373,11 +367,11 @@ const FormsScreen: React.FC = () => {
               {t(STRING.somethingWentWrong)}
             </AppText>
           </View>
-        ) : !isFetched ? (
+        ) : !isFetched && !requestData ? (
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            {/* <AppLoader visible={true} /> */}
+            <ActivityIndicator size="large" color={COLORS.primary} />
           </View>
         ) : (
           <>
@@ -389,7 +383,7 @@ const FormsScreen: React.FC = () => {
               >
                 {/* Patient Info Header */}
                 <FormRequestHeader
-                  patientData={requestData?.patientId as any}
+                  patientData={patientData as any}
                   serviceName={serviceName}
                   requestData={requestData}
                 />

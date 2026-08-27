@@ -97,6 +97,12 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
   const selectProviderSheetRef = useRef<ActionSheetRef>(null);
 
+  const assignedProviderId =
+    (route?.params as any)?.assignedProviderId ||
+    (route?.params as any)?.assignedProvider?._id ||
+    (route?.params as any)?.assignedProvider?.id;
+  const preRequestId = (route?.params as any)?.preRequestId;
+
   // Determine button labels based on request status
   const isNewRequest = !initialData && !requestStatus;
   const isDraftRequest =
@@ -106,7 +112,8 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
     initialData?.status === 'draft';
   const isDoctor =
     role === ROLES.DOCTOR || (role !== ROLES.PROVIDER && !selectedDoctor);
-  const isFirstTimeDoctorRequest = (isNewRequest || isDraftRequest) && isDoctor;
+  const isFirstTimeDoctorRequest =
+    !assignedProviderId && (isNewRequest || isDraftRequest) && isDoctor;
   const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
 
   const leftButtonLabel = isNewRequest
@@ -124,6 +131,16 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   const handleRightButtonPress = async () => {
+    if (preRequestId || assignedProviderId) {
+      if (formRef.current?.validateAndSubmit) {
+        await formRef.current.validateAndSubmit({
+          providerId: assignedProviderId,
+          preRequestId: preRequestId,
+        });
+      }
+      return;
+    }
+
     if (isFirstTimeDoctorRequest) {
       // 1. Validate form fields first if validateForm is available
       if (formRef.current?.validateForm) {

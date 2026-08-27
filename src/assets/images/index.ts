@@ -109,5 +109,7 @@ export const IMAGES = {
   pregnancy: require('./pregnancy.png'),
   provider: require('./provider.png'),
   all_provider: require('./all_provider.png'),
-  ic_mic: require('./ic_mic.png')
+  ic_mic: require('./ic_mic.png'),
+  ic_pause: require('./ic_pause.png'),
+  ic_provider: require('./ic_provider.png'),
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,8 @@ import {
   Easing,
   Platform,
   PermissionsAndroid,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,17 +18,19 @@ import { useTranslation } from 'react-i18next';
 import { useSound } from 'react-native-nitro-sound';
 import LottieView from 'lottie-react-native';
 import { ANIMATION } from '../../../assets/lottie';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   AppSafeAreaView,
   AppText,
   AppLoader,
+  ProfileAvatar,
 } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 import { RootStackParamList } from '../../../navigation';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import {
@@ -39,6 +43,7 @@ import {
   serviceRequestApi,
   CreateServiceRequestPayload,
 } from '../../../services/serviceRequestApi';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 
 export type CreateDischargeRequestScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -54,6 +59,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const route = useRoute<any>();
   const isEdit = !!route.params?.isEdit;
   const editRequest = route.params?.request;
+  console.log("editRequest",editRequest);
+  
 
   // State management (initialized with editRequest data when in edit mode)
   const [instructionsText, setInstructionsText] = useState<string>(
@@ -63,6 +70,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     editRequest?.voiceMessageUrl ? 'recorded' : 'idle',
   );
   const [recordDurationSeconds, setRecordDurationSeconds] = useState<number>(0);
+  const [currentPlaybackSeconds, setCurrentPlaybackSeconds] = useState<number>(0);
+  const [totalAudioDurationSeconds, setTotalAudioDurationSeconds] = useState<number>(0);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(
     editRequest?.voiceMessageUrl || null,
   );
@@ -84,9 +93,19 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       if (e.currentPosition != null && e.currentPosition > 0) {
         const secs = Math.floor(e.currentPosition / 1000);
         setRecordDurationSeconds(secs);
+        setTotalAudioDurationSeconds(secs);
       }
     },
     onPlayback: e => {
+      if (e.duration != null && e.duration > 0) {
+        const total = Math.floor(e.duration / 1000);
+        setTotalAudioDurationSeconds(total);
+        setRecordDurationSeconds(prev => (prev > 0 ? prev : total));
+      }
+      if (e.currentPosition != null && e.currentPosition >= 0) {
+        const curr = Math.floor(e.currentPosition / 1000);
+        setCurrentPlaybackSeconds(curr);
+      }
       if (e.duration > 0 && e.currentPosition != null) {
         const progress = (e.currentPosition / e.duration) * 100;
         setPlaybackProgress(Math.min(progress, 100));
@@ -95,8 +114,70 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     onPlaybackEnd: () => {
       setIsPlaying(false);
       setPlaybackProgress(0);
+      setCurrentPlaybackSeconds(0);
     },
   });
+
+  const soundRef = useRef(sound);
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
+
+  const recordingStateRef = useRef(recordingState);
+  useEffect(() => {
+    recordingStateRef.current = recordingState;
+  }, [recordingState]);
+
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  // Stop playback and recording helper (stable ref-based, does not trigger on state changes)
+  const stopAllAudio = useCallback(async () => {
+    if (isPlayingRef.current) {
+      try {
+        await soundRef.current?.stopPlayer();
+      } catch (e) {
+        // ignore
+      }
+      setIsPlaying(false);
+      setPlaybackProgress(0);
+    }
+    if (recordingStateRef.current === 'recording') {
+      try {
+        await soundRef.current?.stopRecorder();
+      } catch (e) {
+        // ignore
+      }
+      setRecordingState('idle');
+    }
+  }, []);
+
+  // 1. Stop audio and recording ONLY when screen loses focus (navigation changes)
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        stopAllAudio();
+      };
+    }, [stopAllAudio]),
+  );
+
+  // 2. Stop audio and recording on app state changes (phone lock, background, incoming call)
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState !== 'active') {
+          stopAllAudio();
+        }
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [stopAllAudio]);
 
   // Pulse animation for microphone during recording
   useEffect(() => {
@@ -170,6 +251,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       }
 
       setRecordDurationSeconds(0);
+      setCurrentPlaybackSeconds(0);
+      setTotalAudioDurationSeconds(0);
       setRecordingState('recording');
       setIsPlaying(false);
       setPlaybackProgress(0);
@@ -178,7 +261,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       await sound.startRecorder(undefined, undefined, true);
     } catch (error: any) {
       console.error('Error starting nitro recording:', error);
-      SHOW_TOAST('Failed to start recording', 'error');
+      SHOW_TOAST(error?.message || 'Failed to start recording', 'error');
       setRecordingState('idle');
     }
   };
@@ -189,6 +272,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       const audioUri = await sound.stopRecorder();
       setRecordedAudioUri(audioUri);
       setRecordingState('recorded');
+      setTotalAudioDurationSeconds(recordDurationSeconds);
       SHOW_TOAST(t(STRING.voiceRecordingAttached), 'success');
     } catch (error: any) {
       console.error('Error stopping nitro recording:', error);
@@ -202,6 +286,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       await sound.stopRecorder();
     } catch (e) {}
     setRecordDurationSeconds(0);
+    setCurrentPlaybackSeconds(0);
+    setTotalAudioDurationSeconds(0);
     setRecordingState('idle');
     setRecordedAudioUri(null);
   };
@@ -215,6 +301,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     } catch (e) {}
     setIsPlaying(false);
     setPlaybackProgress(0);
+    setCurrentPlaybackSeconds(0);
+    setTotalAudioDurationSeconds(0);
     setRecordDurationSeconds(0);
     setRecordedAudioUri(null);
     setRecordingState('idle');
@@ -240,13 +328,47 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     }
   };
 
+  const isAccepted =
+    editRequest?.preRequestStatus === 'accepted' || !!route.params?.isAccepted;
+
+  const isRejected =
+    editRequest?.preRequestStatus === 'rejected' ||
+    editRequest?.status === 'rejected' ||
+    !!route.params?.isRejected;
+
+  const isPending =
+    editRequest?.preRequestStatus === 'pending' ||
+    (isEdit && !isAccepted && !isRejected);
+
+  const isReadOnly = isAccepted || isRejected || isPending;
+
   // Validate if at least voice or text is provided
   const hasVoice = recordingState === 'recorded' && !!recordedAudioUri;
   const hasText = instructionsText.trim().length > 0;
-  const canSubmit = hasVoice || hasText;
+  const canSubmit = isAccepted || hasVoice || hasText;
 
   // Handle submit button click
   const handleSubmitPress = () => {
+    if (isAccepted) {
+      const assignedProviderId =
+        editRequest?.assignedProvider?._id ||
+        editRequest?.assignedProvider?.id ||
+        editRequest?.provider?._id ||
+        editRequest?.provider?.id ||
+        editRequest?.assignedProviderId ||
+        editRequest?.providerId;
+
+      NavigationService.navigate(SCREENS.CREATE_REQUEST, {
+        preRequest: editRequest,
+        preRequestId:
+          editRequest?.id || editRequest?._id || editRequest?.requestId,
+        assignedProvider:
+          editRequest?.assignedProvider || editRequest?.provider,
+        assignedProviderId,
+      });
+      return;
+    }
+
     if (recordingState === 'recording') {
       handleStopRecording();
       return;
@@ -257,8 +379,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       return;
     }
 
-    // When editing, do NOT ask specific or all provider - directly submit keeping whatever it was earlier!
-    if (isEdit) {
+    // When editing normally (and NOT rejected), directly submit keeping whatever it was earlier!
+    if (isEdit && !isRejected) {
       const prevProviderId =
         editRequest?.providerId ||
         editRequest?.assignedProviderId ||
@@ -280,7 +402,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       return;
     }
 
-    // Open recipient selection sheet (All vs Specific) for new requests
+    // Open recipient selection sheet (All vs Specific) for new requests or rejected requests
     providerOptionSheetRef.current?.show();
   };
 
@@ -288,6 +410,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const processDischargeSubmission = async (
     recipientType: 'all' | 'specific',
     provider?: Provider,
+    serviceId?: string,
   ) => {
     setIsSubmitting(true);
     let audioS3Url = '';
@@ -322,9 +445,13 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         apiPayload.voiceMessageUrl = audioS3Url;
       }
 
-      if (recipientType === 'specific' && provider?.id) {
-        apiPayload.providerId = provider.id;
-        apiPayload.assignedProviderId = provider.id;
+      if (recipientType === 'specific' && provider) {
+        const pId = provider.id || (provider as any)._id;
+        apiPayload.providerId = pId;
+        apiPayload.assignedProviderId = pId;
+        if (serviceId) {
+          apiPayload.serviceId = serviceId;
+        }
       }
 
       const providerName =
@@ -345,8 +472,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       console.log('👥 Recipient Option:', recipientType);
       if (provider) {
         console.log('👤 Selected Provider:', {
-          id: provider.id,
+          id: provider.id || (provider as any)._id,
           name: providerName,
+          serviceId: serviceId || '(All Services)',
         });
       }
       console.log('📦 API Request Body:', JSON.stringify(apiPayload, null, 2));
@@ -420,9 +548,12 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   };
 
   // Callback when a specific provider is chosen from the sheet
-  const handleProviderSelected = async (provider: Provider) => {
+  const handleProviderSelected = async (
+    provider: Provider,
+    serviceId?: string,
+  ) => {
     selectProviderSheetRef.current?.hide();
-    await processDischargeSubmission('specific', provider);
+    await processDischargeSubmission('specific', provider, serviceId);
   };
 
   return (
@@ -445,9 +576,11 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
           >
-            {isEdit
-              ? t(STRING.editDischargeRequest) || 'Edit Discharge Request'
-              : t(STRING.createDischargeRequest)}
+            {isAccepted || isRejected || isPending
+              ? t(STRING.preRequest) || 'Pre-Request'
+              : isEdit
+              ? t(STRING.editPreRequest) || 'Edit Pre-Request'
+              : t(STRING.createPreRequest) || 'Create Pre-Request'}
           </AppText>
         </View>
 
@@ -467,30 +600,177 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         keyboardOpeningTime={0}
       >
         {/* Instructions Intro Banner */}
-        <View style={styles.introCard}>
-          <View style={styles.introIconWrap}>
-            <Image source={IMAGES.info} style={styles.introIcon} />
+        <View
+          style={[
+            styles.introCard,
+            isRejected && styles.introCardRejected,
+          ]}
+        >
+          <View
+            style={[
+              styles.introIconWrap,
+              isRejected && styles.introIconWrapRejected,
+            ]}
+          >
+            <Image
+              source={isRejected ? IMAGES.crossIcon : IMAGES.info}
+              style={[
+                styles.introIcon,
+                isRejected && { tintColor: COLORS.error },
+              ]}
+            />
           </View>
           <View style={styles.introTextCol}>
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
-              color={COLORS.primary}
+              color={isRejected ? COLORS.error : COLORS.primary}
             >
-              {isEdit
-                ? t(STRING.editDischargeRequest) || 'Edit Discharge Request'
-                : t(STRING.createDischargeRequest)}
+              {isAccepted || isPending
+                ? t(STRING.preRequest) || 'Pre-Request'
+                : isRejected
+                ? t(STRING.preRequestRejected) || 'Pre-Request Rejected'
+                : isEdit
+                ? t(STRING.editPreRequest) || 'Edit Pre-Request'
+                : t(STRING.createPreRequest) || 'Create Pre-Request'}
             </AppText>
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
-              color={COLORS._526674}
+              color={isRejected ? '#991B1B' : COLORS._526674}
               style={{ marginTop: 2 }}
             >
-              {t(STRING.dischargeInstructionsSubtitle)}
+              {isAccepted
+                ? t(STRING.preRequestAcceptedSubtitle)
+                : isRejected
+                ? t(STRING.preRequestRejectedSubtitle)
+                : t(STRING.dischargeInstructionsSubtitle)}
             </AppText>
           </View>
         </View>
+
+        {/* Accepted or Rejected Provider Card */}
+        {(isAccepted || isRejected) &&
+          (editRequest?.assignedProvider || editRequest?.provider) &&
+          (() => {
+            const provider =
+              editRequest?.assignedProvider || editRequest?.provider;
+            const providerName =
+              provider?.fullName ||
+              provider?.providerName ||
+              `${provider?.fName || ''} ${provider?.lName || ''}`.trim() ||
+              'Healthcare Provider';
+
+            return (
+              <View style={styles.assignedProviderCard}>
+                <View style={styles.assignedProviderHeaderRow}>
+                  <View style={styles.assignedProviderHeaderLeft}>
+                    <View
+                      style={[
+                        styles.assignedProviderBadgeIconWrap,
+                        isRejected && { backgroundColor: '#FEF2F2' },
+                      ]}
+                    >
+                      <Image
+                        source={IMAGES.ic_provider}
+                        style={[
+                          styles.assignedProviderBadgeIcon,
+                          isRejected && { tintColor: COLORS.error },
+                        ]}
+                      />
+                    </View>
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {t(STRING.assignedProvider) || 'Assigned Provider'}
+                    </AppText>
+                  </View>
+
+                  <View
+                    style={
+                      isRejected
+                        ? styles.rejectedStatusBadge
+                        : styles.acceptedStatusBadge
+                    }
+                  >
+                    <View
+                      style={
+                        isRejected
+                          ? styles.rejectedStatusDot
+                          : styles.acceptedStatusDot
+                      }
+                    />
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Bold}
+                      color={isRejected ? COLORS.error : COLORS.completed}
+                    >
+                      {isRejected
+                        ? t(STRING.Rejected) || 'Rejected'
+                        : t(STRING.Accepted) || 'Accepted'}
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.assignedProviderDivider} />
+
+                <View style={styles.assignedProviderBodyRow}>
+                  <ProfileAvatar
+                    name={providerName}
+                    imageUrl={
+                      provider.profileImg
+                        ? IMAGE_BASE_URL + provider.profileImg
+                        : undefined
+                    }
+                    size="small"
+                  />
+
+                  <View style={styles.assignedProviderInfoCol}>
+                    <AppText
+                      size={getScaleSize(15)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                      numberOfLines={1}
+                    >
+                      {providerName}
+                    </AppText>
+
+                    {!!provider.phoneNumber && (
+                      <View style={styles.providerMetaRow}>
+                        <Image
+                          source={IMAGES.phone}
+                          style={styles.providerMetaIcon}
+                        />
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.Regular}
+                          color={COLORS._6F767E}
+                          numberOfLines={1}
+                        >
+                          {provider.phoneNumber}
+                        </AppText>
+                      </View>
+                    )}
+
+                    {!!provider.email && !provider.phoneNumber && (
+                      <View style={styles.providerMetaRow}>
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.Regular}
+                          color={COLORS._6F767E}
+                          numberOfLines={1}
+                        >
+                          {provider.email}
+                        </AppText>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            );
+          })()}
 
           {/* ──────────────────────────────────────────────────────────
               SECTION 1: VOICE RECORDING (POWERED BY NITRO-SOUND)
@@ -512,41 +792,70 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             {/* IDLE STATE */}
             {recordingState === 'idle' && (
               <View style={styles.recordCard}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={styles.micCircleBtn}
-                  onPress={handleStartRecording}
-                >
-                  <Animated.View
-                    style={[
-                      styles.micPulseRing,
-                      { transform: [{ scale: pulseAnim }] },
-                    ]}
-                  />
-                  <View style={styles.micInnerCircle}>
+                {isReadOnly ? (
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      paddingVertical: getScaleSize(12),
+                    }}
+                  >
                     <Image
                       source={IMAGES.ic_mic}
-                      style={styles.micIcon}
+                      style={{
+                        width: getScaleSize(24),
+                        height: getScaleSize(24),
+                        tintColor: COLORS._6F767E,
+                        resizeMode: 'contain',
+                      }}
                     />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: getScaleSize(8) }}
+                    >
+                      No voice instructions recorded
+                    </AppText>
                   </View>
-                </TouchableOpacity>
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      style={styles.micCircleBtn}
+                      onPress={handleStartRecording}
+                    >
+                      <Animated.View
+                        style={[
+                          styles.micPulseRing,
+                          { transform: [{ scale: pulseAnim }] },
+                        ]}
+                      />
+                      <View style={styles.micInnerCircle}>
+                        <Image
+                          source={IMAGES.ic_mic}
+                          style={styles.micIcon}
+                        />
+                      </View>
+                    </TouchableOpacity>
 
-                <AppText
-                  size={getScaleSize(15)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
-                  style={{ marginTop: getScaleSize(12) }}
-                >
-                  {t(STRING.tapToRecord)}
-                </AppText>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                  style={{ marginTop: getScaleSize(4), textAlign: 'center' }}
-                >
-                  Record patient instructions, orders, or voice summary
-                </AppText>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                      style={{ marginTop: getScaleSize(12) }}
+                    >
+                      {t(STRING.tapToRecord)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: getScaleSize(4), textAlign: 'center' }}
+                    >
+                      {t('Record patient instructions, orders, or voice summary')}
+                    </AppText>
+                  </>
+                )}
               </View>
             )}
 
@@ -593,6 +902,10 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       size={getScaleSize(13)}
                       font={FONTS.Inter.SemiBold}
                       color={COLORS._6F767E}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                      align="center"
                     >
                       {t(STRING.cancelRecording)}
                     </AppText>
@@ -605,9 +918,14 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                   >
                     <View style={styles.stopSquareIcon} />
                     <AppText
-                      size={getScaleSize(14)}
+                      size={getScaleSize(13)}
                       font={FONTS.Inter.Bold}
                       color={COLORS.white}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                      align="center"
+                      style={{ flexShrink: 1 }}
                     >
                       {t(STRING.stopRecording)}
                     </AppText>
@@ -628,19 +946,21 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                     <AppText
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Bold}
-                      color={COLORS._48B02C}
+                      color={COLORS.primary}
                     >
                       {t(STRING.recordedVoiceNote)}
                     </AppText>
                   </View>
 
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleDeleteRecording}
-                    style={styles.deleteNoteBtn}
-                  >
-                    <Image source={IMAGES.trash} style={styles.trashIcon} />
-                  </TouchableOpacity>
+                  {!isReadOnly && (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={handleDeleteRecording}
+                      style={styles.deleteNoteBtn}
+                    >
+                      <Image source={IMAGES.trash} style={styles.trashIcon} />
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 {/* Audio Player Controls & Bar */}
@@ -650,14 +970,21 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                     onPress={handleTogglePlayback}
                     style={styles.playPauseBtn}
                   >
-                    <Image
-                      source={
-                        isPlaying
-                          ? (IMAGES as any).pause || IMAGES.ic_inprogress
-                          : (IMAGES as any).play || IMAGES.forwardIcon
-                      }
-                      style={styles.playPauseIcon}
-                    />
+                    {isPlaying ? (
+                      <Image
+                        source={IMAGES.ic_pause}
+                        style={styles.playPauseIcon}
+                      />
+                    ) : (
+                      <AppText
+                        size={getScaleSize(16)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS.white}
+                        style={{ marginLeft: getScaleSize(2) }}
+                      >
+                        {'▶'}
+                      </AppText>
+                    )}
                   </TouchableOpacity>
 
                   <View style={styles.playerTrackCol}>
@@ -676,38 +1003,38 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                         font={FONTS.Inter.Medium}
                         color={COLORS._6F767E}
                       >
-                        {formatTime(
-                          Math.round(
-                            (playbackProgress / 100) * recordDurationSeconds,
-                          ),
-                        )}
+                        {formatTime(currentPlaybackSeconds)}
                       </AppText>
                       <AppText
                         size={getScaleSize(11)}
                         font={FONTS.Inter.Bold}
                         color={COLORS._1A1D1F}
                       >
-                        {formatTime(recordDurationSeconds)}
+                        {formatTime(
+                          totalAudioDurationSeconds || recordDurationSeconds,
+                        )}
                       </AppText>
                     </View>
                   </View>
                 </View>
 
                 {/* Re-record Action */}
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={styles.rerecordBtn}
-                  onPress={handleStartRecording}
-                >
-                  <Image source={IMAGES.ic_reload} style={styles.reloadIcon} />
-                  <AppText
-                    size={getScaleSize(13)}
-                    font={FONTS.Inter.SemiBold}
-                    color={COLORS.primary}
+                {!isReadOnly && (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.rerecordBtn}
+                    onPress={handleStartRecording}
                   >
-                    {t(STRING.rerecord)}
-                  </AppText>
-                </TouchableOpacity>
+                    <Image source={IMAGES.ic_reload} style={styles.reloadIcon} />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.primary}
+                    >
+                      {t(STRING.rerecord)}
+                    </AppText>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -734,7 +1061,10 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
             <View style={styles.textInputCard}>
               <TextInput
-                style={styles.multilineInput}
+                style={[
+                  styles.multilineInput,
+                  isReadOnly && { color: COLORS._1A1D1F },
+                ]}
                 placeholder={t(STRING.enterDischargeNotesPlaceholder)}
                 placeholderTextColor={COLORS._6F767E}
                 multiline
@@ -743,10 +1073,11 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                 value={instructionsText}
                 onChangeText={setInstructionsText}
                 maxLength={MAX_TEXT_LENGTH}
+                editable={!isReadOnly}
               />
 
               <View style={styles.textInputFooter}>
-                {instructionsText.length > 0 && (
+                {!isReadOnly && instructionsText.length > 0 && (
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setInstructionsText('')}
@@ -756,7 +1087,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       font={FONTS.Inter.Medium}
                       color={COLORS.error}
                     >
-                      Clear text
+                      {t(STRING.clearText)}
                     </AppText>
                   </TouchableOpacity>
                 )}
@@ -772,51 +1103,32 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               </View>
             </View>
           </View>
-
-          {/* Status summary pill */}
-          {(hasVoice || hasText) && (
-            <View style={styles.summaryStatusPill}>
-              <Image
-                source={IMAGES.ic_doubleTick || IMAGES.serviceCompletedCheck}
-                style={styles.summaryStatusIcon}
-              />
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._059669}
-              >
-                {hasVoice && hasText
-                  ? t(STRING.voiceAndTextAttached)
-                  : hasVoice
-                  ? t(STRING.voiceOnlyAttached)
-                  : t(STRING.textOnlyAttached)}
-              </AppText>
-            </View>
-          )}
         </KeyboardAwareScrollView>
 
-        {/* Fixed Bottom Submit Button matching Create Request Step 1 Continue button */}
-        <View style={styles.bottomSheet}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[
-              styles.continueBtn,
-              !canSubmit && styles.continueDisabled,
-            ]}
-            disabled={!canSubmit}
-            onPress={handleSubmitPress}
-          >
-            <AppText
-              size={getScaleSize(15)}
-              color={COLORS.white}
-              font={FONTS.Inter.Bold}
+        {/* Fixed Bottom Submit Button: Shown for new pre-requests or accepted pre-requests (to complete) */}
+        {!isRejected && !isPending && (
+          <View style={styles.bottomSheet}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[
+                styles.continueBtn,
+                !canSubmit && styles.continueDisabled,
+              ]}
+              disabled={!canSubmit}
+              onPress={handleSubmitPress}
             >
-              {isEdit
-                ? t(STRING.updateRequest) || 'Update Request'
-                : t(STRING.submitRequest)}
-            </AppText>
-          </TouchableOpacity>
-        </View>
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS.white}
+                font={FONTS.Inter.Bold}
+              >
+                {isAccepted
+                  ? t(STRING.completeRequest) || 'Complete Request'
+                  : t(STRING.submitRequest)}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Bottom Sheet 1: Recipient Selection (All vs Specific) */}
         <ProviderOptionSheet
@@ -894,6 +1206,109 @@ const styles = StyleSheet.create({
     borderColor: '#D4E6F7',
     gap: getScaleSize(12),
   },
+  introCardRejected: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  introIconWrapRejected: {
+    backgroundColor: '#FEE2E2',
+  },
+  assignedProviderCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(16),
+    marginBottom: getScaleSize(16),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  assignedProviderHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  assignedProviderHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+  },
+  assignedProviderBadgeIconWrap: {
+    width: getScaleSize(28),
+    height: getScaleSize(28),
+    borderRadius: getScaleSize(14),
+    backgroundColor: '#EBF3FB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  assignedProviderBadgeIcon: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  acceptedStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(5),
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: getScaleSize(9),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  acceptedStatusDot: {
+    width: getScaleSize(6),
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: COLORS.completed,
+  },
+  rejectedStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(5),
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: getScaleSize(9),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  rejectedStatusDot: {
+    width: getScaleSize(6),
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: COLORS.error,
+  },
+  assignedProviderDivider: {
+    height: 1,
+    backgroundColor: COLORS._F3F4F6,
+    marginVertical: getScaleSize(12),
+  },
+  assignedProviderBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  assignedProviderInfoCol: {
+    flex: 1,
+    marginLeft: getScaleSize(12),
+    justifyContent: 'center',
+  },
+  providerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(3),
+  },
+  providerMetaIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+  },
   introIconWrap: {
     width: getScaleSize(36),
     height: getScaleSize(36),
@@ -953,8 +1368,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF9F9',
   },
   recordedCardSuccess: {
-    borderColor: COLORS._48B02C,
-    backgroundColor: '#F7FCF5',
+    borderColor: COLORS._E5E7EB,
+    backgroundColor: COLORS.white,
     alignItems: 'stretch',
     padding: getScaleSize(16),
   },
@@ -1019,12 +1434,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: getScaleSize(16),
+    gap: getScaleSize(10),
     marginTop: getScaleSize(12),
     width: '100%',
+    paddingHorizontal: getScaleSize(8),
   },
   cancelRecordBtn: {
-    paddingHorizontal: getScaleSize(16),
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(12),
     paddingVertical: getScaleSize(10),
     borderRadius: getScaleSize(10),
     borderWidth: 1,
@@ -1032,11 +1451,13 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   stopRecordBtn: {
+    flex: 1.1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: getScaleSize(8),
+    justifyContent: 'center',
+    gap: getScaleSize(6),
     backgroundColor: COLORS.error,
-    paddingHorizontal: getScaleSize(20),
+    paddingHorizontal: getScaleSize(12),
     paddingVertical: getScaleSize(10),
     borderRadius: getScaleSize(10),
     elevation: 2,
@@ -1057,7 +1478,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(6),
-    backgroundColor: '#E8F7E4',
+    backgroundColor: '#F3F4F6',
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(4),
     borderRadius: getScaleSize(12),
@@ -1066,7 +1487,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(14),
     height: getScaleSize(14),
     resizeMode: 'contain',
-    tintColor: COLORS._48B02C,
+    tintColor: COLORS.primary,
   },
   deleteNoteBtn: {
     padding: getScaleSize(6),
@@ -1088,12 +1509,17 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   playPauseBtn: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    borderRadius: getScaleSize(22),
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   playPauseIcon: {
     width: getScaleSize(16),
@@ -1162,25 +1588,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS._F3F4F6,
     paddingTop: getScaleSize(10),
     marginTop: getScaleSize(8),
-  },
-  summaryStatusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: getScaleSize(8),
-    backgroundColor: '#E6F4EA',
-    paddingHorizontal: getScaleSize(14),
-    paddingVertical: getScaleSize(10),
-    borderRadius: getScaleSize(12),
-    borderWidth: 1,
-    borderColor: '#C2E7C6',
-    marginTop: getScaleSize(4),
-    marginBottom: getScaleSize(12),
-  },
-  summaryStatusIcon: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
-    resizeMode: 'contain',
-    tintColor: COLORS._059669,
   },
   bottomSheet: {
     paddingHorizontal: 16,

@@ -412,7 +412,10 @@ const HydrationInfusionForm = forwardRef<
     };
 
     // Handle form submission (using centralized handler)
-    const validateAndSubmit = async (options?: { providerId?: string }) => {
+    const validateAndSubmit = async (options?: {
+      providerId?: string;
+      preRequestId?: string;
+    }) => {
       await handleFormSubmit({
         dispatch,
         state,
@@ -421,6 +424,7 @@ const HydrationInfusionForm = forwardRef<
         selectedPatient,
         doctorId: prescriber?.id, // Pass doctorId from prescriber
         providerId: options?.providerId,
+        preRequestId: options?.preRequestId,
         validateForm,
         lastFirstErrorKey,
         errors,

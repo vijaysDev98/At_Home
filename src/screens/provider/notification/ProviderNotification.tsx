@@ -156,8 +156,17 @@ const ProviderNotification: React.FC = () => {
         return IMAGES.resetRequest;
       case 'formSigned':
         return IMAGES.serviceClaimed;
-      case "serviceProviderAssignment":
+      case 'preRequestSubmission':
+      case 'preRequestAssignment':
+      case 'preRequestDetailsUpdated':
+      case 'serviceProviderAssignment':
         return IMAGES.alert_formUpdate;
+      case 'adminManual':
+        return IMAGES.ic_warning;
+      case 'systemMaintenance':
+        return IMAGES.ic_announcement;
+      case 'securityAlert':
+        return IMAGES.securityIcon;
       default:
         return IMAGES.ic_announcement;
     }
@@ -168,11 +177,26 @@ const ProviderNotification: React.FC = () => {
       txt: '',
       onPress: null as (() => void) | null,
     };
-    const request = { id: item?.metadata?.requestId };
+    const targetRequestId =
+      item?.metadata?.requestId ||
+      item?.referenceId ||
+      item?.id;
+
+    const request = { id: targetRequestId };
 
     if (!request.id) return label;
 
     switch (item.type) {
+      case 'preRequestSubmission':
+      case 'preRequestAssignment':
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+            request: request,
+            requestId: request.id,
+            action: 'accept',
+          });
+        return label;
       case 'requestCancelled':
         // label.txt = t(STRING.viewRequest);
         // label.onPress = () =>
@@ -197,7 +221,8 @@ const ProviderNotification: React.FC = () => {
             action: 'edit',
           });
         return label;
-        case 'serviceProviderAssignment':
+      case 'preRequestDetailsUpdated':
+      case 'serviceProviderAssignment':
         label.txt = t(STRING.viewService);
         label.onPress = () =>
           NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {

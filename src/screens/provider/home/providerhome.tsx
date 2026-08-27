@@ -15,7 +15,6 @@ import { IMAGES } from '../../../assets/images';
 import {
   AppText,
   ReviewRequestSheet,
-  ProviderPreRequestDetailSheet,
   AppLoader,
   ProfileAvatar,
   AppSafeAreaView,
@@ -90,7 +89,6 @@ const ProviderHome: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
   const isLoading = useSelector((state: RootState) => state.common.isLoading);
   const reviewSheetRef = useRef<ActionSheetRef>(null);
-  const providerPreRequestDetailSheetRef = useRef<ActionSheetRef>(null);
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
@@ -388,7 +386,14 @@ const ProviderHome: React.FC = () => {
                   ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim()
                   : null);
 
-              const buttonConfig = isPreReq
+              const isAcceptedPreReq =
+                isPreReq &&
+                (item?.preRequestStatus === 'accepted' ||
+                  item?.status === 'accepted');
+
+              const buttonConfig = isAcceptedPreReq
+                ? { show: false, label: null, action: null }
+                : isPreReq
                 ? {
                     show:
                       item?.status === 'submitted' ||
@@ -409,8 +414,8 @@ const ProviderHome: React.FC = () => {
                     name={
                       item?.patient?.fullName ||
                       (isPreReq
-                        ? t(STRING.dischargePreRequest) ||
-                          'Discharge Pre-Request'
+                        ? t(STRING.preRequest) ||
+                          'Pre-Request'
                         : '')
                     }
                     requestId={item?.requestId}
@@ -431,9 +436,13 @@ const ProviderHome: React.FC = () => {
                     }
                     onPress={() => {
                       if (isPreReq) {
-                        (
-                          providerPreRequestDetailSheetRef.current as any
-                        )?.show(item);
+                        NavigationService.navigate(
+                          SCREENS.PROVIDER_PRE_REQUEST_DETAIL,
+                          {
+                            request: item,
+                            action: isAcceptedPreReq ? 'view' : 'accept',
+                          },
+                        );
                         return;
                       }
                       if (item.status == REQUEST_STATUS.COMPLETED) {
@@ -452,9 +461,13 @@ const ProviderHome: React.FC = () => {
                     }}
                     onButtonPress={() => {
                       if (isPreReq) {
-                        (
-                          providerPreRequestDetailSheetRef.current as any
-                        )?.show(item);
+                        NavigationService.navigate(
+                          SCREENS.PROVIDER_PRE_REQUEST_DETAIL,
+                          {
+                            request: item,
+                            action: 'accept',
+                          },
+                        );
                         return;
                       }
                       NavigationService.navigate(
@@ -509,10 +522,6 @@ const ProviderHome: React.FC = () => {
             // });
             await onReturnRequest(reason, details, selectedRequest?.id || '');
           }}
-        />
-        <ProviderPreRequestDetailSheet
-          ref={providerPreRequestDetailSheetRef}
-          onAcceptSuccess={() => fetchDashboardData()}
         />
       </View>
     </AppSafeAreaView>

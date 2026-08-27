@@ -32,6 +32,8 @@ import {
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 const DoctorNotification: React.FC = () => {
   const { t } = useTranslation();
@@ -173,6 +175,10 @@ const DoctorNotification: React.FC = () => {
 
   const getNotificationIcon = (type: string, forReview: boolean = false) => {
     switch (type) {
+      case 'preRequestAccepted':
+        return IMAGES.serviceClaimed;
+      case 'preRequestRejected':
+        return IMAGES.serviceCancelled;
       case 'requestClaimed':
         return IMAGES.serviceClaimed;
       case 'formSubmission':
@@ -203,76 +209,167 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
+  const handleServiceRequestNotificationNavigation = async (
+    targetRequestId: string,
+    notificationType?: string,
+    metadata?: any,
+  ) => {
+    if (!targetRequestId) return;
+    try {
+      // Fetch fresh service request details from backend
+      const reqData = await serviceRequestApi.getServiceRequestDetails(
+        targetRequestId,
+      );
+      if (!reqData) return;
+
+      // If isPreRequest is still true, open pre-request completion screen (CreateDischargeRequestScreen)
+      if (reqData.isPreRequest === true) {
+        const isAccepted = reqData.preRequestStatus === 'accepted';
+        const isRejected =
+          reqData.preRequestStatus === 'rejected' ||
+          notificationType === 'preRequestRejected';
+        NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+          request: reqData,
+          isEdit: true,
+          isAccepted,
+          isRejected,
+        });
+        return;
+      }
+
+      // If isPreRequest is false (converted into normal request or standard request):
+      if (reqData.status === REQUEST_STATUS.COMPLETED) {
+        NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
+          request: reqData,
+        });
+      } else if (
+        metadata?.submitForReview === true ||
+        reqData.formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
+        reqData.formStatus === 'awaitingSignature'
+      ) {
+        NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
+          request: reqData,
+          action: 'edit',
+        });
+      } else {
+        const actionType =
+          notificationType === 'requestClaimed'
+            ? 'read'
+            : notificationType === 'requestCancelled'
+            ? 'view'
+            : notificationType === 'preRequestAccepted'
+            ? 'view'
+            : notificationType === 'preRequestRejected'
+            ? 'view'
+            : 'view';
+        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
+          request: reqData,
+          requestId: reqData?.id || reqData?._id || targetRequestId,
+          action: actionType,
+        });
+      }
+    } catch (e) {
+      console.log('Error handling notification request navigation:', e);
+    }
+  };
+
   const getNotificationAction = (item: any) => {
     let label = {
       txt: '',
       onPress: null as (() => void) | null,
     };
-    let request = {
-      id: item?.metadata?.requestId,
-    };
+    const targetRequestId =
+      item?.metadata?.requestId ||
+      item?.referenceId ||
+      (item?.referenceType === 'serviceRequest' ? item?.referenceId : null);
 
     // Hide action button if no requestId
-    if (!request.id) {
+    if (!targetRequestId) {
       return label;
     }
 
     switch (item.type) {
+      case 'preRequestRejected':
+        label.txt = t(STRING.viewRequest) || 'View Request';
+        label.onPress = () =>
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
+        return label;
+      case 'preRequestAccepted':
+        label.txt = t(STRING.completeRequest) || 'Complete Request';
+        label.onPress = () =>
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
+        return label;
       case 'formSubmission':
         label.txt = t(STRING.viewForm);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: request,
-            action: 'edit',
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
       case 'formUpdate':
-        if (item.metadata.submitForReview == true) {
+        if (item.metadata?.submitForReview == true) {
           label.txt = t(STRING.signForm);
           label.onPress = () =>
-            NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
-              request: request,
-              action: 'edit',
-            });
+            handleServiceRequestNotificationNavigation(
+              targetRequestId,
+              item.type,
+              item.metadata,
+            );
           return label;
         }
         label.txt = t(STRING.viewForm);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: request,
-            action: 'edit',
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
       case 'formReturned':
         label.txt = t(STRING.viewForm);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: request,
-            action: 'edit',
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
-      case 'requestCompleted': //DONE
+      case 'requestCompleted':
         label.txt = t(STRING.viewRequest);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.SERVICE_COMPLETED, {
-            request: request,
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
       case 'requestClaimed':
         label.txt = t(STRING.viewRequest);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: request,
-            action: 'read',
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
       case 'requestCancelled':
         label.txt = t(STRING.viewRequest);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-            request: request,
-            action: 'view',
-          });
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
         return label;
       default:
         return label;

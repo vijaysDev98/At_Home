@@ -59,6 +59,7 @@ interface DashboardRecentQueue {
   initialNotes?: string;
   voiceMessageUrl?: string | null;
   priorityLevel?: string;
+  assignedProvider?: any;
 }
 
 interface DashboardRequestsOverview {
@@ -223,7 +224,7 @@ const HomeScreen: React.FC = () => {
           }
         >
           {/* Main Title Heading */}
-          <View style={styles.headingSection}>
+          {/* <View style={styles.headingSection}>
             <AppText
               size={getScaleSize(24)}
               font={FONTS.Inter.Bold}
@@ -240,7 +241,7 @@ const HomeScreen: React.FC = () => {
             >
               {t(STRING.supportServices)}
             </AppText>
-          </View>
+          </View> */}
 
           {/* Services Section Header with "See All" */}
           <View style={styles.servicesHeaderRow}>
@@ -292,8 +293,11 @@ const HomeScreen: React.FC = () => {
             ))}
           </View>
 
+          {/* Section Divider */}
+          <View style={styles.sectionDivider} />
+
           {/* Info Badges Row */}
-          <View style={styles.infoBadgesRow}>
+          {/* <View style={styles.infoBadgesRow}>
             <View style={styles.infoPill}>
               <Image source={(IMAGES as any).ic_clock_info || IMAGES.ic_clock} style={styles.infoPillIcon} />
               <AppText
@@ -321,7 +325,7 @@ const HomeScreen: React.FC = () => {
                 {t(STRING.approvedProvider)}{'\n'}{t(STRING.multidisciplinaryTeam)}
               </AppText>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Main CTA Button: HOME DISCHARGE REQUEST */}
           <TouchableOpacity
@@ -330,7 +334,7 @@ const HomeScreen: React.FC = () => {
             style={styles.mainCtaBtn}
           >
             <View style={styles.ctaIconCircle}>
-              <Image source={(IMAGES as any).ic_house_cta || IMAGES.tab_home} style={styles.ctaHouseIcon} />
+              <Image source={IMAGES.ic_file} style={styles.ctaHouseIcon} />
             </View>
             <AppText
               size={getScaleSize(14)}
@@ -339,7 +343,7 @@ const HomeScreen: React.FC = () => {
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.7}
-              style={{ flex: 1, marginLeft: getScaleSize(4) }}
+              style={{ flex: 1 }}
             >
               {t(STRING.homeDischargeRequest)}
             </AppText>
@@ -361,7 +365,9 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.white}
                 numberOfLines={2}
-                style={{ textAlign: 'center' }}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                style={styles.actionBtnText}
               >
                 {t(STRING.newPatient)}
               </AppText>
@@ -381,7 +387,9 @@ const HomeScreen: React.FC = () => {
                 font={FONTS.Inter.Bold}
                 color={COLORS.white}
                 numberOfLines={2}
-                style={{ textAlign: 'center' }}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                style={styles.actionBtnText}
               >
                 {t(STRING.newForm)}
               </AppText>
@@ -420,28 +428,46 @@ const HomeScreen: React.FC = () => {
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
                 const isPreReq = !!item.isPreRequest;
+                const isAcceptedPreReq =
+                  isPreReq && item?.preRequestStatus === 'accepted';
                 const formStatus =
                   item.formStatus || item.preRequestStatus || item.status;
-                const buttonConfig = isPreReq
-                  ? { show: true, label: STRING.editInstructions, action: 'edit' }
+                const buttonConfig: {
+                  show: boolean;
+                  label?: string | null;
+                  action?: string | null;
+                } = isAcceptedPreReq
+                  ? {
+                      show: true,
+                      label: STRING.completeRequest,
+                      action: 'completeRequest',
+                    }
+                  : isPreReq
+                  ? {
+                      show: false,
+                    }
                   : getButtonConfig(formStatus, item.status);
+
+                const handleAcceptedPreRequestPress = () => {
+                  NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+                    request: item,
+                    isEdit: true,
+                    isAccepted: true,
+                  });
+                };
+
                 return (
                   <View key={item.id || index} style={styles.queueCardWrapper}>
                     <RequestCardDoctor
                       name={
                         item.patient?.fullName ||
                         (isPreReq
-                          ? t(STRING.dischargePreRequest) ||
-                            'Discharge Pre-Request'
+                          ? t(STRING.preRequest) ||
+                            'Pre-Request'
                           : '')
                       }
                       requestId={item.requestId}
-                      requestType={
-                        item.service?.serviceName ||
-                        (isPreReq
-                          ? t(STRING.homeDischarge) || 'Home Discharge'
-                          : '')
-                      }
+                      requestType={isPreReq ? '' : (item.service?.serviceName || '')}
                       formStatus={formStatus}
                       status={item.status}
                       isPreRequest={isPreReq}
@@ -455,6 +481,11 @@ const HomeScreen: React.FC = () => {
                           : undefined
                       }
                       onPress={() => {
+                        if (isAcceptedPreReq) {
+                          handleAcceptedPreRequestPress();
+                          return;
+                        }
+
                         if (isPreReq) {
                           (preRequestDetailSheetRef.current as any)?.show(item);
                           return;
@@ -473,14 +504,8 @@ const HomeScreen: React.FC = () => {
                         });
                       }}
                       onButtonPress={() => {
-                        if (isPreReq) {
-                          NavigationService.navigate(
-                            SCREENS.CREATE_DISCHARGE_REQUEST,
-                            {
-                              request: item,
-                              isEdit: true,
-                            },
-                          );
+                        if (isAcceptedPreReq) {
+                          handleAcceptedPreRequestPress();
                           return;
                         }
                         if (buttonConfig.action === 'edit') {
@@ -654,6 +679,12 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: getScaleSize(17),
   },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: COLORS._E5E7EB,
+    marginHorizontal: getScaleSize(18),
+    marginTop: getScaleSize(18),
+  },
   infoBadgesRow: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -688,7 +719,7 @@ const styles = StyleSheet.create({
     lineHeight: getScaleSize(14),
   },
   mainCtaBtn: {
-    backgroundColor: '#00509E',
+    backgroundColor: COLORS._008B8B,
     marginHorizontal: getScaleSize(18),
     marginTop: getScaleSize(16),
     height: getScaleSize(72),
@@ -698,10 +729,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: getScaleSize(16),
     gap: getScaleSize(12),
-    elevation: 4,
-    shadowColor: COLORS.shadow,
+    elevation: 3,
+    shadowColor: COLORS._008B8B,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
   },
   ctaIconCircle: {
@@ -713,9 +744,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaHouseIcon: {
-    width: getScaleSize(24),
-    height: getScaleSize(24),
+    width: getScaleSize(22),
+    height: getScaleSize(22),
     resizeMode: 'contain',
+    tintColor: COLORS._008B8B,
   },
   ctaText: {
     letterSpacing: 0.4,
@@ -723,12 +755,16 @@ const styles = StyleSheet.create({
   actionButtonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: getScaleSize(18),
     marginTop: getScaleSize(12),
     gap: getScaleSize(10),
   },
   actionBtnItem: {
     flex: 1,
+    flexBasis: 0,
+    flexGrow: 1,
+    flexShrink: 1,
     height: getScaleSize(64),
     borderRadius: getScaleSize(16),
     flexDirection: 'row',
@@ -745,8 +781,12 @@ const styles = StyleSheet.create({
   actionBtnIcon: {
     width: getScaleSize(22),
     height: getScaleSize(22),
-    tintColor:COLORS.white,
+    tintColor: COLORS.white,
     resizeMode: 'contain',
+  },
+  actionBtnText: {
+    flexShrink: 1,
+    textAlign: 'center',
   },
   callButtonContainer: {
     alignItems: 'center',

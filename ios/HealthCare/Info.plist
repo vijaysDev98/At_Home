@@ -47,6 +47,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow access to your camera to take a profile photo.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow access to your microphone to record doctor instructions and voice notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow access to your photo library to select a profile photo.</string>
 	<key>RCTNewArchEnabled</key>

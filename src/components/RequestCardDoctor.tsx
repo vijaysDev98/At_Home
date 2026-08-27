@@ -56,20 +56,14 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   const { t } = useTranslation();
 
   // Determine display name and subtitle
-  const displayName =
-    name ||
-    (isPreRequest
-      ? t(STRING.dischargePreRequest) || 'Discharge Pre-Request'
-      : 'Patient');
+  const displayName = isPreRequest
+    ? t(STRING.preRequest) || 'Pre-Request'
+    : name || 'Patient';
 
-  const displaySubtitle = requestType
+  const displaySubtitle = isPreRequest
+    ? ''
+    : requestType
     ? t(requestType)
-    : isPreRequest
-    ? voiceMessageUrl && initialNotes
-      ? t(STRING.voiceAndTextInstructions) || 'Voice & Written Summary'
-      : voiceMessageUrl
-      ? t(STRING.voiceInstructions) || 'Voice Instructions'
-      : t(STRING.textInstructions) || 'Written Notes'
     : '';
 
   // Avatar initials
@@ -83,20 +77,29 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  } else if (isPreRequest) {
-    avatarInitials = 'PR';
+  } else if (displayName) {
+    avatarInitials = displayName
+      .trim()
+      .split(' ')
+      .filter(Boolean)
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
 
-  // Safe status badge color & text (follows Blue theme for submitted / pending)
+  // Safe status badge color & text: for pre-requests display preRequestStatus, else standard status
   const effectiveStatus = isPreRequest
-    ? preRequestStatus || status || formStatus || 'submitted'
+    ? preRequestStatus || 'submitted'
     : status || 'draft';
 
   const badgeColor = getStatusBadgeColor(effectiveStatus);
   const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
 
+  const statusKey = effectiveStatus.toLowerCase().replace(/[-_ ]/g, '');
   const displayStatus =
-    DISPLAY_FORM_STATUS[effectiveStatus.toLowerCase()] ||
+    (DISPLAY_FORM_STATUS as Record<string, string>)[statusKey] ||
+    (DISPLAY_FORM_STATUS as Record<string, string>)[effectiveStatus] ||
     (effectiveStatus ? t(effectiveStatus) : 'Submitted');
 
   // Form Status display for bottom row
@@ -126,15 +129,15 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
       {/* Top Header Row */}
       <View style={styles.requestHeaderRow}>
         {isPreRequest ? (
-          <View style={styles.preRequestIconBadge}>
+          <View style={styles.avatarContainer}>
             <Image
-              source={voiceMessageUrl ? IMAGES.ic_mic : IMAGES.ic_file}
-              style={styles.preRequestBadgeIcon}
+              source={IMAGES.ic_file}
+              style={styles.avatarIcon}
             />
           </View>
         ) : (
           <ProfileAvatar
-            name={avatarInitials}
+            name={name || displayName}
             size="small"
             backgroundColor={COLORS._E5E7EB}
           />
@@ -152,15 +155,17 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             </AppText>
           </View>
 
-          <AppText
-            size={getScaleSize(13)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._6B7280}
-            numberOfLines={1}
-            style={{ marginTop: getScaleSize(2) }}
-          >
-            {displaySubtitle}
-          </AppText>
+          {!isPreRequest && !!displaySubtitle && (
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6B7280}
+              numberOfLines={1}
+              style={{ marginTop: getScaleSize(2) }}
+            >
+              {displaySubtitle}
+            </AppText>
+          )}
         </View>
 
         <View
@@ -178,44 +183,6 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
           </AppText>
         </View>
       </View>
-
-      {/* Pre-Request Preview Sections */}
-      {isPreRequest && (
-        <View style={styles.preRequestExtrasContainer}>
-          {/* Voice note indicator */}
-          {!!voiceMessageUrl && (
-            <View style={styles.voiceNotePill}>
-              <Image source={IMAGES.ic_mic} style={styles.voiceNotePillIcon} />
-              <AppText
-                size={getScaleSize(11)}
-                font={FONTS.Inter.Medium}
-                color={COLORS.primary}
-              >
-                {t(STRING.voiceRecordingAttached)}
-              </AppText>
-            </View>
-          )}
-
-          {/* Written notes preview */}
-          {!!initialNotes && (
-            <View style={styles.notePreviewBox}>
-              <Image
-                source={IMAGES.ic_file}
-                style={styles.notePreviewIcon}
-              />
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._526674}
-                numberOfLines={2}
-                style={styles.notePreviewText}
-              >
-                {initialNotes}
-              </AppText>
-            </View>
-          )}
-        </View>
-      )}
 
       <View style={styles.dividerLine} />
 
@@ -295,21 +262,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  preRequestIconBadge: {
+  avatarContainer: {
     width: getScaleSize(40),
     height: getScaleSize(40),
     borderRadius: getScaleSize(20),
-    backgroundColor: '#e8edf1',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    backgroundColor: COLORS._E5E7EB,
+    borderWidth: 0.5,
+    borderColor: COLORS._1E293B80,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  preRequestBadgeIcon: {
+  avatarIcon: {
     width: getScaleSize(18),
     height: getScaleSize(18),
     resizeMode: 'contain',
-    tintColor: COLORS.primary,
+    tintColor: COLORS._1A1D1F,
   },
   patientInfoContainer: {
     marginLeft: getScaleSize(12),
@@ -326,50 +293,6 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(20),
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(4),
-  },
-  preRequestExtrasContainer: {
-    marginTop: getScaleSize(10),
-    gap: getScaleSize(6),
-  },
-  voiceNotePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: getScaleSize(6),
-    backgroundColor: '#e8edf1',
-    paddingHorizontal: getScaleSize(10),
-    paddingVertical: getScaleSize(5),
-    borderRadius: getScaleSize(8),
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  voiceNotePillIcon: {
-    width: getScaleSize(14),
-    height: getScaleSize(14),
-    resizeMode: 'contain',
-    tintColor: COLORS.primary,
-  },
-  notePreviewBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: getScaleSize(6),
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: getScaleSize(10),
-    paddingVertical: getScaleSize(6),
-    borderRadius: getScaleSize(8),
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  notePreviewIcon: {
-    width: getScaleSize(13),
-    height: getScaleSize(13),
-    resizeMode: 'contain',
-    tintColor: COLORS._6F767E,
-    marginTop: getScaleSize(2),
-  },
-  notePreviewText: {
-    flex: 1,
-    lineHeight: getScaleSize(16),
   },
   dividerLine: {
     height: 1,
