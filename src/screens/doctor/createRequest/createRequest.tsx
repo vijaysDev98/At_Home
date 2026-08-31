@@ -98,6 +98,7 @@ const PatientItem: React.FC<PatientItemProps> = React.memo(
 const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const dispatch = useDispatch<any>();
   const route = useRoute();
+  
   const fromPatient = route.params?.fromPatient;
   const role: string = useUserRole();
   const { t } = useTranslation();
@@ -206,8 +207,9 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     if (patient) {
       dispatch(setSelectedPatient(patient));
 
+      const preRequestId = (route.params as any)?.preRequestId;
       NavigationService.navigate(
-        role == ROLES.PROVIDER
+        role === ROLES.PROVIDER && !preRequestId
           ? SCREENS.DOCTOR_LIST
           : SCREENS.CREATE_REQUEST_STEP2,
         {

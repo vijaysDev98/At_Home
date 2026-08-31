@@ -159,6 +159,7 @@ const ProviderNotification: React.FC = () => {
       case 'preRequestSubmission':
       case 'preRequestAssignment':
       case 'preRequestDetailsUpdated':
+      case 'formDelegated':
       case 'serviceProviderAssignment':
         return IMAGES.alert_formUpdate;
       case 'adminManual':
@@ -197,6 +198,15 @@ const ProviderNotification: React.FC = () => {
             action: 'accept',
           });
         return label;
+      case 'formDelegated':
+        label.txt = t(STRING.fillForm) || 'Fill Form';
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+            request: request,
+            requestId: request.id,
+            action: 'view',
+          });
+        return label;
       case 'requestCancelled':
         // label.txt = t(STRING.viewRequest);
         // label.onPress = () =>
@@ -222,6 +232,14 @@ const ProviderNotification: React.FC = () => {
           });
         return label;
       case 'preRequestDetailsUpdated':
+        label.txt = t(STRING.viewRequest);
+        label.onPress = () =>
+          NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+            request: request,
+            requestId: request.id,
+            action: 'view',
+          });
+        return label;
       case 'serviceProviderAssignment':
         label.txt = t(STRING.viewService);
         label.onPress = () =>

@@ -41,6 +41,7 @@ import { SHOW_TOAST } from '../../../constant/showToast';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 import { ServiceRequest } from '../../../services/serviceRequestListApi';
 
 export const ProviderPreRequestDetailScreen: React.FC = () => {
@@ -59,7 +60,7 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
 
-  const [requestData, setRequestData] = useState<ServiceRequest | null>(null);
+  const [requestData, setRequestData] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -378,6 +379,23 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
     );
   };
 
+  const handleFillForm = () => {
+    const doctorObj = requestData?.doctorId;
+
+    const assignedProviderId =
+      requestData?.assignedProviderId ;
+
+    NavigationService.navigate(SCREENS.CREATE_REQUEST, {
+      preRequest: requestData,
+      preRequestId:
+        requestData?.id,
+      fromPreRequest: true,
+      doctorId: doctorObj?.id,
+      selectedDoctor: doctorObj,
+      assignedProviderId,
+    });
+  };
+
   const displayStatus =
     (DISPLAY_FORM_STATUS as Record<string, string>)[effectiveStatus] ||
     effectiveStatus;
@@ -439,17 +457,37 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* Awaiting Physician Notice */}
-            {(effectiveStatus === 'accepted' || requestData?.preRequestStatus === 'accepted') && (
-              <View style={styles.acceptedBanner}>
-                <Image source={IMAGES.info} style={styles.acceptedBannerIcon} />
+            {/* Accepted Pre-Request Notice */}
+            {(effectiveStatus === 'accepted' ||
+              requestData?.preRequestStatus === 'accepted') && (
+              <View
+                style={[
+                  styles.acceptedBanner,
+                  requestData?.delegateFormToProvider && {
+                    backgroundColor: '#EFF6FF',
+                    borderColor: '#BFDBFE',
+                  },
+                ]}
+              >
+                <Image
+                  source={IMAGES.info}
+                  style={[
+                    styles.acceptedBannerIcon,
+                    requestData?.delegateFormToProvider && {
+                      tintColor: COLORS._2563EB,
+                    },
+                  ]}
+                />
                 <AppText
                   size={getScaleSize(13)}
                   font={FONTS.Inter.Medium}
                   color={COLORS._2563EB}
                   style={{ flex: 1, lineHeight: getScaleSize(18) }}
                 >
-                  {t(STRING.awaitingPhysicianToAssignPatient)}
+                  {requestData?.delegateFormToProvider
+                    ? t(STRING.physicianRequestedYouToFillForm) ||
+                      'Physician has requested you to complete the form and assign a patient'
+                    : t(STRING.awaitingPhysicianToAssignPatient)}
                 </AppText>
               </View>
             )}
@@ -656,7 +694,7 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
           </ScrollView>
         )}
 
-        {/* Bottom Action Bar */}
+        {/* Bottom Action Bar for New Pre-Requests (Accept/Reject) */}
         {canAccept && (
           <View style={styles.bottomBar}>
             {isAssignedToProvider ? (
@@ -714,6 +752,28 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Bottom Action Bar for Delegated Pre-Requests (Fill Form) */}
+        {(effectiveStatus === 'accepted' ||
+          requestData?.preRequestStatus === 'accepted') &&
+          !!requestData?.delegateFormToProvider && (
+            <View style={styles.bottomBar}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={[styles.acceptBtn, { flex: 1 }]}
+                onPress={handleFillForm}
+              >
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
+                  align="center"
+                >
+                  {t(STRING.fillForm) || 'Fill Form'}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          )}
 
         {/* Warning Sheet for Lock Conflict */}
         {!isReadOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}

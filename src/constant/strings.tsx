@@ -988,5 +988,12 @@ export const STRING = {
   chatUnderDevelopment: 'Chat feature is under development and will be available soon!',
   noPhoneNumberAvailable: 'No phone number available for this physician',
   unableToOpenPhoneDialer: 'Unable to open phone dialer',
+  delegateToProvider: 'Delegate to Provider',
+  formDelegatedToProvider: 'Form delegated to provider successfully',
+  waitingForProviderToFillForm: 'Waiting for provider to complete the form',
+  physicianRequestedYouToFillForm: 'Physician has requested you to complete the form and assign a patient',
+  fillForm: 'Fill Form',
+  delegating: 'Delegating...',
+  formDelegated: 'Form Delegated',
 };
 

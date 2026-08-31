@@ -38,6 +38,7 @@ interface RequestCardProps {
   priorityLevel?: string | null;
   doctorName?: string | null;
   doctorSpecialty?: string | null;
+  delegateFormToProvider?: boolean;
 }
 
 const RequestCardProvider: React.FC<RequestCardProps> = ({
@@ -57,6 +58,7 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
   priorityLevel,
   doctorName,
   doctorSpecialty,
+  delegateFormToProvider,
 }) => {
   const { t } = useTranslation();
 
@@ -221,7 +223,10 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
             color={COLORS._2563EB}
             style={{ flex: 1, lineHeight: getScaleSize(16) }}
           >
-            {t(STRING.awaitingPhysicianToAssignPatient)}
+            {delegateFormToProvider
+              ? t(STRING.physicianRequestedYouToFillForm) ||
+                'Physician has requested you to complete the form and assign a patient'
+              : t(STRING.awaitingPhysicianToAssignPatient)}
           </AppText>
         </View>
       )}

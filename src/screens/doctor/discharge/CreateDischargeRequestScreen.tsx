@@ -28,7 +28,7 @@ import {
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
-import { SHOW_TOAST, STRING } from '../../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { RootStackParamList } from '../../../navigation';
@@ -58,8 +58,50 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const { t } = useTranslation();
   const route = useRoute<any>();
   const isEdit = !!route.params?.isEdit;
-  const editRequest = route.params?.request;
-  console.log("editRequest",editRequest);
+  const [editRequest, setEditRequest] = useState<any>(
+    route.params?.request || null,
+  );
+  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
+
+  const fetchPreRequestDetails = async () => {
+    const targetId =
+      route.params?.requestId ||
+      route.params?.request?.id ||
+      route.params?.request?._id ||
+      route.params?.request?.requestId ||
+      editRequest?.id ||
+      editRequest?._id ||
+      editRequest?.requestId;
+
+    if (!targetId) return;
+    try {
+      setIsLoadingDetails(true);
+      const data = await serviceRequestApi.getServiceRequestDetails(targetId);
+      if (data) {
+        setEditRequest(data);
+        if (data.initialNotes) {
+          setInstructionsText(data.initialNotes);
+        }
+        if (data.voiceMessageUrl) {
+          setRecordedAudioUri(data.voiceMessageUrl);
+          setRecordingState('recorded');
+        }
+      }
+    } catch (e) {
+      console.log('Error fetching fresh pre-request details in CreateDischargeRequestScreen:', e);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    if (route.params?.request) {
+      setEditRequest(route.params.request);
+    }
+    if (isEdit || route.params?.request || route.params?.requestId) {
+      fetchPreRequestDetails();
+    }
+  }, [route.params?.request, route.params?.requestId]);
   
 
   // State management (initialized with editRequest data when in edit mode)
@@ -78,6 +120,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isDelegating, setIsDelegating] = useState<boolean>(false);
 
   // Bottom sheets
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
@@ -406,6 +449,49 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     providerOptionSheetRef.current?.show();
   };
 
+  // Handle delegating form completion to provider
+  const handleDelegateToProvider = async () => {
+    const targetRequestId =
+      editRequest?.id || editRequest?._id || editRequest?.requestId;
+    if (!targetRequestId) {
+      SHOW_TOAST('Request ID not found', 'error');
+      return;
+    }
+
+    setIsDelegating(true);
+    try {
+      const response =
+        await serviceRequestApi.delegatePreRequestToProvider(targetRequestId);
+      if (response.success) {
+        SHOW_SUCCESS_TOAST(
+          t(STRING.formDelegatedToProvider) ||
+            'Form delegated to provider successfully',
+        );
+        setEditRequest((prev: any) => ({
+          ...prev,
+          delegateFormToProvider: true,
+        }));
+        setTimeout(() => {
+          NavigationService.goBack();
+        }, 600);
+      } else {
+        SHOW_TOAST(
+          response.error ||
+            response.message ||
+            'Failed to delegate form to provider',
+          'error',
+        );
+      }
+    } catch (error: any) {
+      SHOW_TOAST(
+        error?.message || 'Failed to delegate form to provider',
+        'error',
+      );
+    } finally {
+      setIsDelegating(false);
+    }
+  };
+
   // Core handler to upload audio to S3 and process discharge submission
   const processDischargeSubmission = async (
     recipientType: 'all' | 'specific',
@@ -604,12 +690,19 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           style={[
             styles.introCard,
             isRejected && styles.introCardRejected,
+            editRequest?.delegateFormToProvider && {
+              backgroundColor: '#EFF6FF',
+              borderColor: '#BFDBFE',
+            },
           ]}
         >
           <View
             style={[
               styles.introIconWrap,
               isRejected && styles.introIconWrapRejected,
+              editRequest?.delegateFormToProvider && {
+                backgroundColor: '#DBEAFE',
+              },
             ]}
           >
             <Image
@@ -617,6 +710,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               style={[
                 styles.introIcon,
                 isRejected && { tintColor: COLORS.error },
+                editRequest?.delegateFormToProvider && {
+                  tintColor: COLORS._2563EB,
+                },
               ]}
             />
           </View>
@@ -624,9 +720,17 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             <AppText
               size={getScaleSize(14)}
               font={FONTS.Inter.Bold}
-              color={isRejected ? COLORS.error : COLORS.primary}
+              color={
+                isRejected
+                  ? COLORS.error
+                  : editRequest?.delegateFormToProvider
+                  ? COLORS._2563EB
+                  : COLORS.primary
+              }
             >
-              {isAccepted || isPending
+              {editRequest?.delegateFormToProvider
+                ? t(STRING.formDelegated) || 'Form Delegated'
+                : isAccepted || isPending
                 ? t(STRING.preRequest) || 'Pre-Request'
                 : isRejected
                 ? t(STRING.preRequestRejected) || 'Pre-Request Rejected'
@@ -637,10 +741,19 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             <AppText
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
-              color={isRejected ? '#991B1B' : COLORS._526674}
+              color={
+                isRejected
+                  ? '#991B1B'
+                  : editRequest?.delegateFormToProvider
+                  ? '#1E40AF'
+                  : COLORS._526674
+              }
               style={{ marginTop: 2 }}
             >
-              {isAccepted
+              {editRequest?.delegateFormToProvider
+                ? t(STRING.waitingForProviderToFillForm) ||
+                  'Waiting for provider to complete the form'
+                : isAccepted
                 ? t(STRING.preRequestAcceptedSubtitle)
                 : isRejected
                 ? t(STRING.preRequestRejectedSubtitle)
@@ -649,128 +762,189 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           </View>
         </View>
 
-        {/* Accepted or Rejected Provider Card */}
-        {(isAccepted || isRejected) &&
-          (editRequest?.assignedProvider || editRequest?.provider) &&
-          (() => {
-            const provider =
-              editRequest?.assignedProvider || editRequest?.provider;
-            const providerName =
-              provider?.fullName ||
-              provider?.providerName ||
-              `${provider?.fName || ''} ${provider?.lName || ''}`.trim() ||
-              'Healthcare Provider';
+        {/* Accepted, Rejected, or Delegated Provider Card */}
+        {(() => {
+          const provider =
+            editRequest?.assignedProvider ||
+            editRequest?.provider ||
+            editRequest?.acceptedBy ||
+            editRequest?.claimedBy ||
+            route.params?.request?.assignedProvider ||
+            route.params?.request?.provider;
+          const isDelegated = !!editRequest?.delegateFormToProvider;
 
-            return (
-              <View style={styles.assignedProviderCard}>
-                <View style={styles.assignedProviderHeaderRow}>
-                  <View style={styles.assignedProviderHeaderLeft}>
-                    <View
+          if (!provider && !isAccepted && !isRejected && !isDelegated) {
+            return null;
+          }
+
+          const providerName =
+            (typeof provider === 'object'
+              ? provider?.fullName ||
+                provider?.providerName ||
+                `${provider?.fName || ''} ${provider?.lName || ''}`.trim()
+              : null) ||
+            editRequest?.providerName ||
+            editRequest?.assignedProviderName ||
+            (isDelegated
+              ? t(STRING.assignedProvider) || 'Assigned Provider'
+              : 'Healthcare Provider');
+
+          const profileImg =
+            typeof provider === 'object'
+              ? provider?.profileImg || provider?.profileImage
+              : null;
+          const specialty =
+            typeof provider === 'object'
+              ? provider?.specialty || provider?.profession
+              : null;
+          const phoneNumber =
+            typeof provider === 'object'
+              ? provider?.phoneNumber || provider?.phone
+              : null;
+          const email =
+            typeof provider === 'object' ? provider?.email : null;
+
+          return (
+            <View style={styles.assignedProviderCard}>
+              <View style={styles.assignedProviderHeaderRow}>
+                <View style={styles.assignedProviderHeaderLeft}>
+                  <View
+                    style={[
+                      styles.assignedProviderBadgeIconWrap,
+                      isRejected && { backgroundColor: '#FEF2F2' },
+                    ]}
+                  >
+                    <Image
+                      source={IMAGES.ic_provider}
                       style={[
-                        styles.assignedProviderBadgeIconWrap,
-                        isRejected && { backgroundColor: '#FEF2F2' },
+                        styles.assignedProviderBadgeIcon,
+                        isRejected && { tintColor: COLORS.error },
                       ]}
-                    >
-                      <Image
-                        source={IMAGES.ic_provider}
-                        style={[
-                          styles.assignedProviderBadgeIcon,
-                          isRejected && { tintColor: COLORS.error },
-                        ]}
-                      />
-                    </View>
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                    >
-                      {t(STRING.assignedProvider) || 'Assigned Provider'}
-                    </AppText>
+                    />
                   </View>
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {t(STRING.assignedProvider) || 'Assigned Provider'}
+                  </AppText>
+                </View>
 
+                <View
+                  style={
+                    isRejected
+                      ? styles.rejectedStatusBadge
+                      : isDelegated
+                      ? styles.delegatedStatusBadge
+                      : styles.acceptedStatusBadge
+                  }
+                >
                   <View
                     style={
                       isRejected
-                        ? styles.rejectedStatusBadge
-                        : styles.acceptedStatusBadge
+                        ? styles.rejectedStatusDot
+                        : isDelegated
+                        ? styles.delegatedStatusDot
+                        : styles.acceptedStatusDot
+                    }
+                  />
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Bold}
+                    color={
+                      isRejected
+                        ? COLORS.error
+                        : isDelegated
+                        ? COLORS._2563EB
+                        : COLORS.completed
                     }
                   >
-                    <View
-                      style={
-                        isRejected
-                          ? styles.rejectedStatusDot
-                          : styles.acceptedStatusDot
-                      }
-                    />
-                    <AppText
-                      size={getScaleSize(11)}
-                      font={FONTS.Inter.Bold}
-                      color={isRejected ? COLORS.error : COLORS.completed}
-                    >
-                      {isRejected
-                        ? t(STRING.Rejected) || 'Rejected'
-                        : t(STRING.Accepted) || 'Accepted'}
-                    </AppText>
-                  </View>
-                </View>
-
-                <View style={styles.assignedProviderDivider} />
-
-                <View style={styles.assignedProviderBodyRow}>
-                  <ProfileAvatar
-                    name={providerName}
-                    imageUrl={
-                      provider.profileImg
-                        ? IMAGE_BASE_URL + provider.profileImg
-                        : undefined
-                    }
-                    size="small"
-                  />
-
-                  <View style={styles.assignedProviderInfoCol}>
-                    <AppText
-                      size={getScaleSize(15)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                      numberOfLines={1}
-                    >
-                      {providerName}
-                    </AppText>
-
-                    {!!provider.phoneNumber && (
-                      <View style={styles.providerMetaRow}>
-                        <Image
-                          source={IMAGES.phone}
-                          style={styles.providerMetaIcon}
-                        />
-                        <AppText
-                          size={getScaleSize(12)}
-                          font={FONTS.Inter.Regular}
-                          color={COLORS._6F767E}
-                          numberOfLines={1}
-                        >
-                          {provider.phoneNumber}
-                        </AppText>
-                      </View>
-                    )}
-
-                    {!!provider.email && !provider.phoneNumber && (
-                      <View style={styles.providerMetaRow}>
-                        <AppText
-                          size={getScaleSize(12)}
-                          font={FONTS.Inter.Regular}
-                          color={COLORS._6F767E}
-                          numberOfLines={1}
-                        >
-                          {provider.email}
-                        </AppText>
-                      </View>
-                    )}
-                  </View>
+                    {isRejected
+                      ? t(STRING.Rejected) || 'Rejected'
+                      : isDelegated
+                      ? t(STRING.formDelegated) || 'Delegated'
+                      : t(STRING.Accepted) || 'Accepted'}
+                  </AppText>
                 </View>
               </View>
-            );
-          })()}
+
+              <View style={styles.assignedProviderDivider} />
+
+              <View style={styles.assignedProviderBodyRow}>
+                <ProfileAvatar
+                  name={providerName}
+                  imageUrl={
+                    profileImg ? IMAGE_BASE_URL + profileImg : undefined
+                  }
+                  size="small"
+                />
+
+                <View style={styles.assignedProviderInfoCol}>
+                  <AppText
+                    size={getScaleSize(15)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                    numberOfLines={1}
+                  >
+                    {providerName}
+                  </AppText>
+
+                  {!!specialty && (
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: 2 }}
+                    >
+                      {specialty}
+                    </AppText>
+                  )}
+
+                  {!!phoneNumber && (
+                    <View
+                      style={[
+                        styles.providerMetaRow,
+                        { marginTop: getScaleSize(4) },
+                      ]}
+                    >
+                      <Image
+                        source={IMAGES.phone}
+                        style={styles.providerMetaIcon}
+                      />
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                        numberOfLines={1}
+                      >
+                        {phoneNumber}
+                      </AppText>
+                    </View>
+                  )}
+
+                  {!!email && !phoneNumber && (
+                    <View
+                      style={[
+                        styles.providerMetaRow,
+                        { marginTop: getScaleSize(4) },
+                      ]}
+                    >
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                        numberOfLines={1}
+                      >
+                        {email}
+                      </AppText>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          );
+        })()}
 
           {/* ──────────────────────────────────────────────────────────
               SECTION 1: VOICE RECORDING (POWERED BY NITRO-SOUND)
@@ -1105,28 +1279,68 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           </View>
         </KeyboardAwareScrollView>
 
-        {/* Fixed Bottom Submit Button: Shown for new pre-requests or accepted pre-requests (to complete) */}
-        {!isRejected && !isPending && (
+        {/* Fixed Bottom Submit Button: Hidden once delegated to provider */}
+        {!isRejected && !isPending && !editRequest?.delegateFormToProvider && (
           <View style={styles.bottomSheet}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[
-                styles.continueBtn,
-                !canSubmit && styles.continueDisabled,
-              ]}
-              disabled={!canSubmit}
-              onPress={handleSubmitPress}
-            >
-              <AppText
-                size={getScaleSize(15)}
-                color={COLORS.white}
-                font={FONTS.Inter.Bold}
+            {isAccepted ? (
+              <View style={styles.twoButtonsRow}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[styles.outlineBtn, isDelegating && styles.btnDisabled]}
+                  disabled={isDelegating}
+                  onPress={handleSubmitPress}
+                >
+                  <AppText
+                    size={getScaleSize(13)}
+                    color={COLORS._526674}
+                    font={FONTS.Inter.Bold}
+                    align="center"
+                  >
+                    {t(STRING.completeRequest) || 'Complete Request'}
+                  </AppText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[
+                    styles.primaryBtnFlex,
+                    isDelegating && styles.btnDisabled,
+                  ]}
+                  disabled={isDelegating}
+                  onPress={handleDelegateToProvider}
+                >
+                  <AppText
+                    size={getScaleSize(13)}
+                    color={COLORS.white}
+                    font={FONTS.Inter.Bold}
+                    align="center"
+                  >
+                    {isDelegating
+                      ? t(STRING.delegating) || 'Delegating...'
+                      : t(STRING.delegateToProvider) ||
+                        'Delegate to Provider'}
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={[
+                  styles.continueBtn,
+                  !canSubmit && styles.continueDisabled,
+                ]}
+                disabled={!canSubmit}
+                onPress={handleSubmitPress}
               >
-                {isAccepted
-                  ? t(STRING.completeRequest) || 'Complete Request'
-                  : t(STRING.submitRequest)}
-              </AppText>
-            </TouchableOpacity>
+                <AppText
+                  size={getScaleSize(15)}
+                  color={COLORS.white}
+                  font={FONTS.Inter.Bold}
+                >
+                  {t(STRING.submitRequest)}
+                </AppText>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -1610,5 +1824,68 @@ const styles = StyleSheet.create({
   },
   continueDisabled: {
     opacity: 0.6,
+  },
+  twoButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+  },
+  outlineBtn: {
+    flex: 1,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
+    borderWidth: 1.5,
+    borderColor: COLORS._526674,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(6),
+  },
+  primaryBtnFlex: {
+    flex: 1,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: COLORS._526674,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(6),
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+  delegatedStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(5),
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: getScaleSize(9),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  delegatedStatusDot: {
+    width: getScaleSize(6),
+    height: getScaleSize(6),
+    borderRadius: getScaleSize(3),
+    backgroundColor: COLORS._2563EB,
+  },
+  assignedProviderDelegatedFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    marginTop: getScaleSize(12),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(10),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    gap: getScaleSize(8),
+  },
+  assignedProviderDelegatedIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS._2563EB,
   },
 });

@@ -1853,6 +1853,23 @@ export const PreRequestDetailSheet = React.forwardRef<
     },
   });
 
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState<boolean>(false);
+
+  const fetchPreRequestData = async (targetId: string) => {
+    if (!targetId) return;
+    try {
+      setIsLoadingDetails(true);
+      const freshData = await serviceRequestApi.getServiceRequestDetails(targetId);
+      if (freshData) {
+        setRequest(freshData);
+      }
+    } catch (e) {
+      console.log('Error fetching fresh pre-request details in sheet:', e);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
   React.useImperativeHandle(
     ref,
     () =>
@@ -1860,6 +1877,10 @@ export const PreRequestDetailSheet = React.forwardRef<
         show: (data?: any) => {
           if (data) {
             setRequest(data);
+            const targetId = data?.id || data?._id || data?.requestId;
+            if (targetId) {
+              fetchPreRequestData(targetId);
+            }
           }
           setIsPlaying(false);
           setPlaybackProgress(0);
@@ -2141,6 +2162,127 @@ export const PreRequestDetailSheet = React.forwardRef<
           </View>
         )}
 
+        {/* Assigned Provider Card if accepted or delegated */}
+        {(() => {
+          const provider =
+            request?.assignedProvider ||
+            request?.provider ||
+            request?.acceptedBy ||
+            request?.claimedBy;
+          if (!provider) return null;
+
+          const providerName =
+            provider?.fullName ||
+            provider?.providerName ||
+            `${provider?.fName || ''} ${provider?.lName || ''}`.trim() ||
+            'Healthcare Provider';
+
+          const isDelegated = !!request?.delegateFormToProvider;
+
+          return (
+            <View
+              style={{
+                backgroundColor: '#F8FAFC',
+                borderRadius: getScaleSize(12),
+                padding: getScaleSize(12),
+                borderWidth: 1,
+                borderColor: '#E2E8F0',
+                marginBottom: getScaleSize(14),
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: getScaleSize(8),
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: getScaleSize(6),
+                  }}
+                >
+                  <Image
+                    source={IMAGES.ic_provider}
+                    style={{
+                      width: getScaleSize(14),
+                      height: getScaleSize(14),
+                      tintColor: COLORS.primary,
+                    }}
+                  />
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {t(STRING.assignedProvider) || 'Assigned Provider'}
+                  </AppText>
+                </View>
+                {isDelegated && (
+                  <View
+                    style={{
+                      backgroundColor: '#EFF6FF',
+                      paddingHorizontal: getScaleSize(8),
+                      paddingVertical: getScaleSize(2),
+                      borderRadius: getScaleSize(8),
+                      borderWidth: 1,
+                      borderColor: '#BFDBFE',
+                    }}
+                  >
+                    <AppText
+                      size={getScaleSize(10)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._2563EB}
+                    >
+                      {t(STRING.formDelegated) || 'Delegated'}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: getScaleSize(10),
+                }}
+              >
+                <ProfileAvatar
+                  name={providerName}
+                  imageUrl={
+                    provider.profileImg || provider.profileImage
+                      ? IMAGE_BASE_URL +
+                        (provider.profileImg || provider.profileImage)
+                      : undefined
+                  }
+                  size="small"
+                />
+                <View style={{ flex: 1 }}>
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {providerName}
+                  </AppText>
+                  {!!(provider.specialty || provider.profession) && (
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                    >
+                      {provider.specialty || provider.profession}
+                    </AppText>
+                  )}
+                </View>
+              </View>
+            </View>
+          );
+        })()}
+
         {/* Action Buttons: Close and Complete Request (if accepted) */}
         <View style={styles.preRequestBtnRow}>
           <TouchableOpacity
@@ -2157,7 +2299,7 @@ export const PreRequestDetailSheet = React.forwardRef<
             </AppText>
           </TouchableOpacity>
 
-          {effectiveStatus === 'accepted' && (
+          {effectiveStatus === 'accepted' && !request?.delegateFormToProvider && (
             <TouchableOpacity
               activeOpacity={0.85}
               style={styles.preRequestAcceptBtn}

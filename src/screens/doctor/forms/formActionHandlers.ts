@@ -62,6 +62,45 @@ export const handleFormSubmit = async (params: FormActionParams) => {
   // Check if updating an accepted pre-request
   if (preRequestId) {
     try {
+      const roles = store.getState().profile.profileData?.roles || [];
+      const isProvider =
+        roles.includes(ROLES.PROVIDER);
+
+      if (isProvider) {
+        // Provider flow for delegated/accepted pre-request form
+        // Endpoint: POST /service-requests/:requestId/provider-form (or PUT if updating)
+        const providerPayload: any = {
+          patientId: selectedPatient?.id || selectedPatient?._id || '',
+          serviceId: serviceId || '',
+          priorityLevel: state?.priorityLevel || 'routine',
+          requestedDate: moment().format('YYYY-MM-DD'),
+          requestedTime: moment().format('HH:mm'),
+          formData: state,
+        };
+        console.log(preRequestId, 'preRequestIdddddddddddd', providerPayload);
+
+        const response = await serviceRequestApi.saveProviderForm(
+          preRequestId,
+          providerPayload,
+        );
+        dispatch(setLoading(false));
+
+        if (response.success) {
+          SHOW_SUCCESS_TOAST(
+            response.message || 'Form saved successfully',
+          );
+          setTimeout(() => {
+            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
+              screen: PROVIDER_TAB_SCREENS.REQUESTS,
+            });
+          }, 500);
+        } else {
+          SHOW_TOAST(response.error || response.message, 'error');
+        }
+        return;
+      }
+
+      // Doctor flow
       const updatePayload: any = {
         patientId: selectedPatient?.id || selectedPatient?._id || '',
         serviceId: serviceId || '',

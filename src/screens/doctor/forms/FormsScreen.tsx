@@ -434,6 +434,11 @@ const FormsScreen: React.FC = () => {
                       serviceId={serviceId || ''}
                       initialData={requestData}
                       patient={patientData}
+                      prescriber={
+                        (requestData as any)?.doctor ||
+                        (requestData as any)?.doctorId ||
+                        (requestData as any)?.doctorInfo
+                      }
                       readOnly={readOnly}
                     />
                   </View>

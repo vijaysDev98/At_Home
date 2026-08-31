@@ -38,6 +38,7 @@ import NavigationService from '../../../navigation/NavigationService';
 
 // Import all form components
 import { getServiceIcon } from './createRequestStep2';
+import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import ServiceFormRenderer from '../forms/ServiceFormRenderer';
 import { useTranslation } from 'react-i18next';
 import { ROLES } from '../../../constant/getRole';
@@ -97,11 +98,41 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
   const selectProviderSheetRef = useRef<ActionSheetRef>(null);
 
-  const assignedProviderId =
+  const rawAssignedProvider =
     (route?.params as any)?.assignedProviderId ||
-    (route?.params as any)?.assignedProvider?._id ||
-    (route?.params as any)?.assignedProvider?.id;
+    (route?.params as any)?.assignedProvider;
+  const assignedProviderId =
+    typeof rawAssignedProvider === 'object'
+      ? rawAssignedProvider?.id || rawAssignedProvider?._id
+      : rawAssignedProvider;
   const preRequestId = (route?.params as any)?.preRequestId;
+  const [doctorData, setDoctorData] = useState<any>(
+    selectedDoctor || (route?.params as any)?.doctor || null,
+  );
+
+  useEffect(() => {
+    const fetchPreRequestDoctor = async () => {
+      const targetId = preRequestId || (initialData as any)?._id || (initialData as any)?.id;
+      if (targetId) {
+        try {
+          const details = await serviceRequestApi.getServiceRequestDetails(targetId);
+          if (details) {
+            const doc =
+              details.doctor ||
+              details.doctorId ||
+              details.createdBy ||
+              details.doctorInfo;
+            if (doc && typeof doc === 'object') {
+              setDoctorData(doc);
+            }
+          }
+        } catch (e) {
+          console.log('Error fetching pre-request doctor details:', e);
+        }
+      }
+    };
+    fetchPreRequestDoctor();
+  }, [preRequestId, initialData]);
 
   // Determine button labels based on request status
   const isNewRequest = !initialData && !requestStatus;
@@ -260,7 +291,11 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                   formRef={formRef}
                   initialData={initialData}
                   patient={patient}
-                  prescriber={selectedDoctor || profileData}
+                  prescriber={
+                    role === ROLES.PROVIDER
+                      ? doctorData || selectedDoctor
+                      : selectedDoctor || profileData
+                  }
                 />
               </View>
             </View>

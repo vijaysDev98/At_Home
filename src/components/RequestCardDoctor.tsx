@@ -36,6 +36,9 @@ interface RequestCardProps {
   voiceMessageUrl?: string | null;
   initialNotes?: string;
   priorityLevel?: string;
+  delegateFormToProvider?: boolean;
+  providerName?: string | null;
+  providerSpecialty?: string | null;
 }
 
 const RequestCardDoctor: React.FC<RequestCardProps> = ({
@@ -52,6 +55,9 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   voiceMessageUrl,
   initialNotes,
   priorityLevel,
+  delegateFormToProvider,
+  providerName,
+  providerSpecialty,
 }) => {
   const { t } = useTranslation();
 
@@ -210,7 +216,9 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             color={COLORS._6F767E}
             align={'right'}
           >
-            {isPreRequest
+            {isPreRequest && providerName
+              ? t(STRING.assignedProvider) || 'Assigned Provider'
+              : isPreRequest
               ? t(STRING.preRequest) || 'Pre-Request'
               : t(STRING.formStatus)}
           </AppText>
@@ -220,12 +228,34 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
             color={COLORS._1A1D1F}
             align={'right'}
           >
-            {t(displayFormStatus)}
+            {isPreRequest && providerName
+              ? providerName
+              : t(displayFormStatus)}
           </AppText>
         </View>
       </View>
 
-      {buttonText && (
+      {/* Delegated to Provider Banner for Accepted Pre-Requests */}
+      {isPreRequest &&
+        (effectiveStatus === 'accepted' ||
+          preRequestStatus === 'accepted' ||
+          status === 'accepted') &&
+        delegateFormToProvider && (
+          <View style={styles.delegatedBanner}>
+            <Image source={IMAGES.info} style={styles.delegatedIcon} />
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Medium}
+              color={COLORS._2563EB}
+              style={{ flex: 1, lineHeight: getScaleSize(16) }}
+            >
+              {t(STRING.waitingForProviderToFillForm) ||
+                'Waiting for provider to complete the form'}
+            </AppText>
+          </View>
+        )}
+
+      {!delegateFormToProvider && !!buttonText && (
         <AppButton
           title={buttonText}
           onPress={onButtonPress}
@@ -300,5 +330,23 @@ const styles = StyleSheet.create({
   },
   updateButtonStyle: {
     marginTop: getScaleSize(12),
+  },
+  delegatedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(10),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    marginTop: getScaleSize(12),
+    gap: getScaleSize(8),
+  },
+  delegatedIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS._2563EB,
   },
 });

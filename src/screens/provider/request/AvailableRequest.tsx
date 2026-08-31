@@ -265,7 +265,11 @@ const AvailableRequest: React.FC = () => {
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     const isPreReq = Boolean(
-      item?.isPreRequest || (!item?.patient && !item?.service),
+      item?.isPreRequest === true ||
+        (item?.isPreRequest === undefined &&
+          !item?.patient &&
+          !item?.service &&
+          Boolean(item?.preRequestStatus)),
     );
     const formStatus =
       item?.formStatus || item?.preRequestStatus || item?.status || '';
@@ -279,8 +283,12 @@ const AvailableRequest: React.FC = () => {
       isPreReq &&
       (item?.preRequestStatus === 'accepted' || item?.status === 'accepted');
 
+    const isDelegated = !!(item as any)?.delegateFormToProvider;
+
     const buttonConfig = isAcceptedPreReq
-      ? { show: false, label: null, action: null }
+      ? isDelegated
+        ? { show: true, label: STRING.fillForm, action: 'fillForm' }
+        : { show: false, label: null, action: null }
       : isPreReq
       ? {
           show:
@@ -310,6 +318,7 @@ const AvailableRequest: React.FC = () => {
           priorityLevel={item.priorityLevel}
           doctorName={doctorName}
           doctorSpecialty={doctor?.specialty}
+          delegateFormToProvider={isDelegated}
           buttonText={
             buttonConfig.show && buttonConfig.label
               ? t(buttonConfig.label)
@@ -336,6 +345,35 @@ const AvailableRequest: React.FC = () => {
           }}
           onButtonPress={() => {
             if (isPreReq) {
+              if (buttonConfig.action === 'fillForm') {
+                const itemAny = item as any;
+                const doctorObj =
+                  doctor ||
+                  (itemAny?.doctorId
+                    ? {
+                        id: itemAny.doctorId,
+                        fullName: doctorName || '',
+                      }
+                    : null);
+                const assignedProviderId =
+                  itemAny?.assignedProviderId ||
+                  itemAny?.assignedProvider?._id ||
+                  itemAny?.assignedProvider?.id ||
+                  itemAny?.providerId ||
+                  itemAny?.provider?._id ||
+                  itemAny?.provider?.id;
+
+                NavigationService.navigate(SCREENS.CREATE_REQUEST, {
+                  preRequest: item,
+                  preRequestId: item.id || itemAny?._id || item.requestId,
+                  fromPreRequest: true,
+                  doctorId: doctorObj?.id || itemAny?.doctorId,
+                  selectedDoctor: doctorObj,
+                  assignedProviderId,
+                });
+                return;
+              }
+
               NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
                 request: item,
                 action: 'accept',

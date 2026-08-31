@@ -179,6 +179,9 @@ const DoctorNotification: React.FC = () => {
         return IMAGES.serviceClaimed;
       case 'preRequestRejected':
         return IMAGES.serviceCancelled;
+      case 'preRequestDelegated':
+      case 'delegateFormToProvider':
+        return IMAGES.alert_formUpdate;
       case 'requestClaimed':
         return IMAGES.serviceClaimed;
       case 'formSubmission':
@@ -290,6 +293,16 @@ const DoctorNotification: React.FC = () => {
 
     switch (item.type) {
       case 'preRequestRejected':
+        label.txt = t(STRING.viewRequest) || 'View Request';
+        label.onPress = () =>
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
+        return label;
+      case 'preRequestDelegated':
+      case 'delegateFormToProvider':
         label.txt = t(STRING.viewRequest) || 'View Request';
         label.onPress = () =>
           handleServiceRequestNotificationNavigation(

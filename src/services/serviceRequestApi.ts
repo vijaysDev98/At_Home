@@ -226,6 +226,59 @@ export const serviceRequestApi = {
   },
 
   /**
+   * Delegate accepted pre-request to provider to fill the form
+   * Endpoint: PUT /service-requests/:requestId/update-pre-request
+   * Body: { delegateFormToProvider: true }
+   */
+  delegatePreRequestToProvider: async (
+    requestId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.put(
+        `/service-requests/${requestId}/update-pre-request`,
+        { delegateFormToProvider: true },
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message:
+            nestedMessage || 'Form delegated to provider successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message:
+            nestedMessage ||
+            response.message ||
+            'Failed to delegate form to provider',
+          error: nestedMessage || response.message,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to delegate form to provider';
+
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
    * Submit service request for review and lock it
    */
   submitForReview: async (
@@ -564,6 +617,75 @@ export const serviceRequestApi = {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to update form data';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
+   * Save or update provider form for service request (e.g. from delegated pre-request)
+   * Endpoint: POST /service-requests/:requestId/provider-form (or PUT)
+   */
+  saveProviderForm: async (
+    requestId: string,
+    payload: {
+      patientId?: string;
+      serviceId?: string;
+      priorityLevel?: string;
+      requestedDate?: string;
+      requestedTime?: string;
+      formData: any;
+    },
+    isUpdate = false,
+  ): Promise<ServiceRequestResponse> => {
+    console.log("payload",payload);
+    
+    try {
+      const response: any = isUpdate
+        ? await API.Instance.put(
+            `/service-requests/${requestId}/provider-form`,
+            payload,
+          )
+        : await API.Instance.post(
+            `/service-requests/${requestId}/provider-form`,
+            payload,
+          );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200 ||
+        response.code === 201 ||
+        response.status === 201
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Form saved successfully',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message:
+            nestedMessage ||
+            response.message ||
+            'Failed to save provider form',
+          error: nestedMessage || response.message,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to save provider form';
+
       return {
         success: false,
         message: errorMessage,

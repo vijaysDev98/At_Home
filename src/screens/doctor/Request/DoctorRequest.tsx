@@ -251,14 +251,36 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
   const renderItem = useCallback(
     ({ item }: { item: ServiceRequest }) => {
-      const isPreReq = !!item?.isPreRequest;
+      const isPreReq = Boolean(
+        item?.isPreRequest === true ||
+          (item?.isPreRequest === undefined &&
+            !item?.patient &&
+            !item?.service &&
+            Boolean(item?.preRequestStatus)),
+      );
       const isAcceptedPreReq =
-        isPreReq && item?.preRequestStatus === 'accepted';
+        isPreReq &&
+        (item?.preRequestStatus === 'accepted' ||
+          item?.status === 'accepted' ||
+          (item as any)?.formStatus === 'accepted');
       const formStatus =
         item?.formStatus || item?.preRequestStatus || item?.status;
+      const isDelegated = !!(item as any)?.delegateFormToProvider;
+      const provider =
+        (item as any)?.assignedProvider ||
+        (item as any)?.provider ||
+        (item as any)?.acceptedBy;
+      const providerName =
+        provider?.fullName ||
+        provider?.providerName ||
+        (provider?.fName
+          ? `${provider.fName} ${provider.lName || ''}`.trim()
+          : null);
 
       const buttonConfig: { show: boolean; label?: string | null; action?: string | null } = isAcceptedPreReq
-        ? { show: true, label: STRING.completeRequest, action: 'completeRequest' }
+        ? isDelegated
+          ? { show: false }
+          : { show: true, label: STRING.completeRequest, action: 'completeRequest' }
         : isPreReq
         ? { show: false }
         : getButtonConfig(formStatus || '', item?.status);
@@ -288,6 +310,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           voiceMessageUrl={item.voiceMessageUrl}
           initialNotes={item.initialNotes}
           priorityLevel={item.priorityLevel}
+          delegateFormToProvider={isDelegated}
+          providerName={providerName}
+          providerSpecialty={provider?.specialty || provider?.profession}
           buttonText={
             buttonConfig.show
               ? t(buttonConfig.label || '') || undefined

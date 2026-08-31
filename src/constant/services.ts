@@ -22,21 +22,21 @@ export const getServiceIcon = (id: string) => {
     case '69eb112a056b86c571c1a44f': // Generic
       return IMAGES.ic_generic;
     case '69ef3592d1c1c4252d4b8d4a': // Hydration Infusion
-      return IMAGES.ivfIcon;
+      return IMAGES.ic_hydration;
     case '69ef353fd1c1c4252d4b8d22': // IV Therapy
       return IMAGES.ivfIcon;
     case '69ef354cd1c1c4252d4b8d27': // Medical Oxygen
-      return imgs.ic_oxygen_card || IMAGES.maskIcon;
+      return IMAGES.maskIcon;
     case '69ef356cd1c1c4252d4b8d36': // PCA (Pain Management)
-      return imgs.ic_pain_mgmt_card || IMAGES.ivfIcon;
+      return IMAGES.pca;
     case '69ef357cd1c1c4252d4b8d40': // Parenteral Nutrition (Central Line)
-      return IMAGES.testTubeIcon || IMAGES.nurseIcon;
+      return IMAGES.parenteral;
     case '69ef3563d1c1c4252d4b8d31': // Personal Hygiene Care
-      return IMAGES.nurseIcon;
+      return IMAGES.hygiene;
     case '69ef3575d1c1c4252d4b8d3b': // Pregnancy Related Care
-      return IMAGES.ic_medKit || IMAGES.nurseIcon;
+      return IMAGES.pregnancy;
     case '69ef3534d1c1c4252d4b8d1d': // Wound Care
-      return imgs.ic_wound_care_card || IMAGES.bandegeIcon;
+      return IMAGES.bandegeIcon;
     default:
       return IMAGES.nurseIcon;
   }

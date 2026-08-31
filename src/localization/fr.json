@@ -892,5 +892,12 @@
   "No phone number available for this physician": "Aucun numéro de téléphone disponible pour ce médecin",
   "Unable to open phone dialer": "Impossible d'ouvrir le composeur téléphonique",
   "request": "demande",
-  "requests": "demandes"
+  "requests": "demandes",
+  "Delegate to Provider": "Déléguer au prestataire",
+  "Form delegated to provider successfully": "Formulaire délégué au prestataire avec succès",
+  "Waiting for provider to complete the form": "En attente que le prestataire remplisse le formulaire",
+  "Physician has requested you to complete the form and assign a patient": "Le médecin vous a demandé de remplir le formulaire et d'assigner un patient",
+  "Fill Form": "Remplir le formulaire",
+  "Delegating...": "Délégation en cours...",
+  "Form Delegated": "Formulaire délégué"
 }

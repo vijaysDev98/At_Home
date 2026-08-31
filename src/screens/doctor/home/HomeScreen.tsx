@@ -32,8 +32,11 @@ import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
 import FastImage from 'react-native-fast-image';
-import { MASTER_SERVICES_LIST, ServiceConfig } from '../../../constant/services';
-import { getServiceIcon } from '../createRequest/createRequestStep2';
+import {
+  MASTER_SERVICES_LIST,
+  ServiceConfig,
+  getServiceIcon,
+} from '../../../constant/services';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -299,10 +302,7 @@ const HomeScreen: React.FC = () => {
                   <View style={styles.cardIconBox}>
                     <Image
                       source={getServiceIcon(service.id)}
-                      style={[
-                        styles.serviceIcon,
-                        { tintColor: service.bgColor },
-                      ]}
+                      style={styles.serviceIcon}
                     />
                   </View>
                   <View style={styles.cardTextBox}>
@@ -456,7 +456,7 @@ const HomeScreen: React.FC = () => {
           </View>
 
           {/* Recent Queue Section */}
-          {/* <View style={styles.recentQueueSection}>
+          <View style={styles.recentQueueSection}>
             <AppText
               size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
@@ -467,21 +467,44 @@ const HomeScreen: React.FC = () => {
             </AppText>
             {recentQueue.length > 0 ? (
               recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const isPreReq = !!item.isPreRequest;
+                const isPreReq = Boolean(
+                  item.isPreRequest === true ||
+                    (item.isPreRequest === undefined &&
+                      !item.patient &&
+                      !item.service &&
+                      Boolean(item.preRequestStatus)),
+                );
                 const isAcceptedPreReq =
-                  isPreReq && item?.preRequestStatus === 'accepted';
+                  isPreReq &&
+                  (item?.preRequestStatus === 'accepted' ||
+                    item?.status === 'accepted' ||
+                    (item as any)?.formStatus === 'accepted');
                 const formStatus =
                   item.formStatus || item.preRequestStatus || item.status;
+                const isDelegated = !!(item as any)?.delegateFormToProvider;
+                const provider =
+                  (item as any)?.assignedProvider ||
+                  (item as any)?.provider ||
+                  (item as any)?.acceptedBy;
+                const providerName =
+                  provider?.fullName ||
+                  provider?.providerName ||
+                  (provider?.fName
+                    ? `${provider.fName} ${provider.lName || ''}`.trim()
+                    : null);
+
                 const buttonConfig: {
                   show: boolean;
                   label?: string | null;
                   action?: string | null;
                 } = isAcceptedPreReq
-                  ? {
-                      show: true,
-                      label: STRING.completeRequest,
-                      action: 'completeRequest',
-                    }
+                  ? isDelegated
+                    ? { show: false }
+                    : {
+                        show: true,
+                        label: STRING.completeRequest,
+                        action: 'completeRequest',
+                      }
                   : isPreReq
                   ? {
                       show: false,
@@ -515,6 +538,11 @@ const HomeScreen: React.FC = () => {
                       voiceMessageUrl={item.voiceMessageUrl}
                       initialNotes={item.initialNotes}
                       priorityLevel={item.priorityLevel}
+                      delegateFormToProvider={isDelegated}
+                      providerName={providerName}
+                      providerSpecialty={
+                        provider?.specialty || provider?.profession
+                      }
                       buttonText={
                         buttonConfig.show
                           ? t(buttonConfig.label || '') || undefined
@@ -583,7 +611,7 @@ const HomeScreen: React.FC = () => {
                 </AppText>
               </View>
             )}
-          </View> */}
+          </View>
         </ScrollView>
       </View>
 
@@ -642,8 +670,8 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     position: 'absolute',
-    top: -6,
-    right: -6,
+    top: -8,
+    right: -8,
     backgroundColor: COLORS.error,
     borderRadius: getScaleSize(8),
     minWidth: getScaleSize(16),
@@ -651,7 +679,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: getScaleSize(3),
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: COLORS.white,
   },
   badgeText: {
@@ -731,8 +759,8 @@ const styles = StyleSheet.create({
     minWidth: getScaleSize(26),
     height: getScaleSize(26),
     borderRadius: getScaleSize(13),
-    borderWidth: 2,
-    borderColor: '#000000',
+    borderWidth: 1,
+    borderColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: getScaleSize(4),
