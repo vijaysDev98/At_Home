@@ -8,6 +8,7 @@ import {
   Platform,
   AppState,
   AppStateStatus,
+  Linking,
 } from 'react-native';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -342,17 +343,48 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
     (requestData as any)?.doctor || (requestData as any)?.doctorId;
   const doctorName =
     doctor?.fullName ||
-    (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null);
+    (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null) ||
+    (requestData as any)?.doctorName;
+  const doctorPhone =
+    doctor?.phoneNumber ||
+    doctor?.phone ||
+    doctor?.mobileNumber ||
+    doctor?.contactNumber ||
+    (requestData as any)?.doctorPhone ||
+    '';
+
+  const handleCall = () => {
+    if (doctorPhone) {
+      Linking.openURL(`tel:${doctorPhone}`).catch(() => {
+        SHOW_TOAST(
+          t(STRING.unableToOpenPhoneDialer) || 'Unable to open phone dialer',
+          'error',
+        );
+      });
+    } else {
+      SHOW_TOAST(
+        t(STRING.noPhoneNumberAvailable) ||
+          'No phone number available for this physician',
+        'info',
+      );
+    }
+  };
+
+  const handleChat = () => {
+    SHOW_TOAST(
+      t(STRING.chatUnderDevelopment) ||
+        'Chat feature is under development and will be available soon!',
+      'info',
+    );
+  };
 
   const displayStatus =
     (DISPLAY_FORM_STATUS as Record<string, string>)[effectiveStatus] ||
     effectiveStatus;
   const badgeColor = getStatusBadgeColor(effectiveStatus);
   const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
-  
 
   const isAssignedToProvider = Boolean(
-   
     (requestData as any)?.assignedProviderId 
   );
 
@@ -473,7 +505,56 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
                         {doctor.email}
                       </AppText>
                     )}
+                    {!!doctorPhone && (
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.Regular}
+                        color={COLORS._6F767E}
+                        style={{ marginTop: getScaleSize(2) }}
+                      >
+                        {doctorPhone}
+                      </AppText>
+                    )}
                   </View>
+                </View>
+
+                {/* Quick Actions: Chat Now & Call Now */}
+                <View style={styles.doctorActionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.doctorActionBtnChat}
+                    onPress={handleChat}
+                  >
+                    <Image
+                      source={IMAGES.mail}
+                      style={styles.doctorActionIconChat}
+                    />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.primary}
+                    >
+                      {t(STRING.chatNow) || 'Chat Now'}
+                    </AppText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.doctorActionBtnCall}
+                    onPress={handleCall}
+                  >
+                    <Image
+                      source={IMAGES.phone}
+                      style={styles.doctorActionIconCall}
+                    />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.white}
+                    >
+                      {t(STRING.callNow) || 'Call Now'}
+                    </AppText>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -713,6 +794,54 @@ const styles = StyleSheet.create({
   doctorInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  doctorActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    marginTop: getScaleSize(14),
+    paddingTop: getScaleSize(12),
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  doctorActionBtnChat: {
+    flex: 1,
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+  },
+  doctorActionIconChat: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.primary,
+    resizeMode: 'contain',
+  },
+  doctorActionBtnCall: {
+    flex: 1,
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(10),
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  doctorActionIconCall: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
   },
   audioPlayerCard: {
     flexDirection: 'row',

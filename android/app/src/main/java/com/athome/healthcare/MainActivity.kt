@@ -1,6 +1,9 @@
 package com.athome.healthcare
-import android.os.Bundle;
-import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory;
+
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Bundle
+import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -14,11 +17,19 @@ class MainActivity : ReactActivity() {
    */
   override fun getMainComponentName(): String = "At Home"
 
-   //react-native-screens override
-    override fun onCreate(savedInstanceState: Bundle?) {
-      supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
-      super.onCreate(savedInstanceState);
-    }
+  // Prevent system font scaling from affecting the app
+  override fun attachBaseContext(newBase: Context) {
+    val configuration = Configuration(newBase.resources.configuration)
+    configuration.fontScale = 1.0f
+    val context = newBase.createConfigurationContext(configuration)
+    super.attachBaseContext(context)
+  }
+
+  //react-native-screens override
+  override fun onCreate(savedInstanceState: Bundle?) {
+    supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
+    super.onCreate(savedInstanceState)
+  }
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
@@ -27,3 +38,4 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 }
+

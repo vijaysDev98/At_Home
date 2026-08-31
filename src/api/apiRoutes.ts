@@ -64,6 +64,7 @@ const API_ROUTES = {
   updateFcm: 'auth/update-fcm',
   getDoctors: 'providers/doctors',
   getProviders: 'doctors/providers',
+  departmentList: 'common/department-list',
 };
 
 export { API_ROUTES, API_BASE_URL, DISABLE_API_LOGS };

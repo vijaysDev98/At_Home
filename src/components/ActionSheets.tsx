@@ -25,7 +25,11 @@ import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import { SHOW_TOAST, STRING } from '../constant';
 import { useTranslation } from 'react-i18next';
-import { getProvidersService, getServicesService } from '../services/patientService';
+import {
+  getDepartmentListService,
+  getProvidersService,
+  getServicesService,
+} from '../services/patientService';
 import { MASTER_SERVICES_LIST } from '../constant/services';
 import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { Provider } from '../screens/doctor/providers/ProvidersCallList';
@@ -995,15 +999,25 @@ export const ProviderOptionSheet = React.forwardRef<
 /**
  * Select Provider Bottom Sheet (Used in CreateRequestStep3 to search, select, and assign a specific provider)
  */
+export interface DepartmentItem {
+  code: string;
+  name: string;
+}
+
 interface SelectProviderSheetProps {
   serviceId?: string;
-  onSelectProvider: (provider: Provider, serviceId?: string) => void;
+  departmentCode?: string;
+  onSelectProvider: (
+    provider: Provider,
+    serviceId?: string,
+    departmentCode?: string,
+  ) => void;
 }
 
 export const SelectProviderSheet = React.forwardRef<
   ActionSheetRef,
   SelectProviderSheetProps
->(({ serviceId, onSelectProvider }, ref) => {
+>(({ serviceId, departmentCode, onSelectProvider }, ref) => {
   const sheetRef = React.useRef<ActionSheetRef>(null);
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -1013,6 +1027,12 @@ export const SelectProviderSheet = React.forwardRef<
     serviceId || '',
   );
   const currentServiceIdRef = React.useRef<string | undefined>(serviceId);
+
+  const [departmentList, setDepartmentList] = React.useState<DepartmentItem[]>([]);
+  const [selectedDepartmentCode, setSelectedDepartmentCode] = React.useState<string>(
+    departmentCode || '',
+  );
+  const currentDepartmentCodeRef = React.useRef<string | undefined>(departmentCode);
 
   React.useEffect(() => {
     // Fetch live services from backend
@@ -1025,6 +1045,18 @@ export const SelectProviderSheet = React.forwardRef<
       .catch(err => {
         console.log('Error loading services for filter:', err);
       });
+
+    // Fetch live departments from backend
+    getDepartmentListService()
+      .then((res: any) => {
+        const list = res?.data?.data || res?.data || [];
+        if (Array.isArray(list)) {
+          setDepartmentList(list);
+        }
+      })
+      .catch(err => {
+        console.log('Error loading departments for filter:', err);
+      });
   }, []);
 
   React.useEffect(() => {
@@ -1033,6 +1065,13 @@ export const SelectProviderSheet = React.forwardRef<
       currentServiceIdRef.current = serviceId || undefined;
     }
   }, [serviceId]);
+
+  React.useEffect(() => {
+    if (departmentCode !== undefined) {
+      setSelectedDepartmentCode(departmentCode);
+      currentDepartmentCodeRef.current = departmentCode || undefined;
+    }
+  }, [departmentCode]);
 
   const [providers, setProviders] = React.useState<Provider[]>([]);
   const [selectedProvider, setSelectedProvider] = React.useState<Provider | null>(
@@ -1044,12 +1083,45 @@ export const SelectProviderSheet = React.forwardRef<
   const [page, setPage] = React.useState<number>(1);
   const [hasMore, setHasMore] = React.useState<boolean>(true);
   const [isMoreLoading, setIsMoreLoading] = React.useState<boolean>(false);
+  const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] = React.useState<boolean>(false);
+  const [departmentSearchText, setDepartmentSearchText] = React.useState<string>('');
+
+  const selectedDepartmentLabel = React.useMemo(() => {
+    if (!selectedDepartmentCode) {
+      return t(STRING.allDepartments) || 'All Departments';
+    }
+    const found = departmentList.find(
+      d => String(d.code) === String(selectedDepartmentCode),
+    );
+    if (found) {
+      return `${found.code} - ${found.name || found.code}`;
+    }
+    return selectedDepartmentCode;
+  }, [selectedDepartmentCode, departmentList, t]);
+
+  const departmentData = React.useMemo(() => {
+    const allOption = {
+      code: '',
+      name: t(STRING.allDepartments) || 'All Departments',
+    };
+    if (!departmentSearchText.trim()) {
+      return [allOption, ...departmentList];
+    }
+    const q = departmentSearchText.trim().toLowerCase();
+    const filtered = departmentList.filter(
+      d =>
+        d.code.toLowerCase().includes(q) ||
+        (d.name && d.name.toLowerCase().includes(q)),
+    );
+    return [allOption, ...filtered];
+  }, [departmentList, departmentSearchText, t]);
 
   const fetchProviders = async (
     pageNum: number = 1,
     searchQuery: string = '',
     refresh: boolean = false,
     overrideServiceId?: string,
+    overrideDepartmentCode?: string,
   ) => {
     try {
       if (pageNum === 1 && !refresh) setIsLoading(true);
@@ -1060,12 +1132,18 @@ export const SelectProviderSheet = React.forwardRef<
         overrideServiceId !== undefined
           ? overrideServiceId
           : currentServiceIdRef.current || serviceId;
+      const activeDepartmentCode =
+        overrideDepartmentCode !== undefined
+          ? overrideDepartmentCode
+          : currentDepartmentCodeRef.current;
+
       const response: any = await getProvidersService(
         pageNum,
         10,
         searchQuery,
         langParam,
         activeServiceId || undefined,
+        activeDepartmentCode || undefined,
       );
 
       if (
@@ -1107,19 +1185,36 @@ export const SelectProviderSheet = React.forwardRef<
     ref,
     () =>
       ({
-        show: (customServiceId?: string) => {
+        show: (customServiceId?: string, customDepartmentCode?: string) => {
           const targetServiceId =
             customServiceId !== undefined
               ? customServiceId
               : serviceId || '';
+          const targetDepartmentCode =
+            customDepartmentCode !== undefined
+              ? customDepartmentCode
+              : departmentCode || '';
           currentServiceIdRef.current = targetServiceId || undefined;
+          currentDepartmentCodeRef.current = targetDepartmentCode || undefined;
           setSelectedServiceId(targetServiceId);
+          setSelectedDepartmentCode(targetDepartmentCode);
+          setIsDepartmentDropdownOpen(false);
+          setDepartmentSearchText('');
           sheetRef.current?.show();
           setSearch('');
           setSelectedProvider(null);
-          fetchProviders(1, '', false, targetServiceId || undefined);
+          fetchProviders(
+            1,
+            '',
+            false,
+            targetServiceId || undefined,
+            targetDepartmentCode || undefined,
+          );
         },
-        hide: () => sheetRef.current?.hide(),
+        hide: () => {
+          setIsDepartmentDropdownOpen(false);
+          sheetRef.current?.hide();
+        },
         snapToOffset: (offset: number) =>
           sheetRef.current?.snapToOffset(offset),
         snapToIndex: (index: number) => sheetRef.current?.snapToIndex(index),
@@ -1129,7 +1224,13 @@ export const SelectProviderSheet = React.forwardRef<
   // Debounced search
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProviders(1, search, true, currentServiceIdRef.current);
+      fetchProviders(
+        1,
+        search,
+        true,
+        currentServiceIdRef.current,
+        currentDepartmentCodeRef.current,
+      );
     }, 350);
 
     return () => clearTimeout(timer);
@@ -1137,6 +1238,7 @@ export const SelectProviderSheet = React.forwardRef<
 
   const handleSearchChange = (text: string) => {
     setSearch(text);
+    setIsDepartmentDropdownOpen(false);
   };
 
   const handleServiceFilterPress = (targetId: string) => {
@@ -1144,30 +1246,68 @@ export const SelectProviderSheet = React.forwardRef<
     setSelectedServiceId(nextId);
     currentServiceIdRef.current = nextId || undefined;
     setSelectedProvider(null);
+    setIsDepartmentDropdownOpen(false);
     setPage(1);
-    fetchProviders(1, search, true, nextId || undefined);
+    fetchProviders(
+      1,
+      search,
+      true,
+      nextId || undefined,
+      currentDepartmentCodeRef.current,
+    );
+  };
+
+  const handleDepartmentFilterChange = (targetCode: string) => {
+    setSelectedDepartmentCode(targetCode);
+    currentDepartmentCodeRef.current = targetCode || undefined;
+    setSelectedProvider(null);
+    setPage(1);
+    fetchProviders(
+      1,
+      search,
+      true,
+      currentServiceIdRef.current,
+      targetCode || undefined,
+    );
   };
 
   const onRefresh = () => {
     setIsRefreshing(true);
-    fetchProviders(1, search, true, currentServiceIdRef.current);
+    fetchProviders(
+      1,
+      search,
+      true,
+      currentServiceIdRef.current,
+      currentDepartmentCodeRef.current,
+    );
   };
 
   const handleLoadMore = () => {
     if (!hasMore || isMoreLoading || isLoading) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchProviders(nextPage, search, false, currentServiceIdRef.current);
+    fetchProviders(
+      nextPage,
+      search,
+      false,
+      currentServiceIdRef.current,
+      currentDepartmentCodeRef.current,
+    );
   };
 
   const handleSelect = (item: Provider) => {
+    setIsDepartmentDropdownOpen(false);
     setSelectedProvider(item);
   };
 
   const handleSubmit = () => {
     if (selectedProvider) {
       sheetRef.current?.hide();
-      onSelectProvider(selectedProvider, selectedServiceId || undefined);
+      onSelectProvider(
+        selectedProvider,
+        selectedServiceId || undefined,
+        selectedDepartmentCode || undefined,
+      );
     }
   };
 
@@ -1181,7 +1321,7 @@ export const SelectProviderSheet = React.forwardRef<
         styles.sheetContainer,
         {
           backgroundColor: COLORS.white,
-          height: '82%',
+          height: '84%',
           paddingBottom: Math.max(insets.bottom, getScaleSize(20)),
         },
       ]}
@@ -1226,6 +1366,165 @@ export const SelectProviderSheet = React.forwardRef<
             inputWrapperStyle={styles.providerSearchInputWrapper}
             inputStyle={styles.providerSearchInput}
           />
+        </View>
+
+        {/* Department Filter Section */}
+        <View style={styles.departmentFilterContainer}>
+          {/* Main Selector Button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setIsDepartmentDropdownOpen(prev => !prev)}
+            style={[
+              styles.departmentDropdown,
+              (!!selectedDepartmentCode || isDepartmentDropdownOpen) &&
+                styles.departmentDropdownActive,
+              isDepartmentDropdownOpen && styles.departmentDropdownOpen,
+            ]}
+          >
+            <View style={styles.departmentDropdownLeft}>
+              <Image
+                source={IMAGES.location_pin}
+                style={[
+                  styles.departmentDropdownLeftIcon,
+                  (!!selectedDepartmentCode || isDepartmentDropdownOpen) && {
+                    tintColor: COLORS.primary,
+                  },
+                ]}
+              />
+              <AppText
+                size={getScaleSize(13)}
+                font={
+                  selectedDepartmentCode
+                    ? FONTS.Inter.SemiBold
+                    : FONTS.Inter.Medium
+                }
+                color={selectedDepartmentCode ? COLORS._1A1D1F : '#64748B'}
+                numberOfLines={1}
+                style={{ marginLeft: getScaleSize(8), flex: 1 }}
+              >
+                {selectedDepartmentLabel}
+              </AppText>
+            </View>
+
+            <View style={styles.departmentDropdownRight}>
+              {selectedDepartmentCode ? (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    handleDepartmentFilterChange('');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.departmentClearButton}
+                >
+                  <Image
+                    source={IMAGES.crossIcon}
+                    style={styles.departmentClearIcon}
+                  />
+                </TouchableOpacity>
+              ) : null}
+              <Image
+                source={IMAGES.arrow_bottom}
+                style={[
+                  styles.departmentDropdownArrow,
+                  isDepartmentDropdownOpen && {
+                    transform: [{ rotate: '180deg' }],
+                  },
+                ]}
+              />
+            </View>
+          </TouchableOpacity>
+
+          {/* Inline Expandable Dropdown Menu (Sticks seamlessly below the button) */}
+          {isDepartmentDropdownOpen && (
+            <View style={styles.departmentInlineMenu}>
+              {/* Search bar inside dropdown */}
+              <View style={styles.departmentSearchWrapper}>
+                <Image
+                  source={IMAGES.search}
+                  style={styles.departmentSearchIcon}
+                />
+                <TextInput
+                  value={departmentSearchText}
+                  onChangeText={setDepartmentSearchText}
+                  placeholder={
+                    t(STRING.searchDepartment) || 'Search department...'
+                  }
+                  placeholderTextColor="#94A3B8"
+                  style={styles.departmentSearchInput}
+                  autoCorrect={false}
+                  clearButtonMode="while-editing"
+                />
+                {!!departmentSearchText && (
+                  <TouchableOpacity
+                    onPress={() => setDepartmentSearchText('')}
+                    style={{ padding: getScaleSize(4) }}
+                  >
+                    <Image
+                      source={IMAGES.crossIcon}
+                      style={{
+                        width: getScaleSize(12),
+                        height: getScaleSize(12),
+                        tintColor: '#94A3B8',
+                      }}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Scrollable list of departments using GestureFlatList */}
+              <GestureFlatList
+                data={departmentData}
+                keyExtractor={(item, index) => item.code || `all-${index}`}
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                style={styles.departmentFlatList}
+                contentContainerStyle={styles.departmentListContent}
+                renderItem={({ item }) => {
+                  const isSelected = selectedDepartmentCode === String(item.code);
+                  return (
+                    <TouchableOpacity
+                      key={item.code || 'all'}
+                      activeOpacity={0.7}
+                      style={[
+                        styles.departmentMenuItem,
+                        isSelected && styles.departmentMenuItemActive,
+                      ]}
+                      onPress={() => {
+                        handleDepartmentFilterChange(item.code ? String(item.code) : '');
+                        setIsDepartmentDropdownOpen(false);
+                        setDepartmentSearchText('');
+                      }}
+                    >
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={isSelected ? FONTS.Inter.Bold : FONTS.Inter.Regular}
+                        color={isSelected ? COLORS.primary : COLORS._1A1D1F}
+                      >
+                        {item.code
+                          ? `${item.code} - ${item.name || item.code}`
+                          : (t(STRING.allDepartments) || 'All Departments')}
+                      </AppText>
+                      {isSelected && (
+                        <View style={styles.departmentCheckDot} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={styles.departmentNoResult}>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                    >
+                      {t(STRING.noProvidersFound) || 'No department found'}
+                    </AppText>
+                  </View>
+                }
+              />
+            </View>
+          )}
         </View>
 
         {/* Service Filter Chips */}
@@ -1425,6 +1724,25 @@ export const SelectProviderSheet = React.forwardRef<
                       >
                         {item.email}
                       </AppText>
+                    ) : null}
+
+                    {Array.isArray(item.operatingDepartments) &&
+                    item.operatingDepartments.length > 0 ? (
+                      <View style={styles.providerDeptRow}>
+                        <Image
+                          source={IMAGES.location_pin}
+                          style={styles.providerDeptIcon}
+                        />
+                        <AppText
+                          size={getScaleSize(11)}
+                          font={FONTS.Inter.Medium}
+                          color={COLORS._6F767E}
+                          numberOfLines={1}
+                        >
+                          {t(STRING.department) || 'Department'}:{' '}
+                          {item.operatingDepartments.join(', ')}
+                        </AppText>
+                      </View>
                     ) : null}
                   </View>
 
@@ -2084,6 +2402,130 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Inter.Regular,
     color: COLORS._1A1D1F,
   },
+  departmentFilterContainer: {
+    marginBottom: getScaleSize(8),
+  },
+  departmentDropdown: {
+    height: getScaleSize(44),
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderRadius: getScaleSize(10),
+    paddingHorizontal: getScaleSize(12),
+    backgroundColor: '#F8FAFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  departmentDropdownActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS._E8EDF1,
+  },
+  departmentDropdownOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottomColor: '#E2E8F0',
+  },
+  departmentDropdownLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: getScaleSize(8),
+  },
+  departmentDropdownLeftIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS._64748B,
+    resizeMode: 'contain',
+  },
+  departmentDropdownRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+  },
+  departmentDropdownArrow: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    tintColor: COLORS._64748B,
+    resizeMode: 'contain',
+  },
+  departmentClearButton: {
+    padding: getScaleSize(4),
+  },
+  departmentClearIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: COLORS._6F767E,
+    resizeMode: 'contain',
+  },
+  departmentInlineMenu: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#E2E8F0',
+    borderBottomLeftRadius: getScaleSize(10),
+    borderBottomRightRadius: getScaleSize(10),
+    maxHeight: getScaleSize(220),
+    paddingHorizontal: getScaleSize(8),
+    paddingTop: getScaleSize(6),
+    paddingBottom: getScaleSize(6),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  departmentSearchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS._F1F5F9,
+    borderRadius: getScaleSize(8),
+    paddingHorizontal: getScaleSize(8),
+    height: getScaleSize(36),
+    marginBottom: getScaleSize(6),
+    gap: getScaleSize(6),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  departmentSearchIcon: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    tintColor: COLORS._6F767E,
+    resizeMode: 'contain',
+  },
+  departmentSearchInput: {
+    flex: 1,
+    fontSize: getScaleSize(13),
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS._1A1D1F,
+    padding: 0,
+  },
+  departmentFlatList: {
+    maxHeight: getScaleSize(160),
+  },
+  departmentListContent: {
+    paddingBottom: getScaleSize(4),
+  },
+  departmentMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: getScaleSize(9),
+    paddingHorizontal: getScaleSize(10),
+    borderRadius: getScaleSize(6),
+  },
+  departmentMenuItemActive: {
+    backgroundColor: COLORS._E8EDF1,
+  },
+  departmentCheckDot: {
+    width: getScaleSize(8),
+    height: getScaleSize(8),
+    borderRadius: getScaleSize(4),
+    backgroundColor: COLORS.primary,
+  },
+  departmentNoResult: {
+    paddingVertical: getScaleSize(14),
+    alignItems: 'center',
+  },
   serviceFilterContainer: {
     marginBottom: getScaleSize(10),
   },
@@ -2153,6 +2595,18 @@ const styles = StyleSheet.create({
   },
   providerItemInfo: {
     flex: 1,
+  },
+  providerDeptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: getScaleSize(3),
+    gap: getScaleSize(4),
+  },
+  providerDeptIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: COLORS._6F767E,
+    resizeMode: 'contain',
   },
   providerRadioOuter: {
     width: getScaleSize(20),

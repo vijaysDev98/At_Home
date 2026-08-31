@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
   Modal,
   StyleSheet,
   View,
@@ -27,7 +28,8 @@ const AppLoader: React.FC<AppLoaderProps> = ({
       transparent
       animationType="fade"
       visible={visible}
-      statusBarTranslucent
+      statusBarTranslucent={true}
+      navigationBarTranslucent={true}
       hardwareAccelerated
       // Required on Android, otherwise it throws a warning
       // and the hardware back button won't be handled.
@@ -62,6 +64,9 @@ export default React.memo(AppLoader);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    minHeight: Dimensions.get('screen').height,
     backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'center',
     alignItems: 'center',

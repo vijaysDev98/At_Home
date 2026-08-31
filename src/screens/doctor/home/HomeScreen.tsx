@@ -71,6 +71,7 @@ interface DashboardRequestsOverview {
 
 interface DashboardActionRequired {
   awaitingSignatureCount: number;
+  awaitingSignatureByService?: Record<string, number>;
 }
 
 interface DashboardPatients {
@@ -78,10 +79,14 @@ interface DashboardPatients {
 }
 
 interface DashboardData {
-  requestsOverview: DashboardRequestsOverview;
-  actionRequired: DashboardActionRequired;
-  patients: DashboardPatients;
-  recentQueue: DashboardRecentQueue[];
+  requestsOverview?: DashboardRequestsOverview;
+  actionRequired?: DashboardActionRequired;
+  patients?: DashboardPatients;
+  recentQueue?: DashboardRecentQueue[];
+  serviceWiseCount?: Record<string, number>;
+  serviceCounts?: Record<string, number>;
+  servicesOverview?: Record<string, number>;
+  [key: string]: any;
 }
 
 const HomeScreen: React.FC = () => {
@@ -108,15 +113,16 @@ const HomeScreen: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       const [response, count] = await Promise.all([
-        dashboardApi.getDashboardOverview(10),
+        dashboardApi.getDashboardOverview(20),
         getUnreadCountService(),
       ]);
 
-      if (response.success) {
+      if (response.success && response.data) {
         setDashboardData(response.data);
       }
       setUnreadCount(count);
     } catch (error) {
+      console.log('Error fetching dashboard data:', error);
     } finally {
       dispatch(setLoading(false));
     }
@@ -138,6 +144,14 @@ const HomeScreen: React.FC = () => {
 
   const handleEmergencyCall = () => {
     NavigationService.navigate(SCREENS.PROVIDERS_CALL_LIST);
+  };
+
+  const getServiceCount = (service: ServiceConfig): number => {
+    const awaitingByService =
+      dashboardData?.actionRequired?.awaitingSignatureByService;
+    if (!awaitingByService || !service?.id) return 0;
+
+    return awaitingByService[service.id] || 0;
   };
 
   const displayedServices = showAllServices
@@ -270,27 +284,53 @@ const HomeScreen: React.FC = () => {
 
           {/* 6 Services Grid (or 12 when expanded) */}
           <View style={styles.servicesGrid}>
-            {displayedServices.map(service => (
-              <TouchableOpacity
-                key={service.id}
-                activeOpacity={0.9}
-                onPress={() => handleServicePress(service)}
-                style={[styles.serviceCard, { backgroundColor: service.bgColor }]}
-              >
-                <View style={styles.cardIconBox}>
-                  <Image source={getServiceIcon(service.id)} style={styles.serviceIcon} />
-                </View>
-                <AppText
-                  size={getScaleSize(13)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.white}
-                  style={styles.cardTitleText}
-                  numberOfLines={2}
+            {displayedServices.map(service => {
+              const count = getServiceCount(service);
+              return (
+                <TouchableOpacity
+                  key={service.id}
+                  activeOpacity={0.9}
+                  onPress={() => handleServicePress(service)}
+                  style={[
+                    styles.serviceCard,
+                    { backgroundColor: service.bgColor },
+                  ]}
                 >
-                  {t(service.name)}
-                </AppText>
-              </TouchableOpacity>
-            ))}
+                  <View style={styles.cardIconBox}>
+                    <Image
+                      source={getServiceIcon(service.id)}
+                      style={[
+                        styles.serviceIcon,
+                        { tintColor: service.bgColor },
+                      ]}
+                    />
+                  </View>
+                  <View style={styles.cardTextBox}>
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS.white}
+                      style={styles.cardTitleText}
+                      numberOfLines={2}
+                    >
+                      {t(service.name)}
+                    </AppText>
+                  </View>
+                  {count > 0 && (
+                    <View style={styles.serviceBadgeCircle}>
+                      <AppText
+                        size={getScaleSize(11)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS.white}
+                        style={styles.serviceBadgeText}
+                      >
+                        {count > 99 ? '99+' : count}
+                      </AppText>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           {/* Section Divider */}
@@ -327,7 +367,7 @@ const HomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View> */}
 
-          {/* Main CTA Button: HOME DISCHARGE REQUEST */}
+          {/* Main CTA Button: CREATE NEW HOMECARE REQUEST */}
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST)}
@@ -345,11 +385,11 @@ const HomeScreen: React.FC = () => {
               minimumFontScale={0.7}
               style={{ flex: 1 }}
             >
-              {t(STRING.homeDischargeRequest)}
+              {t(STRING.createNewHomecareRequest)}
             </AppText>
           </TouchableOpacity>
 
-          {/* Quick Action Buttons: NEW PATIENT & NEW FORM */}
+          {/* Quick Action Buttons: NEW PATIENT & NEW MEDICAL PRESCRIPTION FORM */}
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
               activeOpacity={0.9}
@@ -391,7 +431,7 @@ const HomeScreen: React.FC = () => {
                 minimumFontScale={0.8}
                 style={styles.actionBtnText}
               >
-                {t(STRING.newForm)}
+                {t(STRING.newMedicalPrescriptionForm)}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -658,6 +698,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(10),
+    position: 'relative',
     elevation: 3,
     shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 3 },
@@ -675,9 +716,32 @@ const styles = StyleSheet.create({
     height: getScaleSize(50),
     resizeMode: 'contain',
   },
-  cardTitleText: {
+  cardTextBox: {
     flex: 1,
-    lineHeight: getScaleSize(17),
+    justifyContent: 'center',
+  },
+  cardTitleText: {
+    lineHeight: getScaleSize(16),
+  },
+  serviceBadgeCircle: {
+    position: 'absolute',
+    top: -getScaleSize(6),
+    right: -getScaleSize(6),
+    backgroundColor: '#E52323',
+    minWidth: getScaleSize(26),
+    height: getScaleSize(26),
+    borderRadius: getScaleSize(13),
+    borderWidth: 2,
+    borderColor: '#000000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(4),
+    zIndex: 20,
+    elevation: 6,
+  },
+  serviceBadgeText: {
+    textAlign: 'center',
+    lineHeight: Platform.OS === 'android' ? getScaleSize(14) : undefined,
   },
   sectionDivider: {
     height: 1,
@@ -719,7 +783,7 @@ const styles = StyleSheet.create({
     lineHeight: getScaleSize(14),
   },
   mainCtaBtn: {
-    backgroundColor: COLORS._008B8B,
+    backgroundColor: '#164E8C',
     marginHorizontal: getScaleSize(18),
     marginTop: getScaleSize(16),
     height: getScaleSize(72),
@@ -730,7 +794,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(16),
     gap: getScaleSize(12),
     elevation: 3,
-    shadowColor: COLORS._008B8B,
+    shadowColor: '#164E8C',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -747,7 +811,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(22),
     height: getScaleSize(22),
     resizeMode: 'contain',
-    tintColor: COLORS._008B8B,
+    tintColor: '#164E8C',
   },
   ctaText: {
     letterSpacing: 0.4,

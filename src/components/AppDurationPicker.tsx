@@ -114,7 +114,14 @@ const AppDurationPicker = forwardRef<
   );
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent={true}
+      navigationBarTranslucent={true}
+      hardwareAccelerated
+    >
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
@@ -205,6 +212,9 @@ const AppDurationPicker = forwardRef<
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    minHeight: Dimensions.get('screen').height,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',

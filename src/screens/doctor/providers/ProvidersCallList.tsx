@@ -40,6 +40,9 @@ export interface Provider {
   profileImg?: string;
   roles?: string[];
   status?: string;
+  operatingDepartments?: string[];
+  assignedServices?: string[];
+  serviceDetails?: any[];
 }
 
 const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(({ provider }) => {

@@ -112,4 +112,5 @@ export const IMAGES = {
   ic_mic: require('./ic_mic.png'),
   ic_pause: require('./ic_pause.png'),
   ic_provider: require('./ic_provider.png'),
+  appLogo_color: require('./appLogo_color.png')
 };

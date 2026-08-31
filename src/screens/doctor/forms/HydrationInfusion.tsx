@@ -88,6 +88,9 @@ const MODE_OF_ADMINISTRATION = [
   STRING.electricInfusionPump,
 ];
 
+const DILUENT_OPTIONS = ['NaCl', 'G5', 'EPPI'];
+const DOSAGE_UNITS = ['mg', 'ml'];
+
 const HydrationInfusionForm = forwardRef<
   HydrationInfusionFormRef,
   HydrationInfusionFormProps
@@ -165,8 +168,11 @@ const HydrationInfusionForm = forwardRef<
       infusion_products: [
         {
           product_name: '',
+          dosage: '',
+          dosage_unit: 'mg',
           strength: '',
           diluent_type: '',
+          diluent: '',
           diluent_volume_ml: '',
           duration_hours: '',
           duration_minutes: '',
@@ -190,10 +196,46 @@ const HydrationInfusionForm = forwardRef<
 
     useEffect(() => {
       if (initialData && initialData.formData) {
-        setState(prev => ({
-          ...prev,
-          ...(initialData.formData as any),
-        }));
+        const initialFormData: any = initialData.formData;
+        if (
+          initialFormData.infusion_products &&
+          Array.isArray(initialFormData.infusion_products)
+        ) {
+          const normalizedProducts = initialFormData.infusion_products.map(
+            (p: any) => {
+              const match = String(p.strength || '').match(
+                /^([\d.,]+)\s*(mg|ml)?$/i,
+              );
+              const dosage =
+                p.dosage !== undefined && p.dosage !== null && p.dosage !== ''
+                  ? p.dosage
+                  : match
+                  ? match[1]
+                  : p.strength || '';
+              const dosage_unit =
+                p.dosage_unit ||
+                (match && match[2] ? match[2].toLowerCase() : 'mg');
+              return {
+                ...p,
+                dosage,
+                dosage_unit,
+                strength:
+                  p.strength || (dosage ? `${dosage} ${dosage_unit}` : ''),
+                diluent: p.diluent || '',
+              };
+            },
+          );
+          setState(prev => ({
+            ...prev,
+            ...initialFormData,
+            infusion_products: normalizedProducts,
+          }));
+        } else {
+          setState(prev => ({
+            ...prev,
+            ...initialFormData,
+          }));
+        }
       } else if (selectedPatient && !initialData) {
         // Update patient info from selectedPatient if not editing
         setState(prev => ({
@@ -220,8 +262,11 @@ const HydrationInfusionForm = forwardRef<
           ...prev.infusion_products,
           {
             product_name: '',
+            dosage: '',
+            dosage_unit: 'mg',
             strength: '',
             diluent_type: '',
+            diluent: '',
             diluent_volume_ml: '',
             duration_hours: '',
             duration_minutes: '',
@@ -263,6 +308,23 @@ const HydrationInfusionForm = forwardRef<
               if (field === 'treatment_duration_days') {
                 updatedProduct.start_date = '';
                 updatedProduct.end_date = '';
+              }
+
+              if (field === 'dosage' || field === 'dosage_unit') {
+                const dVal =
+                  field === 'dosage'
+                    ? value
+                    : product.dosage !== undefined && product.dosage !== null
+                    ? product.dosage
+                    : product.strength || '';
+                const dUnit =
+                  field === 'dosage_unit' ? value : product.dosage_unit || 'mg';
+                updatedProduct.strength = dVal ? `${dVal} ${dUnit}` : '';
+              }
+
+              if (field === 'diluent_type' && value === 'without') {
+                updatedProduct.diluent = '';
+                updatedProduct.diluent_volume_ml = '';
               }
 
               const { tni, treatmentDurationDays } = calculateTni(
@@ -632,23 +694,79 @@ const HydrationInfusionForm = forwardRef<
                 error={errors[`infusion_products[${index}].product_name`]}
               />
 
-              <Input
-                isLocked={readOnly}
-                label={t(STRING.strength)}
-                value={product.strength}
-                onChangeText={value => updateProduct(index, 'strength', value)}
-                placeholder={t(STRING.enterStrength)}
-                style={styles.inputField}
-              />
+              {/* Dosage with mg / ml unit selection */}
+              <View style={styles.dosageContainer}>
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS._1E293B}
+                  font={FONTS.Inter.Medium}
+                  style={styles.fieldLabel}
+                >
+                  {t(STRING.dosage)}
+                </AppText>
+                <View style={styles.dosageRow}>
+                  <View style={styles.dosageInputWrapper}>
+                    <Input
+                      isLocked={readOnly}
+                      value={
+                        product.dosage !== undefined && product.dosage !== null
+                          ? String(product.dosage)
+                          : product.strength || ''
+                      }
+                      isNumberOnly
+                      keyboardType="numeric"
+                      onChangeText={value => {
+                        updateProduct(index, 'dosage', value);
+                        updateProduct(index, 'strength', value);
+                      }}
+                      placeholder="0"
+                      style={styles.dosageInputField}
+                    />
+                  </View>
+                  <View style={styles.unitToggleGroup}>
+                    {DOSAGE_UNITS.map(u => {
+                      const activeUnit = (
+                        product.dosage_unit || 'mg'
+                      ).toLowerCase();
+                      const isSelected = activeUnit === u.toLowerCase();
+                      return (
+                        <TouchableOpacity
+                          key={u}
+                          disabled={readOnly}
+                          activeOpacity={0.7}
+                          onPress={() => updateProduct(index, 'dosage_unit', u)}
+                          style={[
+                            styles.unitToggleBtn,
+                            isSelected && styles.unitToggleBtnActive,
+                          ]}
+                        >
+                          <AppText
+                            size={getScaleSize(13)}
+                            font={FONTS.Inter.SemiBold}
+                            color={isSelected ? COLORS.white : COLORS._526674}
+                          >
+                            {u.toUpperCase() === 'MG' ? 'Mg' : 'ML'}
+                          </AppText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
 
-              <View style={[styles.checkboxGroup, { flexDirection: 'row' }]}>
+              <View
+                style={[
+                  styles.checkboxGroup,
+                  { flexDirection: 'row', marginTop: getScaleSize(6) },
+                ]}
+              >
                 <AppCheckBox
                   disabled={readOnly}
                   value={product.diluent_type === 'with'}
                   onValueChange={value => {
                     updateProduct(index, 'diluent_type', value ? 'with' : '');
                   }}
-                  label={t(STRING.diluent)}
+                  label={t(STRING.withDiluent) || t(STRING.diluent)}
                 />
 
                 <AppCheckBox
@@ -669,17 +787,48 @@ const HydrationInfusionForm = forwardRef<
               </View>
 
               {product.diluent_type === 'with' && (
-                <>
-                  <Input
-                    isLocked={readOnly}
-                    label={t(STRING.diluent)}
-                    value={product.diluent}
-                    onChangeText={value =>
-                      updateProduct(index, 'diluent', value)
-                    }
-                    placeholder={t(STRING.enterDiluent)}
-                    style={styles.inputField}
-                  />
+                <View style={styles.diluentSection}>
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._1E293B}
+                    style={styles.fieldLabel}
+                  >
+                    {t(STRING.diluentType) || 'Diluent'}
+                  </AppText>
+                  <View style={styles.diluentOptionsRow}>
+                    {DILUENT_OPTIONS.map(dOpt => {
+                      const isSelected =
+                        (product.diluent || '').toLowerCase() ===
+                        dOpt.toLowerCase();
+                      return (
+                        <TouchableOpacity
+                          key={dOpt}
+                          disabled={readOnly}
+                          activeOpacity={0.7}
+                          onPress={() =>
+                            updateProduct(
+                              index,
+                              'diluent',
+                              isSelected ? '' : dOpt,
+                            )
+                          }
+                          style={[
+                            styles.diluentPillBtn,
+                            isSelected && styles.diluentPillBtnActive,
+                          ]}
+                        >
+                          <AppText
+                            size={getScaleSize(13)}
+                            font={FONTS.Inter.SemiBold}
+                            color={isSelected ? COLORS.white : COLORS._1A1D1F}
+                          >
+                            {dOpt}
+                          </AppText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
 
                   <Input
                     isLocked={readOnly}
@@ -692,7 +841,7 @@ const HydrationInfusionForm = forwardRef<
                     keyboardType="numeric"
                     style={styles.inputField}
                   />
-                </>
+                </View>
               )}
 
               <Input
@@ -1114,6 +1263,79 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     resizeMode: 'contain',
+  },
+
+  fieldLabel: {
+    marginBottom: getScaleSize(8),
+  },
+  dosageContainer: {
+    marginBottom: getScaleSize(12),
+  },
+  dosageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+  },
+  dosageInputWrapper: {
+    flex: 1,
+  },
+  dosageInputField: {
+    marginBottom: 0,
+    paddingHorizontal: 0,
+  },
+  unitToggleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS._F3F4F6,
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(4),
+    height: getScaleSize(56),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  unitToggleBtn: {
+    paddingHorizontal: getScaleSize(14),
+    height: '100%',
+    borderRadius: getScaleSize(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unitToggleBtnActive: {
+    backgroundColor: COLORS._526674,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  diluentSection: {
+    marginBottom: getScaleSize(12),
+    marginTop: getScaleSize(4),
+  },
+  diluentOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    marginBottom: getScaleSize(12),
+  },
+  diluentPillBtn: {
+    flex: 1,
+    height: getScaleSize(46),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1.5,
+    borderColor: COLORS._E5E7EB,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  diluentPillBtnActive: {
+    backgroundColor: COLORS._526674,
+    borderColor: COLORS._526674,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });
 

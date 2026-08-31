@@ -121,10 +121,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
       activeOpacity={onPress ? 0.7 : 1}
       onPress={onPress}
       disabled={!onPress}
-      style={[
-        styles.requestCardContainer,
-        isPreRequest && styles.preRequestCardBorder,
-      ]}
+      style={styles.requestCardContainer}
     >
       {/* Top Header Row */}
       <View style={styles.requestHeaderRow}>
@@ -254,9 +251,6 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(16),
     padding: getScaleSize(16),
     backgroundColor: COLORS.white,
-  },
-  preRequestCardBorder: {
-    borderColor: '#D0E1FD',
   },
   requestHeaderRow: {
     flexDirection: 'row',

@@ -60,12 +60,17 @@ export const getDoctorsService = async (
   });
 };
 
+export const getDepartmentListService = async () => {
+  return API.Instance.get(API.API_ROUTES.departmentList);
+};
+
 export const getProvidersService = async (
   page: number,
   size: number,
   search?: string,
   lang?: string,
   serviceId?: string,
+  departmentCode?: string,
 ) => {
   const params: any = { page, size };
 
@@ -79,6 +84,10 @@ export const getProvidersService = async (
 
   if (serviceId) {
     params.serviceId = serviceId;
+  }
+
+  if (departmentCode && departmentCode.trim()) {
+    params.departmentCode = departmentCode.trim();
   }
 
   return API.Instance.get(API.API_ROUTES.getProviders, {

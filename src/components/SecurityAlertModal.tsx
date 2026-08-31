@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, Image } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Image,
+  Dimensions,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import AppText from './AppText';
@@ -28,7 +35,9 @@ const SecurityAlertModal: React.FC<SecurityAlertModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      statusBarTranslucent
+      statusBarTranslucent={true}
+      navigationBarTranslucent={true}
+      hardwareAccelerated
       onRequestClose={onCancel}
     >
       <View style={styles.overlay}>
@@ -103,6 +112,9 @@ export default SecurityAlertModal;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    minHeight: Dimensions.get('screen').height,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
