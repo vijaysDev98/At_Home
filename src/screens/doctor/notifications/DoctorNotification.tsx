@@ -176,9 +176,9 @@ const DoctorNotification: React.FC = () => {
   const getNotificationIcon = (type: string, forReview: boolean = false) => {
     switch (type) {
       case 'preRequestAccepted':
-        return IMAGES.serviceClaimed;
+        return IMAGES.ic_approved_prerequest;
       case 'preRequestRejected':
-        return IMAGES.serviceCancelled;
+        return IMAGES.ic_rejected_prerequest;
       case 'preRequestDelegated':
       case 'delegateFormToProvider':
         return IMAGES.alert_formUpdate;
@@ -233,6 +233,7 @@ const DoctorNotification: React.FC = () => {
           notificationType === 'preRequestRejected';
         NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
           request: reqData,
+          requestId: reqData?.id || reqData?._id || targetRequestId,
           isEdit: true,
           isAccepted,
           isRejected,

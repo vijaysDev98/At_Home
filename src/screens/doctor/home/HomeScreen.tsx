@@ -7,24 +7,18 @@ import {
   View,
   RefreshControl,
   Platform,
-  Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppSafeAreaView, AppText, ProfileAvatar } from '../../../components';
-import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
-import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import NavigationService from '../../../navigation/NavigationService';
-import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
+import { SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { ActionSheetRef } from 'react-native-actions-sheet';
-import { PreRequestDetailSheet } from '../../../components/ActionSheets';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { getButtonConfig } from '../../../constant';
 import { dashboardApi } from '../../../services/dashboard';
 import { useTranslation } from 'react-i18next';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
@@ -39,32 +33,6 @@ import {
 } from '../../../constant/services';
 
 // Dashboard interfaces
-interface DashboardPatient {
-  id: string;
-  fullName: string;
-}
-
-interface DashboardService {
-  id: string;
-  serviceName: string;
-}
-
-interface DashboardRecentQueue {
-  id: string;
-  requestId: string;
-  status: string;
-  formStatus: string;
-  updatedAt: string;
-  patient?: DashboardPatient | null;
-  service?: DashboardService | null;
-  isPreRequest?: boolean;
-  preRequestStatus?: string;
-  initialNotes?: string;
-  voiceMessageUrl?: string | null;
-  priorityLevel?: string;
-  assignedProvider?: any;
-}
-
 interface DashboardRequestsOverview {
   inProgressCount: number;
   submittedCount: number;
@@ -85,7 +53,6 @@ interface DashboardData {
   requestsOverview?: DashboardRequestsOverview;
   actionRequired?: DashboardActionRequired;
   patients?: DashboardPatients;
-  recentQueue?: DashboardRecentQueue[];
   serviceWiseCount?: Record<string, number>;
   serviceCounts?: Record<string, number>;
   servicesOverview?: Record<string, number>;
@@ -100,7 +67,6 @@ const HomeScreen: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
-  const preRequestDetailSheetRef = React.useRef<ActionSheetRef>(null);
 
   const doctorName =
     (profileData?.fName || '') + ' ' + (profileData?.lName || '');
@@ -160,8 +126,6 @@ const HomeScreen: React.FC = () => {
   const displayedServices = showAllServices
     ? MASTER_SERVICES_LIST
     : MASTER_SERVICES_LIST.slice(0, 6);
-
-  const recentQueue = dashboardData?.recentQueue || [];
 
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
@@ -454,169 +418,8 @@ const HomeScreen: React.FC = () => {
               </AppText>
             </TouchableOpacity>
           </View>
-
-          {/* Recent Queue Section */}
-          <View style={styles.recentQueueSection}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1A1A}
-              style={styles.sectionTitle}
-            >
-              {t(STRING.recentQueue)}
-            </AppText>
-            {recentQueue.length > 0 ? (
-              recentQueue.map((item: DashboardRecentQueue, index: number) => {
-                const isPreReq = Boolean(
-                  item.isPreRequest === true ||
-                    (item.isPreRequest === undefined &&
-                      !item.patient &&
-                      !item.service &&
-                      Boolean(item.preRequestStatus)),
-                );
-                const isAcceptedPreReq =
-                  isPreReq &&
-                  (item?.preRequestStatus === 'accepted' ||
-                    item?.status === 'accepted' ||
-                    (item as any)?.formStatus === 'accepted');
-                const formStatus =
-                  item.formStatus || item.preRequestStatus || item.status;
-                const isDelegated = !!(item as any)?.delegateFormToProvider;
-                const provider =
-                  (item as any)?.assignedProvider ||
-                  (item as any)?.provider ||
-                  (item as any)?.acceptedBy;
-                const providerName =
-                  provider?.fullName ||
-                  provider?.providerName ||
-                  (provider?.fName
-                    ? `${provider.fName} ${provider.lName || ''}`.trim()
-                    : null);
-
-                const buttonConfig: {
-                  show: boolean;
-                  label?: string | null;
-                  action?: string | null;
-                } = isAcceptedPreReq
-                  ? isDelegated
-                    ? { show: false }
-                    : {
-                        show: true,
-                        label: STRING.completeRequest,
-                        action: 'completeRequest',
-                      }
-                  : isPreReq
-                  ? {
-                      show: false,
-                    }
-                  : getButtonConfig(formStatus, item.status);
-
-                const handleAcceptedPreRequestPress = () => {
-                  NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
-                    request: item,
-                    isEdit: true,
-                    isAccepted: true,
-                  });
-                };
-
-                return (
-                  <View key={item.id || index} style={styles.queueCardWrapper}>
-                    <RequestCardDoctor
-                      name={
-                        item.patient?.fullName ||
-                        (isPreReq
-                          ? t(STRING.preRequest) ||
-                            'Pre-Request'
-                          : '')
-                      }
-                      requestId={item.requestId}
-                      requestType={isPreReq ? '' : (item.service?.serviceName || '')}
-                      formStatus={formStatus}
-                      status={item.status}
-                      isPreRequest={isPreReq}
-                      preRequestStatus={item.preRequestStatus}
-                      voiceMessageUrl={item.voiceMessageUrl}
-                      initialNotes={item.initialNotes}
-                      priorityLevel={item.priorityLevel}
-                      delegateFormToProvider={isDelegated}
-                      providerName={providerName}
-                      providerSpecialty={
-                        provider?.specialty || provider?.profession
-                      }
-                      buttonText={
-                        buttonConfig.show
-                          ? t(buttonConfig.label || '') || undefined
-                          : undefined
-                      }
-                      onPress={() => {
-                        if (isAcceptedPreReq) {
-                          handleAcceptedPreRequestPress();
-                          return;
-                        }
-
-                        if (isPreReq) {
-                          (preRequestDetailSheetRef.current as any)?.show(item);
-                          return;
-                        }
-
-                        if (item.status === REQUEST_STATUS.COMPLETED) {
-                          NavigationService.navigate(
-                            SCREENS.SERVICE_COMPLETED,
-                            { request: item },
-                          );
-                          return;
-                        }
-                        NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                          request: item,
-                          action: 'view',
-                        });
-                      }}
-                      onButtonPress={() => {
-                        if (isAcceptedPreReq) {
-                          handleAcceptedPreRequestPress();
-                          return;
-                        }
-                        if (buttonConfig.action === 'edit') {
-                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                            request: item,
-                            action: buttonConfig.action,
-                          });
-                        } else if (buttonConfig.action === 'sign') {
-                          NavigationService.navigate(
-                            SCREENS.FORM_REVIEW_SCREEN,
-                            {
-                              request: item,
-                              action: buttonConfig.action,
-                            },
-                          );
-                        } else {
-                          NavigationService.navigate(SCREENS.FORMS_SCREEN, {
-                            request: item,
-                            action: 'view',
-                          });
-                        }
-                      }}
-                    />
-                  </View>
-                );
-              })
-            ) : (
-              <View style={styles.emptyQueueBox}>
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                >
-                  {t(STRING.noRecentRequests)}
-                </AppText>
-              </View>
-            )}
-          </View>
         </ScrollView>
       </View>
-
-      {/* Pre-Request Detail Bottom Sheet */}
-      <PreRequestDetailSheet ref={preRequestDetailSheetRef} />
     </AppSafeAreaView>
   );
 };
@@ -906,22 +709,6 @@ const styles = StyleSheet.create({
     height: getScaleSize(28),
     resizeMode: 'contain',
     tintColor: COLORS._48B02C,
-  },
-  recentQueueSection: {
-    marginTop: getScaleSize(20),
-  },
-  sectionTitle: {
-    paddingHorizontal: getScaleSize(20),
-    marginBottom: getScaleSize(14),
-  },
-  queueCardWrapper: {
-    marginHorizontal: getScaleSize(20),
-    marginBottom: getScaleSize(12),
-  },
-  emptyQueueBox: {
-    marginHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(20),
-    alignItems: 'center',
   },
 });
 

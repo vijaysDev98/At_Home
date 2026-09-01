@@ -21,3 +21,50 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Gradle 9 + AGP treat typedefs.txt as a required input of sync*LibJars.
+// Many RN libraries (e.g. @react-native-picker/picker) have no typedef
+// annotations, so extract*Annotations never writes that file and the
+// release build fails. Create an empty placeholder when it is missing.
+def ensureTypedefRecipeFile = { project ->
+    if (!project.plugins.hasPlugin("com.android.library")) {
+        return
+    }
+    project.android.libraryVariants.all { variant ->
+        def cap = variant.name.capitalize()
+        def typedefFile = new File(
+            project.buildDir,
+            "intermediates/annotations_typedef_file/${variant.name}/extract${cap}Annotations/typedefs.txt"
+        )
+        if (!typedefFile.exists()) {
+            typedefFile.parentFile.mkdirs()
+            typedefFile.createNewFile()
+        }
+    }
+}
+
+subprojects { subproject ->
+    if (subproject.state.executed) {
+        ensureTypedefRecipeFile(subproject)
+    } else {
+        subproject.afterEvaluate { ensureTypedefRecipeFile(subproject) }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    graph.allTasks.each { task ->
+        if (task.name ==~ /sync.*LibJars/ && task.hasProperty("typedefRecipe")) {
+            try {
+                def recipe = task.property("typedefRecipe")
+                if (recipe != null && recipe.present) {
+                    def file = recipe.get().asFile
+                    if (!file.exists()) {
+                        file.parentFile.mkdirs()
+                        file.createNewFile()
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+}

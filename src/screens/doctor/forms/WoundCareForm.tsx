@@ -52,6 +52,7 @@ import {
 } from './formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 export interface WoundCareFormProps {
   serviceId?: string;
@@ -178,6 +179,8 @@ const WoundCareForm = forwardRef<WoundCareFormRef, WoundCareFormProps>(
         }));
       }
     }, [initialData]);
+
+    usePrescriberFieldSync(setState, prescriberData, initialData);
 
     // Update patient fields when selectedPatient changes (e.g., after editing patient)
     useEffect(() => {

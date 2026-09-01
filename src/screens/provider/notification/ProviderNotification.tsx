@@ -158,6 +158,7 @@ const ProviderNotification: React.FC = () => {
         return IMAGES.serviceClaimed;
       case 'preRequestSubmission':
       case 'preRequestAssignment':
+        return IMAGES.ic_file_notification;
       case 'preRequestDetailsUpdated':
       case 'formDelegated':
       case 'serviceProviderAssignment':

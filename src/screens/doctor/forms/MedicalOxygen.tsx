@@ -56,6 +56,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 export interface MedicalOxygenProps {
   serviceId?: string;
@@ -178,6 +179,8 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         }));
       }
     }, [initialData, selectedPatient]);
+
+    usePrescriberFieldSync(setState, prescriberData, initialData);
 
     // Wrapper setter that clears errors immediately on any change
     const setFormState = (updaterOrPartial: any): void => {

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { serviceRequestApi } from '../services/serviceRequestApi';
-import { Alert } from 'react-native';
 
 interface UseFormLockRefreshProps {
   requestId?: string;
@@ -121,13 +121,22 @@ export const useFormLockRefresh = ({
   }, [enabled, requestId, ownsLock, readOnly]);
 
   /**
-   * Release on unmount only
+   * Release when the screen loses focus or unmounts so the
+   * request is not left locked under this user after navigation.
    */
-  useEffect(() => {
-    return () => {
-      if (requestId && ownsLock) {
-        serviceRequestApi.releaseFormLock(requestId);
-      }
-    };
-  }, [requestId, ownsLock]);
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        hasAttemptedAcquireRef.current = false;
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        if (requestId && ownsLock) {
+          serviceRequestApi.releaseFormLock(requestId);
+          setOwnsLock(false);
+        }
+      };
+    }, [requestId, ownsLock]),
+  );
 };

@@ -86,6 +86,11 @@ export const handleFormSubmit = async (params: FormActionParams) => {
         dispatch(setLoading(false));
 
         if (response.success) {
+          try {
+            await serviceRequestApi.releaseFormLock(preRequestId);
+          } catch (e) {
+            // Non-fatal — request was converted even if unlock fails
+          }
           SHOW_SUCCESS_TOAST(
             response.message || 'Form saved successfully',
           );
@@ -117,6 +122,11 @@ export const handleFormSubmit = async (params: FormActionParams) => {
       dispatch(setLoading(false));
 
       if (response.success) {
+        try {
+          await serviceRequestApi.releaseFormLock(preRequestId);
+        } catch (e) {
+          // Non-fatal — request was converted even if unlock fails
+        }
         SHOW_SUCCESS_TOAST(
           response.message || 'Pre-request updated successfully',
         );

@@ -42,7 +42,10 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { useTranslation } from 'react-i18next';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import FastImage from 'react-native-fast-image';
-import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import {
+  capitalizeFirstLetter,
+  isDelegatedToProvider,
+} from '../../../constant/smallFunctions';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -395,7 +398,7 @@ const ProviderHome: React.FC = () => {
                 (item?.preRequestStatus === 'accepted' ||
                   item?.status === 'accepted');
 
-              const isDelegated = !!(item as any)?.delegateFormToProvider;
+              const isDelegated = isDelegatedToProvider(item);
 
               const buttonConfig = isAcceptedPreReq
                 ? isDelegated
@@ -438,6 +441,7 @@ const ProviderHome: React.FC = () => {
                     doctorName={doctorName}
                     doctorSpecialty={doctor?.specialty}
                     delegateFormToProvider={isDelegated}
+                    request={item}
                     buttonText={
                       buttonConfig.show && buttonConfig.label
                         ? t(buttonConfig.label)

@@ -11,6 +11,7 @@ import {
   PermissionsAndroid,
   AppState,
   AppStateStatus,
+  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -63,21 +64,32 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   );
   const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
 
+  const assignedProvider =
+    typeof editRequest?.assignedProviderId === 'object'
+      ? editRequest.assignedProviderId
+      : null;
+  const assignedProviderId =
+    assignedProvider?._id ||
+    assignedProvider?.id ||
+    (typeof editRequest?.assignedProviderId === 'string'
+      ? editRequest.assignedProviderId
+      : null);
+
   const fetchPreRequestDetails = async () => {
     const targetId =
       route.params?.requestId ||
       route.params?.request?.id ||
       route.params?.request?._id ||
-      route.params?.request?.requestId ||
       editRequest?.id ||
-      editRequest?._id ||
-      editRequest?.requestId;
+      editRequest?._id;
 
     if (!targetId) return;
     try {
       setIsLoadingDetails(true);
       const data = await serviceRequestApi.getServiceRequestDetails(targetId);
       if (data) {
+        console.log("dataaa",data);
+        
         setEditRequest(data);
         if (data.initialNotes) {
           setInstructionsText(data.initialNotes);
@@ -390,23 +402,39 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const hasText = instructionsText.trim().length > 0;
   const canSubmit = isAccepted || hasVoice || hasText;
 
+  const handleCallAssignedProvider = (phone?: string | null) => {
+    if (phone) {
+      Linking.openURL(`tel:${phone}`).catch(() => {
+        SHOW_TOAST(
+          t(STRING.unableToOpenPhoneDialer) || 'Unable to open phone dialer',
+          'error',
+        );
+      });
+    } else {
+      SHOW_TOAST(
+        t(STRING.noProviderPhoneNumberAvailable) ||
+          'No phone number available for this provider',
+        'info',
+      );
+    }
+  };
+
+  const handleChatAssignedProvider = () => {
+    SHOW_TOAST(
+      t(STRING.chatUnderDevelopment) ||
+        'Chat feature is under development and will be available soon!',
+      'info',
+    );
+  };
+
   // Handle submit button click
   const handleSubmitPress = () => {
     if (isAccepted) {
-      const assignedProviderId =
-        editRequest?.assignedProvider?._id ||
-        editRequest?.assignedProvider?.id ||
-        editRequest?.provider?._id ||
-        editRequest?.provider?.id ||
-        editRequest?.assignedProviderId ||
-        editRequest?.providerId;
-
       NavigationService.navigate(SCREENS.CREATE_REQUEST, {
         preRequest: editRequest,
         preRequestId:
           editRequest?.id || editRequest?._id || editRequest?.requestId,
-        assignedProvider:
-          editRequest?.assignedProvider || editRequest?.provider,
+        assignedProvider,
         assignedProviderId,
       });
       return;
@@ -424,20 +452,15 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
     // When editing normally (and NOT rejected), directly submit keeping whatever it was earlier!
     if (isEdit && !isRejected) {
-      const prevProviderId =
-        editRequest?.providerId ||
-        editRequest?.assignedProviderId ||
-        editRequest?.provider?.id ||
-        editRequest?.provider?._id;
-
-      const recipientType = prevProviderId ? 'specific' : 'all';
-      const providerObj = prevProviderId
+      const recipientType = assignedProviderId ? 'specific' : 'all';
+      const providerObj = assignedProviderId
         ? ({
-            id: prevProviderId,
+            ...assignedProvider,
+            id: assignedProviderId,
             fullName:
-              editRequest?.provider?.fullName ||
-              editRequest?.provider?.name ||
-              '',
+              assignedProvider?.fullName ||
+              assignedProvider?.providerName ||
+              `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim(),
           } as Provider)
         : undefined;
 
@@ -764,45 +787,26 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
         {/* Accepted, Rejected, or Delegated Provider Card */}
         {(() => {
-          const provider =
-            editRequest?.assignedProvider ||
-            editRequest?.provider ||
-            editRequest?.acceptedBy ||
-            editRequest?.claimedBy ||
-            route.params?.request?.assignedProvider ||
-            route.params?.request?.provider;
           const isDelegated = !!editRequest?.delegateFormToProvider;
 
-          if (!provider && !isAccepted && !isRejected && !isDelegated) {
+          if (!assignedProvider && !isAccepted && !isRejected && !isDelegated) {
             return null;
           }
 
           const providerName =
-            (typeof provider === 'object'
-              ? provider?.fullName ||
-                provider?.providerName ||
-                `${provider?.fName || ''} ${provider?.lName || ''}`.trim()
-              : null) ||
-            editRequest?.providerName ||
-            editRequest?.assignedProviderName ||
+            assignedProvider?.fullName ||
+            assignedProvider?.providerName ||
+            `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim() ||
             (isDelegated
               ? t(STRING.assignedProvider) || 'Assigned Provider'
               : 'Healthcare Provider');
 
-          const profileImg =
-            typeof provider === 'object'
-              ? provider?.profileImg || provider?.profileImage
-              : null;
-          const specialty =
-            typeof provider === 'object'
-              ? provider?.specialty || provider?.profession
-              : null;
-          const phoneNumber =
-            typeof provider === 'object'
-              ? provider?.phoneNumber || provider?.phone
-              : null;
-          const email =
-            typeof provider === 'object' ? provider?.email : null;
+          const profileImg = assignedProvider?.profileImg;
+          const specialty = assignedProvider?.specialty;
+          const phoneNumber = assignedProvider?.phoneNumber;
+          const email = assignedProvider?.email;
+          const canContactProvider =
+            (isAccepted || isDelegated) && !isRejected;
 
           return (
             <View style={styles.assignedProviderCard}>
@@ -942,6 +946,46 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                   )}
                 </View>
               </View>
+
+              {canContactProvider && (
+                <View style={styles.assignedProviderActionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.assignedProviderActionBtnChat}
+                    onPress={handleChatAssignedProvider}
+                  >
+                    <Image
+                      source={IMAGES.mail}
+                      style={styles.assignedProviderActionIconChat}
+                    />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.primary}
+                    >
+                      {t(STRING.chatNow) || 'Chat Now'}
+                    </AppText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.assignedProviderActionBtnCall}
+                    onPress={() => handleCallAssignedProvider(phoneNumber)}
+                  >
+                    <Image
+                      source={IMAGES.phone}
+                      style={styles.assignedProviderActionIconCall}
+                    />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.white}
+                    >
+                      {t(STRING.callNow) || 'Call Now'}
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           );
         })()}
@@ -988,7 +1032,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       color={COLORS._6F767E}
                       style={{ marginTop: getScaleSize(8) }}
                     >
-                      No voice instructions recorded
+                      {t(STRING.noVoiceInstructionsRecorded)}
                     </AppText>
                   </View>
                 ) : (
@@ -1511,6 +1555,49 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: getScaleSize(12),
     justifyContent: 'center',
+  },
+  assignedProviderActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    marginTop: getScaleSize(14),
+    paddingTop: getScaleSize(12),
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  assignedProviderActionBtnChat: {
+    flex: 1,
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+  },
+  assignedProviderActionIconChat: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: COLORS.primary,
+    resizeMode: 'contain',
+  },
+  assignedProviderActionBtnCall: {
+    flex: 1,
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(10),
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(8),
+  },
+  assignedProviderActionIconCall: {
+    width: getScaleSize(15),
+    height: getScaleSize(15),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
   },
   providerMetaRow: {
     flexDirection: 'row',

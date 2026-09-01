@@ -39,6 +39,7 @@ import { useRoute, useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { PreRequestDetailSheet } from '../../../components/ActionSheets';
+import { isDelegatedToProvider } from '../../../constant/smallFunctions';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -265,7 +266,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           (item as any)?.formStatus === 'accepted');
       const formStatus =
         item?.formStatus || item?.preRequestStatus || item?.status;
-      const isDelegated = !!(item as any)?.delegateFormToProvider;
+      const isDelegated = isDelegatedToProvider(item);
       const provider =
         (item as any)?.assignedProvider ||
         (item as any)?.provider ||

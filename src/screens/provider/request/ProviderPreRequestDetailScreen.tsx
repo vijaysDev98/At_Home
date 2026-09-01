@@ -43,9 +43,12 @@ import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { ServiceRequest } from '../../../services/serviceRequestListApi';
+import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 
 export const ProviderPreRequestDetailScreen: React.FC = () => {
   const route = useRoute();
+  console.log("routeeee",route.params);
+  
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
 
@@ -224,6 +227,8 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
       setHasError(false);
       const data = await serviceRequestApi.getPreClaimDetails(requestId);
       if (data) {
+        console.log("dataaaa",data);
+        
         setRequestData(data);
       } else {
         // Fallback to getServiceRequestDetails if pre-claim returns null
@@ -341,10 +346,17 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
 
   // Doctor / Physician Info
   const doctor =
-    (requestData as any)?.doctor || (requestData as any)?.doctorId;
+    (requestData as any)?.doctor ||
+    (typeof (requestData as any)?.doctorId === 'object'
+      ? (requestData as any)?.doctorId
+      : null) ||
+    (typeof (requestData as any)?.createdBy === 'object'
+      ? (requestData as any)?.createdBy
+      : null) ;
   const doctorName =
-    doctor?.fullName ||
-    (doctor ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim() : null) ||
+    (doctor
+      ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim()
+      : null) ||
     (requestData as any)?.doctorName;
   const doctorPhone =
     doctor?.phoneNumber ||
@@ -353,6 +365,10 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
     doctor?.contactNumber ||
     (requestData as any)?.doctorPhone ||
     '';
+  const canContactDoctor =
+    effectiveStatus === 'accepted' ||
+    requestData?.preRequestStatus === 'accepted' ||
+    !!requestData?.delegateFormToProvider;
 
   const handleCall = () => {
     if (doctorPhone) {
@@ -509,6 +525,11 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
                 <View style={styles.doctorInfoRow}>
                   <ProfileAvatar
                     name={doctorName}
+                    imageUrl={
+                      doctor?.profileImg
+                        ? IMAGE_BASE_URL + doctor.profileImg
+                        : undefined
+                    }
                     size="medium"
                     backgroundColor="#e8edf1"
                   />
@@ -556,44 +577,45 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
                   </View>
                 </View>
 
-                {/* Quick Actions: Chat Now & Call Now */}
-                <View style={styles.doctorActionsRow}>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.doctorActionBtnChat}
-                    onPress={handleChat}
-                  >
-                    <Image
-                      source={IMAGES.mail}
-                      style={styles.doctorActionIconChat}
-                    />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS.primary}
+                {canContactDoctor && (
+                  <View style={styles.doctorActionsRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.doctorActionBtnChat}
+                      onPress={handleChat}
                     >
-                      {t(STRING.chatNow) || 'Chat Now'}
-                    </AppText>
-                  </TouchableOpacity>
+                      <Image
+                        source={IMAGES.mail}
+                        style={styles.doctorActionIconChat}
+                      />
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                      >
+                        {t(STRING.chatNow) || 'Chat Now'}
+                      </AppText>
+                    </TouchableOpacity>
 
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.doctorActionBtnCall}
-                    onPress={handleCall}
-                  >
-                    <Image
-                      source={IMAGES.phone}
-                      style={styles.doctorActionIconCall}
-                    />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS.white}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.doctorActionBtnCall}
+                      onPress={handleCall}
                     >
-                      {t(STRING.callNow) || 'Call Now'}
-                    </AppText>
-                  </TouchableOpacity>
-                </View>
+                      <Image
+                        source={IMAGES.phone}
+                        style={styles.doctorActionIconCall}
+                      />
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.white}
+                      >
+                        {t(STRING.callNow) || 'Call Now'}
+                      </AppText>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             )}
 

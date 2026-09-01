@@ -436,8 +436,7 @@ const FormsScreen: React.FC = () => {
                       patient={patientData}
                       prescriber={
                         (requestData as any)?.doctor ||
-                        (requestData as any)?.doctorId ||
-                        (requestData as any)?.doctorInfo
+                        (requestData as any)?.doctorId 
                       }
                       readOnly={readOnly}
                     />

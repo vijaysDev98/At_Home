@@ -112,5 +112,8 @@ export const IMAGES = {
   ic_mic: require('./ic_mic.png'),
   ic_pause: require('./ic_pause.png'),
   ic_provider: require('./ic_provider.png'),
-  appLogo_color: require('./appLogo_color.png')
+  appLogo_color: require('./appLogo_color.png'),
+  ic_file_notification: require('./ic_file_notification.png'),
+  ic_approved_prerequest: require('./ic_approved_prerequest.png'),
+  ic_rejected_prerequest: require('./ic_rejected_prerequest.png'),
 };

@@ -70,6 +70,7 @@ export interface ServiceRequest {
   patient?: PatientInfo | null;
   service?: ServiceInfo | null;
   assignedProvider?: any;
+  delegateFormToProvider?: boolean;
 }
 
 // ===== FOR DETAILED VIEW (FormsScreen after API fetch) =====

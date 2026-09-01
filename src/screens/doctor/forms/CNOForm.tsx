@@ -57,6 +57,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 const CNO_REASSESSMENT_CRITERIA = [
   STRING.weight,
@@ -187,6 +188,8 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
         }));
       }
     }, [initialData]);
+
+    usePrescriberFieldSync(setState, prescriberData, initialData);
 
     // Update patient fields when selectedPatient changes (e.g., after editing patient)
     React.useEffect(() => {

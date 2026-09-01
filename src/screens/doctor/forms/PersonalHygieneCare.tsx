@@ -36,6 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 export interface PersonalHygieneCareProps {
   serviceId?: string;
@@ -171,6 +172,8 @@ const PersonalHygieneCare = forwardRef<
       setState(initialData?.formData as any);
     }
   }, [initialData]);
+
+  usePrescriberFieldSync(setState, prescriberData, initialData);
 
   // Update patient fields when selectedPatient changes (e.g., after editing patient)
   useEffect(() => {

@@ -114,8 +114,7 @@ const FormReviewScreen: React.FC = () => {
 
       const data = await serviceRequestApi.getServiceRequestDetails(
         requestId || '',
-      );
-
+      );      
       if (data) {
         setRequestData(data);
       } else {
@@ -200,8 +199,7 @@ const FormReviewScreen: React.FC = () => {
                       patient={patientData}
                       prescriber={
                         (requestData as any)?.doctor ||
-                        (requestData as any)?.doctorId ||
-                        (requestData as any)?.doctorInfo
+                        (requestData as any)?.doctorId 
                       }
                       readOnly={isReadOnly}
                     />

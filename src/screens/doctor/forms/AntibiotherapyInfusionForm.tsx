@@ -55,6 +55,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 export interface AntibiotherapyInfusionFormProps {
   serviceId: string;
@@ -182,6 +183,9 @@ const AntibiotherapyInfusionForm = forwardRef<
     ],
   });
 
+  console.log("state",state);
+  
+
   useEffect(() => {
     if (initialData && initialData.formData) {
       const initialFormData: any = initialData.formData;
@@ -234,6 +238,8 @@ const AntibiotherapyInfusionForm = forwardRef<
       }));
     }
   }, [selectedPatient, initialData]);
+
+  usePrescriberFieldSync(setState, prescriberData, initialData);
 
   // Validation errors state
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -477,6 +483,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                   : product.strength || '';
               const dUnit =
                 field === 'dosage_unit' ? value : product.dosage_unit || 'mg';
+              updatedProduct.dosage_unit = dUnit;
               updatedProduct.strength = dVal ? `${dVal} ${dUnit}` : '';
             }
 
@@ -699,7 +706,6 @@ const AntibiotherapyInfusionForm = forwardRef<
                     keyboardType="numeric"
                     onChangeText={value => {
                       updateProduct(index, 'dosage', value);
-                      updateProduct(index, 'strength', value);
                     }}
                     placeholder="0"
                     style={styles.dosageInputField}

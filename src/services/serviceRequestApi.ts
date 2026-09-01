@@ -35,8 +35,13 @@ export const serviceRequestApi = {
    * Get service request details by ID
    * Handles loader and error toasts internally. Returns data or null.
    */
-  getServiceRequestDetails: async (requestId: string): Promise<any> => {
-    store.dispatch(setLoading(true));
+  getServiceRequestDetails: async (
+    requestId: string,
+    options?: { silent?: boolean },
+  ): Promise<any> => {
+    if (!options?.silent) {
+      store.dispatch(setLoading(true));
+    }
     try {
       const response: any = await API.Instance.get(
         `/service-requests/${requestId}`,
@@ -44,17 +49,23 @@ export const serviceRequestApi = {
       if (response?.status) {
         return response.data.data;
       } else {
-        SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        if (!options?.silent) {
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        }
         return null;
       }
     } catch (error: any) {
-      SHOW_TOAST(
-        error?.message || 'Failed to fetch service request details',
-        'error',
-      );
+      if (!options?.silent) {
+        SHOW_TOAST(
+          error?.message || 'Failed to fetch service request details',
+          'error',
+        );
+      }
       return null;
     } finally {
-      store.dispatch(setLoading(false));
+      if (!options?.silent) {
+        store.dispatch(setLoading(false));
+      }
     }
   },
 

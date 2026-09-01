@@ -57,6 +57,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../../../constant/getCountryCode';
+import { usePrescriberFieldSync } from './prescriberFormFields';
 
 export interface HydrationInfusionFormProps {
   title?: string;
@@ -251,6 +252,8 @@ const HydrationInfusionForm = forwardRef<
       }
     }, [initialData, selectedPatient]);
 
+    usePrescriberFieldSync(setState, prescriberData, initialData);
+
     const addProduct = () => {
       if (state.infusion_products.length >= 10) {
         SHOW_TOAST(t(STRING.youCanOnlyAddUpto10Products), 'info');
@@ -319,6 +322,7 @@ const HydrationInfusionForm = forwardRef<
                     : product.strength || '';
                 const dUnit =
                   field === 'dosage_unit' ? value : product.dosage_unit || 'mg';
+                updatedProduct.dosage_unit = dUnit;
                 updatedProduct.strength = dVal ? `${dVal} ${dUnit}` : '';
               }
 
@@ -717,7 +721,6 @@ const HydrationInfusionForm = forwardRef<
                       keyboardType="numeric"
                       onChangeText={value => {
                         updateProduct(index, 'dosage', value);
-                        updateProduct(index, 'strength', value);
                       }}
                       placeholder="0"
                       style={styles.dosageInputField}

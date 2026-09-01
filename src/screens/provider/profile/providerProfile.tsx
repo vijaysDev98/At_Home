@@ -51,6 +51,7 @@ const ProviderProfile: React.FC = () => {
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+console.log("provider profile data", profileData);
 
   const { currentLanguage } = useSelector((state: RootState) => state.language);
 

@@ -45,6 +45,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { handleClaimService } from '../../doctor/forms/formActionHandlers';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
+import { isDelegatedToProvider } from '../../../constant/smallFunctions';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
 
@@ -181,7 +182,7 @@ const ProviderRequests = () => {
       isPreReq &&
       (item?.preRequestStatus === 'accepted' || item?.status === 'accepted');
 
-    const isDelegated = !!(item as any)?.delegateFormToProvider;
+    const isDelegated = isDelegatedToProvider(item);
 
     const buttonConfig = isAcceptedPreReq
       ? isDelegated
@@ -217,6 +218,7 @@ const ProviderRequests = () => {
           doctorName={doctorName}
           doctorSpecialty={doctor?.specialty}
           delegateFormToProvider={isDelegated}
+          request={item}
           buttonText={
             buttonConfig.show && buttonConfig.label
               ? t(buttonConfig.label)

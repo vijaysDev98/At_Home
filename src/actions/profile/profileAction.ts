@@ -55,6 +55,7 @@ export const updateProfile =
       const payload = fromProvider
         ? {
             providerName,
+            fullName: providerName,
             // fName: firstName,
             // lName: lastName,
             profileImg,

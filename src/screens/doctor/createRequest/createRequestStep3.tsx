@@ -120,8 +120,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
             const doc =
               details.doctor ||
               details.doctorId ||
-              details.createdBy ||
-              details.doctorInfo;
+              details.createdBy 
             if (doc && typeof doc === 'object') {
               setDoctorData(doc);
             }
@@ -292,9 +291,7 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
                   initialData={initialData}
                   patient={patient}
                   prescriber={
-                    role === ROLES.PROVIDER
-                      ? doctorData || selectedDoctor
-                      : selectedDoctor || profileData
+                    doctorData || selectedDoctor || profileData
                   }
                 />
               </View>

@@ -560,7 +560,7 @@ const Register: React.FC = () => {
             label={t(STRING.businessAddress)}
             isMandatory
             placeholder={t(STRING.streetAddressCityPostalCode)}
-            leftIcon={IMAGES.location_pin}
+            leftIcon={IMAGES.ic_pin}
             value={address}
             onChangeText={t => {
               setAddress(t);
