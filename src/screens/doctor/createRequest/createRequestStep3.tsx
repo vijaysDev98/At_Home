@@ -308,24 +308,25 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
 
         {/* Floating Bottom Buttons */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.saveBtn}
-            onPress={handleLeftButtonPress}
-          >
-            <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-              // numberOfLines={1}
-              align="center"
+          {!isFillFormFlow && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.saveBtn}
+              onPress={handleLeftButtonPress}
             >
-              {leftButtonLabel}
-            </AppText>
-          </TouchableOpacity>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                align="center"
+              >
+                {leftButtonLabel}
+              </AppText>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.submitBtn}
+            style={[styles.submitBtn, isFillFormFlow && { flex: 1 }]}
             onPress={handleRightButtonPress}
           >
             <AppText

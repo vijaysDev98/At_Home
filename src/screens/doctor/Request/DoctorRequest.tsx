@@ -312,6 +312,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           initialNotes={item.initialNotes}
           priorityLevel={item.priorityLevel}
           delegateFormToProvider={isDelegated}
+          request={item}
           providerName={providerName}
           providerSpecialty={provider?.specialty || provider?.profession}
           buttonText={

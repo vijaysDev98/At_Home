@@ -495,8 +495,10 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           delegateFormToProvider: true,
         }));
         setTimeout(() => {
-          NavigationService.goBack();
-        }, 600);
+          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+            screen: SCREENS.DOCTOR_REQUEST,
+          });
+        }, 500);
       } else {
         SHOW_TOAST(
           response.error ||

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,7 +12,6 @@ import { COLORS, FONTS } from '../utils';
 import AppButton from './AppButton';
 import {
   DISPLAY_FORM_STATUS,
-  REQUEST_STATUS,
   getStatusBadgeColor,
   getStatusBadgeBgColor,
 } from '../constant/RequestStatus';
@@ -20,6 +19,8 @@ import ProfileAvatar from './ProfileAvatar';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
 import { IMAGES } from '../assets/images';
+import { isDelegatedToProvider } from '../constant/smallFunctions';
+import { serviceRequestApi } from '../services/serviceRequestApi';
 
 interface RequestCardProps {
   name?: string;
@@ -39,6 +40,7 @@ interface RequestCardProps {
   delegateFormToProvider?: boolean;
   providerName?: string | null;
   providerSpecialty?: string | null;
+  request?: any;
 }
 
 const RequestCardDoctor: React.FC<RequestCardProps> = ({
@@ -58,8 +60,14 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   delegateFormToProvider,
   providerName,
   providerSpecialty,
+  request,
 }) => {
   const { t } = useTranslation();
+  const [fetchedDelegated, setFetchedDelegated] = useState(false);
+  const isDelegated =
+    !!delegateFormToProvider ||
+    isDelegatedToProvider(request) ||
+    fetchedDelegated;
 
   // Determine display name and subtitle
   const displayName = isPreRequest
@@ -115,6 +123,33 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
     status ||
     'submitted'
   ).toLowerCase();
+
+  const isAcceptedPreRequest =
+    !!isPreRequest &&
+    (effectiveStatus === 'accepted' ||
+      preRequestStatus === 'accepted' ||
+      status === 'accepted');
+
+  useEffect(() => {
+    const detailId = request?.id || request?._id;
+    if (!detailId || !isAcceptedPreRequest || isDelegated) {
+      return;
+    }
+
+    let cancelled = false;
+    serviceRequestApi
+      .getServiceRequestDetails(detailId, { silent: true })
+      .then(data => {
+        if (!cancelled && isDelegatedToProvider(data)) {
+          setFetchedDelegated(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [request?.id, request?._id, isAcceptedPreRequest, isDelegated]);
 
   const displayFormStatus =
     DISPLAY_FORM_STATUS[formStatusKey] ||
@@ -240,7 +275,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
         (effectiveStatus === 'accepted' ||
           preRequestStatus === 'accepted' ||
           status === 'accepted') &&
-        delegateFormToProvider && (
+        isDelegated && (
           <View style={styles.delegatedBanner}>
             <Image source={IMAGES.info} style={styles.delegatedIcon} />
             <AppText
@@ -255,7 +290,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
           </View>
         )}
 
-      {!delegateFormToProvider && !!buttonText && (
+      {!isDelegated && !!buttonText && (
         <AppButton
           title={buttonText}
           onPress={onButtonPress}
