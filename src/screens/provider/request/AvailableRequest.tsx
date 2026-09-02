@@ -2,7 +2,6 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  useMemo,
   useRef,
 } from 'react';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
@@ -48,6 +47,51 @@ import { STRING } from '../../../constant';
 import { isDelegatedToProvider } from '../../../constant/smallFunctions';
 
 const TABS = ['All', 'Submitted', 'In Progress', 'Returned', 'Completed'];
+const PAGE_SIZE = 25;
+
+const getItemId = (item: any) => item?.id || item?._id || item?.requestId;
+
+const sortByNewest = (list: ServiceRequest[]) =>
+  [...list].sort((a, b) => {
+    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return timeB - timeA;
+  });
+
+const parsePagedResponse = (response: any) => {
+  if (!response) {
+    return { requests: [] as ServiceRequest[], hasNextPage: false, total: 0 };
+  }
+  const data = response.data;
+  if (Array.isArray(data)) {
+    return {
+      requests: data as ServiceRequest[],
+      hasNextPage: data.length >= PAGE_SIZE,
+      total: data.length,
+    };
+  }
+  const requests: ServiceRequest[] = data?.requests || [];
+  const pagination = data?.pagination;
+  return {
+    requests,
+    hasNextPage:
+      pagination?.hasNextPage ?? requests.length >= PAGE_SIZE,
+    total: pagination?.total || 0,
+  };
+};
+
+const mapTabToStatus = (statusParam?: string) => {
+  if (statusParam === 'Submitted') return 'submitted';
+  if (statusParam === 'In Progress') return 'inProgress';
+  if (statusParam === 'Returned') return 'returned';
+  if (statusParam === 'Completed') return 'completed';
+  return undefined;
+};
+
+const shouldFetchAvailableList = (statusParam?: string) =>
+  statusParam !== 'Returned' &&
+  statusParam !== 'In Progress' &&
+  statusParam !== 'Completed';
 
 const AvailableRequest: React.FC = () => {
   const dispatch = useDispatch();
@@ -67,158 +111,150 @@ const AvailableRequest: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
-  const PAGE_SIZE = 25;
 
-  // Ref to always have the latest fetch function without re-creating effects
   const fetchRef = useRef<typeof fetchAvailableRequests | null>(null);
-  // Ref to always have the latest activeTab in focus effect without re-subscribing
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
-  // Lock that prevents ANY concurrent fetch (including isRefresh calls that skip setIsLoading)
   const isFetchingRef = useRef(false);
+  const fetchSeqRef = useRef(0);
+  const skipNextFocusFetchRef = useRef(true);
+  const availablePageRef = useRef(0);
+  const assignedPageRef = useRef(0);
+  const availableHasMoreRef = useRef(true);
+  const assignedHasMoreRef = useRef(true);
 
-  // Fetch service requests
-  // NOTE: no activeTab in deps — we always receive the tab as statusParam so
-  // recreating this on every tab change is not needed and causes extra effect runs.
   const fetchAvailableRequests = useCallback(
     async (
       page: number = 1,
       isRefresh: boolean = false,
       statusParam?: string,
     ) => {
-      if (isFetchingRef.current) return; // block concurrent calls (covers isRefresh too)
+      const isReset = page === 1 || isRefresh;
+      if (!isReset && isFetchingRef.current) return;
+
+      const seq = ++fetchSeqRef.current;
       isFetchingRef.current = true;
       if (!isRefresh) setIsLoading(true);
+
       try {
-        let availableRequests: ServiceRequest[] = [];
-        let assignedRequests: ServiceRequest[] = [];
-        let hasNextPage = false;
-        let availableTotal = 0;
-        let assignedTotal = 0;
-        let availableTotalPages = 0;
-        let assignedTotalPages = 0;
+        const mappedStatus = mapTabToStatus(statusParam);
+        const canFetchAvailable = shouldFetchAvailableList(statusParam);
 
-        // Map tab to backend status
-        let mappedStatus: string | undefined = undefined;
-        if (statusParam === 'Submitted') mappedStatus = 'submitted';
-        else if (statusParam === 'In Progress') mappedStatus = 'inProgress';
-        else if (statusParam === 'Returned') mappedStatus = 'returned';
-        else if (statusParam === 'Completed') mappedStatus = 'completed';
+        if (isReset) {
+          availablePageRef.current = 0;
+          assignedPageRef.current = 0;
+          availableHasMoreRef.current = canFetchAvailable;
+          assignedHasMoreRef.current = true;
+        }
 
-        // Available (unassigned) requests can only have status "submitted".
-        // Calling the available-requests endpoint for other tabs (Returned, In Progress,
-        // Completed) returns ALL submitted items and reports hasNextPage:true, which
-        // corrupts the combined hasNextPage and causes infinite load-more loops.
-        const isFilteredTab =
-          statusParam === 'Returned' ||
-          statusParam === 'In Progress' ||
-          statusParam === 'Completed';
+        const nextAvailablePage = availablePageRef.current + 1;
+        const nextAssignedPage = assignedPageRef.current + 1;
+        const fetchAvailable =
+          canFetchAvailable && availableHasMoreRef.current;
+        const fetchAssigned = assignedHasMoreRef.current;
+
+        if (!fetchAvailable && !fetchAssigned) {
+          setPagination(prev =>
+            prev ? { ...prev, hasNextPage: false } : prev,
+          );
+          return;
+        }
 
         const [availableResponse, assignedResponse] = await Promise.all([
-          isFilteredTab
-            ? Promise.resolve(null)
-            : serviceRequestListApi.listAvailableRequestsForProvider({
-                page,
+          fetchAvailable
+            ? serviceRequestListApi.listAvailableRequestsForProvider({
+                page: nextAvailablePage,
                 size: PAGE_SIZE,
                 status: mappedStatus,
-              }),
-          serviceRequestListApi.listAssignedRequestsForProvider({
-            page,
-            size: PAGE_SIZE,
-            status: mappedStatus,
-          }),
+              })
+            : Promise.resolve(null),
+          fetchAssigned
+            ? serviceRequestListApi.listAssignedRequestsForProvider({
+                page: nextAssignedPage,
+                size: PAGE_SIZE,
+                status: mappedStatus,
+              })
+            : Promise.resolve(null),
         ]);
 
-        if (availableResponse?.data) {
-          availableRequests = availableResponse.data.requests || [];
-          hasNextPage =
-            hasNextPage ||
-            availableResponse.data.pagination?.hasNextPage ||
-            false;
-          availableTotal = availableResponse.data.pagination?.total || 0;
-          availableTotalPages =
-            availableResponse.data.pagination?.totalPages || 0;
+        if (seq !== fetchSeqRef.current) return;
+
+        const availableParsed = fetchAvailable
+          ? parsePagedResponse(availableResponse)
+          : { requests: [] as ServiceRequest[], hasNextPage: false, total: 0 };
+        const assignedParsed = fetchAssigned
+          ? parsePagedResponse(assignedResponse)
+          : { requests: [] as ServiceRequest[], hasNextPage: false, total: 0 };
+
+        if (fetchAvailable) {
+          availablePageRef.current = nextAvailablePage;
+          availableHasMoreRef.current = availableParsed.hasNextPage;
+        }
+        if (fetchAssigned) {
+          assignedPageRef.current = nextAssignedPage;
+          assignedHasMoreRef.current = assignedParsed.hasNextPage;
         }
 
-        if (assignedResponse) {
-          const data = assignedResponse.data;
-          assignedRequests = Array.isArray(data) ? data : data?.requests || [];
-          if (!Array.isArray(data) && data?.pagination) {
-            hasNextPage = hasNextPage || data.pagination.hasNextPage || false;
-            assignedTotal = data.pagination.total || 0;
-            assignedTotalPages = data.pagination.totalPages || 0;
-          }
-        }
-
-        const combined = [...assignedRequests, ...availableRequests];
-        const getItemId = (item: any) =>
-          item?.id || item?._id || item?.requestId;
-
-        // Deduplicate requests by id
-        const uniqueCombined = combined.filter(
-          (item, idx, self) =>
-            self.findIndex(t => getItemId(t) === getItemId(item)) === idx,
-        );
-
-        // Sort by createdAt descending so newest requests / pre-requests appear at the top
-        uniqueCombined.sort((a, b) => {
-          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return timeB - timeA;
+        const seen = new Set<string>();
+        const uniqueCombined = [
+          ...assignedParsed.requests,
+          ...availableParsed.requests,
+        ].filter(item => {
+          const id = String(getItemId(item) || '');
+          if (!id || seen.has(id)) return false;
+          seen.add(id);
+          return true;
         });
 
-        if (page === 1) {
-          setRequests(uniqueCombined);
+        if (isReset) {
+          setRequests(sortByNewest(uniqueCombined));
         } else {
           setRequests(prev => {
-            const combinedPrev = [...prev, ...uniqueCombined];
-            const deduped = combinedPrev.filter(
-              (item, idx, self) =>
-                self.findIndex(t => getItemId(t) === getItemId(item)) === idx,
+            const existing = new Set(prev.map(item => String(getItemId(item))));
+            const appended = uniqueCombined.filter(
+              item => !existing.has(String(getItemId(item))),
             );
-            deduped.sort((a, b) => {
-              const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-              const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-              return timeB - timeA;
-            });
-            return deduped;
+            return [...prev, ...appended];
           });
         }
 
+        const hasNextPage =
+          availableHasMoreRef.current || assignedHasMoreRef.current;
+        const displayPage = Math.max(
+          availablePageRef.current,
+          assignedPageRef.current,
+          1,
+        );
+
         setPagination({
           hasNextPage,
-          page,
+          page: displayPage,
           size: PAGE_SIZE,
-          total: availableTotal + assignedTotal,
-          totalPages: Math.max(availableTotalPages, assignedTotalPages),
+          total: availableParsed.total + assignedParsed.total,
+          totalPages: 0,
           totalRange: '',
-          hasPrevPage: page > 1,
+          hasPrevPage: displayPage > 1,
         });
-
-        setCurrentPage(page);
       } catch (error) {
         console.error('Error fetching combined requests:', error);
       } finally {
-        isFetchingRef.current = false;
-        if (!isRefresh) setIsLoading(false);
+        if (seq === fetchSeqRef.current) {
+          isFetchingRef.current = false;
+          if (!isRefresh) setIsLoading(false);
+        }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
-  // Keep ref in sync so focus effect always calls the latest version
   fetchRef.current = fetchAvailableRequests;
 
-  // Load initial data when activeTab changes
   useEffect(() => {
-    setCurrentPage(1);
     setRequests([]);
-    setPagination(null); // clear stale pagination so handleLoadMore can't fire with old hasNextPage
+    setPagination(null);
     fetchAvailableRequests(1, false, activeTab);
-  }, [activeTab]); // fetchAvailableRequests is stable (empty deps) — safe to omit
+  }, [activeTab, fetchAvailableRequests]);
 
   useEffect(() => {
     if (route?.params?.status) {
@@ -226,13 +262,13 @@ const AvailableRequest: React.FC = () => {
     }
   }, [route?.params?.refreshKey]);
 
-  // Fetch data every time screen comes into focus.
-  // Empty deps [] means this ONLY fires on real screen-focus events,
-  // never on tab changes — activeTab is read via ref to get the latest value.
   useFocusEffect(
     useCallback(() => {
+      if (skipNextFocusFetchRef.current) {
+        skipNextFocusFetchRef.current = false;
+        return;
+      }
       fetchRef.current?.(1, true, activeTabRef.current);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
 
@@ -243,26 +279,9 @@ const AvailableRequest: React.FC = () => {
   }, [fetchAvailableRequests, activeTab]);
 
   const handleLoadMore = useCallback(() => {
-    if (isLoading || isFetchingRef.current) return; // prevent concurrent calls
-    if (pagination && pagination.hasNextPage) {
-      fetchAvailableRequests(currentPage + 1, false, activeTab);
-    }
-  }, [isLoading, pagination, currentPage, fetchAvailableRequests, activeTab]);
-
-  const filteredRequests = useMemo(() => {
-    return requests.filter(item => {
-      if (activeTab === 'All') return true;
-      const formStatus = item.status;
-      if (activeTab === 'In Progress') {
-        return (
-          (formStatus as string) === REQUEST_STATUS.IN_PROGRESS ||
-          formStatus === ('InProgress' as any)
-        );
-      }
-      // 'Submitted', 'Returned', 'Completed' generally map directly
-      return formStatus?.toLowerCase() === activeTab.toLowerCase();
-    });
-  }, [requests, activeTab]);
+    if (isLoading || isFetchingRef.current || !pagination?.hasNextPage) return;
+    fetchAvailableRequests(2, false, activeTab);
+  }, [isLoading, pagination, fetchAvailableRequests, activeTab]);
 
   const renderItem = ({ item }: { item: ServiceRequest }) => {
     const isPreReq = Boolean(
@@ -435,7 +454,7 @@ const AvailableRequest: React.FC = () => {
 
         SHOW_TOAST(response.message, 'success');
         reviewSheetRef?.current?.hide();
-        await fetchAvailableRequests(1, true);
+        await fetchAvailableRequests(1, true, activeTab);
       } else {
         SHOW_TOAST(response.error, 'error');
       }
@@ -481,7 +500,6 @@ const AvailableRequest: React.FC = () => {
                 key={tab}
                 onPress={() => {
                   setIsLoading(true); // show loader immediately — prevents "No requests found" flash
-                  setCurrentPage(1);
                   setRequests([]);
                   setPagination(null);
                   setActiveTab(tab);
@@ -510,7 +528,7 @@ const AvailableRequest: React.FC = () => {
             <AppLoader visible={true} />
           ) : (
             <FlatList
-              data={filteredRequests}
+              data={requests}
               renderItem={renderItem}
               refreshControl={
                 <RefreshControl
@@ -525,7 +543,7 @@ const AvailableRequest: React.FC = () => {
               }
               showsVerticalScrollIndicator={false}
               onEndReached={handleLoadMore}
-              onEndReachedThreshold={0.5}
+              onEndReachedThreshold={0.3}
               ListFooterComponent={renderFooter}
               ListEmptyComponent={
                 !isLoading ? (

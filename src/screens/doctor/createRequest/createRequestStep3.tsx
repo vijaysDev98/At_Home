@@ -106,6 +106,9 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
       ? rawAssignedProvider?.id || rawAssignedProvider?._id
       : rawAssignedProvider;
   const preRequestId = (route?.params as any)?.preRequestId;
+  const isFillFormFlow = Boolean(
+    (route?.params as any)?.fromPreRequest || preRequestId,
+  );
   const [doctorData, setDoctorData] = useState<any>(
     selectedDoctor || (route?.params as any)?.doctor || null,
   );
@@ -240,7 +243,11 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
               font={FONTS.Inter.SemiBold}
               align="center"
             >
-              {t(role === ROLES.PROVIDER ? STRING.step4Of4 : STRING.step3Of3)}
+              {t(
+                role === ROLES.PROVIDER && !isFillFormFlow
+                  ? STRING.step4Of4
+                  : STRING.step3Of3,
+              )}
             </AppText>
           </View>
           <View style={{ flex: 0.5 }} />

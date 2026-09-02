@@ -265,6 +265,8 @@ const DoctorNotification: React.FC = () => {
             ? 'view'
             : notificationType === 'preRequestRejected'
             ? 'view'
+            : notificationType === 'formSubmission'
+            ? 'edit'
             : 'view';
         NavigationService.navigate(SCREENS.FORMS_SCREEN, {
           request: reqData,

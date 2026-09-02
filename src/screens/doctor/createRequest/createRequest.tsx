@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
+  AppButton,
   AppLoader,
   AppSafeAreaView,
   AppText,
@@ -99,7 +100,10 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
   const dispatch = useDispatch<any>();
   const route = useRoute();
   
-  const fromPatient = route.params?.fromPatient;
+  const routeParams = (route.params as any) || {};
+  const isFillFormFlow = Boolean(
+    routeParams.fromPreRequest || routeParams.preRequestId,
+  );
   const role: string = useUserRole();
   const { t } = useTranslation();
 
@@ -224,9 +228,11 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     NavigationService.navigate(SCREENS.ADD_PATIENT);
   }, []);
 
+  const isTabScreen = navigation.getState()?.type === 'tab';
+
   return (
     <AppSafeAreaView
-      edges={fromPatient ? ['top', 'bottom'] : ['top']}
+      edges={isTabScreen ? ['top'] : ['top', 'bottom']}
       style={styles.safe}
     >
       <View style={styles.container}>
@@ -238,7 +244,10 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               activeOpacity={0.8}
               onPress={handleGoBack}
             >
-              <Image source={IMAGES.crossIcon} style={styles.crossIcon} />
+              <Image
+                source={isFillFormFlow ? IMAGES.arrowLeft : IMAGES.crossIcon}
+                style={styles.crossIcon}
+              />
             </TouchableOpacity>
           </View>
 
@@ -256,7 +265,11 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              {t(STRING.step1Of3)}
+              {t(
+                role === ROLES.PROVIDER && !isFillFormFlow
+                  ? STRING.step1Of4
+                  : STRING.step1Of3,
+              )}
             </AppText>
           </View>
 
@@ -366,11 +379,14 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                   )}
                 </View>
 
-                <View style={styles.spacer} />
               </ScrollView>
 
-              {/* FIXED BOTTOM ACTIONS (OUTSIDE SCROLL) */}
-              <View style={styles.bottomSheet}>
+              <View
+                style={[
+                  styles.bottomButtonContainer,
+                  isTabScreen && styles.bottomButtonContainerTab,
+                ]}
+              >
                 <TouchableOpacity
                   activeOpacity={0.85}
                   style={styles.createPatientBtn}
@@ -390,23 +406,12 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
                   </AppText>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={[
-                    styles.continueBtn,
-                    !canContinue && styles.continueDisabled,
-                  ]}
-                  disabled={!canContinue}
+                <AppButton
+                  title={t(STRING.continue)}
+                  style={styles.continueBtn}
                   onPress={handleContinue}
-                >
-                  <AppText
-                    size={getScaleSize(15)}
-                    color={COLORS.white}
-                    font={FONTS.Inter.Bold}
-                  >
-                    {t(STRING.continue)}
-                  </AppText>
-                </TouchableOpacity>
+                  disabled={!canContinue}
+                />
               </View>
             </>
           )}
@@ -501,8 +506,7 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingHorizontal: getScaleSize(20),
-    paddingBottom: getScaleSize(160),
-    // paddingTop: getScaleSize(20),
+    paddingBottom: getScaleSize(20),
   },
 
   searchInput: {
@@ -641,31 +645,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS._526674,
   },
 
-  spacer: {
-    height: 120,
-  },
-
-  bottomSheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: getScaleSize(24),
+  bottomButtonContainer: {
     backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS._EFEFEF,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    gap: 10,
-    zIndex: 10,
+    paddingVertical: getScaleSize(17),
+    paddingHorizontal: getScaleSize(20),
+    gap: getScaleSize(10),
+  },
+  bottomButtonContainerTab: {
+    paddingBottom: getScaleSize(8),
   },
 
   createPatientBtn: {
-    height: 52,
-    borderRadius: 14,
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(16),
     borderWidth: 2,
     borderColor: COLORS._526674,
     borderStyle: 'dashed',
@@ -676,28 +668,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
+  continueBtn: {
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(16),
+  },
+
   createPatientText: {
     fontSize: 15,
     fontWeight: '800',
     color: COLORS._526674,
-  },
-
-  continueBtn: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: COLORS._526674,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  continueDisabled: {
-    opacity: 0.6,
-  },
-
-  continueText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.white,
   },
 
   crossIcon: {

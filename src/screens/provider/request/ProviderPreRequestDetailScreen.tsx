@@ -433,6 +433,17 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
   const createdAtFormatted = createdAt
     ? moment(createdAt).locale(i18n?.language || 'en').format('DD MMM YYYY')
     : null;
+  const displayRequestId =
+    requestData?.requestId &&
+    String(requestData.requestId) !== String(requestId) &&
+    !/^[a-f0-9]{24}$/i.test(String(requestData.requestId))
+      ? requestData.requestId
+      : null;
+  const headerSubtitle = !requestData
+    ? undefined
+    : [displayRequestId, createdAtFormatted].filter(Boolean).join(' • ') ||
+      undefined;
+  const showBottomActions = !isLoading && !!requestData;
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
@@ -440,29 +451,27 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
         {/* Top Header */}
         <HeaderProvider
           title={t(STRING.preRequest) || 'Pre-Request'}
-          subTitle={
-            createdAtFormatted
-              ? `${requestData?.requestId || requestId || '—'} • ${createdAtFormatted}`
-              : requestData?.requestId || requestId || '—'
-          }
+          subTitle={headerSubtitle}
           isBack
           style={styles.header}
-          leftContent={() => (
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: badgeBgColor },
-              ]}
-            >
-              <AppText
-                size={getScaleSize(11)}
-                font={FONTS.Inter.SemiBold}
-                color={badgeColor}
+          leftContent={() =>
+            showBottomActions ? (
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: badgeBgColor },
+                ]}
               >
-                {t(displayStatus)}
-              </AppText>
-            </View>
-          )}
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.SemiBold}
+                  color={badgeColor}
+                >
+                  {t(displayStatus)}
+                </AppText>
+              </View>
+            ) : null
+          }
         />
 
         {isLoading || !requestData ? (
@@ -717,7 +726,7 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
         )}
 
         {/* Bottom Action Bar for New Pre-Requests (Accept/Reject) */}
-        {canAccept && (
+        {showBottomActions && canAccept && (
           <View style={styles.bottomBar}>
             {isAssignedToProvider ? (
               <TouchableOpacity
@@ -776,8 +785,9 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
         )}
 
         {/* Bottom Action Bar for Delegated Pre-Requests (Fill Form) */}
-        {(effectiveStatus === 'accepted' ||
-          requestData?.preRequestStatus === 'accepted') &&
+        {showBottomActions &&
+          (effectiveStatus === 'accepted' ||
+            requestData?.preRequestStatus === 'accepted') &&
           !!requestData?.delegateFormToProvider && (
             <View style={styles.bottomBar}>
               <TouchableOpacity

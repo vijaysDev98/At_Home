@@ -857,6 +857,7 @@ export const STRING = {
     'Pregnancy-Related Care Prescription Form',
   primaryService: 'Primary Service',
   selectDoctor: 'Select Doctor',
+  step1Of4: 'Step 1/4: Patient',
   step2Of4: 'Step 2/4: Doctor',
   step3Of4: 'Step 3/4: Service',
   step4Of4: 'Step 4/4: Fill Medical Form',

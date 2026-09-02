@@ -44,6 +44,10 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
   const patientId = route?.params?.patientId;
   const doctorId = route?.params?.doctorId;  
   const selectedDoctor = route?.params?.selectedDoctor;
+  const isFillFormFlow = Boolean(
+    (route?.params as any)?.fromPreRequest ||
+      (route?.params as any)?.preRequestId,
+  );
   const [apiServices, setApiServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<string>('');
@@ -114,7 +118,11 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
               color={COLORS._526674}
               font={FONTS.Inter.SemiBold}
             >
-              {t(role === ROLES.PROVIDER ? STRING.step3Of4 : STRING.step2Of3)}
+              {t(
+                role === ROLES.PROVIDER && !isFillFormFlow
+                  ? STRING.step3Of4
+                  : STRING.step2Of3,
+              )}
             </AppText>
           </View>
           <View style={styles.headerLeft} />
@@ -205,6 +213,7 @@ const CreateRequestStep2: React.FC<CreateRequestStep2Props> = ({
           <View style={styles.bottomButtonContainer}>
             <AppButton
               title={t(STRING.continue)}
+              style={styles.continueBtn}
               onPress={() => {
                 if (!selected) {
                   SHOW_TOAST(t(STRING.noServiceSelected), 'error');
@@ -417,6 +426,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingVertical: getScaleSize(17),
     paddingHorizontal: getScaleSize(20),
+  },
+  continueBtn: {
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(16),
   },
   loaderContainer: {
     width: '100%',
