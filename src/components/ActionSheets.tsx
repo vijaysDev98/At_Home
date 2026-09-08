@@ -11,6 +11,7 @@ import {
   AppState,
   AppStateStatus,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,6 +43,11 @@ import {
   getStatusBadgeColor,
   getStatusBadgeBgColor,
 } from '../constant/RequestStatus';
+import {
+  isPdfDocument,
+  isDocumentFile,
+  getDisplayFileName,
+} from '../utils/documentPickerHelper';
 
 /**
  * Constants
@@ -1835,6 +1841,8 @@ export const PreRequestDetailSheet = React.forwardRef<
   const [playbackProgress, setPlaybackProgress] = React.useState<number>(0);
   const [currentSecs, setCurrentSecs] = React.useState<number>(0);
   const [totalSecs, setTotalSecs] = React.useState<number>(0);
+  const [selectedPreviewImage, setSelectedPreviewImage] =
+    React.useState<string | null>(null);
 
   const sound = useSound({
     subscriptionDuration: 0.1,
@@ -2116,6 +2124,169 @@ export const PreRequestDetailSheet = React.forwardRef<
           </View>
         )}
 
+        {/* Prescription Documents Section (if files exist) */}
+        {!!request?.prescriptionFiles &&
+          request.prescriptionFiles.length > 0 && (
+            <View style={styles.preRequestNotesSection}>
+              <View style={styles.preRequestSectionTitleRow}>
+                <Image
+                  source={IMAGES.ic_file}
+                  style={styles.preRequestSectionIcon}
+                />
+                <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.prescriptionDocument) || 'Prescription Document'}
+                </AppText>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ width: '100%' }}
+                contentContainerStyle={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: getScaleSize(10),
+                  marginTop: getScaleSize(8),
+                  paddingRight: getScaleSize(12),
+                }}
+              >
+                {request.prescriptionFiles.map(
+                  (uri: string, idx: number) => {
+                    const isDoc = isDocumentFile(uri);
+                    const isPdf = isPdfDocument(uri);
+                    const displayName = getDisplayFileName(uri, 'Prescription.pdf');
+                    const badgeText = isPdf ? 'PDF' : 'DOC';
+
+                    return (
+                      <TouchableOpacity
+                        key={`sheet_presc_${idx}`}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          if (isDoc) {
+                            NavigationService.navigate(SCREENS.PDF_VIEWER, {
+                              pdfUrl: uri,
+                              title:
+                                displayName ||
+                                t(STRING.prescriptionDocument) ||
+                                'Prescription Document',
+                            });
+                          } else {
+                            setSelectedPreviewImage(uri);
+                          }
+                        }}
+                        style={[
+                          {
+                            width: getScaleSize(76),
+                            height: getScaleSize(90),
+                            borderRadius: getScaleSize(8),
+                            overflow: 'hidden',
+                            backgroundColor: '#F3F4F6',
+                            borderWidth: 1,
+                            borderColor: COLORS._E5E7EB,
+                            position: 'relative',
+                          },
+                          isDoc && {
+                            backgroundColor: '#FEF2F2',
+                            borderColor: '#FECACA',
+                          },
+                        ]}
+                      >
+                        {isDoc ? (
+                          <View
+                            style={{
+                              flex: 1,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: getScaleSize(4),
+                            }}
+                          >
+                            <View
+                              style={{
+                                position: 'absolute',
+                                top: getScaleSize(4),
+                                left: getScaleSize(4),
+                                backgroundColor: '#DC2626',
+                                paddingHorizontal: getScaleSize(4),
+                                paddingVertical: getScaleSize(1),
+                                borderRadius: getScaleSize(3),
+                              }}
+                            >
+                              <AppText
+                                size={getScaleSize(8)}
+                                font={FONTS.Inter.Bold}
+                                color={COLORS.white}
+                              >
+                                {badgeText}
+                              </AppText>
+                            </View>
+                            <Image
+                              source={IMAGES.document_icon}
+                              style={{
+                                width: getScaleSize(26),
+                                height: getScaleSize(26),
+                                tintColor: '#DC2626',
+                              }}
+                              resizeMode="contain"
+                            />
+                            <AppText
+                              size={getScaleSize(9)}
+                              font={FONTS.Inter.Medium}
+                              color={COLORS._1A1D1F}
+                              numberOfLines={2}
+                              ellipsizeMode="middle"
+                              style={{
+                                marginTop: getScaleSize(2),
+                                paddingHorizontal: getScaleSize(2),
+                                textAlign: 'center',
+                                lineHeight: getScaleSize(11),
+                              }}
+                            >
+                              {displayName}
+                            </AppText>
+                          </View>
+                        ) : (
+                          <Image
+                            source={{ uri }}
+                            style={{ width: '100%', height: '100%' }}
+                            resizeMode="cover"
+                          />
+                        )}
+                        <View
+                          style={{
+                            position: 'absolute',
+                            bottom: getScaleSize(3),
+                            right: getScaleSize(3),
+                            width: getScaleSize(18),
+                            height: getScaleSize(18),
+                            borderRadius: getScaleSize(9),
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Image
+                            source={IMAGES.serviceEyeIcon || IMAGES.eye}
+                            style={{
+                              width: getScaleSize(10),
+                              height: getScaleSize(10),
+                              tintColor: COLORS.white,
+                              resizeMode: 'contain',
+                            }}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  },
+                )}
+              </ScrollView>
+            </View>
+          )}
+
         {/* Written Notes Section (if notes exist) */}
         {!!request?.initialNotes && (
           <View style={styles.preRequestNotesSection}>
@@ -2322,6 +2493,81 @@ export const PreRequestDetailSheet = React.forwardRef<
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Full-Screen Prescription Image Preview Modal */}
+        <Modal
+          visible={!!selectedPreviewImage}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setSelectedPreviewImage(null)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.92)',
+              justifyContent: 'space-between',
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: getScaleSize(20),
+                paddingTop:
+                  Platform.OS === 'ios' ? getScaleSize(50) : getScaleSize(20),
+                paddingBottom: getScaleSize(16),
+              }}
+            >
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.prescriptionPreview) || 'Prescription Preview'}
+              </AppText>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={{
+                  width: getScaleSize(36),
+                  height: getScaleSize(36),
+                  borderRadius: getScaleSize(18),
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => setSelectedPreviewImage(null)}
+              >
+                <Image
+                  source={IMAGES.crossIcon}
+                  style={{
+                    width: getScaleSize(16),
+                    height: getScaleSize(16),
+                    resizeMode: 'contain',
+                    tintColor: COLORS.white,
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: getScaleSize(16),
+              }}
+            >
+              {selectedPreviewImage && (
+                <Image
+                  source={{ uri: selectedPreviewImage }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </ActionSheet>
   );

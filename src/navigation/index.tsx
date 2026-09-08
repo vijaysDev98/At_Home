@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/auth/Login';
 import WelcomeScreen from '../screens/auth/AuthWelcome';
 import RegisterScreen from '../screens/auth/Register';
+import DoctorRegisteredScreen from '../screens/auth/DoctorRegisteredScreen';
 import RegisterSuccess from '../screens/auth/RegisterSuccess';
 import ForgotPassword from '../screens/auth/ForgotPassword';
 import OtpVerification from '../screens/auth/OtpVerification';
@@ -45,6 +46,7 @@ export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
+  DoctorRegistered: undefined;
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
   Alerts: undefined;
@@ -145,6 +147,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.REGISTER}
           component={RegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.DOCTOR_REGISTERED}
+          component={DoctorRegisteredScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

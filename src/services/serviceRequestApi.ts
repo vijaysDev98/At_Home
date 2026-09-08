@@ -17,6 +17,8 @@ export interface CreateServiceRequestPayload {
   formData?: any;
   isPreRequest?: boolean;
   voiceMessageUrl?: string;
+  prescriptionFiles?: string[];
+  delegateFormToProvider?: boolean;
 }
 
 export interface UpdateServiceRequestPayload {

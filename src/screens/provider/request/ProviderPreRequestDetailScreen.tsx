@@ -9,6 +9,7 @@ import {
   AppState,
   AppStateStatus,
   Linking,
+  Modal,
 } from 'react-native';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -44,29 +45,35 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { ServiceRequest } from '../../../services/serviceRequestListApi';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
+import {
+  isPdfDocument,
+  isDocumentFile,
+  getDisplayFileName,
+} from '../../../utils/documentPickerHelper';
 
-export const ProviderPreRequestDetailScreen: React.FC = () => {
-  const route = useRoute();
-  console.log("routeeee",route.params);
-  
+interface ProviderPreRequestDetailScreenProps {}
+
+export const ProviderPreRequestDetailScreen: React.FC<
+  ProviderPreRequestDetailScreenProps
+> = () => {
   const { t, i18n } = useTranslation();
+  const route = useRoute<any>();
   const dispatch = useDispatch();
 
-  const initialRequest: ServiceRequest = (route.params as any)?.request;
-  const requestId =
-    (route.params as any)?.requestId ||
-    initialRequest?.id ||
-    (initialRequest as any)?._id ||
-    initialRequest?.requestId ||
-    '';
+  const requestId = route.params?.id || route.params?.requestId || route.params?.request?.id;  
 
   const { profileData } = useSelector((state: RootState) => state.profile);
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
 
-  const [requestData, setRequestData] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
+  const [requestData, setRequestData] = useState<any>(
+    route.params?.request || null,
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(!route.params?.request);
+  const [isAccepting, setIsAccepting] = useState<boolean>(false);
+  const [isRejecting, setIsRejecting] = useState<boolean>(false);
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(
+    null,
+  );
   const [isFetched, setIsFetched] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -696,6 +703,125 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
               </View>
             )}
 
+            {/* Prescription Documents Section */}
+            {!!requestData?.prescriptionFiles &&
+              requestData.prescriptionFiles.length > 0 && (
+                <View style={styles.cardContainer}>
+                  <View style={styles.cardHeaderRow}>
+                    <Image
+                      source={IMAGES.ic_file}
+                      style={styles.cardHeaderIcon}
+                    />
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {t(STRING.prescriptionDocument) ||
+                        'Prescription Document'}
+                    </AppText>
+                    <View style={styles.prescriptionCountBadge}>
+                      <AppText
+                        size={getScaleSize(11)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS.primary}
+                      >
+                        {requestData.prescriptionFiles.length}{' '}
+                        {requestData.prescriptionFiles.length === 1
+                          ? t(STRING.file) || 'file'
+                          : t(STRING.files) || 'files'}
+                      </AppText>
+                    </View>
+                  </View>
+
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ width: '100%' }}
+                    contentContainerStyle={styles.prescriptionThumbnailsRow}
+                  >
+                    {requestData.prescriptionFiles.map(
+                      (fileUrl: string, idx: number) => {
+                        const isDoc = isDocumentFile(fileUrl);
+                        const isPdf = isPdfDocument(fileUrl);
+                        const displayName = getDisplayFileName(fileUrl, 'Prescription.pdf');
+                        const badgeText = isPdf ? 'PDF' : 'DOC';
+
+                        return (
+                          <TouchableOpacity
+                            key={`presc_file_${idx}`}
+                            activeOpacity={0.85}
+                            style={[
+                              styles.prescriptionThumbWrapper,
+                              isDoc && styles.prescriptionPdfThumbWrapper,
+                            ]}
+                            onPress={() => {
+                              if (isDoc) {
+                                NavigationService.navigate(SCREENS.PDF_VIEWER, {
+                                  pdfUrl: fileUrl,
+                                  title:
+                                    displayName ||
+                                    t(STRING.prescriptionDocument) ||
+                                    'Prescription Document',
+                                });
+                              } else {
+                                setSelectedPreviewImage(fileUrl);
+                              }
+                            }}
+                          >
+                            {isDoc ? (
+                              <View style={styles.prescriptionPdfContent}>
+                                <View style={styles.prescriptionPdfBadge}>
+                                  <AppText
+                                    size={getScaleSize(9)}
+                                    font={FONTS.Inter.Bold}
+                                    color={COLORS.white}
+                                  >
+                                    {badgeText}
+                                  </AppText>
+                                </View>
+                                <Image
+                                  source={IMAGES.ic_file}
+                                  style={styles.prescriptionPdfIcon}
+                                  resizeMode="contain"
+                                />
+                                <AppText
+                                  size={getScaleSize(9)}
+                                  font={FONTS.Inter.Medium}
+                                  color={COLORS._1A1D1F}
+                                  numberOfLines={2}
+                                  ellipsizeMode="middle"
+                                  style={{
+                                    marginTop: getScaleSize(4),
+                                    paddingHorizontal: getScaleSize(4),
+                                    textAlign: 'center',
+                                    lineHeight: getScaleSize(12),
+                                  }}
+                                >
+                                  {displayName}
+                                </AppText>
+                              </View>
+                            ) : (
+                              <Image
+                                source={{ uri: fileUrl }}
+                                style={styles.prescriptionThumbImage}
+                                resizeMode="cover"
+                              />
+                            )}
+                            <View style={styles.prescriptionViewBadge}>
+                              <Image
+                                source={IMAGES.serviceEyeIcon || IMAGES.eye}
+                                style={styles.prescriptionEyeIcon}
+                              />
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      },
+                    )}
+                  </ScrollView>
+                </View>
+              )}
+
             {/* Written Notes Section */}
             {!!requestData?.initialNotes && (
               <View style={styles.cardContainer}>
@@ -809,6 +935,46 @@ export const ProviderPreRequestDetailScreen: React.FC = () => {
 
         {/* Warning Sheet for Lock Conflict */}
         {!isReadOnly && <WarningSheet isLock={true} ref={warningSheetRef} />}
+
+        {/* Full-Screen Prescription Image Preview Modal */}
+        <Modal
+          visible={!!selectedPreviewImage}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setSelectedPreviewImage(null)}
+        >
+          <View style={styles.previewModalOverlay}>
+            <View style={styles.previewModalHeader}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.prescriptionPreview) || 'Prescription Preview'}
+              </AppText>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.previewModalCloseBtn}
+                onPress={() => setSelectedPreviewImage(null)}
+              >
+                <Image
+                  source={IMAGES.crossIcon}
+                  style={styles.previewModalCloseIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.previewModalBody}>
+              {selectedPreviewImage && (
+                <Image
+                  source={{ uri: selectedPreviewImage }}
+                  style={styles.previewFullImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </AppSafeAreaView>
   );
@@ -1036,6 +1202,116 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  prescriptionCountBadge: {
+    marginLeft: 'auto',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(2),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  prescriptionThumbnailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: getScaleSize(12),
+    marginTop: getScaleSize(6),
+    paddingRight: getScaleSize(12),
+  },
+  prescriptionThumbWrapper: {
+    width: getScaleSize(92),
+    height: getScaleSize(110),
+    borderRadius: getScaleSize(10),
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    position: 'relative',
+  },
+  prescriptionPdfThumbWrapper: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  prescriptionPdfContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: getScaleSize(6),
+  },
+  prescriptionPdfBadge: {
+    position: 'absolute',
+    top: getScaleSize(4),
+    left: getScaleSize(4),
+    backgroundColor: '#DC2626',
+    paddingHorizontal: getScaleSize(5),
+    paddingVertical: getScaleSize(1.5),
+    borderRadius: getScaleSize(4),
+  },
+  prescriptionPdfIcon: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    marginTop:getScaleSize(10),
+    tintColor: '#DC2626',
+  },
+  prescriptionThumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  prescriptionViewBadge: {
+    position: 'absolute',
+    bottom: getScaleSize(4),
+    right: getScaleSize(4),
+    width: getScaleSize(22),
+    height: getScaleSize(22),
+    borderRadius: getScaleSize(11),
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prescriptionEyeIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'space-between',
+  },
+  previewModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: getScaleSize(20),
+    paddingTop: Platform.OS === 'ios' ? getScaleSize(50) : getScaleSize(20),
+    paddingBottom: getScaleSize(16),
+  },
+  previewModalCloseBtn: {
+    width: getScaleSize(36),
+    height: getScaleSize(36),
+    borderRadius: getScaleSize(18),
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewModalCloseIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  previewModalBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: getScaleSize(16),
+  },
+  previewFullImage: {
+    width: '100%',
+    height: '100%',
   },
 });
 

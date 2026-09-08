@@ -159,3 +159,137 @@ export const uploadAudioDirectToS3 = async (
     throw error;
   }
 };
+
+const PRESCRIPTION_MIME_MAP: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  pdf: 'application/pdf',
+};
+
+/**
+ * Upload Prescription Document (Image or PDF) to S3 using Presigned URL
+ * 1. Calls GET /common/file/getPresignedUrl?type=images&extn=jpg&model=serviceRequest
+ * 2. PUTs raw binary file directly to S3 upload_url
+ * 3. Returns the public file_url (CloudFront/S3)
+ */
+export const uploadPrescriptionDirectToS3 = async (
+  fileUri: string,
+  extn?: string,
+): Promise<{ fileUrl: string; uploadUrl?: string }> => {
+  if (!fileUri) {
+    SHOW_TOAST('Invalid prescription file', 'error');
+    throw new Error('Invalid prescription file');
+  }
+
+  try {
+    // 1. Detect file extension and matching MIME type
+    const cleanUri = decodeURIComponent(fileUri.split('?')[0]);
+    let detectedExt = extn ? extn.replace('.', '').toLowerCase() : '';
+    if (!detectedExt) {
+      if (cleanUri.toLowerCase().endsWith('.pdf') || cleanUri.toLowerCase().includes('.pdf')) {
+        detectedExt = 'pdf';
+      } else if (cleanUri.toLowerCase().endsWith('.png')) {
+        detectedExt = 'png';
+      } else if (cleanUri.toLowerCase().endsWith('.webp')) {
+        detectedExt = 'webp';
+      } else {
+        const parts = cleanUri.split('.');
+        if (parts.length > 1) {
+          const possible = parts.pop()?.toLowerCase() || '';
+          if (possible.length <= 5) detectedExt = possible;
+        }
+      }
+    }
+    const fileExt = detectedExt || 'jpg';
+    const contentType =
+      PRESCRIPTION_MIME_MAP[fileExt] ||
+      (fileExt === 'pdf' ? 'application/pdf' : 'image/jpeg');
+
+    const uploadType = fileExt === 'pdf' ? 'files' : 'images';
+
+    console.log('Fetching presigned URL for prescription upload...', {
+      fileUri,
+      fileExt,
+      contentType,
+      uploadType,
+    });
+
+    // 2. GET presigned URL from backend
+    const presignedRes: any = await API.Instance.get(
+      API.API_ROUTES.getPresignedUrl,
+      {
+        params: {
+          type: uploadType,
+          extn: fileExt,
+          model: 'serviceRequest',
+        },
+      },
+    );
+    console.log("presignedRes",presignedRes);
+    
+
+    const payload = presignedRes?.data?.data || presignedRes?.data;
+    const uploadUrl = payload?.upload_url;
+    const fileUrl = payload?.file_url;
+
+    if (!uploadUrl || !fileUrl) {
+      throw new Error('Failed to obtain presigned upload URL from server');
+    }
+
+    // 3. PUT raw binary file directly to S3 using the presigned URL
+    let cleanPath = fileUri.startsWith('file://')
+      ? fileUri.replace('file://', '')
+      : fileUri;
+
+    const ReactNativeBlobUtil = require('react-native-blob-util').default;
+
+    // For Android content:// URIs, copy to a readable app cache file if needed
+    if (Platform.OS === 'android' && fileUri.startsWith('content://')) {
+      try {
+        const tempCachePath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/prescription_${Date.now()}.${fileExt}`;
+        await ReactNativeBlobUtil.fs.cp(fileUri, tempCachePath);
+        cleanPath = tempCachePath;
+      } catch (cpErr) {
+        console.log('cp content URI to cache failed, using direct URI:', cpErr);
+      }
+    }
+
+    const uploadRes = await ReactNativeBlobUtil.fetch(
+      'PUT',
+      uploadUrl,
+      {
+        'Content-Type': contentType,
+      },
+      ReactNativeBlobUtil.wrap(cleanPath),
+    );
+
+    const statusCode = uploadRes.info().status;
+    console.log('AWS S3 prescription upload status code:', statusCode);
+
+    if (statusCode >= 200 && statusCode < 300) {
+      console.log('✅ Prescription uploaded to S3 successfully:', fileUrl);
+      return { fileUrl, uploadUrl };
+    } else {
+      let respBody = '';
+      try {
+        respBody = await uploadRes.text();
+      } catch (e) {}
+      console.error('S3 prescription upload error body:', respBody);
+      throw new Error(`AWS S3 upload failed with status ${statusCode}`);
+    }
+  } catch (error: any) {
+    console.error('Prescription upload to S3 failed:', error);
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.data?.message ||
+      error?.message ||
+      'Failed to upload prescription document';
+    SHOW_TOAST(errorMessage, 'error');
+    throw error;
+  }
+};
+

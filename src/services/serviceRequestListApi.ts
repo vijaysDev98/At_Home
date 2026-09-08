@@ -65,6 +65,7 @@ export interface ServiceRequest {
   priorityLevel?: string;
   initialNotes?: string;
   voiceMessageUrl?: string | null;
+  prescriptionFiles?: string[] | null;
   createdAt: string;
   updatedAt: string;
   patient?: PatientInfo | null;

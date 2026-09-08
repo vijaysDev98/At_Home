@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 import { ImagePickerResponse } from 'react-native-image-picker';
 import { openGallery, openCamera } from '../utils/simpleImagePicker';
+import {
+  requestCameraPermission,
+  requestGalleryPermission,
+  handleImagePickerPermissionError,
+} from '../utils/permissionHelper';
 
 interface UseSimpleImagePickerOptions {
   onImageSelected?: (
@@ -14,7 +19,10 @@ interface UseSimpleImagePickerOptions {
 export const useSimpleImagePicker = (
   options: UseSimpleImagePickerOptions = {},
 ) => {
-  const onImageGalleryClick = useCallback(() => {
+  const onImageGalleryClick = useCallback(async () => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) return;
+
     const pickerOptions = {
       selectionLimit: 1,
       mediaType: 'photo' as const,
@@ -31,6 +39,7 @@ export const useSimpleImagePicker = (
 
         if (res.errorCode) {
           console.log('Gallery Error:', res.errorMessage);
+          if (handleImagePickerPermissionError(res, 'gallery')) return;
           options.onError?.(res.errorMessage || 'Gallery error');
           return;
         }
@@ -60,7 +69,10 @@ export const useSimpleImagePicker = (
     }
   }, [options]);
 
-  const onCameraPress = useCallback(() => {
+  const onCameraPress = useCallback(async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return;
+
     const pickerOptions = {
       saveToPhotos: false,
       mediaType: 'photo' as const,
@@ -77,6 +89,7 @@ export const useSimpleImagePicker = (
 
         if (res.errorCode) {
           console.log('Camera Error:', res.errorMessage);
+          if (handleImagePickerPermissionError(res, 'camera')) return;
           options.onError?.(res.errorMessage || 'Camera error');
           return;
         }

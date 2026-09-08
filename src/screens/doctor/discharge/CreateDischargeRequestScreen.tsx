@@ -8,10 +8,11 @@ import {
   Animated,
   Easing,
   Platform,
-  PermissionsAndroid,
   AppState,
   AppStateStatus,
   Linking,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -25,6 +26,7 @@ import {
   AppText,
   AppLoader,
   ProfileAvatar,
+  AppBottomSheet,
 } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -39,7 +41,24 @@ import {
   SelectProviderSheet,
 } from '../../../components/ActionSheets';
 import { Provider } from '../providers/ProvidersCallList';
-import { uploadAudioDirectToS3 } from '../../../services/uploadService';
+import {
+  uploadAudioDirectToS3,
+  uploadPrescriptionDirectToS3,
+} from '../../../services/uploadService';
+import { openCamera, openGallery } from '../../../utils/simpleImagePicker';
+import { ImagePickerResponse } from 'react-native-image-picker';
+import {
+  requestCameraPermission,
+  requestGalleryPermission,
+  requestMicrophonePermission,
+  handleImagePickerPermissionError,
+} from '../../../utils/permissionHelper';
+import {
+  pickPrescriptionDocuments,
+  isPdfDocument,
+  isDocumentFile,
+  getDisplayFileName,
+} from '../../../utils/documentPickerHelper';
 import {
   serviceRequestApi,
   CreateServiceRequestPayload,
@@ -98,6 +117,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           setRecordedAudioUri(data.voiceMessageUrl);
           setRecordingState('recorded');
         }
+        if (data.prescriptionFiles && Array.isArray(data.prescriptionFiles)) {
+          setPrescriptionFiles(data.prescriptionFiles);
+        }
       }
     } catch (e) {
       console.log('Error fetching fresh pre-request details in CreateDischargeRequestScreen:', e);
@@ -109,6 +131,12 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   useEffect(() => {
     if (route.params?.request) {
       setEditRequest(route.params.request);
+      if (
+        route.params.request.prescriptionFiles &&
+        Array.isArray(route.params.request.prescriptionFiles)
+      ) {
+        setPrescriptionFiles(route.params.request.prescriptionFiles);
+      }
     }
     if (isEdit || route.params?.request || route.params?.requestId) {
       fetchPreRequestDetails();
@@ -129,6 +157,17 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(
     editRequest?.voiceMessageUrl || null,
   );
+  const [prescriptionFiles, setPrescriptionFiles] = useState<string[]>(
+    editRequest?.prescriptionFiles && Array.isArray(editRequest.prescriptionFiles)
+      ? editRequest.prescriptionFiles
+      : [],
+  );
+  const [prescriptionMeta, setPrescriptionMeta] = useState<
+    Record<string, { name?: string; isDoc?: boolean; type?: string }>
+  >({});
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(
+    null,
+  );
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -137,6 +176,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   // Bottom sheets
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
   const selectProviderSheetRef = useRef<ActionSheetRef>(null);
+  const prescriptionPickerSheetRef = useRef<ActionSheetRef>(null);
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -263,30 +303,6 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     };
   }, [recordingState, pulseAnim]);
 
-  // Request Android recording permission
-  const requestMicrophonePermission = async (): Promise<boolean> => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-          {
-            title: 'Microphone Permission',
-            message:
-              'At-Home needs access to your microphone to record doctor instructions.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn('Microphone permission error:', err);
-        return false;
-      }
-    }
-    return true;
-  };
-
   // Format seconds into MM:SS
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -301,7 +317,6 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     try {
       const hasPermission = await requestMicrophonePermission();
       if (!hasPermission) {
-        SHOW_TOAST('Microphone permission is required', 'error');
         return;
       }
 
@@ -383,6 +398,130 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     }
   };
 
+  const handleTakePhoto = async () => {
+    prescriptionPickerSheetRef.current?.hide();
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      return;
+    }
+    setTimeout(() => {
+      openCamera(
+        {
+          saveToPhotos: false,
+          mediaType: 'photo',
+          includeBase64: false,
+        },
+        (res: ImagePickerResponse) => {
+          if (res.didCancel) return;
+          if (res.errorCode) {
+            if (handleImagePickerPermissionError(res, 'camera')) return;
+            SHOW_TOAST(res.errorMessage || 'Camera error', 'error');
+            return;
+          }
+          const asset = res.assets?.[0];
+          if (asset && asset.uri) {
+            const capturedUri = asset.uri;
+            setPrescriptionMeta(prev => ({
+              ...prev,
+              [capturedUri]: {
+                name: asset.fileName || 'Photo.jpg',
+                isDoc: false,
+                type: asset.type || 'image/jpeg',
+              },
+            }));
+            setPrescriptionFiles(prev => [...prev, capturedUri]);
+          }
+        },
+      );
+    }, 250);
+  };
+
+  const handleSelectPhoto = async () => {
+    prescriptionPickerSheetRef.current?.hide();
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) {
+      return;
+    }
+    setTimeout(() => {
+      openGallery(
+        {
+          selectionLimit: 5,
+          mediaType: 'photo',
+          includeBase64: false,
+        },
+        (res: ImagePickerResponse) => {
+          if (res.didCancel) return;
+          if (res.errorCode) {
+            if (handleImagePickerPermissionError(res, 'gallery')) return;
+            SHOW_TOAST(res.errorMessage || 'Gallery error', 'error');
+            return;
+          }
+          if (res.assets && res.assets.length > 0) {
+            const newUris = res.assets
+              .map(a => a.uri)
+              .filter((u): u is string => !!u);
+            const newMeta: Record<
+              string,
+              { name?: string; isDoc?: boolean; type?: string }
+            > = {};
+            res.assets.forEach(a => {
+              if (a.uri) {
+                newMeta[a.uri] = {
+                  name: a.fileName || 'Photo.jpg',
+                  isDoc: false,
+                  type: a.type || 'image/jpeg',
+                };
+              }
+            });
+            setPrescriptionMeta(prev => ({ ...prev, ...newMeta }));
+            setPrescriptionFiles(prev => [...prev, ...newUris]);
+          }
+        },
+      );
+    }, 250);
+  };
+
+  const handleSelectFile = async () => {
+    prescriptionPickerSheetRef.current?.hide();
+    try {
+      const picked = await pickPrescriptionDocuments({
+        allowMultiSelection: true,
+      });
+      if (picked && picked.length > 0) {
+        const newUris: string[] = [];
+        const newMeta: Record<
+          string,
+          { name?: string; isDoc?: boolean; type?: string }
+        > = {};
+        for (const f of picked) {
+          if (f.uri) {
+            newUris.push(f.uri);
+            newMeta[f.uri] = {
+              name: f.name || 'Prescription.pdf',
+              isDoc: f.isDoc ?? true,
+              type: f.type || undefined,
+            };
+          }
+        }
+        setPrescriptionMeta(prev => ({ ...prev, ...newMeta }));
+        setPrescriptionFiles(prev => [...prev, ...newUris]);
+      }
+    } catch (err: any) {
+      console.warn('Document picker error:', err);
+    }
+  };
+
+  const handleRemovePrescription = (indexToRemove: number) => {
+    setPrescriptionFiles(prev =>
+      prev.filter((_, idx) => idx !== indexToRemove),
+    );
+  };
+
+  const handleOpenPrescriptionPicker = () => {
+    if (isReadOnly) return;
+    prescriptionPickerSheetRef.current?.show();
+  };
+
   const isAccepted =
     editRequest?.preRequestStatus === 'accepted' || !!route.params?.isAccepted;
 
@@ -397,10 +536,11 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
   const isReadOnly = isAccepted || isRejected || isPending;
 
-  // Validate if at least voice or text is provided
+  // Validate if at least voice, prescription document, or text is provided
   const hasVoice = recordingState === 'recorded' && !!recordedAudioUri;
   const hasText = instructionsText.trim().length > 0;
-  const canSubmit = isAccepted || hasVoice || hasText;
+  const hasPrescriptions = prescriptionFiles.length > 0;
+  const canSubmit = isAccepted || hasVoice || hasText || hasPrescriptions;
 
   const handleCallAssignedProvider = (phone?: string | null) => {
     if (phone) {
@@ -543,7 +683,36 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         }
       }
 
-      // 2. Prepare API payload matching the exact backend spec
+      // 2. Upload any local prescription files to AWS S3 bucket
+      const uploadedPrescriptionUrls: string[] = [];
+      if (prescriptionFiles && prescriptionFiles.length > 0) {
+        console.log(
+          '📤 Uploading prescription documents to S3...',
+          prescriptionFiles.length,
+        );
+        for (const fileUri of prescriptionFiles) {
+          if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
+            uploadedPrescriptionUrls.push(fileUri);
+          } else {
+            const meta = prescriptionMeta[fileUri];
+            const isDoc =
+              meta?.isDoc !== undefined ? meta.isDoc : isDocumentFile(fileUri);
+            const ext = isDoc
+              ? (meta?.name?.split('.').pop() || 'pdf').toLowerCase()
+              : undefined;
+            const uploadRes = await uploadPrescriptionDirectToS3(fileUri, ext);
+            if (uploadRes?.fileUrl) {
+              uploadedPrescriptionUrls.push(uploadRes.fileUrl);
+            }
+          }
+        }
+        console.log(
+          '✅ Prescription files uploaded to S3 successfully:',
+          uploadedPrescriptionUrls,
+        );
+      }
+
+      // 3. Prepare API payload matching the exact backend spec
       const apiPayload: CreateServiceRequestPayload = {
         isPreRequest: true,
       };
@@ -554,6 +723,12 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
       if (audioS3Url) {
         apiPayload.voiceMessageUrl = audioS3Url;
+      }
+
+      if (uploadedPrescriptionUrls.length > 0) {
+        apiPayload.prescriptionFiles = uploadedPrescriptionUrls;
+      } else if (isEdit) {
+        apiPayload.prescriptionFiles = [];
       }
 
       if (recipientType === 'specific' && provider) {
@@ -580,6 +755,10 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       );
       console.log('📝 Written Note / Text:', apiPayload.initialNotes || '(None)');
       console.log('🎙️ Audio S3 URL:', apiPayload.voiceMessageUrl || '(None)');
+      console.log(
+        '📄 Prescription Files:',
+        apiPayload.prescriptionFiles || '(None)',
+      );
       console.log('👥 Recipient Option:', recipientType);
       if (provider) {
         console.log('👤 Selected Provider:', {
@@ -591,7 +770,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       console.log('📦 API Request Body:', JSON.stringify(apiPayload, null, 2));
       console.log('====================================================');
 
-      // 3. Call backend API to create or update pre-request
+      // 4. Call backend API to create or update pre-request
       let response;
       if (
         isEdit &&
@@ -603,6 +782,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           targetId,
           apiPayload,
         );
+        
         // Fallback to create if update route returns error
         if (!response.success && response.message?.includes('404')) {
           response = await serviceRequestApi.createServiceRequest(apiPayload);
@@ -1260,7 +1440,286 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           </View>
 
           {/* ──────────────────────────────────────────────────────────
-              SECTION 2: TEXT / PARAGRAPH INSTRUCTIONS
+              SECTION 2: PRESCRIPTION DOCUMENT (TAKE PHOTO / SELECT FILE)
+          ────────────────────────────────────────────────────────── */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeaderRow}>
+              <View
+                style={[
+                  styles.sectionBadge,
+                ]}
+              >
+                <Image
+                  source={IMAGES.ic_file}
+                  style={[
+                    styles.sectionBadgeIcon,
+                    { tintColor: COLORS.primary },
+                  ]}
+                />
+              </View>
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.prescriptionDocument) || 'Prescription Document'}
+              </AppText>
+              {prescriptionFiles.length > 0 && (
+                <View style={styles.prescriptionCountBadge}>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.primary}
+                  >
+                    {prescriptionFiles.length}{' '}
+                    {prescriptionFiles.length === 1
+                      ? t(STRING.file) || 'file'
+                      : t(STRING.files) || 'files'}
+                  </AppText>
+                </View>
+              )}
+            </View>
+
+            {prescriptionFiles.length === 0 ? (
+              <View style={styles.recordCard}>
+                {isReadOnly ? (
+                  <View
+                    style={{
+                      alignItems: 'center',
+                      paddingVertical: getScaleSize(12),
+                    }}
+                  >
+                    <Image
+                      source={IMAGES.document_icon}
+                      style={{
+                        width: getScaleSize(24),
+                        height: getScaleSize(24),
+                        tintColor: COLORS._6F767E,
+                        resizeMode: 'contain',
+                      }}
+                    />
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: getScaleSize(8) }}
+                    >
+                      {t(STRING.noPrescriptionDocument) ||
+                        'No prescription document attached'}
+                    </AppText>
+                  </View>
+                ) : (
+                  <View style={styles.prescriptionUploadDashed}>
+                    <View style={styles.prescriptionUploadIconWrap}>
+                      <Image
+                        source={IMAGES.ic_file}
+                        style={styles.prescriptionUploadIcon}
+                      />
+                    </View>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                      style={{ marginTop: getScaleSize(10) }}
+                    >
+                      {t(STRING.uploadPrescription) || 'Upload Prescription'}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                      style={{
+                        marginTop: getScaleSize(4),
+                        textAlign: 'center',
+                        paddingHorizontal: getScaleSize(16),
+                      }}
+                    >
+                      {t(STRING.attachPrescriptionSubtitle) ||
+                        'Add a photo or file of the medical prescription'}
+                    </AppText>
+
+                    {/* Quick action buttons: Take Photo & Select File */}
+                    <View style={styles.prescriptionActionButtonsRow}>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={styles.prescriptionActionBtn}
+                        onPress={handleTakePhoto}
+                      >
+                        <Image
+                          source={IMAGES.ic_camera}
+                          style={styles.prescriptionBtnIcon}
+                        />
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS.primary}
+                        >
+                          {t(STRING.takePhoto) || 'Take Photo'}
+                        </AppText>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={styles.prescriptionActionBtn}
+                        onPress={handleSelectFile}
+                      >
+                        <Image
+                          source={IMAGES.ic_file}
+                          style={[
+                            styles.prescriptionBtnIcon,
+                            // { tintColor: COLORS.primary },
+                          ]}
+                        />
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS.primary}
+                        >
+                          {t(STRING.selectFile) || 'Select File'}
+                        </AppText>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={[styles.recordCard, styles.prescriptionCardActive]}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.prescriptionScrollView}
+                  contentContainerStyle={styles.prescriptionThumbnailsContainer}
+                >
+                  {prescriptionFiles.map((uri, idx) => {
+                    const meta = prescriptionMeta[uri];
+                    const isDoc =
+                      meta?.isDoc !== undefined
+                        ? meta.isDoc
+                        : isDocumentFile(uri);
+                    const displayName =
+                      meta?.name || getDisplayFileName(uri, 'Prescription.pdf');
+                    const isPdf =
+                      displayName.toLowerCase().endsWith('.pdf') ||
+                      meta?.type === 'application/pdf' ||
+                      isPdfDocument(uri);
+                    const badgeText = isPdf ? 'PDF' : 'DOC';
+
+                    return (
+                      <View
+                        key={`presc_${idx}`}
+                        style={styles.prescriptionThumbWrapper}
+                      >
+                        <TouchableOpacity
+                          activeOpacity={isReadOnly ? 0.85 : 1}
+                          disabled={!isReadOnly}
+                          onPress={() => {
+                            if (isDoc) {
+                              NavigationService.navigate(SCREENS.PDF_VIEWER, {
+                                pdfUrl: uri,
+                                title:
+                                  displayName ||
+                                  t(STRING.prescriptionDocument) ||
+                                  'Prescription Document',
+                              });
+                            } else {
+                              setSelectedPreviewImage(uri);
+                            }
+                          }}
+                          style={[
+                            styles.prescriptionThumbPressable,
+                            isDoc && styles.prescriptionPdfThumbPressable,
+                          ]}
+                        >
+                          {isDoc ? (
+                            <View style={styles.prescriptionPdfContent}>
+                              <View style={styles.prescriptionPdfBadge}>
+                                <AppText
+                                  size={getScaleSize(9)}
+                                  font={FONTS.Inter.Bold}
+                                  color={COLORS.white}
+                                >
+                                  {badgeText}
+                                </AppText>
+                              </View>
+                              <Image
+                                source={IMAGES.ic_file}
+                                style={styles.prescriptionPdfIcon}
+                                resizeMode="contain"
+                              />
+                              <AppText
+                                size={getScaleSize(9)}
+                                font={FONTS.Inter.Medium}
+                                color={COLORS._1A1D1F}
+                                numberOfLines={2}
+                                ellipsizeMode="middle"
+                                style={styles.prescriptionDocName}
+                              >
+                                {displayName}
+                              </AppText>
+                            </View>
+                          ) : (
+                            <Image
+                              source={{ uri }}
+                              style={styles.prescriptionThumbImage}
+                              resizeMode="cover"
+                            />
+                          )}
+                          {isReadOnly && (
+                            <View style={styles.prescriptionViewBadge}>
+                              <Image
+                                source={IMAGES.serviceEyeIcon || IMAGES.eye}
+                                style={styles.prescriptionEyeIcon}
+                              />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+
+                        {!isReadOnly && (
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={styles.prescriptionDeleteBtn}
+                            onPress={() => handleRemovePrescription(idx)}
+                          >
+                            <Image
+                              source={IMAGES.crossIcon}
+                              style={styles.prescriptionDeleteIcon}
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    );
+                  })}
+
+                  {!isReadOnly && (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.prescriptionAddMoreBtn}
+                      onPress={handleOpenPrescriptionPicker}
+                    >
+                      <View style={styles.prescriptionAddMoreIconWrap}>
+                        <Image
+                          source={IMAGES.ic_camera}
+                          style={styles.prescriptionAddMoreIcon}
+                        />
+                      </View>
+                      <AppText
+                        size={getScaleSize(11)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                        align="center"
+                        style={{ marginTop: getScaleSize(4) }}
+                      >
+                        {t(STRING.addAnotherPrescription) || '+ Add'}
+                      </AppText>
+                    </TouchableOpacity>
+                  )}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          {/* ──────────────────────────────────────────────────────────
+              SECTION 3: TEXT / PARAGRAPH INSTRUCTIONS
           ────────────────────────────────────────────────────────── */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeaderRow}>
@@ -1402,6 +1861,186 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           ref={selectProviderSheetRef}
           onSelectProvider={handleProviderSelected}
         />
+
+        {/* Bottom Sheet 3: Prescription Picker (Take Photo / Select File) */}
+        <AppBottomSheet ref={prescriptionPickerSheetRef}>
+          <View style={styles.prescriptionSheetContent}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+              align="center"
+              style={{ marginBottom: getScaleSize(4) }}
+            >
+              {t(STRING.prescriptionDocument) || 'Prescription Document'}
+            </AppText>
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+              align="center"
+              style={{ marginBottom: getScaleSize(20) }}
+            >
+              {t(STRING.takePhotoOrSelectFile) || 'Take Photo / Select File'}
+            </AppText>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.sheetOptionBtn}
+              onPress={handleTakePhoto}
+            >
+              <View style={styles.sheetOptionIconWrap}>
+                <Image
+                  source={IMAGES.ic_camera}
+                  style={styles.sheetOptionIcon}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.takePhoto) || 'Take Photo'}
+                </AppText>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Regular}
+                  color={COLORS._6F767E}
+                  style={{ marginTop: 2 }}
+                >
+                  {t('Use camera to capture document') ||
+                    'Use camera to capture document'}
+                </AppText>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.sheetOptionBtn}
+              onPress={handleSelectPhoto}
+            >
+              <View style={styles.sheetOptionIconWrap}>
+                <Image
+                  source={IMAGES.ic_gallery}
+                  style={styles.sheetOptionIcon}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.photoLibrary) || 'Photo Library'}
+                </AppText>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Regular}
+                  color={COLORS._6F767E}
+                  style={{ marginTop: 2 }}
+                >
+                  {t(STRING.chooseFromGallery) ||
+                    'Choose photo from gallery'}
+                </AppText>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.sheetOptionBtn}
+              onPress={handleSelectFile}
+            >
+              <View
+                style={[
+                  styles.sheetOptionIconWrap,
+                  // { backgroundColor: '#FEF2F2' },
+                ]}
+              >
+                <Image
+                  source={IMAGES.ic_file}
+                  style={[
+                    styles.sheetOptionIcon,
+                    // { tintColor: '#DC2626' },
+                  ]}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.selectPdfOrDocument) || 'Select PDF / Document'}
+                </AppText>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Regular}
+                  color={COLORS._6F767E}
+                  style={{ marginTop: 2 }}
+                >
+                  {t(STRING.selectPdfOrDocumentDesc) ||
+                    'Choose PDF document or file from device'}
+                </AppText>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.sheetCancelBtn}
+              onPress={() => prescriptionPickerSheetRef.current?.hide()}
+            >
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._6F767E}
+                align="center"
+              >
+                {t(STRING.cancel) || 'Cancel'}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </AppBottomSheet>
+
+        {/* Full-Screen Prescription Image Preview Modal */}
+        <Modal
+          visible={!!selectedPreviewImage}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setSelectedPreviewImage(null)}
+        >
+          <View style={styles.previewModalOverlay}>
+            <View style={styles.previewModalHeader}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.prescriptionPreview) || 'Prescription Preview'}
+              </AppText>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.previewModalCloseBtn}
+                onPress={() => setSelectedPreviewImage(null)}
+              >
+                <Image
+                  source={IMAGES.crossIcon}
+                  style={styles.previewModalCloseIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.previewModalBody}>
+              {selectedPreviewImage && (
+                <Image
+                  source={{ uri: selectedPreviewImage }}
+                  style={styles.previewFullImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
       </AppSafeAreaView>
   );
 };
@@ -1976,5 +2615,282 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS._2563EB,
+  },
+  prescriptionCountBadge: {
+    marginLeft: 'auto',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(2),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  prescriptionUploadDashed: {
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    borderStyle: 'dashed',
+    borderRadius: getScaleSize(12),
+    paddingVertical: getScaleSize(20),
+    paddingHorizontal: getScaleSize(16),
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  prescriptionUploadIconWrap: {
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(24),
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prescriptionUploadIcon: {
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    resizeMode: 'contain',
+    // tintColor: COLORS.primary,
+  },
+  prescriptionActionButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(12),
+    marginTop: getScaleSize(16),
+    width: '100%',
+  },
+  prescriptionActionBtn: {
+    flex: 1,
+    maxWidth: getScaleSize(155),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: getScaleSize(6),
+    backgroundColor: COLORS.white,
+    paddingVertical: getScaleSize(10),
+    paddingHorizontal: getScaleSize(12),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  prescriptionBtnIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  prescriptionCardActive: {
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(10),
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    width: '100%',
+  },
+  prescriptionScrollView: {
+    width: '100%',
+  },
+  prescriptionThumbnailsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: getScaleSize(12),
+    paddingTop: getScaleSize(6),
+    paddingBottom: getScaleSize(4),
+    paddingRight: getScaleSize(12),
+  },
+  prescriptionThumbWrapper: {
+    position: 'relative',
+    width: getScaleSize(92),
+    height: getScaleSize(110),
+  },
+  prescriptionThumbPressable: {
+    width: '100%',
+    height: '100%',
+    borderRadius: getScaleSize(10),
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  prescriptionPdfThumbPressable: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  prescriptionPdfContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: getScaleSize(6),
+  },
+  prescriptionPdfBadge: {
+    position: 'absolute',
+    top: getScaleSize(4),
+    left: getScaleSize(4),
+    backgroundColor: '#DC2626',
+    paddingHorizontal: getScaleSize(5),
+    paddingVertical: getScaleSize(1.5),
+    borderRadius: getScaleSize(4),
+  },
+  prescriptionPdfIcon: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    tintColor: '#DC2626',
+    marginTop: getScaleSize(10)
+  },
+  prescriptionDocName: {
+    marginTop: getScaleSize(5),
+    paddingHorizontal: getScaleSize(4),
+    textAlign: 'center',
+    lineHeight: getScaleSize(12),
+  },
+  prescriptionThumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  prescriptionViewBadge: {
+    position: 'absolute',
+    bottom: getScaleSize(4),
+    right: getScaleSize(4),
+    width: getScaleSize(22),
+    height: getScaleSize(22),
+    borderRadius: getScaleSize(11),
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prescriptionEyeIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  prescriptionDeleteBtn: {
+    position: 'absolute',
+    top: -getScaleSize(6),
+    right: -getScaleSize(6),
+    width: getScaleSize(22),
+    height: getScaleSize(22),
+    borderRadius: getScaleSize(11),
+    backgroundColor: COLORS.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  prescriptionDeleteIcon: {
+    width: getScaleSize(10),
+    height: getScaleSize(10),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  prescriptionAddMoreBtn: {
+    width: getScaleSize(92),
+    height: getScaleSize(110),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    borderStyle: 'dashed',
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: getScaleSize(8),
+  },
+  prescriptionAddMoreIconWrap: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prescriptionAddMoreIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  prescriptionSheetContent: {
+    paddingVertical: getScaleSize(8),
+    paddingHorizontal: getScaleSize(4),
+  },
+  sheetOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: getScaleSize(14),
+    paddingHorizontal: getScaleSize(16),
+    borderRadius: getScaleSize(12),
+    backgroundColor: '#F9FAFB',
+    marginBottom: getScaleSize(10),
+    gap: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  sheetOptionIconWrap: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetOptionIcon: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  sheetCancelBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getScaleSize(14),
+    marginTop: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  previewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'space-between',
+  },
+  previewModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: getScaleSize(20),
+    paddingTop: Platform.OS === 'ios' ? getScaleSize(50) : getScaleSize(20),
+    paddingBottom: getScaleSize(16),
+  },
+  previewModalCloseBtn: {
+    width: getScaleSize(36),
+    height: getScaleSize(36),
+    borderRadius: getScaleSize(18),
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewModalCloseIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
+  },
+  previewModalBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: getScaleSize(16),
+  },
+  previewFullImage: {
+    width: '100%',
+    height: '100%',
   },
 });

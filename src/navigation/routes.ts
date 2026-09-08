@@ -3,6 +3,7 @@ export const SCREENS = {
   WELCOME: 'Welcome',
   LOGIN: 'Login',
   REGISTER: 'Register',
+  DOCTOR_REGISTERED: 'DoctorRegistered',
   REGISTER_SUCCESS: 'RegisterSuccess',
   FORGOT_PASSWORD: 'ForgotPassword',
   OTP_VERIFICATION: 'OtpVerification',
