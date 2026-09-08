@@ -1944,15 +1944,65 @@ export const PreRequestDetailSheet = React.forwardRef<
     };
   }, [stopAudio]);
 
+  const pendingNavigationRef = React.useRef<{
+    screen: string;
+    params?: object;
+  } | null>(null);
+  const fallbackTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const performPendingNavigation = React.useCallback(() => {
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
+    if (pendingNavigationRef.current) {
+      const { screen, params } = pendingNavigationRef.current;
+      pendingNavigationRef.current = null;
+      // On iOS wait a moment for the native modal to fully dismiss from the view hierarchy before pushing
+      setTimeout(
+        () => {
+          NavigationService.navigate(screen, params);
+        },
+        Platform.OS === 'ios' ? 120 : 50,
+      );
+    }
+  }, []);
+
   const handleSheetClose = () => {
     stopAudio();
     onClose?.();
+    performPendingNavigation();
   };
 
-  const handleClose = () => {
+  const handleClose = React.useCallback(() => {
     stopAudio();
     sheetRef.current?.hide();
-  };
+  }, [stopAudio]);
+
+  const closeAndNavigate = React.useCallback(
+    (screen: string, params?: object) => {
+      pendingNavigationRef.current = { screen, params };
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
+      // Safety fallback in case onClose does not trigger within 400ms
+      fallbackTimerRef.current = setTimeout(() => {
+        performPendingNavigation();
+      }, 400);
+      handleClose();
+    },
+    [handleClose, performPendingNavigation],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleTogglePlay = async () => {
     if (!request?.voiceMessageUrl) return;
@@ -2168,7 +2218,7 @@ export const PreRequestDetailSheet = React.forwardRef<
                         activeOpacity={0.85}
                         onPress={() => {
                           if (isDoc) {
-                            NavigationService.navigate(SCREENS.PDF_VIEWER, {
+                            closeAndNavigate(SCREENS.PDF_VIEWER, {
                               pdfUrl: uri,
                               title:
                                 displayName ||
@@ -2225,10 +2275,11 @@ export const PreRequestDetailSheet = React.forwardRef<
                               </AppText>
                             </View>
                             <Image
-                              source={IMAGES.document_icon}
+                              source={IMAGES.ic_file}
                               style={{
                                 width: getScaleSize(26),
                                 height: getScaleSize(26),
+                                marginTop: getScaleSize(10),
                                 tintColor: '#DC2626',
                               }}
                               resizeMode="contain"
@@ -2475,8 +2526,7 @@ export const PreRequestDetailSheet = React.forwardRef<
               activeOpacity={0.85}
               style={styles.preRequestAcceptBtn}
               onPress={() => {
-                handleClose();
-                NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
+                closeAndNavigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
                   request,
                   isEdit: true,
                   isAccepted: true,

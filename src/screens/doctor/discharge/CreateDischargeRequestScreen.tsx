@@ -1528,9 +1528,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       size={getScaleSize(12)}
                       font={FONTS.Inter.Regular}
                       color={COLORS._6F767E}
+                      align='center'
                       style={{
                         marginTop: getScaleSize(4),
-                        textAlign: 'center',
                         paddingHorizontal: getScaleSize(16),
                       }}
                     >
@@ -1550,9 +1550,11 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                           style={styles.prescriptionBtnIcon}
                         />
                         <AppText
-                          size={getScaleSize(12)}
+                          size={getScaleSize(11.5)}
                           font={FONTS.Inter.SemiBold}
                           color={COLORS.primary}
+                          numberOfLines={1}
+                          style={styles.prescriptionBtnText}
                         >
                           {t(STRING.takePhoto) || 'Take Photo'}
                         </AppText>
@@ -1565,15 +1567,14 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       >
                         <Image
                           source={IMAGES.ic_file}
-                          style={[
-                            styles.prescriptionBtnIcon,
-                            // { tintColor: COLORS.primary },
-                          ]}
+                          style={styles.prescriptionBtnIcon}
                         />
                         <AppText
-                          size={getScaleSize(12)}
+                          size={getScaleSize(11.5)}
                           font={FONTS.Inter.SemiBold}
                           color={COLORS.primary}
+                          numberOfLines={1}
+                          style={styles.prescriptionBtnText}
                         >
                           {t(STRING.selectFile) || 'Select File'}
                         </AppText>
@@ -2651,22 +2652,22 @@ const styles = StyleSheet.create({
   },
   prescriptionActionButtonsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
-    gap: getScaleSize(12),
+    gap: getScaleSize(10),
     marginTop: getScaleSize(16),
     width: '100%',
   },
   prescriptionActionBtn: {
     flex: 1,
-    maxWidth: getScaleSize(155),
+    minHeight: getScaleSize(46),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: getScaleSize(6),
     backgroundColor: COLORS.white,
     paddingVertical: getScaleSize(10),
-    paddingHorizontal: getScaleSize(12),
+    paddingHorizontal: getScaleSize(8),
     borderRadius: getScaleSize(10),
     borderWidth: 1,
     borderColor: COLORS.primary,
@@ -2681,6 +2682,10 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS.primary,
+  },
+  prescriptionBtnText: {
+    textAlign: 'center',
+    flexShrink: 1,
   },
   prescriptionCardActive: {
     paddingHorizontal: getScaleSize(12),

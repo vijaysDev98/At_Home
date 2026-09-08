@@ -35,7 +35,7 @@ import {
 } from '../../../services/serviceRequestListApi';
 import { getButtonConfig, STRING } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
-import { useRoute, useIsFocused } from '@react-navigation/native';
+import { useRoute, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { PreRequestDetailSheet } from '../../../components/ActionSheets';
@@ -117,6 +117,15 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const searchTextRef = useRef('');
   const currentPageRef = useRef(1);
   const preRequestDetailSheetRef = useRef<ActionSheetRef>(null);
+
+  // Ensure bottom sheet is closed when navigating away from DoctorRequest
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        (preRequestDetailSheetRef.current as any)?.hide();
+      };
+    }, []),
+  );
 
   const fetchServiceRequests = useCallback(
     async (
