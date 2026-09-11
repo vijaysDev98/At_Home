@@ -22,3 +22,4 @@ export { default as ProfileAvatar } from './ProfileAvatar';
 export { default as AppDropDown } from './AppDropDown';
 export { default as SecurityAlertModal } from './SecurityAlertModal';
 export type { SecurityAlertModalProps } from './SecurityAlertModal';
+export { default as DocFormSubmittedModal } from './DocFormSubmittedModal';

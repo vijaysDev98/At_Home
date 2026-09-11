@@ -116,5 +116,8 @@ export const IMAGES = {
   ic_file_notification: require('./ic_file_notification.png'),
   ic_approved_prerequest: require('./ic_approved_prerequest.png'),
   ic_rejected_prerequest: require('./ic_rejected_prerequest.png'),
-  doc_registered: require('./doc_registered.png')
+  doc_registered: require('./doc_registered.png'),
+  doc_registered_fr: require('./doc_registered_fr.png'),
+  doc_form_submitted: require('./doc_form_submitted.png'),
+  doc_form_submitted_fr: require('./doc_form_submitted_fr.png'),
 };

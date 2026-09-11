@@ -1,5 +1,5 @@
 import { Dispatch } from 'react';
-import { setLoading } from '../../../actions/common/commonSlice';
+import { setLoading, setDocFormSubmittedModal } from '../../../actions/common/commonSlice';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS, PROVIDER_TAB_SCREENS } from '../../../navigation/routes';
@@ -131,9 +131,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
           response.message || 'Pre-request updated successfully',
         );
         setTimeout(() => {
-          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-            screen: SCREENS.DOCTOR_REQUEST,
-          });
+          dispatch(setDocFormSubmittedModal(true));
         }, 500);
       } else {
         SHOW_TOAST(response.error || response.message, 'error');
@@ -174,9 +172,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
               screen: PROVIDER_TAB_SCREENS.REQUESTS,
             });
           } else {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
+            dispatch(setDocFormSubmittedModal(true));
           }
         }, 500);
       } else {
@@ -228,9 +224,7 @@ export const handleFormSubmit = async (params: FormActionParams) => {
                   screen: PROVIDER_TAB_SCREENS.REQUESTS,
                 });
               } else {
-                NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-                  screen: SCREENS.DOCTOR_REQUEST,
-                });
+                dispatch(setDocFormSubmittedModal(true));
               }
             }, 500);
           } else {

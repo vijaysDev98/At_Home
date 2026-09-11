@@ -1,16 +1,17 @@
 import React, { useEffect } from 'react';
 import {
-  View,
   Image,
   StyleSheet,
   StatusBar,
   BackHandler,
   ScrollView,
   Dimensions,
+  View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import { PrimaryButton } from '../../components';
 import { IMAGES } from '../../assets/images';
 import NavigationService from '../../navigation/NavigationService';
@@ -24,8 +25,11 @@ const IMAGE_ASPECT_RATIO = 1672 / 941;
 const IMAGE_HEIGHT = SCREEN_WIDTH * IMAGE_ASPECT_RATIO;
 
 const DoctorRegisteredScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
+
+  const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
+  const imageSource = isFrench ? IMAGES.doc_registered_fr : IMAGES.doc_registered;
 
   const handleContinue = () => {
     NavigationService.replace(SCREENS.REGISTER_SUCCESS);
@@ -43,56 +47,35 @@ const DoctorRegisteredScreen: React.FC = () => {
     return () => backHandler.remove();
   }, []);
 
-  const bottomPadding = insets.bottom > 0 ? insets.bottom + getScaleSize(8) : getScaleSize(24);
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
+        backgroundColor={COLORS.white}
       />
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: insets.top,
-            paddingBottom: bottomPadding + getScaleSize(68),
-          },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <Image
-          source={IMAGES.doc_registered}
+          source={imageSource}
           style={styles.fullImage}
           resizeMode="contain"
         />
       </ScrollView>
 
-      {/* Floating Continue Button Container with Soft Gradient Backdrop */}
-      <LinearGradient
-        colors={[
-          'rgba(255, 255, 255, 0)',
-          'rgba(255, 255, 255, 0.85)',
-          '#FFFFFF',
-        ]}
-        locations={[0, 0.45, 1]}
-        style={[
-          styles.floatingCtaContainer,
-          { paddingBottom: bottomPadding },
-        ]}
-        pointerEvents="box-none"
-      >
+      {/* Continue Button Container */}
+      <View style={styles.ctaContainer}>
         <PrimaryButton
           title={t(STRING.continue) || 'Continue'}
           onPress={handleContinue}
           style={styles.continueBtn}
         />
-      </LinearGradient>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -114,13 +97,11 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: IMAGE_HEIGHT,
   },
-  floatingCtaContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  ctaContainer: {
     paddingHorizontal: getScaleSize(24),
-    paddingTop: getScaleSize(32),
+    paddingTop: getScaleSize(12),
+    paddingBottom: getScaleSize(16),
+    backgroundColor: COLORS.white,
   },
   continueBtn: {
     shadowColor: COLORS.primary,
