@@ -1122,7 +1122,7 @@ const AntibiotherapyInfusionForm = forwardRef<
 
         {/* SUBMIT BUTTON */}
         {/* <AppButton
-          title="Submit Form"
+          title="Check and Sign the Form"
           onPress={handleSubmit}
           style={{ marginTop: getScaleSize(20), marginBottom: getScaleSize(20) }}
         /> */}

@@ -31,6 +31,7 @@ const Header = ({
   unreadCount = 0,
   isViewForm = false,
   onViewFormPress,
+  onBackPress,
 }: {
   isBack?: boolean;
   title?: String;
@@ -45,6 +46,7 @@ const Header = ({
   unreadCount?: number;
   isViewForm?: boolean;
   onViewFormPress?: () => void;
+  onBackPress?: () => void;
 }) => {
   const { t } = useTranslation();
   return (
@@ -55,7 +57,7 @@ const Header = ({
             activeOpacity={0.8}
             hitSlop={20}
             style={backIcon ? {} : styles.backBtn}
-            onPress={() => NavigationService.goBack()}
+            onPress={onBackPress ? onBackPress : () => NavigationService.goBack()}
           >
             <Image
               source={backIcon ? backIcon : IMAGES.arrowLeft}

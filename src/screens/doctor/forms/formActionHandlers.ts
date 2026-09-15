@@ -95,9 +95,12 @@ export const handleFormSubmit = async (params: FormActionParams) => {
             response.message || 'Form saved successfully',
           );
           setTimeout(() => {
-            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-              screen: PROVIDER_TAB_SCREENS.REQUESTS,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.PROVIDER_BOTTOM_TABS,
+                params: { screen: PROVIDER_TAB_SCREENS.REQUESTS },
+              },
+            ]);
           }, 500);
         } else {
           SHOW_TOAST(response.error || response.message, 'error');
@@ -131,7 +134,31 @@ export const handleFormSubmit = async (params: FormActionParams) => {
           response.message || 'Pre-request updated successfully',
         );
         setTimeout(() => {
-          dispatch(setDocFormSubmittedModal(true));
+          const reqId =
+            response.data?.data?.id ||
+            response.data?.id ||
+            response.data?.data?._id ||
+            preRequestId;
+          dispatch(
+            setDocFormSubmittedModal({
+              visible: true,
+              target: {
+                routes: [
+                  {
+                    name: SCREENS.DOCTOR_BOTTOM_TABS,
+                    params: { screen: SCREENS.DOCTOR_REQUEST },
+                  },
+                  {
+                    name: SCREENS.FORM_REVIEW_SCREEN,
+                    params: {
+                      request: { ...response.data?.data, id: reqId },
+                      fromCreate: true,
+                    },
+                  },
+                ],
+              },
+            }),
+          );
         }, 500);
       } else {
         SHOW_TOAST(response.error || response.message, 'error');
@@ -168,11 +195,33 @@ export const handleFormSubmit = async (params: FormActionParams) => {
           const isProvider = roles.includes(ROLES.PROVIDER);
 
           if (isProvider) {
-            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-              screen: PROVIDER_TAB_SCREENS.REQUESTS,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.PROVIDER_BOTTOM_TABS,
+                params: { screen: PROVIDER_TAB_SCREENS.REQUESTS },
+              },
+            ]);
           } else {
-            dispatch(setDocFormSubmittedModal(true));
+            dispatch(
+              setDocFormSubmittedModal({
+                visible: true,
+                target: {
+                  routes: [
+                    {
+                      name: SCREENS.DOCTOR_BOTTOM_TABS,
+                      params: { screen: SCREENS.DOCTOR_REQUEST },
+                    },
+                    {
+                      name: SCREENS.FORM_REVIEW_SCREEN,
+                      params: {
+                        request: { ...initialData, id: requestId },
+                        fromCreate: true,
+                      },
+                    },
+                  ],
+                },
+              }),
+            );
           }
         }, 500);
       } else {
@@ -220,11 +269,33 @@ export const handleFormSubmit = async (params: FormActionParams) => {
               const isProvider = roles.includes(ROLES.PROVIDER);
 
               if (isProvider) {
-                NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-                  screen: PROVIDER_TAB_SCREENS.REQUESTS,
-                });
+                NavigationService.resetTo([
+                  {
+                    name: SCREENS.PROVIDER_BOTTOM_TABS,
+                    params: { screen: PROVIDER_TAB_SCREENS.REQUESTS },
+                  },
+                ]);
               } else {
-                dispatch(setDocFormSubmittedModal(true));
+                dispatch(
+                  setDocFormSubmittedModal({
+                    visible: true,
+                    target: {
+                      routes: [
+                        {
+                          name: SCREENS.DOCTOR_BOTTOM_TABS,
+                          params: { screen: SCREENS.DOCTOR_REQUEST },
+                        },
+                        {
+                          name: SCREENS.FORM_REVIEW_SCREEN,
+                          params: {
+                            request: { ...response.data?.data, id: newRequestId },
+                            fromCreate: true,
+                          },
+                        },
+                      ],
+                    },
+                  }),
+                );
               }
             }, 500);
           } else {
@@ -297,13 +368,19 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
           const isProvider = roles.includes(ROLES.PROVIDER);
 
           if (isProvider) {
-            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-              screen: PROVIDER_TAB_SCREENS.REQUESTS,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.PROVIDER_BOTTOM_TABS,
+                params: { screen: PROVIDER_TAB_SCREENS.REQUESTS },
+              },
+            ]);
           } else {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.DOCTOR_BOTTOM_TABS,
+                params: { screen: SCREENS.DOCTOR_REQUEST },
+              },
+            ]);
           }
         }, 500);
       } else {
@@ -338,13 +415,19 @@ export const handleSaveAsDraft = async (params: FormActionParams) => {
           const isProvider = roles.includes(ROLES.PROVIDER);
 
           if (isProvider) {
-            NavigationService.navigate(SCREENS.PROVIDER_BOTTOM_TABS, {
-              screen: PROVIDER_TAB_SCREENS.REQUESTS,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.PROVIDER_BOTTOM_TABS,
+                params: { screen: PROVIDER_TAB_SCREENS.REQUESTS },
+              },
+            ]);
           } else {
-            NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-              screen: SCREENS.DOCTOR_REQUEST,
-            });
+            NavigationService.resetTo([
+              {
+                name: SCREENS.DOCTOR_BOTTOM_TABS,
+                params: { screen: SCREENS.DOCTOR_REQUEST },
+              },
+            ]);
           }
         }, 500);
       } else {

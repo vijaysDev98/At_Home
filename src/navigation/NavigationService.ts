@@ -30,6 +30,18 @@ function reset(route: string) {
   );
 }
 
+function resetTo(
+  routes: Array<{ name: string; params?: object }>,
+  index?: number,
+) {
+  navigator.dispatch(
+    CommonActions.reset({
+      index: index ?? routes.length - 1,
+      routes: routes,
+    }),
+  );
+}
+
 function goBack() {
   navigator.dispatch(CommonActions.goBack());
   // navigator._navigation.goBack();
@@ -74,6 +86,7 @@ export default {
   closeDrawer,
   pop,
   reset,
+  resetTo,
   push,
   replace,
   getCurrentRoute,

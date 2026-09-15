@@ -31,6 +31,9 @@ const DocFormSubmittedModal: React.FC = () => {
   const visible = useSelector(
     (state: RootState) => state.common.docFormSubmittedModalVisible,
   );
+  const target = useSelector(
+    (state: RootState) => state.common.docFormSubmittedModalTarget,
+  );
   const { t, i18n } = useTranslation();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
 
@@ -41,9 +44,13 @@ const DocFormSubmittedModal: React.FC = () => {
 
   const handleContinue = () => {
     dispatch(setDocFormSubmittedModal(false));
-    NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
-      screen: SCREENS.DOCTOR_REQUEST,
-    });
+    if (target?.routes && target.routes.length > 0) {
+      NavigationService.resetTo(target.routes);
+    } else {
+      NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+        screen: SCREENS.DOCTOR_REQUEST,
+      });
+    }
   };
 
   useEffect(() => {
@@ -57,7 +64,7 @@ const DocFormSubmittedModal: React.FC = () => {
       onBackPress,
     );
     return () => backHandler.remove();
-  }, [visible]);
+  }, [visible, target]);
 
   if (!visible) return null;
 

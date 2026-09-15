@@ -218,7 +218,7 @@ export const getFormScreenButtons = (
           handler: 'saveAsDraft',
         },
         right: {
-          label: STRING.submitRequest,
+          label: STRING.checkAndSignForm,
           variant: 'primary',
           handler: 'submitRequest',
         },

@@ -154,6 +154,8 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
     : t(STRING.saveProgress);
   const rightButtonLabel = isSubmitted
     ? t(STRING.updateAndSign)
+    : isDoctor
+    ? t(STRING.checkAndSignForm)
     : t(STRING.submitRequest);
 
   // Button handlers - call the form's methods via ref

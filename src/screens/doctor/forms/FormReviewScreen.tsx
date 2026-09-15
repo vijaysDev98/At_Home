@@ -36,7 +36,17 @@ import { STRING } from '../../../constant';
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
   const { t } = useTranslation();
-  const request: ServiceRequest = (route.params as any)?.request;
+  const { request, fromCreate } = (route.params as any) || {};
+
+  const handleGoBack = () => {
+    if (fromCreate) {
+      NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+        screen: SCREENS.DOCTOR_REQUEST,
+      });
+    } else {
+      NavigationService.goBack();
+    }
+  };
 
   const requestId =
     request?.id || (request as any)?._id || (route.params as any)?.requestId;
@@ -144,6 +154,7 @@ const FormReviewScreen: React.FC = () => {
         <Header
           title={t(STRING.reviewAndSign)}
           isBack={true}
+          onBackPress={handleGoBack}
           style={styles.header}
         />
 
@@ -213,6 +224,7 @@ const FormReviewScreen: React.FC = () => {
                     onSignatureCompleted={fetchServiceRequestDetails}
                     onSigningStart={handleSigningStart}
                     onSigningEnd={handleSigningEnd}
+                    onGoBack={handleGoBack}
                   />
                 </View>
               </ScrollView>

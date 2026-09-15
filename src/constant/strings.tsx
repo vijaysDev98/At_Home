@@ -227,6 +227,7 @@ export const STRING = {
   saveAsDraft: 'Save as Draft',
   saveProgress: 'Save Progress',
   submitRequest: 'Submit Request',
+  checkAndSignForm: 'Check and sign the form',
 
   // ─── Validation / Errors ─────────────────────────────────────
   fNameRequired: 'First name is required.',

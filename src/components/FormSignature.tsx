@@ -31,6 +31,7 @@ export interface FormSignatureProps {
   onSignatureCompleted?: () => void;
   onSigningStart?: () => void;
   onSigningEnd?: () => void;
+  onGoBack?: () => void;
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
@@ -40,6 +41,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   onSignatureCompleted,
   onSigningStart,
   onSigningEnd,
+  onGoBack,
 }) => {
 
   const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
@@ -163,7 +165,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
       onSignatureCompleted?.();
       // Navigate back first, then turn off the loader so it doesn't
       // flash off before the screen transition completes
-      NavigationService.goBack();
+      if (onGoBack) {
+        onGoBack();
+      } else {
+        NavigationService.goBack();
+      }
       setTimeout(() => {
         onSigningEnd?.();
         dispatch(setLoading(false));
