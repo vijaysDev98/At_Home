@@ -5,6 +5,7 @@ import {
   errorCodes,
   DocumentPickerResponse,
 } from '@react-native-documents/picker';
+import { Keyboard, Platform } from 'react-native';
 import { SHOW_TOAST } from '../constant';
 
 export interface PickedPrescriptionFile {
@@ -21,11 +22,24 @@ export interface PickedPrescriptionFile {
 export const pickPrescriptionDocuments = async (
   options: { allowMultiSelection?: boolean } = { allowMultiSelection: true },
 ): Promise<PickedPrescriptionFile[]> => {
+  Keyboard.dismiss();
+
   try {
     const results = await pick({
-      type: [types.pdf, types.images, types.doc, types.docx],
+      // iOS: public.item opens the system Files browser. Mixing image UTTypes
+      // can route iOS to a Photos-style picker instead of Files.
+      type:
+        Platform.OS === 'ios'
+          ? [types.allFiles]
+          : [types.pdf, types.images, types.doc, types.docx],
       allowMultiSelection: options.allowMultiSelection ?? true,
       mode: 'import',
+      ...(Platform.OS === 'ios'
+        ? {
+            presentationStyle: 'fullScreen' as const,
+            transitionStyle: 'coverVertical' as const,
+          }
+        : {}),
     });
 
     if (!results || results.length === 0) return [];

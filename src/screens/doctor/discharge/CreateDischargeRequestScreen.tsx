@@ -13,6 +13,7 @@ import {
   Linking,
   Modal,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -482,33 +483,41 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   };
 
   const handleSelectFile = async () => {
+    Keyboard.dismiss();
     prescriptionPickerSheetRef.current?.hide();
-    try {
-      const picked = await pickPrescriptionDocuments({
-        allowMultiSelection: true,
-      });
-      if (picked && picked.length > 0) {
-        const newUris: string[] = [];
-        const newMeta: Record<
-          string,
-          { name?: string; isDoc?: boolean; type?: string }
-        > = {};
-        for (const f of picked) {
-          if (f.uri) {
-            newUris.push(f.uri);
-            newMeta[f.uri] = {
-              name: f.name || 'Prescription.pdf',
-              isDoc: f.isDoc ?? true,
-              type: f.type || undefined,
-            };
+
+    // iOS cannot present UIDocumentPickerViewController while another modal
+    // (action sheet) is still dismissing. Camera/gallery already wait; Files must too.
+    const pickerDelay = Platform.OS === 'ios' ? 400 : 250;
+
+    setTimeout(async () => {
+      try {
+        const picked = await pickPrescriptionDocuments({
+          allowMultiSelection: true,
+        });
+        if (picked && picked.length > 0) {
+          const newUris: string[] = [];
+          const newMeta: Record<
+            string,
+            { name?: string; isDoc?: boolean; type?: string }
+          > = {};
+          for (const f of picked) {
+            if (f.uri) {
+              newUris.push(f.uri);
+              newMeta[f.uri] = {
+                name: f.name || 'Prescription.pdf',
+                isDoc: f.isDoc ?? true,
+                type: f.type || undefined,
+              };
+            }
           }
+          setPrescriptionMeta(prev => ({ ...prev, ...newMeta }));
+          setPrescriptionFiles(prev => [...prev, ...newUris]);
         }
-        setPrescriptionMeta(prev => ({ ...prev, ...newMeta }));
-        setPrescriptionFiles(prev => [...prev, ...newUris]);
+      } catch (err: any) {
+        console.warn('Document picker error:', err);
       }
-    } catch (err: any) {
-      console.warn('Document picker error:', err);
-    }
+    }, pickerDelay);
   };
 
   const handleRemovePrescription = (indexToRemove: number) => {
