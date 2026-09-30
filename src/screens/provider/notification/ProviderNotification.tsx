@@ -120,7 +120,7 @@ const ProviderNotification: React.FC = () => {
   };
 
   const handleNotificationPress = async (item: Notification) => {
-    console.log("noooooo", item);
+    console.log("nottttt", item);
 
     const action = getNotificationAction(item);
     if (typeof action === 'object' && action?.onPress) {
@@ -235,10 +235,9 @@ const ProviderNotification: React.FC = () => {
       case 'preRequestDetailsUpdated':
         label.txt = t(STRING.viewRequest);
         label.onPress = () =>
-          NavigationService.navigate(SCREENS.PROVIDER_PRE_REQUEST_DETAIL, {
+          NavigationService.navigate(SCREENS.PROVIDER_FORMS_SCREEN, {
             request: request,
-            requestId: request.id,
-            action: 'view',
+            action: 'edit'
           });
         return label;
       case 'serviceProviderAssignment':

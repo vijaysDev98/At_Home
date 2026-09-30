@@ -51,7 +51,7 @@ import {
   getDisplayFileName,
 } from '../../../utils/documentPickerHelper';
 
-interface ProviderPreRequestDetailScreenProps {}
+interface ProviderPreRequestDetailScreenProps { }
 
 export const ProviderPreRequestDetailScreen: React.FC<
   ProviderPreRequestDetailScreenProps
@@ -60,7 +60,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
   const route = useRoute<any>();
   const dispatch = useDispatch();
 
-  const requestId = route.params?.id || route.params?.requestId || route.params?.request?.id;  
+  const requestId = route.params?.id || route.params?.requestId || route.params?.request?.id;
 
   const { profileData } = useSelector((state: RootState) => state.profile);
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
@@ -225,6 +225,9 @@ export const ProviderPreRequestDetailScreen: React.FC<
     if (requestId) {
       fetchDetails();
       recordView();
+    } else {
+      SHOW_TOAST(t(STRING.noRequestsFound) || 'Request not found', 'error');
+      NavigationService.goBack();
     }
   }, [requestId]);
 
@@ -234,8 +237,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
       setHasError(false);
       const data = await serviceRequestApi.getPreClaimDetails(requestId);
       if (data) {
-        console.log("dataaaa",data);
-        
+        console.log("dataaaa", data);
         setRequestData(data);
       } else {
         // Fallback to getServiceRequestDetails if pre-claim returns null
@@ -246,6 +248,8 @@ export const ProviderPreRequestDetailScreen: React.FC<
           setRequestData(fallbackData);
         } else {
           setRequestData(null);
+          setHasError(true);
+          NavigationService.goBack();
         }
       }
     } catch (e) {
@@ -258,9 +262,11 @@ export const ProviderPreRequestDetailScreen: React.FC<
           setRequestData(fallbackData);
         } else {
           setHasError(true);
+          NavigationService.goBack();
         }
       } catch (err) {
         setHasError(true);
+        NavigationService.goBack();
       }
     } finally {
       setIsLoading(false);
@@ -359,7 +365,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
       : null) ||
     (typeof (requestData as any)?.createdBy === 'object'
       ? (requestData as any)?.createdBy
-      : null) ;
+      : null);
   const doctorName =
     (doctor
       ? `${doctor.fName || ''} ${doctor.lName || ''}`.trim()
@@ -388,7 +394,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
     } else {
       SHOW_TOAST(
         t(STRING.noPhoneNumberAvailable) ||
-          'No phone number available for this physician',
+        'No phone number available for this physician',
         'info',
       );
     }
@@ -397,7 +403,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
   const handleChat = () => {
     SHOW_TOAST(
       t(STRING.chatUnderDevelopment) ||
-        'Chat feature is under development and will be available soon!',
+      'Chat feature is under development and will be available soon!',
       'info',
     );
   };
@@ -406,7 +412,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
     const doctorObj = requestData?.doctorId;
 
     const assignedProviderId =
-      requestData?.assignedProviderId ;
+      requestData?.assignedProviderId;
 
     NavigationService.navigate(SCREENS.CREATE_REQUEST, {
       preRequest: requestData,
@@ -426,7 +432,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
   const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
 
   const isAssignedToProvider = Boolean(
-    (requestData as any)?.assignedProviderId 
+    (requestData as any)?.assignedProviderId
   );
 
   const canAccept =
@@ -442,14 +448,14 @@ export const ProviderPreRequestDetailScreen: React.FC<
     : null;
   const displayRequestId =
     requestData?.requestId &&
-    String(requestData.requestId) !== String(requestId) &&
-    !/^[a-f0-9]{24}$/i.test(String(requestData.requestId))
+      String(requestData.requestId) !== String(requestId) &&
+      !/^[a-f0-9]{24}$/i.test(String(requestData.requestId))
       ? requestData.requestId
       : null;
   const headerSubtitle = !requestData
     ? undefined
     : [displayRequestId, createdAtFormatted].filter(Boolean).join(' • ') ||
-      undefined;
+    undefined;
   const showBottomActions = !isLoading && !!requestData;
 
   return (
@@ -481,9 +487,9 @@ export const ProviderPreRequestDetailScreen: React.FC<
           }
         />
 
-        {isLoading || !requestData ? (
+        {isLoading ? (
           <AppLoader visible={true} />
-        ) : (
+        ) : !requestData ? null : (
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
@@ -492,37 +498,37 @@ export const ProviderPreRequestDetailScreen: React.FC<
             {/* Accepted Pre-Request Notice */}
             {(effectiveStatus === 'accepted' ||
               requestData?.preRequestStatus === 'accepted') && (
-              <View
-                style={[
-                  styles.acceptedBanner,
-                  requestData?.delegateFormToProvider && {
-                    backgroundColor: '#EFF6FF',
-                    borderColor: '#BFDBFE',
-                  },
-                ]}
-              >
-                <Image
-                  source={IMAGES.info}
+                <View
                   style={[
-                    styles.acceptedBannerIcon,
+                    styles.acceptedBanner,
                     requestData?.delegateFormToProvider && {
-                      tintColor: COLORS._2563EB,
+                      backgroundColor: '#EFF6FF',
+                      borderColor: '#BFDBFE',
                     },
                   ]}
-                />
-                <AppText
-                  size={getScaleSize(13)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._2563EB}
-                  style={{ flex: 1, lineHeight: getScaleSize(18) }}
                 >
-                  {requestData?.delegateFormToProvider
-                    ? t(STRING.physicianRequestedYouToFillForm) ||
+                  <Image
+                    source={IMAGES.info}
+                    style={[
+                      styles.acceptedBannerIcon,
+                      requestData?.delegateFormToProvider && {
+                        tintColor: COLORS._2563EB,
+                      },
+                    ]}
+                  />
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._2563EB}
+                    style={{ flex: 1, lineHeight: getScaleSize(18) }}
+                  >
+                    {requestData?.delegateFormToProvider
+                      ? t(STRING.physicianRequestedYouToFillForm) ||
                       'Physician has requested you to complete the form and assign a patient'
-                    : t(STRING.awaitingPhysicianToAssignPatient)}
-                </AppText>
-              </View>
-            )}
+                      : t(STRING.awaitingPhysicianToAssignPatient)}
+                  </AppText>
+                </View>
+              )}
 
             {/* Physician Information Card */}
             {!!doctorName && (
@@ -1252,7 +1258,7 @@ const styles = StyleSheet.create({
   prescriptionPdfIcon: {
     width: getScaleSize(32),
     height: getScaleSize(32),
-    marginTop:getScaleSize(10),
+    marginTop: getScaleSize(10),
     tintColor: '#DC2626',
   },
   prescriptionThumbImage: {

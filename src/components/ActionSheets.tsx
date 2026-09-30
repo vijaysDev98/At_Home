@@ -12,6 +12,7 @@ import {
   AppStateStatus,
   ScrollView,
   Modal,
+  Keyboard,
 } from 'react-native';
 import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -1302,6 +1303,7 @@ export const SelectProviderSheet = React.forwardRef<
   };
 
   const handleSelect = (item: Provider) => {
+    Keyboard.dismiss();
     setIsDepartmentDropdownOpen(false);
     setSelectedProvider(item);
   };
@@ -1323,6 +1325,9 @@ export const SelectProviderSheet = React.forwardRef<
       gestureEnabled={false}
       closeOnTouchBackdrop={true}
       closeOnPressBack={true}
+      keyboardHandlerEnabled={
+        Platform.OS === 'android' ? Number(Platform.Version) >= 35 : true
+      }
       containerStyle={[
         styles.sheetContainer,
         {
@@ -1365,6 +1370,8 @@ export const SelectProviderSheet = React.forwardRef<
           <Input
             value={search}
             onChangeText={handleSearchChange}
+            onSubmitEditing={() => Keyboard.dismiss()}
+            returnKeyType="search"
             placeholder={t(STRING.searchProviderPlaceholder)}
             placeholderTextColor={COLORS._6F767E}
             leftIcon={IMAGES.search}
@@ -1452,6 +1459,8 @@ export const SelectProviderSheet = React.forwardRef<
                 <TextInput
                   value={departmentSearchText}
                   onChangeText={setDepartmentSearchText}
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                  returnKeyType="search"
                   placeholder={
                     t(STRING.searchDepartment) || 'Search department...'
                   }
@@ -1497,6 +1506,7 @@ export const SelectProviderSheet = React.forwardRef<
                         isSelected && styles.departmentMenuItemActive,
                       ]}
                       onPress={() => {
+                        Keyboard.dismiss();
                         handleDepartmentFilterChange(item.code ? String(item.code) : '');
                         setIsDepartmentDropdownOpen(false);
                         setDepartmentSearchText('');
@@ -1619,6 +1629,7 @@ export const SelectProviderSheet = React.forwardRef<
             }
             nestedScrollEnabled={true}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             contentContainerStyle={styles.providerListContent}
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={true}

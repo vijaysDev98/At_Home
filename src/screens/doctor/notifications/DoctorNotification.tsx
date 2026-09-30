@@ -260,14 +260,14 @@ const DoctorNotification: React.FC = () => {
           notificationType === 'requestClaimed'
             ? 'read'
             : notificationType === 'requestCancelled'
-            ? 'view'
-            : notificationType === 'preRequestAccepted'
-            ? 'view'
-            : notificationType === 'preRequestRejected'
-            ? 'view'
-            : notificationType === 'formSubmission'
-            ? 'edit'
-            : 'view';
+              ? 'view'
+              : notificationType === 'preRequestAccepted'
+                ? 'edit'
+                : notificationType === 'preRequestRejected'
+                  ? 'view'
+                  : notificationType === 'formSubmission'
+                    ? 'edit'
+                    : 'view';
         NavigationService.navigate(SCREENS.FORMS_SCREEN, {
           request: reqData,
           requestId: reqData?.id || reqData?._id || targetRequestId,

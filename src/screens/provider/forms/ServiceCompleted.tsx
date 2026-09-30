@@ -32,8 +32,7 @@ import { SHOW_TOAST } from '../../../constant/showToast';
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t, i18n } = useTranslation();
-  const requestId = route?.params?.request?.id || route?.params?.requestId;
-  console.log('data route', route.params);
+  const requestId = route?.params?.request?.id || route?.params?.request?._id || route?.params?.requestId;
 
   const [loading, setLoading] = useState(true);
   const [requestData, setRequestData] = useState<any>(null);
@@ -63,35 +62,32 @@ const ServiceCompletedScreen: React.FC = () => {
   };
 
   const patientName = requestData?.patientId
-    ? `${requestData?.patientId?.fName || ''} ${
-        requestData?.patientId?.lName || ''
-      }`
+    ? `${requestData?.patientId?.fName || ''} ${requestData?.patientId?.lName || ''
+    }`
     : '-';
 
   const providerName = requestData?.assignedProviderId
-    ? `${requestData?.assignedProviderId?.fName || ''} ${
-        requestData?.assignedProviderId?.lName || ''
-      }`
+    ? `${requestData?.assignedProviderId?.fName || ''} ${requestData?.assignedProviderId?.lName || ''
+    }`
     : '-';
 
   const doctorName = requestData?.doctorId
-    ? `${requestData?.doctorId?.fName || ''} ${
-        requestData?.doctorId?.lName || ''
-      }`
+    ? `${requestData?.doctorId?.fName || ''} ${requestData?.doctorId?.lName || ''
+    }`
     : '-';
 
   const completedDate = requestData?.updatedAt
     ? moment(requestData?.updatedAt)
-        .locale(i18n?.language || 'en')
-        .format('DD MMM YYYY')
+      .locale(i18n?.language || 'en')
+      .format('DD MMM YYYY')
     : '-';
 
   const serviceType = requestData?.serviceId?.serviceName || '-';
 
   const dob = requestData?.patientId?.dateOfBirth
     ? moment(requestData?.patientId?.dateOfBirth)
-        .locale(i18n?.language || 'en')
-        .format('DD/MM/YYYY')
+      .locale(i18n?.language || 'en')
+      .format('DD/MM/YYYY')
     : '-';
 
   const weight = requestData?.patientId?.weight || '-';

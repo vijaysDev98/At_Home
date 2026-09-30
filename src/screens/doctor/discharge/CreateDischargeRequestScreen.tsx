@@ -108,8 +108,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       setIsLoadingDetails(true);
       const data = await serviceRequestApi.getServiceRequestDetails(targetId);
       if (data) {
-        console.log("dataaa",data);
-        
+        console.log("dataaa", data);
+
         setEditRequest(data);
         if (data.initialNotes) {
           setInstructionsText(data.initialNotes);
@@ -143,7 +143,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       fetchPreRequestDetails();
     }
   }, [route.params?.request, route.params?.requestId]);
-  
+
 
   // State management (initialized with editRequest data when in edit mode)
   const [instructionsText, setInstructionsText] = useState<string>(
@@ -355,7 +355,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const handleCancelRecording = async () => {
     try {
       await sound.stopRecorder();
-    } catch (e) {}
+    } catch (e) { }
     setRecordDurationSeconds(0);
     setCurrentPlaybackSeconds(0);
     setTotalAudioDurationSeconds(0);
@@ -369,7 +369,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       if (isPlaying) {
         await sound.stopPlayer();
       }
-    } catch (e) {}
+    } catch (e) { }
     setIsPlaying(false);
     setPlaybackProgress(0);
     setCurrentPlaybackSeconds(0);
@@ -562,7 +562,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     } else {
       SHOW_TOAST(
         t(STRING.noProviderPhoneNumberAvailable) ||
-          'No phone number available for this provider',
+        'No phone number available for this provider',
         'info',
       );
     }
@@ -571,7 +571,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
   const handleChatAssignedProvider = () => {
     SHOW_TOAST(
       t(STRING.chatUnderDevelopment) ||
-        'Chat feature is under development and will be available soon!',
+      'Chat feature is under development and will be available soon!',
       'info',
     );
   };
@@ -604,13 +604,13 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       const recipientType = assignedProviderId ? 'specific' : 'all';
       const providerObj = assignedProviderId
         ? ({
-            ...assignedProvider,
-            id: assignedProviderId,
-            fullName:
-              assignedProvider?.fullName ||
-              assignedProvider?.providerName ||
-              `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim(),
-          } as Provider)
+          ...assignedProvider,
+          id: assignedProviderId,
+          fullName:
+            assignedProvider?.fullName ||
+            assignedProvider?.providerName ||
+            `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim(),
+        } as Provider)
         : undefined;
 
       processDischargeSubmission(recipientType, providerObj);
@@ -637,7 +637,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       if (response.success) {
         SHOW_SUCCESS_TOAST(
           t(STRING.formDelegatedToProvider) ||
-            'Form delegated to provider successfully',
+          'Form delegated to provider successfully',
         );
         setEditRequest((prev: any) => ({
           ...prev,
@@ -651,8 +651,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       } else {
         SHOW_TOAST(
           response.error ||
-            response.message ||
-            'Failed to delegate form to provider',
+          response.message ||
+          'Failed to delegate form to provider',
           'error',
         );
       }
@@ -791,7 +791,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           targetId,
           apiPayload,
         );
-        
+
         // Fallback to create if update route returns error
         if (!response.success && response.message?.includes('404')) {
           response = await serviceRequestApi.createServiceRequest(apiPayload);
@@ -806,17 +806,17 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
       if (response.success) {
         SHOW_TOAST(
           response.message ||
-            (isEdit
-              ? t(STRING.dischargeRequestUpdated)
-              : t(STRING.dischargeRequestSubmitted)),
+          (isEdit
+            ? t(STRING.dischargeRequestUpdated)
+            : t(STRING.dischargeRequestSubmitted)),
           'success',
         );
         NavigationService.goBack();
       } else {
         SHOW_TOAST(
           response.error ||
-            response.message ||
-            'Failed to submit discharge request',
+          response.message ||
+          'Failed to submit discharge request',
           'error',
         );
       }
@@ -879,8 +879,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             {isAccepted || isRejected || isPending
               ? t(STRING.preRequest) || 'Pre-Request'
               : isEdit
-              ? t(STRING.editPreRequest) || 'Edit Pre-Request'
-              : t(STRING.createPreRequest) || 'Create Pre-Request'}
+                ? t(STRING.editPreRequest) || 'Edit Pre-Request'
+                : t(STRING.createPreRequest) || 'Create Pre-Request'}
           </AppText>
         </View>
 
@@ -938,19 +938,19 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                 isRejected
                   ? COLORS.error
                   : editRequest?.delegateFormToProvider
-                  ? COLORS._2563EB
-                  : COLORS.primary
+                    ? COLORS._2563EB
+                    : COLORS.primary
               }
             >
               {editRequest?.delegateFormToProvider
                 ? t(STRING.formDelegated) || 'Form Delegated'
                 : isAccepted || isPending
-                ? t(STRING.preRequest) || 'Pre-Request'
-                : isRejected
-                ? t(STRING.preRequestRejected) || 'Pre-Request Rejected'
-                : isEdit
-                ? t(STRING.editPreRequest) || 'Edit Pre-Request'
-                : t(STRING.createPreRequest) || 'Create Pre-Request'}
+                  ? t(STRING.preRequest) || 'Pre-Request'
+                  : isRejected
+                    ? t(STRING.preRequestRejected) || 'Pre-Request Rejected'
+                    : isEdit
+                      ? t(STRING.editPreRequest) || 'Edit Pre-Request'
+                      : t(STRING.createPreRequest) || 'Create Pre-Request'}
             </AppText>
             <AppText
               size={getScaleSize(12)}
@@ -959,19 +959,19 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                 isRejected
                   ? '#991B1B'
                   : editRequest?.delegateFormToProvider
-                  ? '#1E40AF'
-                  : COLORS._526674
+                    ? '#1E40AF'
+                    : COLORS._526674
               }
               style={{ marginTop: 2 }}
             >
               {editRequest?.delegateFormToProvider
                 ? t(STRING.waitingForProviderToFillForm) ||
-                  'Waiting for provider to complete the form'
+                'Waiting for provider to complete the form'
                 : isAccepted
-                ? t(STRING.preRequestAcceptedSubtitle)
-                : isRejected
-                ? t(STRING.preRequestRejectedSubtitle)
-                : t(STRING.dischargeInstructionsSubtitle)}
+                  ? t(STRING.preRequestAcceptedSubtitle)
+                  : isRejected
+                    ? t(STRING.preRequestRejectedSubtitle)
+                    : t(STRING.dischargeInstructionsSubtitle)}
             </AppText>
           </View>
         </View>
@@ -1031,8 +1031,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                     isRejected
                       ? styles.rejectedStatusBadge
                       : isDelegated
-                      ? styles.delegatedStatusBadge
-                      : styles.acceptedStatusBadge
+                        ? styles.delegatedStatusBadge
+                        : styles.acceptedStatusBadge
                   }
                 >
                   <View
@@ -1040,8 +1040,8 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       isRejected
                         ? styles.rejectedStatusDot
                         : isDelegated
-                        ? styles.delegatedStatusDot
-                        : styles.acceptedStatusDot
+                          ? styles.delegatedStatusDot
+                          : styles.acceptedStatusDot
                     }
                   />
                   <AppText
@@ -1051,15 +1051,15 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                       isRejected
                         ? COLORS.error
                         : isDelegated
-                        ? COLORS._2563EB
-                        : COLORS.completed
+                          ? COLORS._2563EB
+                          : COLORS.completed
                     }
                   >
                     {isRejected
                       ? t(STRING.Rejected) || 'Rejected'
                       : isDelegated
-                      ? t(STRING.formDelegated) || 'Delegated'
-                      : t(STRING.Accepted) || 'Accepted'}
+                        ? t(STRING.formDelegated) || 'Delegated'
+                        : t(STRING.Accepted) || 'Accepted'}
                   </AppText>
                 </View>
               </View>
@@ -1181,877 +1181,877 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           );
         })()}
 
-          {/* ──────────────────────────────────────────────────────────
+        {/* ──────────────────────────────────────────────────────────
               SECTION 1: VOICE RECORDING (POWERED BY NITRO-SOUND)
           ────────────────────────────────────────────────────────── */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.sectionBadge}>
-                <Image source={IMAGES.ic_mic} style={styles.sectionBadgeIcon} />
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.sectionBadge}>
+              <Image source={IMAGES.ic_mic} style={styles.sectionBadgeIcon} />
+            </View>
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t(STRING.voiceInstructions)}
+            </AppText>
+          </View>
+
+          {/* IDLE STATE */}
+          {recordingState === 'idle' && (
+            <View style={styles.recordCard}>
+              {isReadOnly ? (
+                <View
+                  style={{
+                    alignItems: 'center',
+                    paddingVertical: getScaleSize(12),
+                  }}
+                >
+                  <Image
+                    source={IMAGES.ic_mic}
+                    style={{
+                      width: getScaleSize(24),
+                      height: getScaleSize(24),
+                      tintColor: COLORS._6F767E,
+                      resizeMode: 'contain',
+                    }}
+                  />
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    style={{ marginTop: getScaleSize(8) }}
+                  >
+                    {t(STRING.noVoiceInstructionsRecorded)}
+                  </AppText>
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={styles.micCircleBtn}
+                    onPress={handleStartRecording}
+                  >
+                    <Animated.View
+                      style={[
+                        styles.micPulseRing,
+                        { transform: [{ scale: pulseAnim }] },
+                      ]}
+                    />
+                    <View style={styles.micInnerCircle}>
+                      <Image
+                        source={IMAGES.ic_mic}
+                        style={styles.micIcon}
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                    style={{ marginTop: getScaleSize(12) }}
+                  >
+                    {t(STRING.tapToRecord)}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                    style={{ marginTop: getScaleSize(4), textAlign: 'center' }}
+                  >
+                    {t('Record patient instructions, orders, or voice summary')}
+                  </AppText>
+                </>
+              )}
+            </View>
+          )}
+
+          {/* RECORDING IN PROGRESS STATE */}
+          {recordingState === 'recording' && (
+            <View style={[styles.recordCard, styles.recordCardActive]}>
+              <View style={styles.recordingHeaderRow}>
+                <View style={styles.recordingRedDot} />
+                <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.error}
+                >
+                  {t(STRING.recordingInProgress)}
+                </AppText>
               </View>
+
+              {/* Live Timer */}
               <AppText
-                size={getScaleSize(15)}
+                size={getScaleSize(32)}
                 font={FONTS.Inter.Bold}
                 color={COLORS._1A1D1F}
+                style={styles.liveTimerText}
               >
-                {t(STRING.voiceInstructions)}
+                {formatTime(recordDurationSeconds)}
               </AppText>
-            </View>
 
-            {/* IDLE STATE */}
-            {recordingState === 'idle' && (
-              <View style={styles.recordCard}>
-                {isReadOnly ? (
-                  <View
-                    style={{
-                      alignItems: 'center',
-                      paddingVertical: getScaleSize(12),
-                    }}
+              {/* Lottie Recording Waveform Animation */}
+              <LottieView
+                source={ANIMATION.recording}
+                autoPlay
+                loop
+                style={styles.lottieRecording}
+              />
+
+              {/* Recording Controls */}
+              <View style={styles.recordingActionsRow}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.cancelRecordBtn}
+                  onPress={handleCancelRecording}
+                >
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.SemiBold}
+                    color={COLORS._6F767E}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    align="center"
                   >
-                    <Image
-                      source={IMAGES.ic_mic}
-                      style={{
-                        width: getScaleSize(24),
-                        height: getScaleSize(24),
-                        tintColor: COLORS._6F767E,
-                        resizeMode: 'contain',
-                      }}
-                    />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._6F767E}
-                      style={{ marginTop: getScaleSize(8) }}
-                    >
-                      {t(STRING.noVoiceInstructionsRecorded)}
-                    </AppText>
-                  </View>
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      style={styles.micCircleBtn}
-                      onPress={handleStartRecording}
-                    >
-                      <Animated.View
-                        style={[
-                          styles.micPulseRing,
-                          { transform: [{ scale: pulseAnim }] },
-                        ]}
-                      />
-                      <View style={styles.micInnerCircle}>
-                        <Image
-                          source={IMAGES.ic_mic}
-                          style={styles.micIcon}
-                        />
-                      </View>
-                    </TouchableOpacity>
+                    {t(STRING.cancelRecording)}
+                  </AppText>
+                </TouchableOpacity>
 
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                      style={{ marginTop: getScaleSize(12) }}
-                    >
-                      {t(STRING.tapToRecord)}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                      style={{ marginTop: getScaleSize(4), textAlign: 'center' }}
-                    >
-                      {t('Record patient instructions, orders, or voice summary')}
-                    </AppText>
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* RECORDING IN PROGRESS STATE */}
-            {recordingState === 'recording' && (
-              <View style={[styles.recordCard, styles.recordCardActive]}>
-                <View style={styles.recordingHeaderRow}>
-                  <View style={styles.recordingRedDot} />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.stopRecordBtn}
+                  onPress={handleStopRecording}
+                >
+                  <View style={styles.stopSquareIcon} />
                   <AppText
                     size={getScaleSize(13)}
                     font={FONTS.Inter.Bold}
-                    color={COLORS.error}
+                    color={COLORS.white}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    align="center"
+                    style={{ flexShrink: 1 }}
                   >
-                    {t(STRING.recordingInProgress)}
+                    {t(STRING.stopRecording)}
                   </AppText>
-                </View>
-
-                {/* Live Timer */}
-                <AppText
-                  size={getScaleSize(32)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
-                  style={styles.liveTimerText}
-                >
-                  {formatTime(recordDurationSeconds)}
-                </AppText>
-
-                {/* Lottie Recording Waveform Animation */}
-                <LottieView
-                  source={ANIMATION.recording}
-                  autoPlay
-                  loop
-                  style={styles.lottieRecording}
-                />
-
-                {/* Recording Controls */}
-                <View style={styles.recordingActionsRow}>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.cancelRecordBtn}
-                    onPress={handleCancelRecording}
-                  >
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS._6F767E}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.75}
-                      align="center"
-                    >
-                      {t(STRING.cancelRecording)}
-                    </AppText>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    style={styles.stopRecordBtn}
-                    onPress={handleStopRecording}
-                  >
-                    <View style={styles.stopSquareIcon} />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS.white}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.75}
-                      align="center"
-                      style={{ flexShrink: 1 }}
-                    >
-                      {t(STRING.stopRecording)}
-                    </AppText>
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </View>
-            )}
+            </View>
+          )}
 
-            {/* RECORDED / PLAYBACK STATE */}
-            {recordingState === 'recorded' && (
-              <View style={[styles.recordCard, styles.recordedCardSuccess]}>
-                <View style={styles.recordedTopRow}>
-                  <View style={styles.recordedSuccessBadge}>
-                    <Image
-                      source={IMAGES.ic_doubleTick || IMAGES.serviceCompletedCheck}
-                      style={styles.checkIconSmall}
-                    />
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS.primary}
-                    >
-                      {t(STRING.recordedVoiceNote)}
-                    </AppText>
-                  </View>
-
-                  {!isReadOnly && (
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={handleDeleteRecording}
-                      style={styles.deleteNoteBtn}
-                    >
-                      <Image source={IMAGES.trash} style={styles.trashIcon} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Audio Player Controls & Bar */}
-                <View style={styles.playerContainer}>
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={handleTogglePlayback}
-                    style={styles.playPauseBtn}
-                  >
-                    {isPlaying ? (
-                      <Image
-                        source={IMAGES.ic_pause}
-                        style={styles.playPauseIcon}
-                      />
-                    ) : (
-                      <AppText
-                        size={getScaleSize(16)}
-                        font={FONTS.Inter.Bold}
-                        color={COLORS.white}
-                        style={{ marginLeft: getScaleSize(2) }}
-                      >
-                        {'▶'}
-                      </AppText>
-                    )}
-                  </TouchableOpacity>
-
-                  <View style={styles.playerTrackCol}>
-                    <View style={styles.progressTrackBackground}>
-                      <View
-                        style={[
-                          styles.progressTrackFill,
-                          { width: `${playbackProgress}%` },
-                        ]}
-                      />
-                    </View>
-
-                    <View style={styles.durationRow}>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Medium}
-                        color={COLORS._6F767E}
-                      >
-                        {formatTime(currentPlaybackSeconds)}
-                      </AppText>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Bold}
-                        color={COLORS._1A1D1F}
-                      >
-                        {formatTime(
-                          totalAudioDurationSeconds || recordDurationSeconds,
-                        )}
-                      </AppText>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Re-record Action */}
-                {!isReadOnly && (
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.rerecordBtn}
-                    onPress={handleStartRecording}
-                  >
-                    <Image source={IMAGES.ic_reload} style={styles.reloadIcon} />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.SemiBold}
-                      color={COLORS.primary}
-                    >
-                      {t(STRING.rerecord)}
-                    </AppText>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* ──────────────────────────────────────────────────────────
-              SECTION 2: PRESCRIPTION DOCUMENT (TAKE PHOTO / SELECT FILE)
-          ────────────────────────────────────────────────────────── */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow}>
-              <View
-                style={[
-                  styles.sectionBadge,
-                ]}
-              >
-                <Image
-                  source={IMAGES.ic_file}
-                  style={[
-                    styles.sectionBadgeIcon,
-                    { tintColor: COLORS.primary },
-                  ]}
-                />
-              </View>
-              <AppText
-                size={getScaleSize(15)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.prescriptionDocument) || 'Prescription Document'}
-              </AppText>
-              {prescriptionFiles.length > 0 && (
-                <View style={styles.prescriptionCountBadge}>
+          {/* RECORDED / PLAYBACK STATE */}
+          {recordingState === 'recorded' && (
+            <View style={[styles.recordCard, styles.recordedCardSuccess]}>
+              <View style={styles.recordedTopRow}>
+                <View style={styles.recordedSuccessBadge}>
+                  <Image
+                    source={IMAGES.ic_doubleTick || IMAGES.serviceCompletedCheck}
+                    style={styles.checkIconSmall}
+                  />
                   <AppText
-                    size={getScaleSize(11)}
+                    size={getScaleSize(12)}
                     font={FONTS.Inter.Bold}
                     color={COLORS.primary}
                   >
-                    {prescriptionFiles.length}{' '}
-                    {prescriptionFiles.length === 1
-                      ? t(STRING.file) || 'file'
-                      : t(STRING.files) || 'files'}
+                    {t(STRING.recordedVoiceNote)}
                   </AppText>
                 </View>
-              )}
-            </View>
 
-            {prescriptionFiles.length === 0 ? (
-              <View style={styles.recordCard}>
-                {isReadOnly ? (
-                  <View
-                    style={{
-                      alignItems: 'center',
-                      paddingVertical: getScaleSize(12),
-                    }}
-                  >
-                    <Image
-                      source={IMAGES.document_icon}
-                      style={{
-                        width: getScaleSize(24),
-                        height: getScaleSize(24),
-                        tintColor: COLORS._6F767E,
-                        resizeMode: 'contain',
-                      }}
-                    />
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS._6F767E}
-                      style={{ marginTop: getScaleSize(8) }}
-                    >
-                      {t(STRING.noPrescriptionDocument) ||
-                        'No prescription document attached'}
-                    </AppText>
-                  </View>
-                ) : (
-                  <View style={styles.prescriptionUploadDashed}>
-                    <View style={styles.prescriptionUploadIconWrap}>
-                      <Image
-                        source={IMAGES.ic_file}
-                        style={styles.prescriptionUploadIcon}
-                      />
-                    </View>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS._1A1D1F}
-                      style={{ marginTop: getScaleSize(10) }}
-                    >
-                      {t(STRING.uploadPrescription) || 'Upload Prescription'}
-                    </AppText>
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Regular}
-                      color={COLORS._6F767E}
-                      align='center'
-                      style={{
-                        marginTop: getScaleSize(4),
-                        paddingHorizontal: getScaleSize(16),
-                      }}
-                    >
-                      {t(STRING.attachPrescriptionSubtitle) ||
-                        'Add a photo or file of the medical prescription'}
-                    </AppText>
-
-                    {/* Quick action buttons: Take Photo & Select File */}
-                    <View style={styles.prescriptionActionButtonsRow}>
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.prescriptionActionBtn}
-                        onPress={handleTakePhoto}
-                      >
-                        <Image
-                          source={IMAGES.ic_camera}
-                          style={styles.prescriptionBtnIcon}
-                        />
-                        <AppText
-                          size={getScaleSize(11.5)}
-                          font={FONTS.Inter.SemiBold}
-                          color={COLORS.primary}
-                          numberOfLines={1}
-                          style={styles.prescriptionBtnText}
-                        >
-                          {t(STRING.takePhoto) || 'Take Photo'}
-                        </AppText>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={styles.prescriptionActionBtn}
-                        onPress={handleSelectFile}
-                      >
-                        <Image
-                          source={IMAGES.ic_file}
-                          style={styles.prescriptionBtnIcon}
-                        />
-                        <AppText
-                          size={getScaleSize(11.5)}
-                          font={FONTS.Inter.SemiBold}
-                          color={COLORS.primary}
-                          numberOfLines={1}
-                          style={styles.prescriptionBtnText}
-                        >
-                          {t(STRING.selectFile) || 'Select File'}
-                        </AppText>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <View style={[styles.recordCard, styles.prescriptionCardActive]}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.prescriptionScrollView}
-                  contentContainerStyle={styles.prescriptionThumbnailsContainer}
-                >
-                  {prescriptionFiles.map((uri, idx) => {
-                    const meta = prescriptionMeta[uri];
-                    const isDoc =
-                      meta?.isDoc !== undefined
-                        ? meta.isDoc
-                        : isDocumentFile(uri);
-                    const displayName =
-                      meta?.name || getDisplayFileName(uri, 'Prescription.pdf');
-                    const isPdf =
-                      displayName.toLowerCase().endsWith('.pdf') ||
-                      meta?.type === 'application/pdf' ||
-                      isPdfDocument(uri);
-                    const badgeText = isPdf ? 'PDF' : 'DOC';
-
-                    return (
-                      <View
-                        key={`presc_${idx}`}
-                        style={styles.prescriptionThumbWrapper}
-                      >
-                        <TouchableOpacity
-                          activeOpacity={isReadOnly ? 0.85 : 1}
-                          disabled={!isReadOnly}
-                          onPress={() => {
-                            if (isDoc) {
-                              NavigationService.navigate(SCREENS.PDF_VIEWER, {
-                                pdfUrl: uri,
-                                title:
-                                  displayName ||
-                                  t(STRING.prescriptionDocument) ||
-                                  'Prescription Document',
-                              });
-                            } else {
-                              setSelectedPreviewImage(uri);
-                            }
-                          }}
-                          style={[
-                            styles.prescriptionThumbPressable,
-                            isDoc && styles.prescriptionPdfThumbPressable,
-                          ]}
-                        >
-                          {isDoc ? (
-                            <View style={styles.prescriptionPdfContent}>
-                              <View style={styles.prescriptionPdfBadge}>
-                                <AppText
-                                  size={getScaleSize(9)}
-                                  font={FONTS.Inter.Bold}
-                                  color={COLORS.white}
-                                >
-                                  {badgeText}
-                                </AppText>
-                              </View>
-                              <Image
-                                source={IMAGES.ic_file}
-                                style={styles.prescriptionPdfIcon}
-                                resizeMode="contain"
-                              />
-                              <AppText
-                                size={getScaleSize(9)}
-                                font={FONTS.Inter.Medium}
-                                color={COLORS._1A1D1F}
-                                numberOfLines={2}
-                                ellipsizeMode="middle"
-                                style={styles.prescriptionDocName}
-                              >
-                                {displayName}
-                              </AppText>
-                            </View>
-                          ) : (
-                            <Image
-                              source={{ uri }}
-                              style={styles.prescriptionThumbImage}
-                              resizeMode="cover"
-                            />
-                          )}
-                          {isReadOnly && (
-                            <View style={styles.prescriptionViewBadge}>
-                              <Image
-                                source={IMAGES.serviceEyeIcon || IMAGES.eye}
-                                style={styles.prescriptionEyeIcon}
-                              />
-                            </View>
-                          )}
-                        </TouchableOpacity>
-
-                        {!isReadOnly && (
-                          <TouchableOpacity
-                            activeOpacity={0.8}
-                            style={styles.prescriptionDeleteBtn}
-                            onPress={() => handleRemovePrescription(idx)}
-                          >
-                            <Image
-                              source={IMAGES.crossIcon}
-                              style={styles.prescriptionDeleteIcon}
-                            />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    );
-                  })}
-
-                  {!isReadOnly && (
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      style={styles.prescriptionAddMoreBtn}
-                      onPress={handleOpenPrescriptionPicker}
-                    >
-                      <View style={styles.prescriptionAddMoreIconWrap}>
-                        <Image
-                          source={IMAGES.ic_camera}
-                          style={styles.prescriptionAddMoreIcon}
-                        />
-                      </View>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.SemiBold}
-                        color={COLORS.primary}
-                        align="center"
-                        style={{ marginTop: getScaleSize(4) }}
-                      >
-                        {t(STRING.addAnotherPrescription) || '+ Add'}
-                      </AppText>
-                    </TouchableOpacity>
-                  )}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-
-          {/* ──────────────────────────────────────────────────────────
-              SECTION 3: TEXT / PARAGRAPH INSTRUCTIONS
-          ────────────────────────────────────────────────────────── */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionBadge]}>
-                <Image
-                  source={IMAGES.ic_edit}
-                  style={[styles.sectionBadgeIcon]}
-                />
-              </View>
-              <AppText
-                size={getScaleSize(15)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.textInstructions)}
-              </AppText>
-            </View>
-
-            <View style={styles.textInputCard}>
-              <TextInput
-                style={[
-                  styles.multilineInput,
-                  isReadOnly && { color: COLORS._1A1D1F },
-                ]}
-                placeholder={t(STRING.enterDischargeNotesPlaceholder)}
-                placeholderTextColor={COLORS._6F767E}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                value={instructionsText}
-                onChangeText={setInstructionsText}
-                maxLength={MAX_TEXT_LENGTH}
-                editable={!isReadOnly}
-              />
-
-              <View style={styles.textInputFooter}>
-                {!isReadOnly && instructionsText.length > 0 && (
+                {!isReadOnly && (
                   <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setInstructionsText('')}
+                    activeOpacity={0.8}
+                    onPress={handleDeleteRecording}
+                    style={styles.deleteNoteBtn}
                   >
-                    <AppText
-                      size={getScaleSize(12)}
-                      font={FONTS.Inter.Medium}
-                      color={COLORS.error}
-                    >
-                      {t(STRING.clearText)}
-                    </AppText>
+                    <Image source={IMAGES.trash} style={styles.trashIcon} />
                   </TouchableOpacity>
                 )}
-                <AppText
-                  size={getScaleSize(11)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                  style={{ marginLeft: 'auto' }}
-                >
-                  {instructionsText.length}/{MAX_TEXT_LENGTH}{' '}
-                  {t(STRING.characters)}
-                </AppText>
               </View>
+
+              {/* Audio Player Controls & Bar */}
+              <View style={styles.playerContainer}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleTogglePlayback}
+                  style={styles.playPauseBtn}
+                >
+                  {isPlaying ? (
+                    <Image
+                      source={IMAGES.ic_pause}
+                      style={styles.playPauseIcon}
+                    />
+                  ) : (
+                    <AppText
+                      size={getScaleSize(16)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS.white}
+                      style={{ marginLeft: getScaleSize(2) }}
+                    >
+                      {'▶'}
+                    </AppText>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.playerTrackCol}>
+                  <View style={styles.progressTrackBackground}>
+                    <View
+                      style={[
+                        styles.progressTrackFill,
+                        { width: `${playbackProgress}%` },
+                      ]}
+                    />
+                  </View>
+
+                  <View style={styles.durationRow}>
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Medium}
+                      color={COLORS._6F767E}
+                    >
+                      {formatTime(currentPlaybackSeconds)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {formatTime(
+                        totalAudioDurationSeconds || recordDurationSeconds,
+                      )}
+                    </AppText>
+                  </View>
+                </View>
+              </View>
+
+              {/* Re-record Action */}
+              {!isReadOnly && (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.rerecordBtn}
+                  onPress={handleStartRecording}
+                >
+                  <Image source={IMAGES.ic_reload} style={styles.reloadIcon} />
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.SemiBold}
+                    color={COLORS.primary}
+                  >
+                    {t(STRING.rerecord)}
+                  </AppText>
+                </TouchableOpacity>
+              )}
             </View>
-          </View>
-        </KeyboardAwareScrollView>
+          )}
+        </View>
 
-        {/* Fixed Bottom Submit Button: Hidden once delegated to provider */}
-        {!isRejected && !isPending && !editRequest?.delegateFormToProvider && (
-          <View style={styles.bottomSheet}>
-            {isAccepted ? (
-              <View style={styles.twoButtonsRow}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={[styles.outlineBtn, isDelegating && styles.btnDisabled]}
-                  disabled={isDelegating}
-                  onPress={handleSubmitPress}
-                >
-                  <AppText
-                    size={getScaleSize(13)}
-                    color={COLORS._526674}
-                    font={FONTS.Inter.Bold}
-                    align="center"
-                  >
-                    {t(STRING.completeRequest) || 'Complete Request'}
-                  </AppText>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={[
-                    styles.primaryBtnFlex,
-                    isDelegating && styles.btnDisabled,
-                  ]}
-                  disabled={isDelegating}
-                  onPress={handleDelegateToProvider}
-                >
-                  <AppText
-                    size={getScaleSize(13)}
-                    color={COLORS.white}
-                    font={FONTS.Inter.Bold}
-                    align="center"
-                  >
-                    {isDelegating
-                      ? t(STRING.delegating) || 'Delegating...'
-                      : t(STRING.delegateToProvider) ||
-                        'Delegate to Provider'}
-                  </AppText>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.9}
+        {/* ──────────────────────────────────────────────────────────
+              SECTION 2: PRESCRIPTION DOCUMENT (TAKE PHOTO / SELECT FILE)
+          ────────────────────────────────────────────────────────── */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <View
+              style={[
+                styles.sectionBadge,
+              ]}
+            >
+              <Image
+                source={IMAGES.ic_file}
                 style={[
-                  styles.continueBtn,
-                  !canSubmit && styles.continueDisabled,
+                  styles.sectionBadgeIcon,
+                  { tintColor: COLORS.primary },
                 ]}
-                disabled={!canSubmit}
-                onPress={handleSubmitPress}
-              >
-                <AppText
-                  size={getScaleSize(15)}
-                  color={COLORS.white}
-                  font={FONTS.Inter.Bold}
-                >
-                  {t(STRING.submitRequest)}
-                </AppText>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {/* Bottom Sheet 1: Recipient Selection (All vs Specific) */}
-        <ProviderOptionSheet
-          ref={providerOptionSheetRef}
-          onSendToAll={handleSendToAllProviders}
-          onSendToSpecific={handleSendToSpecificProvider}
-        />
-
-        {/* Bottom Sheet 2: Specific Provider Selection Entry Point */}
-        <SelectProviderSheet
-          ref={selectProviderSheetRef}
-          onSelectProvider={handleProviderSelected}
-        />
-
-        {/* Bottom Sheet 3: Prescription Picker (Take Photo / Select File) */}
-        <AppBottomSheet ref={prescriptionPickerSheetRef}>
-          <View style={styles.prescriptionSheetContent}>
+              />
+            </View>
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-              align="center"
-              style={{ marginBottom: getScaleSize(4) }}
             >
               {t(STRING.prescriptionDocument) || 'Prescription Document'}
             </AppText>
-            <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._6F767E}
-              align="center"
-              style={{ marginBottom: getScaleSize(20) }}
-            >
-              {t(STRING.takePhotoOrSelectFile) || 'Take Photo / Select File'}
-            </AppText>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.sheetOptionBtn}
-              onPress={handleTakePhoto}
-            >
-              <View style={styles.sheetOptionIconWrap}>
-                <Image
-                  source={IMAGES.ic_camera}
-                  style={styles.sheetOptionIcon}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
+            {prescriptionFiles.length > 0 && (
+              <View style={styles.prescriptionCountBadge}>
                 <AppText
-                  size={getScaleSize(14)}
+                  size={getScaleSize(11)}
                   font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
+                  color={COLORS.primary}
                 >
-                  {t(STRING.takePhoto) || 'Take Photo'}
-                </AppText>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                  style={{ marginTop: 2 }}
-                >
-                  {t('Use camera to capture document') ||
-                    'Use camera to capture document'}
+                  {prescriptionFiles.length}{' '}
+                  {prescriptionFiles.length === 1
+                    ? t(STRING.file) || 'file'
+                    : t(STRING.files) || 'files'}
                 </AppText>
               </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.sheetOptionBtn}
-              onPress={handleSelectPhoto}
-            >
-              <View style={styles.sheetOptionIconWrap}>
-                <Image
-                  source={IMAGES.ic_gallery}
-                  style={styles.sheetOptionIcon}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
-                >
-                  {t(STRING.photoLibrary) || 'Photo Library'}
-                </AppText>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                  style={{ marginTop: 2 }}
-                >
-                  {t(STRING.chooseFromGallery) ||
-                    'Choose photo from gallery'}
-                </AppText>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.sheetOptionBtn}
-              onPress={handleSelectFile}
-            >
-              <View
-                style={[
-                  styles.sheetOptionIconWrap,
-                  // { backgroundColor: '#FEF2F2' },
-                ]}
-              >
-                <Image
-                  source={IMAGES.ic_file}
-                  style={[
-                    styles.sheetOptionIcon,
-                    // { tintColor: '#DC2626' },
-                  ]}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS._1A1D1F}
-                >
-                  {t(STRING.selectPdfOrDocument) || 'Select PDF / Document'}
-                </AppText>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Regular}
-                  color={COLORS._6F767E}
-                  style={{ marginTop: 2 }}
-                >
-                  {t(STRING.selectPdfOrDocumentDesc) ||
-                    'Choose PDF document or file from device'}
-                </AppText>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={styles.sheetCancelBtn}
-              onPress={() => prescriptionPickerSheetRef.current?.hide()}
-            >
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._6F767E}
-                align="center"
-              >
-                {t(STRING.cancel) || 'Cancel'}
-              </AppText>
-            </TouchableOpacity>
+            )}
           </View>
-        </AppBottomSheet>
 
-        {/* Full-Screen Prescription Image Preview Modal */}
-        <Modal
-          visible={!!selectedPreviewImage}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setSelectedPreviewImage(null)}
-        >
-          <View style={styles.previewModalOverlay}>
-            <View style={styles.previewModalHeader}>
-              <AppText
-                size={getScaleSize(16)}
-                font={FONTS.Inter.Bold}
-                color={COLORS.white}
-              >
-                {t(STRING.prescriptionPreview) || 'Prescription Preview'}
-              </AppText>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.previewModalCloseBtn}
-                onPress={() => setSelectedPreviewImage(null)}
-              >
-                <Image
-                  source={IMAGES.crossIcon}
-                  style={styles.previewModalCloseIcon}
-                />
-              </TouchableOpacity>
-            </View>
+          {prescriptionFiles.length === 0 ? (
+            <View style={styles.recordCard}>
+              {isReadOnly ? (
+                <View
+                  style={{
+                    alignItems: 'center',
+                    paddingVertical: getScaleSize(12),
+                  }}
+                >
+                  <Image
+                    source={IMAGES.ic_file}
+                    style={{
+                      width: getScaleSize(24),
+                      height: getScaleSize(24),
+                      tintColor: COLORS._6F767E,
+                      resizeMode: 'contain',
+                    }}
+                  />
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS._6F767E}
+                    style={{ marginTop: getScaleSize(8) }}
+                  >
+                    {t(STRING.noPrescriptionDocument) ||
+                      'No prescription document attached'}
+                  </AppText>
+                </View>
+              ) : (
+                <View style={styles.prescriptionUploadDashed}>
+                  <View style={styles.prescriptionUploadIconWrap}>
+                    <Image
+                      source={IMAGES.ic_file}
+                      style={styles.prescriptionUploadIcon}
+                    />
+                  </View>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                    style={{ marginTop: getScaleSize(10) }}
+                  >
+                    {t(STRING.uploadPrescription) || 'Upload Prescription'}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                    align='center'
+                    style={{
+                      marginTop: getScaleSize(4),
+                      paddingHorizontal: getScaleSize(16),
+                    }}
+                  >
+                    {t(STRING.attachPrescriptionSubtitle) ||
+                      'Add a photo or file of the medical prescription'}
+                  </AppText>
 
-            <View style={styles.previewModalBody}>
-              {selectedPreviewImage && (
-                <Image
-                  source={{ uri: selectedPreviewImage }}
-                  style={styles.previewFullImage}
-                  resizeMode="contain"
-                />
+                  {/* Quick action buttons: Take Photo & Select File */}
+                  <View style={styles.prescriptionActionButtonsRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.prescriptionActionBtn}
+                      onPress={handleTakePhoto}
+                    >
+                      <Image
+                        source={IMAGES.ic_camera}
+                        style={styles.prescriptionBtnIcon}
+                      />
+                      <AppText
+                        size={getScaleSize(11.5)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                        numberOfLines={1}
+                        style={styles.prescriptionBtnText}
+                      >
+                        {t(STRING.takePhoto) || 'Take Photo'}
+                      </AppText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={styles.prescriptionActionBtn}
+                      onPress={handleSelectFile}
+                    >
+                      <Image
+                        source={IMAGES.ic_file}
+                        style={styles.prescriptionBtnIcon}
+                      />
+                      <AppText
+                        size={getScaleSize(11.5)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                        numberOfLines={1}
+                        style={styles.prescriptionBtnText}
+                      >
+                        {t(STRING.selectFile) || 'Select File'}
+                      </AppText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
             </View>
+          ) : (
+            <View style={[styles.recordCard, styles.prescriptionCardActive]}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.prescriptionScrollView}
+                contentContainerStyle={styles.prescriptionThumbnailsContainer}
+              >
+                {prescriptionFiles.map((uri, idx) => {
+                  const meta = prescriptionMeta[uri];
+                  const isDoc =
+                    meta?.isDoc !== undefined
+                      ? meta.isDoc
+                      : isDocumentFile(uri);
+                  const displayName =
+                    meta?.name || getDisplayFileName(uri, 'Prescription.pdf');
+                  const isPdf =
+                    displayName.toLowerCase().endsWith('.pdf') ||
+                    meta?.type === 'application/pdf' ||
+                    isPdfDocument(uri);
+                  const badgeText = isPdf ? 'PDF' : 'DOC';
+
+                  return (
+                    <View
+                      key={`presc_${idx}`}
+                      style={styles.prescriptionThumbWrapper}
+                    >
+                      <TouchableOpacity
+                        activeOpacity={isReadOnly ? 0.85 : 1}
+                        disabled={!isReadOnly}
+                        onPress={() => {
+                          if (isDoc) {
+                            NavigationService.navigate(SCREENS.PDF_VIEWER, {
+                              pdfUrl: uri,
+                              title:
+                                displayName ||
+                                t(STRING.prescriptionDocument) ||
+                                'Prescription Document',
+                            });
+                          } else {
+                            setSelectedPreviewImage(uri);
+                          }
+                        }}
+                        style={[
+                          styles.prescriptionThumbPressable,
+                          isDoc && styles.prescriptionPdfThumbPressable,
+                        ]}
+                      >
+                        {isDoc ? (
+                          <View style={styles.prescriptionPdfContent}>
+                            <View style={styles.prescriptionPdfBadge}>
+                              <AppText
+                                size={getScaleSize(9)}
+                                font={FONTS.Inter.Bold}
+                                color={COLORS.white}
+                              >
+                                {badgeText}
+                              </AppText>
+                            </View>
+                            <Image
+                              source={IMAGES.ic_file}
+                              style={styles.prescriptionPdfIcon}
+                              resizeMode="contain"
+                            />
+                            <AppText
+                              size={getScaleSize(9)}
+                              font={FONTS.Inter.Medium}
+                              color={COLORS._1A1D1F}
+                              numberOfLines={2}
+                              ellipsizeMode="middle"
+                              style={styles.prescriptionDocName}
+                            >
+                              {displayName}
+                            </AppText>
+                          </View>
+                        ) : (
+                          <Image
+                            source={{ uri }}
+                            style={styles.prescriptionThumbImage}
+                            resizeMode="cover"
+                          />
+                        )}
+                        {isReadOnly && (
+                          <View style={styles.prescriptionViewBadge}>
+                            <Image
+                              source={IMAGES.serviceEyeIcon || IMAGES.eye}
+                              style={styles.prescriptionEyeIcon}
+                            />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+
+                      {!isReadOnly && (
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          style={styles.prescriptionDeleteBtn}
+                          onPress={() => handleRemovePrescription(idx)}
+                        >
+                          <Image
+                            source={IMAGES.crossIcon}
+                            style={styles.prescriptionDeleteIcon}
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
+
+                {!isReadOnly && (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.prescriptionAddMoreBtn}
+                    onPress={handleOpenPrescriptionPicker}
+                  >
+                    <View style={styles.prescriptionAddMoreIconWrap}>
+                      <Image
+                        source={IMAGES.ic_camera}
+                        style={styles.prescriptionAddMoreIcon}
+                      />
+                    </View>
+                    <AppText
+                      size={getScaleSize(11)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.primary}
+                      align="center"
+                      style={{ marginTop: getScaleSize(4) }}
+                    >
+                      {t(STRING.addAnotherPrescription) || '+ Add'}
+                    </AppText>
+                  </TouchableOpacity>
+                )}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+
+        {/* ──────────────────────────────────────────────────────────
+              SECTION 3: TEXT / PARAGRAPH INSTRUCTIONS
+          ────────────────────────────────────────────────────────── */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={[styles.sectionBadge]}>
+              <Image
+                source={IMAGES.ic_edit}
+                style={[styles.sectionBadgeIcon]}
+              />
+            </View>
+            <AppText
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
+            >
+              {t(STRING.textInstructions)}
+            </AppText>
           </View>
-        </Modal>
-      </AppSafeAreaView>
+
+          <View style={styles.textInputCard}>
+            <TextInput
+              style={[
+                styles.multilineInput,
+                isReadOnly && { color: COLORS._1A1D1F },
+              ]}
+              placeholder={t(STRING.enterDischargeNotesPlaceholder)}
+              placeholderTextColor={COLORS._6F767E}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              value={instructionsText}
+              onChangeText={setInstructionsText}
+              maxLength={MAX_TEXT_LENGTH}
+              editable={!isReadOnly}
+            />
+
+            <View style={styles.textInputFooter}>
+              {!isReadOnly && instructionsText.length > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setInstructionsText('')}
+                >
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS.error}
+                  >
+                    {t(STRING.clearText)}
+                  </AppText>
+                </TouchableOpacity>
+              )}
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginLeft: 'auto' }}
+              >
+                {instructionsText.length}/{MAX_TEXT_LENGTH}{' '}
+                {t(STRING.characters)}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      </KeyboardAwareScrollView>
+
+      {/* Fixed Bottom Submit Button: Hidden once delegated to provider */}
+      {!isRejected && !isPending && !editRequest?.delegateFormToProvider && (
+        <View style={styles.bottomSheet}>
+          {isAccepted ? (
+            <View style={styles.twoButtonsRow}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[styles.outlineBtn, isDelegating && styles.btnDisabled]}
+                disabled={isDelegating}
+                onPress={handleSubmitPress}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS._526674}
+                  font={FONTS.Inter.Bold}
+                  align="center"
+                >
+                  {t(STRING.completeRequest) || 'Complete Request'}
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.primaryBtnFlex,
+                  isDelegating && styles.btnDisabled,
+                ]}
+                disabled={isDelegating}
+                onPress={handleDelegateToProvider}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  color={COLORS.white}
+                  font={FONTS.Inter.Bold}
+                  align="center"
+                >
+                  {isDelegating
+                    ? t(STRING.delegating) || 'Delegating...'
+                    : t(STRING.delegateToProvider) ||
+                    'Delegate to Provider'}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[
+                styles.continueBtn,
+                !canSubmit && styles.continueDisabled,
+              ]}
+              disabled={!canSubmit}
+              onPress={handleSubmitPress}
+            >
+              <AppText
+                size={getScaleSize(15)}
+                color={COLORS.white}
+                font={FONTS.Inter.Bold}
+              >
+                {t(STRING.submitRequest)}
+              </AppText>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Bottom Sheet 1: Recipient Selection (All vs Specific) */}
+      <ProviderOptionSheet
+        ref={providerOptionSheetRef}
+        onSendToAll={handleSendToAllProviders}
+        onSendToSpecific={handleSendToSpecificProvider}
+      />
+
+      {/* Bottom Sheet 2: Specific Provider Selection Entry Point */}
+      <SelectProviderSheet
+        ref={selectProviderSheetRef}
+        onSelectProvider={handleProviderSelected}
+      />
+
+      {/* Bottom Sheet 3: Prescription Picker (Take Photo / Select File) */}
+      <AppBottomSheet ref={prescriptionPickerSheetRef}>
+        <View style={styles.prescriptionSheetContent}>
+          <AppText
+            size={getScaleSize(16)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+            align="center"
+            style={{ marginBottom: getScaleSize(4) }}
+          >
+            {t(STRING.prescriptionDocument) || 'Prescription Document'}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._6F767E}
+            align="center"
+            style={{ marginBottom: getScaleSize(20) }}
+          >
+            {t(STRING.takePhotoOrSelectFile) || 'Take Photo / Select File'}
+          </AppText>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.sheetOptionBtn}
+            onPress={handleTakePhoto}
+          >
+            <View style={styles.sheetOptionIconWrap}>
+              <Image
+                source={IMAGES.ic_camera}
+                style={styles.sheetOptionIcon}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.takePhoto) || 'Take Photo'}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: 2 }}
+              >
+                {t('Use camera to capture document') ||
+                  'Use camera to capture document'}
+              </AppText>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.sheetOptionBtn}
+            onPress={handleSelectPhoto}
+          >
+            <View style={styles.sheetOptionIconWrap}>
+              <Image
+                source={IMAGES.ic_gallery}
+                style={styles.sheetOptionIcon}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.photoLibrary) || 'Photo Library'}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: 2 }}
+              >
+                {t(STRING.chooseFromGallery) ||
+                  'Choose photo from gallery'}
+              </AppText>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.sheetOptionBtn}
+            onPress={handleSelectFile}
+          >
+            <View
+              style={[
+                styles.sheetOptionIconWrap,
+                // { backgroundColor: '#FEF2F2' },
+              ]}
+            >
+              <Image
+                source={IMAGES.ic_file}
+                style={[
+                  styles.sheetOptionIcon,
+                  // { tintColor: '#DC2626' },
+                ]}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                size={getScaleSize(14)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.selectPdfOrDocument) || 'Select PDF / Document'}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: 2 }}
+              >
+                {t(STRING.selectPdfOrDocumentDesc) ||
+                  'Choose PDF document or file from device'}
+              </AppText>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.sheetCancelBtn}
+            onPress={() => prescriptionPickerSheetRef.current?.hide()}
+          >
+            <AppText
+              size={getScaleSize(14)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS._6F767E}
+              align="center"
+            >
+              {t(STRING.cancel) || 'Cancel'}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+      </AppBottomSheet>
+
+      {/* Full-Screen Prescription Image Preview Modal */}
+      <Modal
+        visible={!!selectedPreviewImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedPreviewImage(null)}
+      >
+        <View style={styles.previewModalOverlay}>
+          <View style={styles.previewModalHeader}>
+            <AppText
+              size={getScaleSize(16)}
+              font={FONTS.Inter.Bold}
+              color={COLORS.white}
+            >
+              {t(STRING.prescriptionPreview) || 'Prescription Preview'}
+            </AppText>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.previewModalCloseBtn}
+              onPress={() => setSelectedPreviewImage(null)}
+            >
+              <Image
+                source={IMAGES.crossIcon}
+                style={styles.previewModalCloseIcon}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.previewModalBody}>
+            {selectedPreviewImage && (
+              <Image
+                source={{ uri: selectedPreviewImage }}
+                style={styles.previewFullImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+    </AppSafeAreaView>
   );
 };
 
