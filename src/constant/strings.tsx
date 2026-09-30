@@ -673,6 +673,7 @@ export const STRING = {
 
   //toast
   downloadFailed: 'Download failed',
+  pdfDownloadedSuccessfully: 'PDF downloaded successfully',
 
   //bottomtabname
   home: 'Home',

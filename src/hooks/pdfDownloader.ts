@@ -2,11 +2,12 @@ import { Linking, PermissionsAndroid, Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import Share from 'react-native-share';
-import { SHOW_TOAST, STRING } from '../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../constant';
 import { API_BASE_URL } from '../api/apiRoutes';
 import { COLORS } from '../utils';
 import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
+import i18n from 'i18next';
 
 /** Builds a full PDF URL from a relative or absolute signedPdfUrl. */
 export const getSignedPdfUrl = (signedPdfUrl?: string | null): string => {
@@ -106,7 +107,11 @@ export const downloadPdfFromUrl = async (
   try {
     if (!url) return;
 
-    if (Platform.OS === 'android' && Number(Platform.Version) < 33) {
+    // Only request WRITE_EXTERNAL_STORAGE on Android <= 28 (Android 9 and below).
+    // On Android 10+ (API >= 29, including Android 13/14), Scoped Storage & MediaStore are used.
+    // Calling request(WRITE_EXTERNAL_STORAGE) on API >= 29 returns DENIED automatically
+    // because AndroidManifest specifies android:maxSdkVersion="28".
+    if (Platform.OS === 'android' && Number(Platform.Version) <= 28) {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
       );
@@ -119,40 +124,104 @@ export const downloadPdfFromUrl = async (
 
     const fileName = getPdfFileName(requestId);
 
-    const path =
-      Platform.OS === 'ios'
-        ? `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`
-        : `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`;
-
-    const res = await ReactNativeBlobUtil.config(
-      Platform.OS === 'android'
-        ? {
-            fileCache: true,
-            path,
-            addAndroidDownloads: {
-              useDownloadManager: true,
-              notification: true,
-              title: fileName,
-              mime: 'application/pdf',
-              path,
-            },
-          }
-        : {
-            fileCache: true,
-            path,
-          },
-    ).fetch('GET', url);
-
     if (Platform.OS === 'ios') {
+      const path = `${ReactNativeBlobUtil.fs.dirs.DocumentDir}/${fileName}`;
+      const res = await ReactNativeBlobUtil.config({
+        fileCache: true,
+        path,
+      }).fetch('GET', url);
+
+      const status = res.info().status;
+      if (status < 200 || status >= 300) {
+        console.log('PDF download failed with HTTP status:', status);
+        SHOW_TOAST(i18n.isInitialized ? i18n.t(STRING.downloadFailed) : STRING.downloadFailed);
+        return;
+      }
+
       ReactNativeBlobUtil.ios.previewDocument(res.path());
+      return;
+    }
+
+    // Android:
+    // 1. Download to app's cache directory first (requires no permissions, works reliably across all Android versions)
+    const tempPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`;
+    if (await ReactNativeBlobUtil.fs.exists(tempPath)) {
+      try {
+        await ReactNativeBlobUtil.fs.unlink(tempPath);
+      } catch {}
+    }
+
+    const res = await ReactNativeBlobUtil.config({
+      fileCache: true,
+      path: tempPath,
+    }).fetch('GET', url);
+
+    const status = res.info().status;
+    if (status < 200 || status >= 300) {
+      console.log('PDF download failed with HTTP status:', status);
+      SHOW_TOAST(i18n.isInitialized ? i18n.t(STRING.downloadFailed) : STRING.downloadFailed);
+      return;
+    }
+
+    const sourcePath = res.path();
+
+    // 2. Save into the user-accessible Downloads folder
+    if (Number(Platform.Version) >= 29) {
+      try {
+        await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+          {
+            name: fileName,
+            parentFolder: '',
+            mimeType: 'application/pdf',
+          },
+          'Download',
+          sourcePath,
+        );
+      } catch (mediaErr) {
+        console.log('copyToMediaStore error, attempting direct DownloadDir copy:', mediaErr);
+        try {
+          const destPath = `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`;
+          await ReactNativeBlobUtil.fs.cp(sourcePath, destPath);
+          await ReactNativeBlobUtil.fs.scanFile([
+            { path: destPath, mime: 'application/pdf' },
+          ]);
+        } catch (cpErr) {
+          console.log('DownloadDir copy error:', cpErr);
+        }
+      }
     } else {
-      ReactNativeBlobUtil.android.actionViewIntent(
-        res.path(),
+      // Android <= 9 (API <= 28)
+      try {
+        const destPath = `${ReactNativeBlobUtil.fs.dirs.DownloadDir}/${fileName}`;
+        await ReactNativeBlobUtil.fs.cp(sourcePath, destPath);
+        await ReactNativeBlobUtil.fs.scanFile([
+          { path: destPath, mime: 'application/pdf' },
+        ]);
+      } catch (cpErr) {
+        console.log('Legacy DownloadDir copy error:', cpErr);
+      }
+    }
+
+    const successMsg = i18n.isInitialized
+      ? i18n.t(STRING.pdfDownloadedSuccessfully)
+      : STRING.pdfDownloadedSuccessfully;
+    SHOW_SUCCESS_TOAST(successMsg);
+
+    // 3. Attempt to open in an external viewer if available (without failing download if viewer is not installed)
+    try {
+      await ReactNativeBlobUtil.android.actionViewIntent(
+        sourcePath,
         'application/pdf',
       );
+    } catch (viewError) {
+      console.log('Cannot open PDF with actionViewIntent:', viewError);
     }
   } catch (error) {
-    SHOW_TOAST(STRING.downloadFailed);
+    console.log('Download PDF error:', error);
+    const failMsg = i18n.isInitialized
+      ? i18n.t(STRING.downloadFailed)
+      : STRING.downloadFailed;
+    SHOW_TOAST(failMsg);
   }
 };
 
@@ -163,7 +232,10 @@ export const downloadSignedPdf = async (
 ) => {
   const url = getSignedPdfUrl(signedPdfUrl);
   if (!url) {
-    SHOW_TOAST(STRING.failedToLoadPdf);
+    const errorMsg = i18n.isInitialized
+      ? i18n.t(STRING.failedToLoadPdf)
+      : STRING.failedToLoadPdf;
+    SHOW_TOAST(errorMsg);
     return;
   }
   await downloadPdfFromUrl(url, requestId);
@@ -195,10 +267,23 @@ export const sharePdfFromUrl = async (
     const fileName = getPdfFileName(requestId);
     const path = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`;
 
+    if (await ReactNativeBlobUtil.fs.exists(path)) {
+      try {
+        await ReactNativeBlobUtil.fs.unlink(path);
+      } catch {}
+    }
+
     const res = await ReactNativeBlobUtil.config({
       fileCache: true,
       path,
     }).fetch('GET', url);
+
+    const status = res.info().status;
+    if (status < 200 || status >= 300) {
+      console.log('PDF share failed with HTTP status:', status);
+      SHOW_TOAST(i18n.isInitialized ? i18n.t(STRING.failedToLoadPdf) : STRING.failedToLoadPdf);
+      return;
+    }
 
     const filePath = res.path();
     const shareUrl = filePath.startsWith('file://')
@@ -213,7 +298,10 @@ export const sharePdfFromUrl = async (
     });
   } catch (error) {
     if (!isShareCancelled(error)) {
-      SHOW_TOAST(STRING.shareFailed);
+      const shareFailMsg = i18n.isInitialized
+        ? i18n.t(STRING.shareFailed)
+        : STRING.shareFailed;
+      SHOW_TOAST(shareFailMsg);
     }
   }
 };
@@ -225,7 +313,10 @@ export const shareSignedPdf = async (
 ) => {
   const url = getSignedPdfUrl(signedPdfUrl);
   if (!url) {
-    SHOW_TOAST(STRING.failedToLoadPdf);
+    const errorMsg = i18n.isInitialized
+      ? i18n.t(STRING.failedToLoadPdf)
+      : STRING.failedToLoadPdf;
+    SHOW_TOAST(errorMsg);
     return;
   }
   await sharePdfFromUrl(url, requestId);

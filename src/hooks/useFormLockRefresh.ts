@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { serviceRequestApi } from '../services/serviceRequestApi';
 
 interface UseFormLockRefreshProps {
@@ -23,10 +23,17 @@ export const useFormLockRefresh = ({
   enabled = true,
   onLockConflict,
 }: UseFormLockRefreshProps) => {
+  const isFocused = useIsFocused();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasAttemptedAcquireRef = useRef(false);
+  const ownsLockRef = useRef(false);
 
   const [ownsLock, setOwnsLock] = useState(false);
+
+  const updateOwnsLock = (owned: boolean) => {
+    ownsLockRef.current = owned;
+    setOwnsLock(owned);
+  };
 
   /**
    * null expiresAt is treated as expired
@@ -41,7 +48,7 @@ export const useFormLockRefresh = ({
    * Acquire / detect lock ownership
    */
   useEffect(() => {
-    if (!enabled || !requestId || !currentUserId || readOnly) {
+    if (!isFocused || !enabled || !requestId || !currentUserId || readOnly) {
       return;
     }
 
@@ -52,7 +59,7 @@ export const useFormLockRefresh = ({
         const response = await serviceRequestApi.acquireFormLock(requestId);
 
         if (response?.success) {
-          setOwnsLock(true);
+          updateOwnsLock(true);
         } else {
           hasAttemptedAcquireRef.current = false;
         }
@@ -65,7 +72,7 @@ export const useFormLockRefresh = ({
      * Current user already owns lock
      */
     if (isLocked && lockedBy === currentUserId) {
-      setOwnsLock(true);
+      updateOwnsLock(true);
       return;
     }
 
@@ -73,7 +80,7 @@ export const useFormLockRefresh = ({
      * Another user owns active lock
      */
     if (isLocked && lockedBy && lockedBy !== currentUserId && !isExpired()) {
-      setOwnsLock(false);
+      updateOwnsLock(false);
       onLockConflict?.();
       return;
     }
@@ -85,6 +92,7 @@ export const useFormLockRefresh = ({
       acquireLock();
     }
   }, [
+    isFocused,
     enabled,
     requestId,
     isLocked,
@@ -99,7 +107,7 @@ export const useFormLockRefresh = ({
    * Refresh every 30s while current user owns lock
    */
   useEffect(() => {
-    if (!enabled || !requestId || !ownsLock || readOnly) {
+    if (!isFocused || !enabled || !requestId || !ownsLock || readOnly) {
       return;
     }
 
@@ -118,7 +126,7 @@ export const useFormLockRefresh = ({
         intervalRef.current = null;
       }
     };
-  }, [enabled, requestId, ownsLock, readOnly]);
+  }, [isFocused, enabled, requestId, ownsLock, readOnly]);
 
   /**
    * Release when the screen loses focus or unmounts so the
@@ -132,11 +140,12 @@ export const useFormLockRefresh = ({
           clearInterval(intervalRef.current);
           intervalRef.current = null;
         }
-        if (requestId && ownsLock) {
+        if (requestId && ownsLockRef.current) {
           serviceRequestApi.releaseFormLock(requestId);
-          setOwnsLock(false);
+          updateOwnsLock(false);
         }
       };
-    }, [requestId, ownsLock]),
+    }, [requestId]),
   );
 };
+

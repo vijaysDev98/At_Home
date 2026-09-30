@@ -99,6 +99,7 @@ const FormsScreen: React.FC = () => {
 
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const status = requestData?.status || request?.status;
   const formStatus = requestData?.formStatus || request?.formStatus;
 
@@ -161,7 +162,7 @@ const FormsScreen: React.FC = () => {
     expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
     readOnly,
-    enabled: isFetched && !!requestData && !hasError,
+    enabled: !isLeaving && isFetched && !!requestData && !hasError,
     onLockConflict: () => {
       if (Platform.OS === 'ios') {
         setTimeout(() => {
@@ -339,6 +340,21 @@ const FormsScreen: React.FC = () => {
     );
   };
 
+  const handleBackPress = async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    const targetRequestId =
+      requestId || requestData?.id || (requestData as any)?._id;
+    if (targetRequestId && !readOnly) {
+      try {
+        await serviceRequestApi.releaseFormLock(targetRequestId);
+      } catch (e) {
+        console.log('Error releasing form lock on back:', e);
+      }
+    }
+    NavigationService.goBack();
+  };
+
   return (
     <AppSafeAreaView
       edges={['top', 'bottom']}
@@ -349,6 +365,7 @@ const FormsScreen: React.FC = () => {
         <Header
           title={t(STRING.medicalForm)}
           isBack={true}
+          onBackPress={handleBackPress}
           style={styles.header}
           isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
           onViewFormPress={() => {

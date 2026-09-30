@@ -38,7 +38,31 @@ const FormReviewScreen: React.FC = () => {
   const { t } = useTranslation();
   const { request, fromCreate } = (route.params as any) || {};
 
-  const handleGoBack = () => {
+  const requestId =
+    request?.id || (request as any)?._id || (route.params as any)?.requestId;
+
+  const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
+    null,
+  );
+
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleGoBack = async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+
+    const targetRequestId =
+      requestId || requestData?.id || (requestData as any)?._id;
+    console.log('targetRequestId', `test-${targetRequestId}, -${requestId}`);
+
+    if (targetRequestId) {
+      try {
+        await serviceRequestApi.releaseFormLock(targetRequestId);
+      } catch (e) {
+        console.log('Error releasing form lock on back:', e);
+      }
+    }
+
     if (fromCreate) {
       NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
         screen: SCREENS.DOCTOR_REQUEST,
@@ -47,13 +71,6 @@ const FormReviewScreen: React.FC = () => {
       NavigationService.goBack();
     }
   };
-
-  const requestId =
-    request?.id || (request as any)?._id || (route.params as any)?.requestId;
-
-  const [requestData, setRequestData] = useState<ServiceRequestDetail | null>(
-    null,
-  );
   const [hasError, setHasError] = useState(false);
   const [isFetched, setIsFetched] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
@@ -79,7 +96,7 @@ const FormReviewScreen: React.FC = () => {
     expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
     readOnly: false,
-    enabled: isFetched && !!requestData && !hasError,
+    enabled: !isLeaving && isFetched && !!requestData && !hasError,
     onLockConflict: () => {
       // warningSheetRef.current?.show();
     },
@@ -124,7 +141,7 @@ const FormReviewScreen: React.FC = () => {
 
       const data = await serviceRequestApi.getServiceRequestDetails(
         requestId || '',
-      );      
+      );
       if (data) {
         setRequestData(data);
       } else {
@@ -210,7 +227,7 @@ const FormReviewScreen: React.FC = () => {
                       patient={patientData}
                       prescriber={
                         (requestData as any)?.doctor ||
-                        (requestData as any)?.doctorId 
+                        (requestData as any)?.doctorId
                       }
                       readOnly={isReadOnly}
                     />
