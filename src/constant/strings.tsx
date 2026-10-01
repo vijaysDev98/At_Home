@@ -2,7 +2,7 @@ export const STRING = {
   welcome: 'welcome',
   // ─── Auth: Welcome ───────────────────────────────────────────
   welcomeTitle: 'Welcome to\nAt-Home',
-  welcomeSubtitle: 'Patients to Doctors',
+  welcomeSubtitle: 'Care at Home\nSupportive Care',
   signIn: 'Sign In',
   createAccount: 'Create Account',
 

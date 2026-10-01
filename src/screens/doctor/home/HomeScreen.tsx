@@ -7,6 +7,7 @@ import {
   View,
   RefreshControl,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppSafeAreaView, AppText, ProfileAvatar } from '../../../components';
@@ -59,9 +60,35 @@ interface DashboardData {
   [key: string]: any;
 }
 
+const DOCHOME_LOGO_ASPECT = {
+  en: 2019 / 528,
+  fr: 1024 / 268,
+} as const;
+
+const HOME_BTN_ASPECT = {
+  en: 1356 / 768,
+  fr: 1024 / 580,
+} as const;
+
+/** Home CTA image width as a fraction of the content area (banner stays full width). */
+const HOME_BTN_WIDTH_RATIO = 0.60;
+
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
-  const { t } = useTranslation();
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
+  const { width: windowWidth } = useWindowDimensions();
+  const { t, i18n } = useTranslation();
+  const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
+  const docHomeLogo = isFrench
+    ? IMAGES.ic_dochome_logo_fr
+    : IMAGES.ic_dochome_logo_en;
+  const homeBtnImage = isFrench ? IMAGES.ic_home_btn_fr : IMAGES.ic_home_btn_en;
+  const contentWidth = windowWidth;
+  const docHomeLogoHeight =
+    contentWidth / DOCHOME_LOGO_ASPECT[isFrench ? 'fr' : 'en'];
+  const homeBtnWidth = contentWidth * HOME_BTN_WIDTH_RATIO;
+  const homeBtnHeight =
+    homeBtnWidth / HOME_BTN_ASPECT[isFrench ? 'fr' : 'en'];
   const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -204,25 +231,14 @@ const HomeScreen: React.FC = () => {
             />
           }
         >
-          {/* Main Title Heading */}
-          {/* <View style={styles.headingSection}>
-            <AppText
-              size={getScaleSize(24)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-              style={styles.titleLine}
-            >
-              {t(STRING.homeDischarge)}
-            </AppText>
-            <AppText
-              size={getScaleSize(24)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-              style={styles.titleLine}
-            >
-              {t(STRING.supportServices)}
-            </AppText>
-          </View> */}
+          <Image
+            source={docHomeLogo}
+            style={[
+              styles.docHomeLogo,
+              { width: contentWidth, height: docHomeLogoHeight },
+            ]}
+            resizeMode="contain"
+          />
 
           {/* Services Section Header with "See All" */}
           <View style={styles.servicesHeaderRow}>
@@ -331,26 +347,21 @@ const HomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View> */}
 
-          {/* Main CTA Button: CREATE NEW HOMECARE REQUEST */}
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST)}
-            style={styles.mainCtaBtn}
+            onPress={() =>
+              NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST)
+            }
+            style={styles.homeBtnTouchable}
           >
-            <View style={styles.ctaIconCircle}>
-              <Image source={IMAGES.ic_file} style={styles.ctaHouseIcon} />
-            </View>
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.white}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              style={{ flex: 1 }}
-            >
-              {t(STRING.createNewHomecareRequest)}
-            </AppText>
+            <Image
+              source={homeBtnImage}
+              style={[
+                styles.homeBtnImage,
+                { width: homeBtnWidth, height: homeBtnHeight },
+              ]}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
 
           {/* Quick Action Buttons: NEW PATIENT & NEW MEDICAL PRESCRIPTION FORM */}
@@ -491,7 +502,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: getScaleSize(60),
-    paddingTop: getScaleSize(16),
+    // paddingTop: getScaleSize(8),
+  },
+  docHomeLogo: {
+    alignSelf: 'center',
+    marginBottom: getScaleSize(12),
+    borderRadius: getScaleSize(16),
+  },
+  homeBtnTouchable: {
+    alignSelf: 'center',
+    marginTop: getScaleSize(9),
+  },
+  homeBtnImage: {
+    alignSelf: 'center',
+    elevation: 3,
   },
   headingSection: {
     alignItems: 'center',
@@ -612,40 +636,6 @@ const styles = StyleSheet.create({
   infoPillText: {
     flex: 1,
     lineHeight: getScaleSize(14),
-  },
-  mainCtaBtn: {
-    backgroundColor: '#164E8C',
-    marginHorizontal: getScaleSize(18),
-    marginTop: getScaleSize(16),
-    height: getScaleSize(72),
-    borderRadius: getScaleSize(16),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: getScaleSize(16),
-    gap: getScaleSize(12),
-    elevation: 3,
-    shadowColor: '#164E8C',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-  ctaIconCircle: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
-    backgroundColor: COLORS.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaHouseIcon: {
-    width: getScaleSize(22),
-    height: getScaleSize(22),
-    resizeMode: 'contain',
-    tintColor: '#164E8C',
-  },
-  ctaText: {
-    letterSpacing: 0.4,
   },
   actionButtonsRow: {
     flexDirection: 'row',

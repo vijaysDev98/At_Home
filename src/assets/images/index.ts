@@ -120,4 +120,8 @@ export const IMAGES = {
   doc_registered_fr: require('./doc_registered_fr.png'),
   doc_form_submitted: require('./doc_form_submitted.png'),
   doc_form_submitted_fr: require('./doc_form_submitted_fr.png'),
+  ic_dochome_logo_en: require('./ic_dochome_logo_en.png'),
+  ic_dochome_logo_fr: require('./ic_dochome_logo_fr.jpeg'),
+  ic_home_btn_en: require('./ic_home_btn_en.png'),
+  ic_home_btn_fr: require('./ic_home_btn_fr.png'),
 };

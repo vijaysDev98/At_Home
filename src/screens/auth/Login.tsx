@@ -158,7 +158,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             style={{ marginTop: getScaleSize(12) }}
             align="center"
           >
-            {t(STRING.welcomeBackMessage)}{' '}
+            {t(STRING.welcomeSubtitle)}
           </AppText>
         </View>
 
