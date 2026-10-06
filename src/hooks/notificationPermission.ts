@@ -9,6 +9,12 @@ import { SCREENS } from '../navigation/routes';
 import { createNotificationChannels } from '../services/notificationChannels';
 import { uploadFcmToken } from '../utils/fcmTokenHelper';
 import { ROLES } from '../constant/getRole';
+import store from '../redux/store';
+import { showNotificationOverlay } from '../actions/common/notificationOverlaySlice';
+import {
+  resolveOverlayKey,
+  extractNotificationInfo,
+} from '../constant/notificationOverlayConfig';
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -81,13 +87,45 @@ export const getFcmToken = async () => {
   }
 };
 
-// Foreground handler - using Notifee for better UX
+// Foreground handler - displays rich action overlay for supported types, otherwise Notifee
 export function setupForegroundHandler(): () => void {
   const unsubscribe = messaging().onMessage(
     async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
       console.log('Foreground message received:', remoteMessage);
+      console.log(
+        'Foreground message DATA:',
+        JSON.stringify(remoteMessage?.data, null, 2),
+      );
+      console.log(
+        'Foreground message NOTIFICATION:',
+        JSON.stringify(remoteMessage?.notification, null, 2),
+      );
 
       const { notification, data, messageId } = remoteMessage;
+
+      // Extract parsed info from notification data payload
+      const info = extractNotificationInfo(data);
+      const overlayKey = resolveOverlayKey(data);
+      console.log('Resolved overlayKey:', overlayKey, 'Extracted info:', info);
+
+      if (overlayKey) {
+        store.dispatch(
+          showNotificationOverlay({
+            type: overlayKey,
+            title: notification?.title || info.type,
+            message: notification?.body || '',
+            payload: {
+              requestId: info.requestId,
+              formId: info.formId,
+              patientName: info.patientName,
+              referenceId: (data as any)?.referenceId || info.requestId,
+              referenceType: (data as any)?.referenceType,
+              metadata: info.metadata,
+            },
+          }),
+        );
+        return;
+      }
 
       if (notification) {
         // Create a channel (required for Android)

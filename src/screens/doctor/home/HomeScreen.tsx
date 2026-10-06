@@ -332,7 +332,7 @@ const HomeScreen: React.FC = () => {
 
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => NavigationService.navigate(SCREENS.PROVIDERS_CALL_LIST)}
+              onPress={handleEmergencyCall}
               style={styles.infoPill}
             >
               <Image source={(IMAGES as any).ic_vitale_info || IMAGES.card} style={styles.infoPillIconBadge} />
@@ -410,6 +410,8 @@ const HomeScreen: React.FC = () => {
               </AppText>
             </TouchableOpacity>
           </View>
+
+
 
           {/* Centered Floating CALL Button */}
           <View style={styles.callButtonContainer}>
@@ -700,6 +702,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     tintColor: COLORS._48B02C,
   },
+
 });
 
 export default HomeScreen;

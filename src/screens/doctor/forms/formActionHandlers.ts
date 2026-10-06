@@ -202,10 +202,19 @@ export const handleFormSubmit = async (params: FormActionParams) => {
               },
             ]);
           } else {
+            const resolvedPatientName =
+              initialData?.patient?.fullName ||
+              initialData?.patientName ||
+              selectedPatient?.fullName ||
+              selectedPatient?.name ||
+              '';
+
             dispatch(
               setDocFormSubmittedModal({
                 visible: true,
                 target: {
+                  patientName: resolvedPatientName,
+                  requestId,
                   routes: [
                     {
                       name: SCREENS.DOCTOR_BOTTOM_TABS,
@@ -276,10 +285,22 @@ export const handleFormSubmit = async (params: FormActionParams) => {
                   },
                 ]);
               } else {
+                const resolvedPatientName =
+                  selectedPatient?.fullName ||
+                  selectedPatient?.name ||
+                  (selectedPatient?.fName
+                    ? `${selectedPatient.fName} ${selectedPatient.lName || ''}`.trim()
+                    : '') ||
+                  response.data?.data?.patient?.fullName ||
+                  response.data?.data?.patientName ||
+                  '';
+
                 dispatch(
                   setDocFormSubmittedModal({
                     visible: true,
                     target: {
+                      patientName: resolvedPatientName,
+                      requestId: newRequestId,
                       routes: [
                         {
                           name: SCREENS.DOCTOR_BOTTOM_TABS,

@@ -4,6 +4,7 @@ import profileReducer from '../actions/profile/profileSlice';
 import commonReducer from '../actions/common/commonSlice';
 import patientReducer from '../actions/patient/patientSlice';
 import languageReducer from '../actions/language/languageSlice';
+import notificationOverlayReducer from '../actions/common/notificationOverlaySlice';
 
 const appReducer = combineReducers({
   login: authReducer,
@@ -11,6 +12,7 @@ const appReducer = combineReducers({
   common: commonReducer,
   patient: patientReducer,
   language: languageReducer,
+  notificationOverlay: notificationOverlayReducer,
 });
 
 const rootReducer = (state: any, action: any) => {

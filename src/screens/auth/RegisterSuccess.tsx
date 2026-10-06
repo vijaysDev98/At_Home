@@ -1,8 +1,9 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSelector } from 'react-redux';
 import { RootStackParamList } from '../../navigation';
+import { RootState } from '../../redux/store';
 import { AppSafeAreaView, AppText, PrimaryButton } from '../../components';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
@@ -17,54 +18,42 @@ export type RegisterSuccessProps = NativeStackScreenProps<
   'RegisterSuccess'
 >;
 
-const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
-  const { t } = useTranslation();
+const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
+  const { t, i18n } = useTranslation();
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
+
+  const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
+  const imageSource = isFrench
+    ? IMAGES.overlay_profile_review_fr
+    : IMAGES.overlay_profile_review_en;
+
   return (
-    <AppSafeAreaView
-      style={styles.safe}
-    >
+    <AppSafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        {/* Hero */}
-        <View style={styles.heroSection}>
-          {/* Check icon circle */}
-          <Image
-            source={IMAGES.ic_register_done}
-            style={{ height: getScaleSize(96), width: getScaleSize(96) }}
-            resizeMode="contain"
-          />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Illustration Image (with baked-in completion and review message) */}
+          <View style={styles.imageWrapper}>
+            <Image
+              source={imageSource}
+              style={[
+                styles.illustrationImage,
+                { aspectRatio: isFrench ? 1024 / 764 : 1024 / 682 },
+              ]}
+              resizeMode="contain"
+            />
+          </View>
 
-          <AppText
-            size={getScaleSize(24)}
-            font={FONTS.Inter.Bold}
-            color={COLORS.slate900}
-            align="center"
-          >
-            {t(STRING.registrationSuccessful)}
-          </AppText>
-
-          <AppText
-            size={getScaleSize(15)}
-            font={FONTS.Inter.Regular}
-            color={COLORS.slate700}
-            align="center"
-            style={{ maxWidth: getScaleSize(320) }}
-          >
-            {t(STRING.yourAccountHasBeenCreatedAndIsCurrently)}{' '}
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-            >
-              {t(STRING.pendingAdminApproval)}
-            </AppText>
-            . {t(STRING.weWillNotifyYouViaEmailOnceYourAccountIsActivated)}
-          </AppText>
-
-          {/* Info Card */}
+          {/* Info Card: What Happens Next */}
           <View style={styles.infoCard}>
             <Image
               source={IMAGES.ic_clock}
-              style={{ height: getScaleSize(25), width: getScaleSize(25) }}
+              style={styles.clockIcon}
+              resizeMode="contain"
             />
             <View style={styles.infoTextWrap}>
               <AppText
@@ -75,18 +64,18 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ navigation }) => {
                 {t(STRING.whatHappensNext)}
               </AppText>
               <AppText
-                size={getScaleSize(14)}
+                size={getScaleSize(13.5)}
                 font={FONTS.Inter.Regular}
                 color={COLORS.slate700}
-                style={{ marginTop: getScaleSize(4) }}
+                style={styles.infoSubtext}
               >
                 {t(STRING.yourRegDes)}
               </AppText>
             </View>
           </View>
-        </View>
+        </ScrollView>
 
-        {/* CTA */}
+        {/* CTA Container */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
             title={t(STRING.backToLogin)}
@@ -105,16 +94,28 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  heroSection: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: getScaleSize(32),
-    width: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: getScaleSize(20),
+    paddingTop: getScaleSize(16),
+    paddingBottom: getScaleSize(16),
     alignItems: 'center',
     justifyContent: 'center',
     gap: getScaleSize(20),
+  },
+  imageWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  illustrationImage: {
+    width: '100%',
+    maxHeight: getScaleSize(320),
   },
   infoCard: {
     width: '100%',
@@ -132,13 +133,24 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  clockIcon: {
+    height: getScaleSize(24),
+    width: getScaleSize(24),
+    marginTop: getScaleSize(2),
+  },
   infoTextWrap: {
     flex: 1,
+  },
+  infoSubtext: {
+    marginTop: getScaleSize(4),
+    lineHeight: getScaleSize(19),
   },
   ctaContainer: {
     width: '100%',
     paddingHorizontal: getScaleSize(24),
     paddingBottom: getScaleSize(24),
+    paddingTop: getScaleSize(8),
+    backgroundColor: COLORS.white,
   },
 });
 

@@ -22,6 +22,8 @@ import { useSound } from 'react-native-nitro-sound';
 import LottieView from 'lottie-react-native';
 import { ANIMATION } from '../../../assets/lottie';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { showNotificationOverlay } from '../../../actions/common/notificationOverlaySlice';
 import {
   AppSafeAreaView,
   AppText,
@@ -76,6 +78,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded';
 const MAX_TEXT_LENGTH = 1500;
 
 const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> = () => {
+  const dispatch = useDispatch();
   const { t } = useTranslation();
   const route = useRoute<any>();
   const isEdit = !!route.params?.isEdit;
@@ -553,12 +556,15 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
   const handleCallAssignedProvider = (phone?: string | null) => {
     if (phone) {
-      Linking.openURL(`tel:${phone}`).catch(() => {
-        SHOW_TOAST(
-          t(STRING.unableToOpenPhoneDialer) || 'Unable to open phone dialer',
-          'error',
-        );
-      });
+      dispatch(
+        showNotificationOverlay({
+          type: 'contactProvider',
+          payload: {
+            phoneNumber: phone,
+            position: 'center',
+          },
+        }),
+      );
     } else {
       SHOW_TOAST(
         t(STRING.noProviderPhoneNumberAvailable) ||

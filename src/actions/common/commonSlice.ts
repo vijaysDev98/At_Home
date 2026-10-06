@@ -2,6 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 export interface DocFormSubmittedModalTarget {
   routes?: Array<{ name: string; params?: object }>;
+  patientName?: string;
+  requestId?: string;
 }
 
 interface CommonSliceProps {

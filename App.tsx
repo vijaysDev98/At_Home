@@ -34,7 +34,7 @@ import { createNotificationChannels } from './src/services/notificationChannels'
 import { COLORS } from './src/utils';
 import { toastConfig } from './src/constant/toastConfig';
 import notifee, { AndroidImportance } from '@notifee/react-native';
-import { DocFormSubmittedModal } from './src/components';
+import { DocFormSubmittedModal, NotificationActionOverlay } from './src/components';
 
 const AppContent = () => {
   // Sync language between Redux and i18n
@@ -44,6 +44,7 @@ const AppContent = () => {
     <>
       <RootNavigation />
       <DocFormSubmittedModal />
+      <NotificationActionOverlay />
       <Toast config={toastConfig} />
     </>
   );

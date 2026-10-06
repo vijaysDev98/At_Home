@@ -5,7 +5,7 @@ import {
   StatusBar,
   BackHandler,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,16 +20,17 @@ import { STRING } from '../../constant';
 import { COLORS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const IMAGE_ASPECT_RATIO = 1672 / 941;
-const IMAGE_HEIGHT = SCREEN_WIDTH * IMAGE_ASPECT_RATIO;
-
 const DoctorRegisteredScreen: React.FC = () => {
+  const { width: screenWidth } = useWindowDimensions();
   const { t, i18n } = useTranslation();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
 
   const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
-  const imageSource = isFrench ? IMAGES.doc_registered_fr : IMAGES.doc_registered;
+  const imageSource = isFrench
+    ? IMAGES.overlay_profile_review_fr || IMAGES.doc_registered_fr
+    : IMAGES.overlay_profile_review_en || IMAGES.doc_registered;
+  const imageAspectRatio = isFrench ? 764 / 1024 : 682 / 1024;
+  const imageHeight = screenWidth * imageAspectRatio;
 
   const handleContinue = () => {
     NavigationService.replace(SCREENS.REGISTER_SUCCESS);
@@ -62,7 +63,7 @@ const DoctorRegisteredScreen: React.FC = () => {
       >
         <Image
           source={imageSource}
-          style={styles.fullImage}
+          style={[styles.fullImage, { height: imageHeight }]}
           resizeMode="contain"
         />
       </ScrollView>
@@ -94,8 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   fullImage: {
-    width: SCREEN_WIDTH,
-    height: IMAGE_HEIGHT,
+    width: '100%',
   },
   ctaContainer: {
     paddingHorizontal: getScaleSize(24),

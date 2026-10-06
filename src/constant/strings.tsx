@@ -1031,5 +1031,14 @@ export const STRING = {
   fillForm: 'Fill Form',
   delegating: 'Delegating...',
   formDelegated: 'Form Delegated',
+  providerAcceptedPatientCare: 'The healthcare provider has accepted the care of patient',
+  providerAcceptedCareDefault: 'The healthcare provider has accepted the care of your patient.',
+  providerAcceptedCare: 'The healthcare provider has accepted the care of the patient',
+  careStartedPatient: 'Your healthcare provider has started the care for',
+  careStartedDefault: 'Your healthcare provider has started the care for your patient.',
+  signLater: 'Sign Later',
+  thankYouDoctorTitle: 'Thank you Doctor,',
+  thankYouDoctorForChoosing: 'for choosing the AT-Home application to organize home care for',
+  thankYouDoctorDefault: 'for choosing the AT-Home application to organize home care for your patient.',
 };
 

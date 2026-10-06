@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { showNotificationOverlay } from '../../../actions/common/notificationOverlaySlice';
 import {
   AppSafeAreaView,
   AppText,
@@ -46,6 +48,7 @@ export interface Provider {
 }
 
 const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(({ provider }) => {
+  const dispatch = useDispatch();
   const { t } = useTranslation();
   const name =
     provider.providerName ||
@@ -53,9 +56,16 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(({ provide
 
   const handleCall = () => {
     if (provider.phoneNumber) {
-      Linking.openURL(`tel:${provider.phoneNumber}`).catch(() => {
-        console.log('Unable to open phone dialer');
-      });
+      dispatch(
+        showNotificationOverlay({
+          type: 'contactProvider',
+          payload: {
+            phoneNumber: provider.phoneNumber,
+            providerName: name,
+            position: 'center',
+          },
+        }),
+      );
     }
   };
 

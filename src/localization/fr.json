@@ -937,5 +937,14 @@
   "file": "fichier",
   "files": "fichiers",
   "Provide instructions using voice recording, prescription document, written notes, or all.": "Fournissez des instructions à l'aide d'un enregistrement vocal, d'un document de prescription, de notes écrites ou des trois.",
-  "Please provide pre-request instructions using voice recording, prescription document, or written notes.": "Veuillez fournir des instructions de pré-demande à l'aide d'un enregistrement vocal, d'un document d'ordonnance ou de notes écrites."
+  "Please provide pre-request instructions using voice recording, prescription document, or written notes.": "Veuillez fournir des instructions de pré-demande à l'aide d'un enregistrement vocal, d'un document d'ordonnance ou de notes écrites.",
+  "The healthcare provider has accepted the care of patient": "Le professionnel de santé a accepté la prise en charge du patient",
+  "The healthcare provider has accepted the care of your patient.": "Le professionnel de santé a accepté la prise en charge de votre patient.",
+  "Your healthcare provider has started the care for": "Votre professionnel de santé a commencé la prise en charge du patient",
+  "Your healthcare provider has started the care for your patient.": "Votre professionnel de santé a commencé la prise en charge de votre patient.",
+  "Sign Later": "Signer plus tard",
+  "Thank you Doctor,": "Merci Docteur,",
+  "for choosing the AT-Home application to organize home care for": "d'avoir choisi l'application AT-Home pour organiser les soins à domicile pour",
+  "for choosing the AT-Home application to organize home care for your patient.": "d'avoir choisi l'application AT-Home pour organiser les soins à domicile de votre patient.",
+  "The healthcare provider has accepted the care of the patient": "Le professionnel de santé a accepté la prise en charge du patient"
 }

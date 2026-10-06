@@ -938,5 +938,14 @@
   "file": "file",
   "files": "files",
   "Provide instructions using voice recording, prescription document, written notes, or all.": "Provide instructions using voice recording, prescription document, written notes, or all.",
-  "Please provide pre-request instructions using voice recording, prescription document, or written notes.": "Please provide pre-request instructions using voice recording, prescription document, or written notes."
+  "Please provide pre-request instructions using voice recording, prescription document, or written notes.": "Please provide pre-request instructions using voice recording, prescription document, or written notes.",
+  "The healthcare provider has accepted the care of patient": "The healthcare provider has accepted the care of patient",
+  "The healthcare provider has accepted the care of your patient.": "The healthcare provider has accepted the care of your patient.",
+  "Your healthcare provider has started the care for": "Your healthcare provider has started the care for",
+  "Your healthcare provider has started the care for your patient.": "Your healthcare provider has started the care for your patient.",
+  "Sign Later": "Sign Later",
+  "Thank you Doctor,": "Thank you Doctor,",
+  "for choosing the AT-Home application to organize home care for": "for choosing the AT-Home application to organize home care for",
+  "for choosing the AT-Home application to organize home care for your patient.": "for choosing the AT-Home application to organize home care for your patient.",
+  "The healthcare provider has accepted the care of the patient": "The healthcare provider has accepted the care of the patient"
 }
