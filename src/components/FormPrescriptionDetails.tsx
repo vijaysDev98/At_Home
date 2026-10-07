@@ -25,6 +25,7 @@ export interface FormPrescriptionDetailsProps {
   errors?: { [key: string]: string };
   readOnly?: boolean;
   showDoneAt?: boolean;
+  showTherapyType?: boolean;
 }
 
 const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
@@ -33,6 +34,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
   errors = {},
   readOnly = false,
   showDoneAt = false,
+  showTherapyType = true,
 }) => {
   const { t } = useTranslation();
   const locale = useSelector((state: any) => state.language.currentLanguage);
@@ -119,37 +121,41 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
         onCancel={() => setOpen(false)}
       />
 
-      <View style={styles.checkboxGroup}>
-        <View style={styles.checkboxItem}>
-          <AppCheckBox
-            value={state.therapy_type === 'start'}
-            onValueChange={value =>
-              setState({ therapy_type: value ? 'start' : '' })
-            }
-            disabled={readOnly}
-            label={t(STRING.startOfHomeInfusionTherapy)}
-          />
-        </View>
+      {showTherapyType && (
+        <>
+          <View style={styles.checkboxGroup}>
+            <View style={styles.checkboxItem}>
+              <AppCheckBox
+                value={state.therapy_type === 'start'}
+                onValueChange={value =>
+                  setState({ therapy_type: value ? 'start' : '' })
+                }
+                disabled={readOnly}
+                label={t(STRING.startOfHomeInfusionTherapy)}
+              />
+            </View>
 
-        <View style={[styles.checkboxItem]}>
-          <AppCheckBox
-            value={state.therapy_type === 'renewal'}
-            onValueChange={value =>
-              setState({ therapy_type: value ? 'renewal' : '' })
-            }
-            disabled={readOnly}
-            label={t(STRING.renewalOrModification)}
-          />
-        </View>
-      </View>
-      {errors.therapy_type && (
-        <AppText
-          size={getScaleSize(12)}
-          color={COLORS.error}
-          style={styles.errorText}
-        >
-          {errors.therapy_type}
-        </AppText>
+            <View style={[styles.checkboxItem]}>
+              <AppCheckBox
+                value={state.therapy_type === 'renewal'}
+                onValueChange={value =>
+                  setState({ therapy_type: value ? 'renewal' : '' })
+                }
+                disabled={readOnly}
+                label={t(STRING.renewalOrModification)}
+              />
+            </View>
+          </View>
+          {errors.therapy_type && (
+            <AppText
+              size={getScaleSize(12)}
+              color={COLORS.error}
+              style={styles.errorText}
+            >
+              {errors.therapy_type}
+            </AppText>
+          )}
+        </>
       )}
     </View>
   );

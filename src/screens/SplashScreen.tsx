@@ -19,6 +19,11 @@ import { useTranslation } from 'react-i18next';
 import { IMAGES } from '../assets/images';
 import { uploadFcmToken } from '../utils/fcmTokenHelper';
 import { ROLES } from '../constant/getRole';
+import {
+  hasPendingNotification,
+  consumePendingNotification,
+  navigateFromNotification,
+} from '../utils/notificationRouter';
 
 const LOGO_URI =
   'https://storage.googleapis.com/uxpilot-auth.appspot.com/b8dc346b0e-dacb1354ad85e642c274.png';
@@ -75,12 +80,23 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         await uploadFcmToken();
 
         await dispatch(fetchProfile());
+
+        // Handle initial notification if app was opened from killed state
+        if (hasPendingNotification()) {
+          const pending = consumePendingNotification();
+          const navigated = await navigateFromNotification(pending);
+          if (navigated) {
+            return;
+          }
+        }
+
         if (role === ROLES.PROVIDER) {
           NavigationService.replace(SCREENS.PROVIDER_BOTTOM_TABS as any);
         } else {
           NavigationService.replace(SCREENS.DOCTOR_BOTTOM_TABS as any);
         }
       } else {
+        consumePendingNotification();
         NavigationService.replace(SCREENS.WELCOME as any);
       }
     }, 1000);

@@ -23,6 +23,7 @@ import { serviceRequestApi } from '../services/serviceRequestApi';
 import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import { FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
+import { ROLES } from '../constant/getRole';
 import { STRING } from '../constant/strings';
 import { COLORS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
@@ -43,17 +44,41 @@ const NotificationActionOverlay: React.FC = () => {
     (state: RootState) => state.notificationOverlay,
   );
 
+  const userRoles = useSelector(
+    (state: RootState) =>
+      state.profile.profileData?.roles ||
+      state.login.userData?.roles ||
+      [],
+  );
+  const userRole = useSelector(
+    (state: RootState) =>
+      state.profile.profileData?.roles?.[0] ||
+      state.login.userData?.roles?.[0] ||
+      '',
+  );
+  const isProvider =
+    userRole === ROLES.PROVIDER ||
+    userRole === 'serviceProvider' ||
+    userRoles.includes(ROLES.PROVIDER) ||
+    userRoles.includes('serviceProvider');
+
   const [isLoading, setIsLoading] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
 
   // Resolve config based on notification type with fallback
   const config = type
     ? NOTIFICATION_OVERLAY_CONFIG[type] ||
-      NOTIFICATION_OVERLAY_CONFIG.formSignature
+    NOTIFICATION_OVERLAY_CONFIG.formSignature
     : null;
 
   useEffect(() => {
-    if (visible) {
+    if (visible && isProvider) {
+      dispatch(hideNotificationOverlay());
+    }
+  }, [visible, isProvider, dispatch]);
+
+  useEffect(() => {
+    if (visible && !isProvider) {
       Animated.spring(animValue, {
         toValue: 1,
         useNativeDriver: true,
@@ -236,16 +261,18 @@ const NotificationActionOverlay: React.FC = () => {
         }
 
         // 6. Form Review / Signing
-        if (
+        const isFormSignAction =
+          Boolean(payload?.submitForReview) ||
+          String(payload?.submitForReview) === 'true' ||
           metadata?.submitForReview === true ||
           metadata?.submitForReview === 'true' ||
           effectiveRequest?.formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
           effectiveRequest?.formStatus === 'awaitingSignature' ||
           notificationType === 'formSignature' ||
-          notificationType === 'formUpdate' ||
           notificationType === 'signForm' ||
-          notificationType === 'awaitingSignature'
-        ) {
+          notificationType === 'awaitingSignature';
+
+        if (isFormSignAction) {
           NavigationService.resetTo([
             { name: SCREENS.DOCTOR_BOTTOM_TABS },
             {
@@ -262,7 +289,7 @@ const NotificationActionOverlay: React.FC = () => {
         // 7. Care Started / Default Forms Screen
         const actionType =
           notificationType === 'requestClaimed' ||
-          notificationType === 'careStarted'
+            notificationType === 'careStarted'
             ? 'read'
             : 'edit';
 
@@ -286,7 +313,7 @@ const NotificationActionOverlay: React.FC = () => {
     }
   };
 
-  if (!visible || !config) return null;
+  if (!visible || !config || isProvider) return null;
 
   const backdropOpacity = animValue.interpolate({
     inputRange: [0, 1],
@@ -308,16 +335,16 @@ const NotificationActionOverlay: React.FC = () => {
 
   const cardScale = isCentered
     ? animValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.88, 1],
-      })
+      inputRange: [0, 1],
+      outputRange: [0.88, 1],
+    })
     : 1;
 
   const cardOpacity = isCentered
     ? animValue.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1],
-      })
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    })
     : 1;
 
   const ctaButtonText = t(config.ctaLabel) || config.ctaLabel;
@@ -361,8 +388,8 @@ const NotificationActionOverlay: React.FC = () => {
       (typeof payload?.patient === 'object'
         ? payload?.patient?.fullName || payload?.patient?.name
         : typeof payload?.patient === 'string'
-        ? payload?.patient
-        : '') ||
+          ? payload?.patient
+          : '') ||
       '';
 
     const cleanPatientName = rawPatientName ? String(rawPatientName).trim() : '';
@@ -501,13 +528,13 @@ const NotificationActionOverlay: React.FC = () => {
               (type === 'preRequestAccepted' ||
                 type === 'careStarted' ||
                 type === 'requestClaimed') &&
-                styles.careAcceptedImageContainer,
+              styles.careAcceptedImageContainer,
               (type === 'careSecured' || type === 'docFormSubmitted') &&
-                styles.careSecuredImageContainer,
+              styles.careSecuredImageContainer,
               (type === 'profileUnderReview' ||
                 type === 'doctorRegistration') &&
-                isFrench &&
-                styles.profileReviewFrImageContainer,
+              isFrench &&
+              styles.profileReviewFrImageContainer,
             ]}
           >
             <Image

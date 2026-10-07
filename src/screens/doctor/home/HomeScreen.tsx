@@ -168,9 +168,8 @@ const HomeScreen: React.FC = () => {
             ) : (
               <ProfileAvatar
                 size="medium"
-                name={`${profileData?.fName || ''} ${
-                  profileData?.lName || ''
-                }`.trim()}
+                name={`${profileData?.fName || ''} ${profileData?.lName || ''
+                  }`.trim()}
               />
             )}
             <View>

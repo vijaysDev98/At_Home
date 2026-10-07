@@ -378,10 +378,10 @@ const ProviderHome: React.FC = () => {
             recentQueue.map((item: DashboardRecentQueue, index: number) => {
               const isPreReq = Boolean(
                 item.isPreRequest === true ||
-                  (item.isPreRequest === undefined &&
-                    !item.patient &&
-                    !item.service &&
-                    Boolean(item.preRequestStatus)),
+                (item.isPreRequest === undefined &&
+                  !item.patient &&
+                  !item.service &&
+                  Boolean(item.preRequestStatus)),
               );
               const formStatus =
                 item.formStatus || item.preRequestStatus || item.status || '';
@@ -405,14 +405,14 @@ const ProviderHome: React.FC = () => {
                   ? { show: true, label: STRING.fillForm, action: 'fillForm' }
                   : { show: false, label: null, action: null }
                 : isPreReq
-                ? {
+                  ? {
                     show:
                       item?.status === 'submitted' ||
                       item?.preRequestStatus === 'pending',
                     label: STRING.accept,
                     action: 'accept',
                   }
-                : getButtonConfigProvider(formStatus, item?.status);
+                  : getButtonConfigProvider(formStatus, item?.status);
 
               return (
                 <View
@@ -426,7 +426,7 @@ const ProviderHome: React.FC = () => {
                       item?.patient?.fullName ||
                       (isPreReq
                         ? t(STRING.preRequest) ||
-                          'Pre-Request'
+                        'Pre-Request'
                         : '')
                     }
                     requestId={item?.requestId}
@@ -480,9 +480,9 @@ const ProviderHome: React.FC = () => {
                             doctor ||
                             (itemAny?.doctorId
                               ? {
-                                  id: itemAny.doctorId,
-                                  fullName: doctorName || '',
-                                }
+                                id: itemAny.doctorId,
+                                fullName: doctorName || '',
+                              }
                               : null);
                           const assignedProviderId =
                             itemAny?.assignedProviderId ||

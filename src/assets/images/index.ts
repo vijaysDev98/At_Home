@@ -142,4 +142,6 @@ export const IMAGES = {
   overlay_care_secured: require('./overlay_care_secured.png'),
   overlay_care_secured_en: require('./overlay_care_secured_en.png'),
   overlay_care_secured_fr: require('./overlay_care_secured_fr.png'),
+  docusign_redirect_en: require('./docusign_redirect_en.png'),
+  docusign_redirect_fr: require('./docusign_redirect_fr.png'),
 };

@@ -1807,39 +1807,43 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             <View style={styles.twoButtonsRow}>
               <TouchableOpacity
                 activeOpacity={0.85}
-                style={[styles.outlineBtn, isDelegating && styles.btnDisabled]}
-                disabled={isDelegating}
-                onPress={handleSubmitPress}
-              >
-                <AppText
-                  size={getScaleSize(13)}
-                  color={COLORS._526674}
-                  font={FONTS.Inter.Bold}
-                  align="center"
-                >
-                  {t(STRING.completeRequest) || 'Complete Request'}
-                </AppText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.85}
                 style={[
-                  styles.primaryBtnFlex,
+                  styles.delegateProviderBtn,
                   isDelegating && styles.btnDisabled,
                 ]}
                 disabled={isDelegating}
                 onPress={handleDelegateToProvider}
               >
                 <AppText
-                  size={getScaleSize(13)}
-                  color={COLORS.white}
+                  size={getScaleSize(12)}
+                  color={COLORS._526674}
                   font={FONTS.Inter.Bold}
                   align="center"
                 >
                   {isDelegating
                     ? t(STRING.delegating) || 'Delegating...'
-                    : t(STRING.delegateToProvider) ||
-                    'Delegate to Provider'}
+                    : t(STRING.continueAndDelegateFormsToProvider) ||
+                    'Continue and delegate forms to the service provider'}
+                </AppText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.completeMyselfBtn,
+                  isDelegating && styles.btnDisabled,
+                ]}
+                disabled={isDelegating}
+                onPress={handleSubmitPress}
+              >
+                <AppText
+                  size={getScaleSize(12)}
+                  color={COLORS.white}
+                  font={FONTS.Inter.Bold}
+                  align="center"
+                >
+                  {t(STRING.continueAndCompleteFormsByMyself) ||
+                    'Continue and complete the forms by myself'}
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -2571,8 +2575,33 @@ const styles = StyleSheet.create({
   },
   twoButtonsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     gap: getScaleSize(10),
+  },
+  twoButtonsContainer: {
+    gap: getScaleSize(10),
+  },
+  completeMyselfBtn: {
+    flex: 1,
+    minHeight: getScaleSize(64),
+    paddingVertical: getScaleSize(8),
+    paddingHorizontal: getScaleSize(8),
+    borderRadius: 14,
+    backgroundColor: COLORS._526674,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  delegateProviderBtn: {
+    flex: 1,
+    minHeight: getScaleSize(64),
+    paddingVertical: getScaleSize(8),
+    paddingHorizontal: getScaleSize(8),
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
+    borderWidth: 1.5,
+    borderColor: COLORS._526674,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   outlineBtn: {
     flex: 1,

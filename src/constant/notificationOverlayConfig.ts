@@ -215,18 +215,16 @@ export function extractNotificationInfo(data: any) {
     data.status === 'awaitingSignature' ||
     metadata?.status === 'awaitingSignature';
 
-  // Priority order matching DoctorNotification.tsx:
-  // metadata.requestId -> referenceId (serviceRequest) -> data.requestId -> metadata.referenceId
-  // NEVER use data.id or data._id because that is the notification document ID in FCM!
+  // Priority order matching exact MongoDB ObjectId resolution:
   const requestId =
-    metadata?.requestId ||
+    data.serviceRequestId ||
+    (data.referenceType === 'serviceRequest' && data.referenceId ? data.referenceId : '') ||
     metadata?.serviceRequestId ||
-    (data.referenceType === 'serviceRequest' ? data.referenceId : '') ||
-    (metadata?.referenceType === 'serviceRequest'
+    (metadata?.referenceType === 'serviceRequest' && metadata?.referenceId
       ? metadata?.referenceId
       : '') ||
+    metadata?.requestId ||
     data.requestId ||
-    data.serviceRequestId ||
     data.referenceId ||
     metadata?.referenceId ||
     '';
@@ -244,13 +242,13 @@ export function extractNotificationInfo(data: any) {
     (typeof data.patient === 'object'
       ? data.patient?.fullName || data.patient?.name
       : typeof data.patient === 'string'
-      ? data.patient
-      : '') ||
+        ? data.patient
+        : '') ||
     (typeof metadata?.patient === 'object'
       ? metadata?.patient?.fullName || metadata?.patient?.name
       : typeof metadata?.patient === 'string'
-      ? metadata?.patient
-      : '') ||
+        ? metadata?.patient
+        : '') ||
     '';
 
   return {
@@ -273,16 +271,16 @@ export function resolveOverlayKey(data: any): string | null {
   const info = extractNotificationInfo(data);
   const typeLower = info.type.toLowerCase();
 
-  // Match form signature notifications:
-  // e.g. 'formSignature', 'signForm', 'formUpdate', 'formSubmission', 'awaitingSignature'
+  // Match form signature notifications ("Sign Now" overlay):
+  // When provider submits for review, or direct signing notification types:
+  // e.g. 'formSignature', 'signForm', 'awaitingSignature', or when isSubmitForReview is true.
+  // Note: Plain form updates/draft saves without submitForReview will NOT show the Sign Now popup.
   if (
+    info.isSubmitForReview ||
     info.type === 'formSignature' ||
     typeLower.includes('formsig') ||
     typeLower.includes('signform') ||
-    typeLower.includes('awaitingsign') ||
-    info.type === 'formUpdate' ||
-    info.type === 'formSubmission' ||
-    info.isSubmitForReview
+    typeLower.includes('awaitingsign')
   ) {
     return 'formSignature';
   }

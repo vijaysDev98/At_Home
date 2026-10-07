@@ -6,6 +6,7 @@ export interface NotificationOverlayPayload {
   patientName?: string;
   referenceId?: string;
   referenceType?: string;
+  submitForReview?: boolean;
   metadata?: any;
   [key: string]: any;
 }

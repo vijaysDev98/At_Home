@@ -1040,5 +1040,7 @@ export const STRING = {
   thankYouDoctorTitle: 'Thank you Doctor,',
   thankYouDoctorForChoosing: 'for choosing the AT-Home application to organize home care for',
   thankYouDoctorDefault: 'for choosing the AT-Home application to organize home care for your patient.',
+  continueAndCompleteFormsByMyself: 'Continue and complete the forms by myself',
+  continueAndDelegateFormsToProvider: 'Continue and delegate forms to the service provider',
 };
 

@@ -24,3 +24,4 @@ export { default as SecurityAlertModal } from './SecurityAlertModal';
 export type { SecurityAlertModalProps } from './SecurityAlertModal';
 export { default as DocFormSubmittedModal } from './DocFormSubmittedModal';
 export { default as NotificationActionOverlay } from './NotificationActionOverlay';
+export { default as DocuSignRedirectModal } from './DocuSignRedirectModal';

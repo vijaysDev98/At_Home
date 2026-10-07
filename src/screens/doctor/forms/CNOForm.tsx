@@ -579,6 +579,7 @@ const CNOForm = forwardRef<CNOFormRef, CNOFormProps>(
             setState={setFormState}
             errors={errors}
             showDoneAt={true}
+            showTherapyType={false}
           />
 
           {/* PATIENT CONDITION */}

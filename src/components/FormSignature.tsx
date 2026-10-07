@@ -23,6 +23,7 @@ import { capitalizeFirstLetter } from '../constant/smallFunctions';
 import { useTranslation } from 'react-i18next';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import SecurityAlertModal from './SecurityAlertModal';
+import DocuSignRedirectModal from './DocuSignRedirectModal';
 
 export interface FormSignatureProps {
   title?: string;
@@ -44,6 +45,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   onGoBack,
 }) => {
 
+  const [showDocuSignRedirect, setShowDocuSignRedirect] = React.useState(false);
   const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
   const { t, i18n } = useTranslation();
   const requestId = requestData?._id || requestData?.id;
@@ -181,7 +183,12 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     }
   };
 
-  const handleSignPress = async () => {
+  const handleSignPress = () => {
+    setShowDocuSignRedirect(true);
+  };
+
+  const proceedWithSigningFlow = async () => {
+    setShowDocuSignRedirect(false);
     const sensorInfo = await checkAvailability();
     const hasBiometrics = sensorInfo?.available;
     const hasDeviceCredential = sensorInfo?.isDeviceSecure;
@@ -313,6 +320,12 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           )}
         </View>
       </View>
+
+      <DocuSignRedirectModal
+        visible={showDocuSignRedirect}
+        onClose={() => setShowDocuSignRedirect(false)}
+        onContinue={proceedWithSigningFlow}
+      />
 
       <SecurityAlertModal
         visible={showSecurityAlert}

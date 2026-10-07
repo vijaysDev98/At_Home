@@ -20,6 +20,7 @@ import { STRING } from '../constant';
 import { COLORS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
 import { setDocFormSubmittedModal } from '../actions/common/commonSlice';
+import { ROLES } from '../constant/getRole';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - getScaleSize(32), 440);
@@ -35,6 +36,24 @@ const DocFormSubmittedModal: React.FC = () => {
   const target = useSelector(
     (state: RootState) => state.common.docFormSubmittedModalTarget,
   );
+  const userRoles = useSelector(
+    (state: RootState) =>
+      state.profile.profileData?.roles ||
+      state.login.userData?.roles ||
+      [],
+  );
+  const userRole = useSelector(
+    (state: RootState) =>
+      state.profile.profileData?.roles?.[0] ||
+      state.login.userData?.roles?.[0] ||
+      '',
+  );
+  const isProvider =
+    userRole === ROLES.PROVIDER ||
+    userRole === 'serviceProvider' ||
+    userRoles.includes(ROLES.PROVIDER) ||
+    userRoles.includes('serviceProvider');
+
   const { t, i18n } = useTranslation();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
   const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
@@ -42,7 +61,13 @@ const DocFormSubmittedModal: React.FC = () => {
   const animValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (visible) {
+    if (visible && isProvider) {
+      dispatch(setDocFormSubmittedModal(false));
+    }
+  }, [visible, isProvider, dispatch]);
+
+  useEffect(() => {
+    if (visible && !isProvider) {
       Animated.spring(animValue, {
         toValue: 1,
         useNativeDriver: true,
@@ -103,7 +128,7 @@ const DocFormSubmittedModal: React.FC = () => {
     return () => backHandler.remove();
   }, [visible, target]);
 
-  if (!visible) return null;
+  if (!visible || isProvider) return null;
 
   const backdropOpacity = animValue.interpolate({
     inputRange: [0, 1],

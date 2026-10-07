@@ -1,7 +1,7 @@
 import messaging, {
   FirebaseMessagingTypes,
 } from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { Storage } from '../constant';
 import NavigationService from '../navigation/NavigationService';
@@ -15,6 +15,10 @@ import {
   resolveOverlayKey,
   extractNotificationInfo,
 } from '../constant/notificationOverlayConfig';
+import {
+  navigateFromNotification,
+  setPendingNotification,
+} from '../utils/notificationRouter';
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -103,12 +107,33 @@ export function setupForegroundHandler(): () => void {
 
       const { notification, data, messageId } = remoteMessage;
 
+      // Custom animated action overlays are strictly for doctors
+      const state = store.getState();
+      const userRoles =
+        state.profile?.profileData?.roles ||
+        state.login?.userData?.roles ||
+        [];
+      const storedRole = await Storage.get(Storage.USER_ROLE);
+
+      const isDoctor =
+        userRoles.includes(ROLES.DOCTOR) ||
+        userRoles.includes('doctor') ||
+        storedRole === ROLES.DOCTOR ||
+        storedRole === 'doctor';
+
       // Extract parsed info from notification data payload
       const info = extractNotificationInfo(data);
       const overlayKey = resolveOverlayKey(data);
-      console.log('Resolved overlayKey:', overlayKey, 'Extracted info:', info);
+      console.log(
+        'Resolved overlayKey:',
+        overlayKey,
+        'Extracted info:',
+        info,
+        'isDoctor:',
+        isDoctor,
+      );
 
-      if (overlayKey) {
+      if (overlayKey && isDoctor) {
         store.dispatch(
           showNotificationOverlay({
             type: overlayKey,
@@ -120,6 +145,7 @@ export function setupForegroundHandler(): () => void {
               patientName: info.patientName,
               referenceId: (data as any)?.referenceId || info.requestId,
               referenceType: (data as any)?.referenceType,
+              submitForReview: info.isSubmitForReview,
               metadata: info.metadata,
             },
           }),
@@ -127,7 +153,13 @@ export function setupForegroundHandler(): () => void {
         return;
       }
 
-      if (notification) {
+      const notifTitle = notification?.title || (data as any)?.title;
+      const notifBody =
+        notification?.body ||
+        (data as any)?.message ||
+        (data as any)?.body;
+
+      if (notifTitle || notifBody) {
         // Create a channel (required for Android)
         const channelId = await notifee.createChannel({
           id: 'default',
@@ -138,8 +170,8 @@ export function setupForegroundHandler(): () => void {
         // Display the notification
         await notifee.displayNotification({
           id: messageId,
-          title: notification.title,
-          body: notification.body,
+          title: notifTitle,
+          body: notifBody,
           data: data,
           android: {
             channelId,
@@ -168,62 +200,56 @@ export function setupForegroundHandler(): () => void {
 // Guard against getInitialNotification firing more than once
 let initialNotificationHandled = false;
 
-// Background notification open handler
+// Background and foreground banner notification open handler
 export function setupNotificationOpenHandler(): () => void {
-  // Handle notification opened from background state
-  const unsubscribe = messaging().onNotificationOpenedApp(
+  // 1. Handle notification opened from background state via Firebase
+  const unsubscribeMessaging = messaging().onNotificationOpenedApp(
     (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-      console.log('App opened from background by notification:', remoteMessage);
-      handleNotificationTap();
+      console.log('App opened from background by Firebase notification:', remoteMessage);
+      navigateFromNotification(remoteMessage);
     },
   );
 
-  return unsubscribe;
+  // 2. Handle foreground notification press via Notifee
+  const unsubscribeNotifee = notifee.onForegroundEvent(({ type, detail }) => {
+    if (type === EventType.PRESS && detail.notification) {
+      console.log('Notifee notification pressed in foreground:', detail.notification);
+      navigateFromNotification(detail.notification);
+    }
+  });
+
+  return () => {
+    unsubscribeMessaging();
+    unsubscribeNotifee();
+  };
 }
 
 // Handle notification when app is opened from quit state
 export async function handleInitialNotification(): Promise<void> {
-  const remoteMessage = await messaging().getInitialNotification();
+  if (initialNotificationHandled) return;
 
-  if (remoteMessage && !initialNotificationHandled) {
-    initialNotificationHandled = true;
-    console.log('App opened from quit state by notification:', remoteMessage);
-    handleNotificationTap();
-  }
-}
-
-const handleNotificationTap = async () => {
   try {
-    const token = await Storage.get(Storage.USER_TOKEN);
-    const role = await Storage.get(Storage.USER_ROLE);
+    // Check Firebase initial notification
+    const remoteMessage = await messaging().getInitialNotification();
+    if (remoteMessage) {
+      initialNotificationHandled = true;
+      console.log('App opened from quit state by Firebase notification:', remoteMessage);
+      setPendingNotification(remoteMessage);
+      return;
+    }
 
-    if (token && role) {
-      // User is logged in, navigate to appropriate notification screen
-      if (role === ROLES.PROVIDER) {
-        // Reset to provider bottom tabs (replaces splash), then navigate to alerts tab
-        NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
-        // Small delay to ensure bottom tabs are loaded, then navigate to alerts
-        setTimeout(() => {
-          NavigationService.navigate(SCREENS.ALERTS);
-        }, 100);
-      } else {
-        // Reset to doctor bottom tabs (replaces splash), then navigate to notifications
-        NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
-        // Small delay to ensure bottom tabs are loaded, then navigate to notifications
-        setTimeout(() => {
-          NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION);
-        }, 100);
-      }
-    } else {
-      // User is not logged in, just open the app to welcome screen
-      NavigationService.reset(SCREENS.WELCOME);
+    // Check Notifee initial notification (e.g. on Android / iOS)
+    const notifeeInitial = await notifee.getInitialNotification();
+    if (notifeeInitial?.notification) {
+      initialNotificationHandled = true;
+      console.log('App opened from quit state by Notifee notification:', notifeeInitial.notification);
+      setPendingNotification(notifeeInitial.notification);
+      return;
     }
   } catch (error) {
-    console.log('Error handling notification tap:', error);
-    // Fallback to welcome screen
-    NavigationService.reset(SCREENS.WELCOME);
+    console.log('Error checking initial notification:', error);
   }
-};
+}
 
 // Token refresh listener
 export function setupTokenRefreshListener(): () => void {

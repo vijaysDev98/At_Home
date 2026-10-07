@@ -76,6 +76,10 @@ function getCurrentRoute(): string | undefined {
   return getActiveRoute(state);
 }
 
+function isReady(): boolean {
+  return Boolean(navigator && typeof navigator.isReady === 'function' ? navigator.isReady() : navigator);
+}
+
 // add other navigation functions that you need and export them
 
 export default {
@@ -90,4 +94,5 @@ export default {
   push,
   replace,
   getCurrentRoute,
+  isReady,
 };
