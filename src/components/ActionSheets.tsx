@@ -157,6 +157,7 @@ export const ReviewRequestSheet = React.forwardRef<
   ReviewRequestSheetProps
 >(({ onSend }, ref) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const sheetRef = React.useRef<ActionSheetRef>(null);
   const [selectedReason, setSelectedReason] = React.useState<string | null>(
     null,
@@ -193,159 +194,175 @@ export const ReviewRequestSheet = React.forwardRef<
   return (
     <ActionSheet
       ref={sheetRef}
-      gestureEnabled
+      gestureEnabled={false}
+      closeOnTouchBackdrop={true}
+      closeOnPressBack={true}
+      keyboardHandlerEnabled={
+        Platform.OS === 'android' ? Number(Platform.Version) >= 35 : true
+      }
       containerStyle={[
         styles.sheetContainer,
-        { backgroundColor: COLORS.white },
+        {
+          backgroundColor: COLORS.white,
+          maxHeight: '90%',
+          paddingBottom: Math.max(insets.bottom, getScaleSize(16)),
+        },
       ]}
       indicatorStyle={styles.indicator}
       onClose={handleCancel}
     >
-      <View style={styles.sheetContent}>
-        <View style={{ borderBottomWidth: 1, borderColor: COLORS._F3F4F6 }}>
-          <AppText
-            size={getScaleSize(18)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-            style={{ marginBottom: getScaleSize(4) }}
-          >
-            {t(STRING.requestReview)}
-          </AppText>
-          <AppText
-            size={getScaleSize(13)}
-            color={COLORS._6B7280}
-            style={{ marginBottom: getScaleSize(20) }}
-          >
-            {t(STRING.describeIssueWithThisService)}
-          </AppText>
-        </View>
-        {/* Quick Select */}
-        <View style={styles.section}>
-          <View style={styles.labelRow}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+        contentContainerStyle={{ paddingBottom: getScaleSize(16) }}
+      >
+        <View style={styles.sheetContent}>
+          <View style={{ borderBottomWidth: 1, borderColor: COLORS._F3F4F6 }}>
             <AppText
-              size={getScaleSize(13)}
+              size={getScaleSize(18)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
+              style={{ marginBottom: getScaleSize(4) }}
             >
-              {t(STRING.quickSelect)}
+              {t(STRING.requestReview)}
             </AppText>
             <AppText
               size={getScaleSize(13)}
-              color={COLORS.error}
-              style={{ marginLeft: 4 }}
+              color={COLORS._6B7280}
+              style={{ marginBottom: getScaleSize(20) }}
             >
-              *
+              {t(STRING.describeIssueWithThisService)}
             </AppText>
           </View>
-          <View style={styles.chips}>
-            {REVIEW_REASONS.map(reason => {
-              const active = selectedReason === reason.key;
-              return (
-                <TouchableOpacity
-                  key={reason.key}
-                  onPress={() => setSelectedReason(reason.key)}
-                  activeOpacity={0.7}
-                  style={[styles.chip, active && styles.chipActive]}
-                >
-                  <AppText
-                    size={getScaleSize(13)}
-                    font={FONTS.Inter.Medium}
-                    color={active ? COLORS._526674 : COLORS._1A1A1A}
+          {/* Quick Select */}
+          <View style={styles.section}>
+            <View style={styles.labelRow}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.quickSelect)}
+              </AppText>
+              <AppText
+                size={getScaleSize(13)}
+                color={COLORS.error}
+                style={{ marginLeft: 4 }}
+              >
+                *
+              </AppText>
+            </View>
+            <View style={styles.chips}>
+              {REVIEW_REASONS.map(reason => {
+                const active = selectedReason === reason.key;
+                return (
+                  <TouchableOpacity
+                    key={reason.key}
+                    onPress={() => setSelectedReason(reason.key)}
+                    activeOpacity={0.7}
+                    style={[styles.chip, active && styles.chipActive]}
                   >
-                    {t(reason.value)}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
+                    <AppText
+                      size={getScaleSize(13)}
+                      font={FONTS.Inter.Medium}
+                      color={active ? COLORS._526674 : COLORS._1A1A1A}
+                    >
+                      {t(reason.value)}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-        </View>
 
-        {/* Details */}
-        <View style={styles.section}>
-          <View style={styles.labelRow}>
+          {/* Details */}
+          <View style={styles.section}>
+            <View style={styles.labelRow}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.details)}
+              </AppText>
+              <AppText
+                size={getScaleSize(13)}
+                color={COLORS.error}
+                style={{ marginLeft: 4 }}
+              >
+                *
+              </AppText>
+            </View>
+            <View style={styles.textareaContainer}>
+              <TextInput
+                value={reviewDetails}
+                onChangeText={text =>
+                  text.length <= DETAILS_MAX && setReviewDetails(text)
+                }
+                placeholder={t(STRING.enterDetails)}
+                placeholderTextColor={COLORS._6F767E}
+                multiline
+                numberOfLines={4}
+                style={styles.textareaInput}
+                textAlignVertical="top"
+              />
+            </View>
             <AppText
-              size={getScaleSize(13)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              size={getScaleSize(12)}
+              color={COLORS._6F767E}
+              align={'right'}
+              style={styles.charCount}
             >
-              {t(STRING.details)}
-            </AppText>
-            <AppText
-              size={getScaleSize(13)}
-              color={COLORS.error}
-              style={{ marginLeft: 4 }}
-            >
-              *
+              {reviewDetails.length}/{DETAILS_MAX}
             </AppText>
           </View>
-          <View style={styles.textareaContainer}>
-            <TextInput
-              value={reviewDetails}
-              onChangeText={text =>
-                text.length <= DETAILS_MAX && setReviewDetails(text)
-              }
-              placeholder={t(STRING.enterDetails)}
-              placeholderTextColor={COLORS._6F767E}
-              multiline
-              numberOfLines={4}
-              style={styles.textareaInput}
-              textAlignVertical="top"
-            />
-          </View>
-          <AppText
-            size={getScaleSize(12)}
-            color={COLORS._6F767E}
-            align={'right'}
-            style={styles.charCount}
-          >
-            {reviewDetails.length}/{DETAILS_MAX}
-          </AppText>
-        </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => {
-              sheetRef.current?.hide();
-              handleCancel();
-            }}
-            activeOpacity={0.7}
-          >
-            <AppText
-              size={getScaleSize(15)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => {
+                sheetRef.current?.hide();
+                handleCancel();
+              }}
+              activeOpacity={0.7}
             >
-              {t(STRING.cancel)}
-            </AppText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              {
-                flex: 2,
-                backgroundColor: COLORS.error,
-                flexDirection: 'row',
-                gap: 8,
-              },
-            ]}
-            onPress={handleSend}
-            activeOpacity={0.8}
-          >
-            <Image
-              source={IMAGES.ic_reload}
-              style={{ width: 18, height: 18, tintColor: COLORS.white }}
-            />
-            <AppText
-              size={getScaleSize(15)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.white}
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+              >
+                {t(STRING.cancel)}
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                {
+                  flex: 2,
+                  backgroundColor: COLORS.error,
+                  flexDirection: 'row',
+                  gap: 8,
+                },
+              ]}
+              onPress={handleSend}
+              activeOpacity={0.8}
             >
-              {t(STRING.sendForReview)}
-            </AppText>
-          </TouchableOpacity>
+              <Image
+                source={IMAGES.ic_reload}
+                style={{ width: 18, height: 18, tintColor: COLORS.white }}
+              />
+              <AppText
+                size={getScaleSize(15)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.sendForReview)}
+              </AppText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </ActionSheet>
   );
 });

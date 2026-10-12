@@ -1,5 +1,5 @@
-import React from 'react';
-import { Image, StyleSheet, View, ScrollView } from 'react-native';
+import React, { useEffect } from 'react';
+import { BackHandler, Image, StatusBar, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 import { RootStackParamList } from '../../navigation';
@@ -27,23 +27,33 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
     ? IMAGES.overlay_profile_review_fr
     : IMAGES.overlay_profile_review_en;
 
+  const handleBackToLogin = () => {
+    NavigationService.reset(SCREENS.LOGIN);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBackToLogin();
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+    return () => backHandler.remove();
+  }, []);
+
   return (
     <AppSafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       <View style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
-          {/* Illustration Image (with baked-in completion and review message) */}
+        {/* Main Content Area */}
+        <View style={styles.content}>
+          {/* Illustration Image */}
           <View style={styles.imageWrapper}>
             <Image
               source={imageSource}
-              style={[
-                styles.illustrationImage,
-                { aspectRatio: isFrench ? 1024 / 764 : 1024 / 682 },
-              ]}
+              style={styles.illustrationImage}
               resizeMode="contain"
             />
           </View>
@@ -64,7 +74,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
                 {t(STRING.whatHappensNext)}
               </AppText>
               <AppText
-                size={getScaleSize(13.5)}
+                size={getScaleSize(13)}
                 font={FONTS.Inter.Regular}
                 color={COLORS.slate700}
                 style={styles.infoSubtext}
@@ -73,13 +83,13 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
               </AppText>
             </View>
           </View>
-        </ScrollView>
+        </View>
 
         {/* CTA Container */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
             title={t(STRING.backToLogin)}
-            onPress={() => NavigationService.reset(SCREENS.LOGIN)}
+            onPress={handleBackToLogin}
           />
         </View>
       </View>
@@ -96,26 +106,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
-  scrollView: {
+  content: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
     paddingHorizontal: getScaleSize(20),
     paddingTop: getScaleSize(16),
-    paddingBottom: getScaleSize(16),
+    paddingBottom: getScaleSize(12),
     alignItems: 'center',
     justifyContent: 'center',
-    gap: getScaleSize(20),
   },
   imageWrapper: {
+    flex: 1,
     width: '100%',
+    maxHeight: getScaleSize(260),
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: getScaleSize(20),
   },
   illustrationImage: {
     width: '100%',
-    maxHeight: getScaleSize(320),
+    height: '100%',
   },
   infoCard: {
     width: '100%',
@@ -143,12 +152,12 @@ const styles = StyleSheet.create({
   },
   infoSubtext: {
     marginTop: getScaleSize(4),
-    lineHeight: getScaleSize(19),
+    lineHeight: getScaleSize(18),
   },
   ctaContainer: {
     width: '100%',
-    paddingHorizontal: getScaleSize(24),
-    paddingBottom: getScaleSize(24),
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: getScaleSize(20),
     paddingTop: getScaleSize(8),
     backgroundColor: COLORS.white,
   },
