@@ -102,15 +102,54 @@ export function normalizeNotificationData(raw: any): NormalizedNotificationInfo 
         : '') ||
     '';
 
+  const rawTitle = String(
+    raw?.notification?.title ||
+    data?.title ||
+    metadata?.title ||
+    '',
+  ).toLowerCase();
+
+  const rawMessage = String(
+    raw?.notification?.body ||
+    data?.message ||
+    data?.body ||
+    metadata?.message ||
+    '',
+  ).toLowerCase();
+
+  const isTitleSignatureMatch =
+    rawTitle.includes('providerformsubmitted') ||
+    rawTitle.includes('providerinitiatedformsubmitted') ||
+    rawTitle.includes('review and signature') ||
+    rawTitle.includes('examen et signature') ||
+    rawTitle.includes('submitted for review') ||
+    rawTitle.includes('soumis pour examen') ||
+    rawTitle.includes('awaiting your review') ||
+    rawTitle.includes('en attente de votre examen') ||
+    rawTitle.includes('attente de signature') ||
+    rawMessage.includes('review and signature') ||
+    rawMessage.includes('examen et signature') ||
+    rawMessage.includes('awaiting your review') ||
+    rawMessage.includes('en attente de votre examen');
+
   const isSubmitForReview =
     data.submitForReview === true ||
     data.submitForReview === 'true' ||
+    data.submitForReview === 1 ||
+    data.submitForReview === '1' ||
     metadata?.submitForReview === true ||
     metadata?.submitForReview === 'true' ||
+    metadata?.submitForReview === 1 ||
+    metadata?.submitForReview === '1' ||
     data.action === 'sign' ||
     metadata?.action === 'sign' ||
+    data.action === 'submitForReview' ||
+    metadata?.action === 'submitForReview' ||
+    metadata?.actionType === 'formSubmit' ||
+    metadata?.providerAssociated === true ||
     data.status === 'awaitingSignature' ||
-    metadata?.status === 'awaitingSignature';
+    metadata?.status === 'awaitingSignature' ||
+    isTitleSignatureMatch;
 
   return {
     type,

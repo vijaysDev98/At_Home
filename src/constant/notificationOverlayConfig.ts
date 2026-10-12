@@ -185,64 +185,108 @@ export function extractNotificationInfo(data: any) {
     };
   }
 
+  // Handle Firebase RemoteMessage wrapping
+  const payload = data?.data || data;
+
   let metadata: any = {};
-  if (typeof data.metadata === 'string') {
+  if (typeof payload.metadata === 'string') {
     try {
-      metadata = JSON.parse(data.metadata);
+      metadata = JSON.parse(payload.metadata);
     } catch (e) {
       metadata = {};
     }
-  } else if (data.metadata && typeof data.metadata === 'object') {
-    metadata = data.metadata;
+  } else if (payload.metadata && typeof payload.metadata === 'object') {
+    metadata = payload.metadata;
   }
 
   const type =
-    data.type ||
-    data.notificationType ||
-    data.notification_type ||
+    payload.type ||
+    payload.notificationType ||
+    payload.notification_type ||
     metadata?.type ||
     metadata?.notificationType ||
     metadata?.notification_type ||
     '';
 
+  const rawTitle = String(
+    payload.title ||
+    data?.notification?.title ||
+    metadata?.title ||
+    metadata?.resolvedCopy?.title ||
+    '',
+  ).toLowerCase();
+
+  const rawMessage = String(
+    payload.message ||
+    payload.body ||
+    data?.notification?.body ||
+    metadata?.message ||
+    metadata?.resolvedCopy?.message ||
+    '',
+  ).toLowerCase();
+
+  const isTitleSignatureMatch =
+    rawTitle.includes('providerformsubmitted') ||
+    rawTitle.includes('providerinitiatedformsubmitted') ||
+    rawTitle.includes('review and signature') ||
+    rawTitle.includes('examen et signature') ||
+    rawTitle.includes('submitted for review') ||
+    rawTitle.includes('soumis pour examen') ||
+    rawTitle.includes('awaiting your review') ||
+    rawTitle.includes('en attente de votre examen') ||
+    rawTitle.includes('attente de signature') ||
+    rawMessage.includes('review and signature') ||
+    rawMessage.includes('examen et signature') ||
+    rawMessage.includes('awaiting your review') ||
+    rawMessage.includes('en attente de votre examen');
+
   const isSubmitForReview =
-    data.submitForReview === true ||
-    data.submitForReview === 'true' ||
+    payload.submitForReview === true ||
+    payload.submitForReview === 'true' ||
+    payload.submitForReview === 1 ||
+    payload.submitForReview === '1' ||
     metadata?.submitForReview === true ||
     metadata?.submitForReview === 'true' ||
-    data.action === 'sign' ||
+    metadata?.submitForReview === 1 ||
+    metadata?.submitForReview === '1' ||
+    payload.action === 'sign' ||
     metadata?.action === 'sign' ||
-    data.status === 'awaitingSignature' ||
-    metadata?.status === 'awaitingSignature';
+    payload.action === 'submitForReview' ||
+    metadata?.action === 'submitForReview' ||
+    metadata?.actionType === 'formSubmit' ||
+    metadata?.providerAssociated === true ||
+    payload.status === 'awaitingSignature' ||
+    metadata?.status === 'awaitingSignature' ||
+    isTitleSignatureMatch;
 
   // Priority order matching exact MongoDB ObjectId resolution:
   const requestId =
-    data.serviceRequestId ||
-    (data.referenceType === 'serviceRequest' && data.referenceId ? data.referenceId : '') ||
+    payload.serviceRequestId ||
+    (payload.referenceType === 'serviceRequest' && payload.referenceId ? payload.referenceId : '') ||
     metadata?.serviceRequestId ||
     (metadata?.referenceType === 'serviceRequest' && metadata?.referenceId
       ? metadata?.referenceId
       : '') ||
     metadata?.requestId ||
-    data.requestId ||
-    data.referenceId ||
+    payload.requestId ||
+    payload.referenceId ||
     metadata?.referenceId ||
     '';
 
   const formId =
-    data.formId || metadata?.formId || data.form_id || metadata?.form_id || '';
+    payload.formId || metadata?.formId || payload.form_id || metadata?.form_id || '';
 
   const patientName =
-    data.patientName ||
+    payload.patientName ||
     metadata?.patientName ||
-    data.patient_name ||
+    payload.patient_name ||
     metadata?.patient_name ||
-    data.patientFullName ||
+    payload.patientFullName ||
     metadata?.patientFullName ||
-    (typeof data.patient === 'object'
-      ? data.patient?.fullName || data.patient?.name
-      : typeof data.patient === 'string'
-        ? data.patient
+    (typeof payload.patient === 'object'
+      ? payload.patient?.fullName || payload.patient?.name
+      : typeof payload.patient === 'string'
+        ? payload.patient
         : '') ||
     (typeof metadata?.patient === 'object'
       ? metadata?.patient?.fullName || metadata?.patient?.name
@@ -278,6 +322,8 @@ export function resolveOverlayKey(data: any): string | null {
   if (
     info.isSubmitForReview ||
     info.type === 'formSignature' ||
+    info.type === 'signForm' ||
+    info.type === 'awaitingSignature' ||
     typeLower.includes('formsig') ||
     typeLower.includes('signform') ||
     typeLower.includes('awaitingsign')
