@@ -238,6 +238,7 @@ const FormReviewScreen: React.FC = () => {
                   <FormSignature
                     readOnly={isReadOnly}
                     requestData={requestData}
+                    patientData={patientData}
                     onSignatureCompleted={fetchServiceRequestDetails}
                     onSigningStart={handleSigningStart}
                     onSigningEnd={handleSigningEnd}

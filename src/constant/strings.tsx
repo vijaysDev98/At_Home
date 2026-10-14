@@ -61,6 +61,10 @@ export const STRING = {
   iAgreeToThe: 'I agree to the',
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
+  termsAndConditionsOfUse: 'Terms and Conditions of Use',
+  neutralityCharter: 'Neutrality and Independence Charter',
+  legalInformation: 'Legal Information',
+  close: 'Close',
   and: 'and',
   alreadyHaveAnAccount: 'Already have an account?',
   registrationSuccessful: 'Registration Successful',
@@ -654,7 +658,7 @@ export const STRING = {
   requestStatus: 'Request Status',
 
   //signature
-  doctorSignature: 'Doctor Signature',
+  doctorSignature: 'Physician Signature',
   signed: 'Signed',
   signNow: 'Sign Now',
 

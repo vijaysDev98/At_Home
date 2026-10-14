@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../navigation';
 import {
   AppSafeAreaView,
@@ -17,6 +18,7 @@ import {
   PrimaryButton,
   AppLoader,
   LanguagePickerSheet,
+  LegalDocumentSheet,
 } from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { COLORS, FONTS, REGEX } from '../../utils';
@@ -45,6 +47,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { isLoading } = useSelector((state: RootState) => state.common);
   const { currentLanguage } = useSelector((state: RootState) => state.language);
   const languageSheetRef = useRef<ActionSheetRef>(null);
+  const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,6 +56,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     password: '',
   });
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const legalDocSheetRef = useRef<ActionSheetRef>(null);
+
+  const handleOpenLegalDocs = () => {
+    legalDocSheetRef.current?.show();
+  };
 
   // Fetch stored language on component mount
   useEffect(() => {
@@ -118,23 +126,42 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <AppSafeAreaView edges={['top']}>
+    <AppSafeAreaView edges={['top', 'bottom']}>
       <AppLoader visible={isLoading} />
       <KeyboardAwareScrollView
         enableOnAndroid={true}
         enableAutomaticScroll={true}
         style={{ flex: 1 }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom:
+              Math.max(insets.bottom, getScaleSize(24)) + getScaleSize(28),
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* HEADER */}
-        <TouchableOpacity
-          style={styles.languageButton}
-          onPress={handleLanguagePicker}
-          activeOpacity={0.8}
-        >
-          <Image source={IMAGES.language} style={styles.languageIcon} />
-        </TouchableOpacity>
+        {/* TOP RIGHT ACTIONS (INFO & LANGUAGE) */}
+        <View style={styles.topRightActions}>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={handleOpenLegalDocs}
+            activeOpacity={0.8}
+            accessibilityLabel={t(STRING.legalInformation)}
+          >
+            <Image source={IMAGES.info} style={styles.headerIcon} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={handleLanguagePicker}
+            activeOpacity={0.8}
+            accessibilityLabel={t(STRING.selectLanguage)}
+          >
+            <Image source={IMAGES.language} style={styles.headerIcon} />
+          </TouchableOpacity>
+        </View>
         <View style={styles.hero}>
           <Image
             source={IMAGES.logo}
@@ -274,13 +301,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           >
             {t(STRING.logInMessage)}
           </AppText>
+
         </View>
-        <LanguagePickerSheet
-          ref={languageSheetRef}
-          onLanguageSelect={handleLanguageSelect}
-          currentLanguage={currentLanguage}
-        />
       </KeyboardAwareScrollView>
+      <LanguagePickerSheet
+        ref={languageSheetRef}
+        onLanguageSelect={handleLanguageSelect}
+        currentLanguage={currentLanguage}
+      />
+      <LegalDocumentSheet
+        ref={legalDocSheetRef}
+        initialDoc="terms_and_conditions"
+      />
     </AppSafeAreaView>
   );
 };
@@ -344,10 +376,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     width: '80%',
   },
-  languageButton: {
+  topRightActions: {
     position: 'absolute',
     top: getScaleSize(20),
     right: getScaleSize(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    zIndex: 10,
+  },
+  headerIconButton: {
     width: getScaleSize(40),
     height: getScaleSize(40),
     borderRadius: getScaleSize(20),
@@ -357,7 +395,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
   },
-  languageIcon: {
+  headerIcon: {
     width: getScaleSize(20),
     height: getScaleSize(20),
     tintColor: COLORS._526674,

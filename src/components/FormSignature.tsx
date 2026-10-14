@@ -24,11 +24,13 @@ import { useTranslation } from 'react-i18next';
 import { useBiometricAuth } from '../hooks/useBiometricAuth';
 import SecurityAlertModal from './SecurityAlertModal';
 import DocuSignRedirectModal from './DocuSignRedirectModal';
+import PatientChoiceAttestationModal from './PatientChoiceAttestationModal';
 
 export interface FormSignatureProps {
   title?: string;
   readOnly?: boolean;
   requestData: any;
+  patientData?: any;
   onSignatureCompleted?: () => void;
   onSigningStart?: () => void;
   onSigningEnd?: () => void;
@@ -36,15 +38,17 @@ export interface FormSignatureProps {
 }
 
 const FormSignature: React.FC<FormSignatureProps> = ({
-  title = 'Doctor Signature',
+  title = STRING.physicianSignature,
   readOnly = false,
   requestData,
+  patientData,
   onSignatureCompleted,
   onSigningStart,
   onSigningEnd,
   onGoBack,
 }) => {
-
+  const [showPatientChoiceAttestation, setShowPatientChoiceAttestation] =
+    React.useState(false);
   const [showDocuSignRedirect, setShowDocuSignRedirect] = React.useState(false);
   const [showSecurityAlert, setShowSecurityAlert] = React.useState(false);
   const { t, i18n } = useTranslation();
@@ -184,6 +188,11 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   };
 
   const handleSignPress = () => {
+    setShowPatientChoiceAttestation(true);
+  };
+
+  const handleAttestationConfirmed = () => {
+    setShowPatientChoiceAttestation(false);
     setShowDocuSignRedirect(true);
   };
 
@@ -320,6 +329,14 @@ const FormSignature: React.FC<FormSignatureProps> = ({
           )}
         </View>
       </View>
+
+      <PatientChoiceAttestationModal
+        visible={showPatientChoiceAttestation}
+        onClose={() => setShowPatientChoiceAttestation(false)}
+        onConfirm={handleAttestationConfirmed}
+        requestData={requestData}
+        patientData={patientData}
+      />
 
       <DocuSignRedirectModal
         visible={showDocuSignRedirect}
