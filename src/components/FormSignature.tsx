@@ -290,7 +290,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 color={COLORS.primary}
                 font={FONTS.Inter.SemiBold}
               >
-                {t(STRING.signNow)}
+                {t(STRING.proceedToSignTheForm)}
               </AppText>
             </TouchableOpacity>
           )}

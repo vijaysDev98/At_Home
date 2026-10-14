@@ -661,6 +661,7 @@ export const STRING = {
   doctorSignature: 'Physician Signature',
   signed: 'Signed',
   signNow: 'Sign Now',
+  proceedToSignTheForm: 'Proceed to sign the form',
 
   //image picker
   selectImage: 'Select Image',
