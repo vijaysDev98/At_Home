@@ -934,13 +934,17 @@ export const STRING = {
 
   // Pre-Request Flow
   createDischargeRequest: 'Create Pre-Request',
+  addInformationForRequest: 'Add the information for your request',
   dischargeInstructionsSubtitle: 'Provide instructions using voice recording, prescription document, written notes, or all.',
   voiceInstructions: 'Voice Instructions',
   noVoiceInstructionsRecorded: 'No voice instructions recorded',
+  recordPatientInstructionsOrVoiceSummary: 'Record patient instructions or a voice summary',
   prescriptionDocument: 'Prescription Document',
   prescriptionDocuments: 'Prescription Documents',
   uploadPrescription: 'Upload Prescription',
   uploadPrescriptionDocument: 'Upload Prescription Document',
+  addPhotoOrFileOfPrescription: 'Add a photo or file of the prescription',
+  enterInstructionsNotesPlaceholder: 'Enter instructions, patient notes or care details...',
   takePhoto: 'Take Photo',
   photoLibrary: 'Photo Library',
   chooseFromGallery: 'Choose photo from gallery',

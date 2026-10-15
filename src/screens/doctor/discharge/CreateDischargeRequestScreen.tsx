@@ -878,15 +878,26 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
         <View style={styles.headerCenter}>
           <AppText
-            size={getScaleSize(16)}
+            size={getScaleSize(18)}
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
+            align="center"
           >
             {isAccepted || isRejected || isPending
               ? t(STRING.preRequest) || 'Pre-Request'
               : isEdit
                 ? t(STRING.editPreRequest) || 'Edit Pre-Request'
                 : t(STRING.createPreRequest) || 'Create Pre-Request'}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            font={FONTS.Inter.Regular}
+            color={COLORS._6F767E}
+            align="center"
+            style={{ marginTop: getScaleSize(2) }}
+          >
+            {t(STRING.addInformationForRequest) ||
+              'Add the information for your request'}
           </AppText>
         </View>
 
@@ -905,17 +916,21 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         extraHeight={Platform.OS === 'android' ? 160 : 100}
         keyboardOpeningTime={0}
       >
-        {/* Instructions Intro Banner */}
-        <View
-          style={[
-            styles.introCard,
-            isRejected && styles.introCardRejected,
-            editRequest?.delegateFormToProvider && {
-              backgroundColor: '#EFF6FF',
-              borderColor: '#BFDBFE',
-            },
-          ]}
-        >
+        {/* Instructions Intro Banner (only shown for non-new states like edit, accepted, rejected, delegated) */}
+        {(isAccepted ||
+          isRejected ||
+          editRequest?.delegateFormToProvider ||
+          isEdit) && (
+          <View
+            style={[
+              styles.introCard,
+              isRejected && styles.introCardRejected,
+              editRequest?.delegateFormToProvider && {
+                backgroundColor: '#EFF6FF',
+                borderColor: '#BFDBFE',
+              },
+            ]}
+          >
           <View
             style={[
               styles.introIconWrap,
@@ -981,6 +996,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             </AppText>
           </View>
         </View>
+        )}
 
         {/* Accepted, Rejected, or Delegated Provider Card */}
         {(() => {
@@ -1190,15 +1206,15 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         {/* ──────────────────────────────────────────────────────────
               SECTION 1: VOICE RECORDING (POWERED BY NITRO-SOUND)
           ────────────────────────────────────────────────────────── */}
-        <View style={styles.sectionContainer}>
+        <View style={styles.voiceSectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <View style={styles.sectionBadge}>
-              <Image source={IMAGES.ic_mic} style={styles.sectionBadgeIcon} />
+            <View style={styles.voiceIconBadge}>
+              <Image source={IMAGES.ic_mic} style={styles.voiceBadgeIcon} />
             </View>
             <AppText
-              size={getScaleSize(15)}
+              size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              color="#0F172A"
             >
               {t(STRING.voiceInstructions)}
             </AppText>
@@ -1206,7 +1222,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
           {/* IDLE STATE */}
           {recordingState === 'idle' && (
-            <View style={styles.recordCard}>
+            <View style={styles.voiceRecordCard}>
               {isReadOnly ? (
                 <View
                   style={{
@@ -1245,6 +1261,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                         { transform: [{ scale: pulseAnim }] },
                       ]}
                     />
+                    <View style={styles.micMidRing} />
                     <View style={styles.micInnerCircle}>
                       <Image
                         source={IMAGES.ic_mic}
@@ -1254,20 +1271,21 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                   </TouchableOpacity>
 
                   <AppText
-                    size={getScaleSize(14)}
+                    size={getScaleSize(15)}
                     font={FONTS.Inter.Bold}
-                    color={COLORS._1A1D1F}
+                    color="#0F172A"
                     style={{ marginTop: getScaleSize(12) }}
                   >
                     {t(STRING.tapToRecord)}
                   </AppText>
                   <AppText
-                    size={getScaleSize(12)}
+                    size={getScaleSize(12.5)}
                     font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
+                    color="#64748B"
                     style={{ marginTop: getScaleSize(4), textAlign: 'center' }}
                   >
-                    {t('Record patient instructions, orders, or voice summary')}
+                    {t(STRING.recordPatientInstructionsOrVoiceSummary) ||
+                      'Record patient instructions or a voice summary'}
                   </AppText>
                 </>
               )}
@@ -1276,7 +1294,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
           {/* RECORDING IN PROGRESS STATE */}
           {recordingState === 'recording' && (
-            <View style={[styles.recordCard, styles.recordCardActive]}>
+            <View style={[styles.voiceRecordCard, styles.recordCardActive]}>
               <View style={styles.recordingHeaderRow}>
                 <View style={styles.recordingRedDot} />
                 <AppText
@@ -1351,7 +1369,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
 
           {/* RECORDED / PLAYBACK STATE */}
           {recordingState === 'recorded' && (
-            <View style={[styles.recordCard, styles.recordedCardSuccess]}>
+            <View style={[styles.voiceRecordCard, styles.recordedCardSuccess]}>
               <View style={styles.recordedTopRow}>
                 <View style={styles.recordedSuccessBadge}>
                   <Image
@@ -1457,34 +1475,27 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         {/* ──────────────────────────────────────────────────────────
               SECTION 2: PRESCRIPTION DOCUMENT (TAKE PHOTO / SELECT FILE)
           ────────────────────────────────────────────────────────── */}
-        <View style={styles.sectionContainer}>
+        <View style={styles.prescriptionSectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <View
-              style={[
-                styles.sectionBadge,
-              ]}
-            >
+            <View style={styles.prescriptionIconBadge}>
               <Image
                 source={IMAGES.ic_file}
-                style={[
-                  styles.sectionBadgeIcon,
-                  { tintColor: COLORS.primary },
-                ]}
+                style={styles.prescriptionBadgeIcon}
               />
             </View>
             <AppText
-              size={getScaleSize(15)}
+              size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              color="#0F172A"
             >
               {t(STRING.prescriptionDocument) || 'Prescription Document'}
             </AppText>
             {prescriptionFiles.length > 0 && (
-              <View style={styles.prescriptionCountBadge}>
+              <View style={styles.prescriptionCountBadgeMint}>
                 <AppText
                   size={getScaleSize(11)}
                   font={FONTS.Inter.Bold}
-                  color={COLORS.primary}
+                  color="#047857"
                 >
                   {prescriptionFiles.length}{' '}
                   {prescriptionFiles.length === 1
@@ -1496,7 +1507,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           </View>
 
           {prescriptionFiles.length === 0 ? (
-            <View style={styles.recordCard}>
+            <View style={styles.prescriptionUploadCard}>
               {isReadOnly ? (
                 <View
                   style={{
@@ -1532,25 +1543,25 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                     />
                   </View>
                   <AppText
-                    size={getScaleSize(14)}
+                    size={getScaleSize(15)}
                     font={FONTS.Inter.Bold}
-                    color={COLORS._1A1D1F}
+                    color="#0F172A"
                     style={{ marginTop: getScaleSize(10) }}
                   >
                     {t(STRING.uploadPrescription) || 'Upload Prescription'}
                   </AppText>
                   <AppText
-                    size={getScaleSize(12)}
+                    size={getScaleSize(12.5)}
                     font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                    align='center'
+                    color="#64748B"
+                    align="center"
                     style={{
                       marginTop: getScaleSize(4),
                       paddingHorizontal: getScaleSize(16),
                     }}
                   >
-                    {t(STRING.attachPrescriptionSubtitle) ||
-                      'Add a photo or file of the medical prescription'}
+                    {t(STRING.addPhotoOrFileOfPrescription) ||
+                      'Add a photo or file of the prescription'}
                   </AppText>
 
                   {/* Quick action buttons: Take Photo & Select File */}
@@ -1565,9 +1576,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                         style={styles.prescriptionBtnIcon}
                       />
                       <AppText
-                        size={getScaleSize(11.5)}
+                        size={getScaleSize(13)}
                         font={FONTS.Inter.SemiBold}
-                        color={COLORS.primary}
+                        color="#0F172A"
                         numberOfLines={1}
                         style={styles.prescriptionBtnText}
                       >
@@ -1585,9 +1596,9 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                         style={styles.prescriptionBtnIcon}
                       />
                       <AppText
-                        size={getScaleSize(11.5)}
+                        size={getScaleSize(13)}
                         font={FONTS.Inter.SemiBold}
-                        color={COLORS.primary}
+                        color="#0F172A"
                         numberOfLines={1}
                         style={styles.prescriptionBtnText}
                       >
@@ -1599,7 +1610,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               )}
             </View>
           ) : (
-            <View style={[styles.recordCard, styles.prescriptionCardActive]}>
+            <View style={[styles.prescriptionActiveCard]}>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -1737,33 +1748,36 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         {/* ──────────────────────────────────────────────────────────
               SECTION 3: TEXT / PARAGRAPH INSTRUCTIONS
           ────────────────────────────────────────────────────────── */}
-        <View style={styles.sectionContainer}>
+        <View style={styles.notesSectionContainer}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionBadge]}>
+            <View style={styles.notesIconBadge}>
               <Image
                 source={IMAGES.ic_edit}
-                style={[styles.sectionBadgeIcon]}
+                style={styles.notesBadgeIcon}
               />
             </View>
             <AppText
-              size={getScaleSize(15)}
+              size={getScaleSize(16)}
               font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+              color="#0F172A"
             >
               {t(STRING.textInstructions)}
             </AppText>
           </View>
 
-          <View style={styles.textInputCard}>
+          <View style={styles.notesInputCard}>
             <TextInput
               style={[
-                styles.multilineInput,
-                isReadOnly && { color: COLORS._1A1D1F },
+                styles.notesMultilineInput,
+                isReadOnly && { color: '#0F172A' },
               ]}
-              placeholder={t(STRING.enterDischargeNotesPlaceholder)}
-              placeholderTextColor={COLORS._6F767E}
+              placeholder={
+                t(STRING.enterInstructionsNotesPlaceholder) ||
+                'Enter instructions, patient notes or care details...'
+              }
+              placeholderTextColor="#94A3B8"
               multiline
-              numberOfLines={6}
+              numberOfLines={4}
               textAlignVertical="top"
               value={instructionsText}
               onChangeText={setInstructionsText}
@@ -1771,7 +1785,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               editable={!isReadOnly}
             />
 
-            <View style={styles.textInputFooter}>
+            <View style={styles.notesInputFooter}>
               {!isReadOnly && instructionsText.length > 0 && (
                 <TouchableOpacity
                   activeOpacity={0.7}
@@ -1789,7 +1803,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
               <AppText
                 size={getScaleSize(11)}
                 font={FONTS.Inter.Regular}
-                color={COLORS._6F767E}
+                color="#94A3B8"
                 style={{ marginLeft: 'auto' }}
               >
                 {instructionsText.length}/{MAX_TEXT_LENGTH}{' '}
@@ -2076,43 +2090,42 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   header: {
-    height: getScaleSize(56),
+    height: getScaleSize(60),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: getScaleSize(16),
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS._EFEFEF,
     backgroundColor: COLORS.white,
   },
   backBtn: {
-    width: getScaleSize(38),
-    height: getScaleSize(38),
-    borderRadius: getScaleSize(19),
-    backgroundColor: COLORS._F8F9FA,
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    borderRadius: getScaleSize(21),
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
   },
   backIcon: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
+    width: getScaleSize(18),
+    height: getScaleSize(18),
     resizeMode: 'contain',
+    tintColor: '#0F172A',
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerRightPlaceholder: {
-    width: getScaleSize(38),
+    width: getScaleSize(42),
   },
   scroll: {
     flex: 1,
-    backgroundColor: COLORS._F9FAFB,
+    backgroundColor: COLORS.white,
   },
   scrollContent: {
     padding: getScaleSize(16),
+    paddingBottom: getScaleSize(28),
   },
   introCard: {
     flexDirection: 'row',
@@ -2297,6 +2310,124 @@ const styles = StyleSheet.create({
     gap: getScaleSize(10),
     marginBottom: getScaleSize(10),
   },
+  voiceSectionContainer: {
+    backgroundColor: '#F5F3FF',
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+    padding: getScaleSize(16),
+    marginBottom: getScaleSize(16),
+  },
+  voiceIconBadge: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#E4DCFD',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  voiceBadgeIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: '#6D28D9',
+  },
+  voiceRecordCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    paddingVertical: getScaleSize(24),
+    paddingHorizontal: getScaleSize(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: getScaleSize(12),
+  },
+  prescriptionSectionContainer: {
+    backgroundColor: '#EDFAF3',
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: '#B8F2D5',
+    padding: getScaleSize(16),
+    marginBottom: getScaleSize(16),
+  },
+  prescriptionIconBadge: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#C5F5DE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prescriptionBadgeIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: '#047857',
+  },
+  prescriptionCountBadgeMint: {
+    marginLeft: 'auto',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(3),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  prescriptionUploadCard: {
+    marginTop: getScaleSize(12),
+  },
+  prescriptionActiveCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    padding: getScaleSize(14),
+    marginTop: getScaleSize(12),
+  },
+  notesSectionContainer: {
+    backgroundColor: '#FFF4EE',
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    padding: getScaleSize(16),
+    marginBottom: getScaleSize(16),
+  },
+  notesIconBadge: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#FDE4D6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notesBadgeIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: '#C2410C',
+  },
+  notesInputCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(16),
+    paddingHorizontal: getScaleSize(14),
+    paddingTop: getScaleSize(12),
+    paddingBottom: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: getScaleSize(12),
+  },
+  notesMultilineInput: {
+    minHeight: getScaleSize(90),
+    fontSize: getScaleSize(14),
+    fontFamily: FONTS.Inter.Regular,
+    color: '#0F172A',
+    padding: 0,
+    lineHeight: getScaleSize(20),
+  },
+  notesInputFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: getScaleSize(8),
+    marginTop: getScaleSize(6),
+  },
   sectionBadge: {
     width: getScaleSize(32),
     height: getScaleSize(32),
@@ -2327,7 +2458,7 @@ const styles = StyleSheet.create({
   },
   recordCardActive: {
     borderColor: COLORS.error,
-    backgroundColor: '#FFF9F9',
+    backgroundColor: COLORS.white,
   },
   recordedCardSuccess: {
     borderColor: COLORS._E5E7EB,
@@ -2336,37 +2467,44 @@ const styles = StyleSheet.create({
     padding: getScaleSize(16),
   },
   micCircleBtn: {
-    width: getScaleSize(76),
-    height: getScaleSize(76),
-    borderRadius: getScaleSize(38),
+    width: getScaleSize(88),
+    height: getScaleSize(88),
+    borderRadius: getScaleSize(44),
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginVertical: getScaleSize(8),
+    marginVertical: getScaleSize(6),
   },
   micPulseRing: {
     position: 'absolute',
-    width: getScaleSize(76),
-    height: getScaleSize(76),
-    borderRadius: getScaleSize(38),
-    backgroundColor: COLORS.primary + '20',
+    width: getScaleSize(88),
+    height: getScaleSize(88),
+    borderRadius: getScaleSize(44),
+    backgroundColor: '#ECE6FF',
+  },
+  micMidRing: {
+    position: 'absolute',
+    width: getScaleSize(72),
+    height: getScaleSize(72),
+    borderRadius: getScaleSize(36),
+    backgroundColor: '#DDD2FC',
   },
   micInnerCircle: {
-    width: getScaleSize(64),
-    height: getScaleSize(64),
-    borderRadius: getScaleSize(32),
-    backgroundColor: COLORS.primary,
+    width: getScaleSize(56),
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(28),
+    backgroundColor: '#5844E3',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
-    shadowColor: COLORS.primary,
+    shadowColor: '#5844E3',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
   },
   micIcon: {
-    width: getScaleSize(26),
-    height: getScaleSize(26),
+    width: getScaleSize(24),
+    height: getScaleSize(24),
     resizeMode: 'contain',
     tintColor: COLORS.white,
   },
@@ -2552,26 +2690,22 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(8),
   },
   bottomSheet: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: getScaleSize(16),
+    paddingTop: getScaleSize(10),
+    paddingBottom: Platform.OS === 'ios' ? getScaleSize(14) : getScaleSize(16),
     backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS._EFEFEF,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    gap: 10,
     zIndex: 10,
   },
   continueBtn: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: COLORS._526674,
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    backgroundColor: '#526674',
     alignItems: 'center',
     justifyContent: 'center',
   },
   continueDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#94A3B8',
+    opacity: 1,
   },
   twoButtonsRow: {
     flexDirection: 'row',
@@ -2672,52 +2806,50 @@ const styles = StyleSheet.create({
   },
   prescriptionUploadDashed: {
     borderWidth: 1.5,
-    borderColor: '#BFDBFE',
+    borderColor: '#86EFAC',
     borderStyle: 'dashed',
-    borderRadius: getScaleSize(12),
+    borderRadius: getScaleSize(16),
     paddingVertical: getScaleSize(20),
-    paddingHorizontal: getScaleSize(16),
+    paddingHorizontal: getScaleSize(14),
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.white,
   },
   prescriptionUploadIconWrap: {
     width: getScaleSize(48),
     height: getScaleSize(48),
     borderRadius: getScaleSize(24),
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   prescriptionUploadIcon: {
-    width: getScaleSize(24),
-    height: getScaleSize(24),
+    width: getScaleSize(22),
+    height: getScaleSize(22),
     resizeMode: 'contain',
-    // tintColor: COLORS.primary,
+    tintColor: '#059669',
   },
   prescriptionActionButtonsRow: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: getScaleSize(10),
+    gap: getScaleSize(12),
     marginTop: getScaleSize(16),
     width: '100%',
   },
   prescriptionActionBtn: {
     flex: 1,
-    minHeight: getScaleSize(46),
+    height: getScaleSize(44),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: getScaleSize(6),
+    gap: getScaleSize(8),
     backgroundColor: COLORS.white,
-    paddingVertical: getScaleSize(10),
-    paddingHorizontal: getScaleSize(8),
-    borderRadius: getScaleSize(10),
+    borderRadius: getScaleSize(12),
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: '#CBD5E1',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
@@ -2725,11 +2857,11 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     resizeMode: 'contain',
-    tintColor: COLORS.primary,
+    tintColor: '#1E293B',
   },
   prescriptionBtnText: {
     textAlign: 'center',
-    flexShrink: 1,
+    color: '#0F172A',
   },
   prescriptionCardActive: {
     paddingHorizontal: getScaleSize(12),
