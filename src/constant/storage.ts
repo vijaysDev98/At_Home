@@ -5,27 +5,37 @@ const Storage = {
     USER_TOKEN:'USER_TOKEN',
     REFRESH_TOKEN: 'REFRESH_TOKEN',
     USER_ROLE: 'USER_ROLE',
+    LANGUAGE_KEY: '@app_language',
     async save(key: string, value: string): Promise<boolean> {
         try {
-            const res = await AsyncStorage.setItem(key, value ?? '');
-            return true
+            await AsyncStorage.setItem(key, value ?? '');
+            return true;
         } catch (error) {
-            console.log('error', error)
-            return false
+            console.log('error', error);
+            return false;
         }
     },
     async get(key: string): Promise<string | null> {
         try {
             const result = await AsyncStorage.getItem(key);
-            return result
+            return result;
         } catch (error) {
-            console.log('error', error)
-            return null
+            console.log('error', error);
+            return null;
         }
     },
     async clear() {
-        const result = await AsyncStorage.clear()
-        return result
+        try {
+            const savedLanguage = await AsyncStorage.getItem('@app_language');
+            const result = await AsyncStorage.clear();
+            if (savedLanguage) {
+                await AsyncStorage.setItem('@app_language', savedLanguage);
+            }
+            return result;
+        } catch (error) {
+            console.log('error clearing storage', error);
+            return null;
+        }
     },
 }
 

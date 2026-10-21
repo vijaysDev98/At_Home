@@ -1,6 +1,7 @@
 import moment from 'moment';
 import 'moment/locale/fr';
 import store from '../redux/store';
+export { getDeviceLanguage } from './deviceLanguage';
 
 /**
  * Get the current language from Redux store

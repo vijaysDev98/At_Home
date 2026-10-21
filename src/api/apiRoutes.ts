@@ -1,13 +1,13 @@
 const API_BASE_URL =
-  // 'https://at-home-api-prod.prometteur.in/';
-  // 'http://163.227.92.122:3047/';
-  'https://at-home-api.prometteur.in/';
+  'https://at-home-api-prod.prometteur.in/';
+// 'http://163.227.92.122:3047/';
+// 'https://at-home-api.prometteur.in/';
 // 'http://192.168.10.150:3000/';
 
 export const IMAGE_BASE_URL =
-  // 'https://at-home-api-prod.prometteur.in/';
-  // 'http://163.227.92.122:3047/';
-  'https://at-home-api.prometteur.in/';
+  'https://at-home-api-prod.prometteur.in/';
+// 'http://163.227.92.122:3047/';
+// 'https://at-home-api.prometteur.in/';
 // 'http://192.168.10.150:3000/';
 
 export const PRIVACY_POLICY_URL =
