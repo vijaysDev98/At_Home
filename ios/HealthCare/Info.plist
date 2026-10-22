@@ -10,8 +10,6 @@
 	<string>At Home</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>We use Face ID to confirm your identity before signing documents</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -47,12 +45,14 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow access to your camera to take photos of prescriptions, medical documents, or profile pictures.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to confirm your identity before signing documents</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Allow access to your microphone to record doctor instructions and voice notes.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow access to your photo library to select prescriptions, medical documents, or profile pictures.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Allow saving photos and documents to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to your photo library to select prescriptions, medical documents, or profile pictures.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
