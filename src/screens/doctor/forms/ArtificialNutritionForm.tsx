@@ -19,6 +19,7 @@ import {
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
+import { getDatePickerLocale } from '../../../utils/languageHelper';
 
 import {
   AppText,
@@ -902,7 +903,7 @@ const ArtificialNutritionForm = forwardRef<any, ArtificialNutritionFormProps>(
         </KeyboardAwareScrollView>
 
         <DatePicker
-          locale={locale}
+          locale={getDatePickerLocale(locale)}
           title={t(STRING.selectDate)}
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}

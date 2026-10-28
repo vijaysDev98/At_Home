@@ -40,17 +40,20 @@ import { CustomDropdown } from '../../../components/CustomDropDown';
 import { GENDER } from '../../../constant/constantData';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTranslation } from 'react-i18next';
+import { getDatePickerLocale } from '../../../utils/languageHelper';
 
 const AppDatePicker = ({
   open,
   date,
   onConfirm,
   onCancel,
+  locale,
 }: {
   open: boolean;
   date: Date;
   onConfirm: (date: Date) => void;
   onCancel: () => void;
+  locale?: string;
 }) => {
   return (
     <DatePicker
@@ -62,6 +65,7 @@ const AppDatePicker = ({
       onCancel={onCancel}
       maximumDate={new Date()}
       theme="light"
+      locale={getDatePickerLocale(locale)}
     />
   );
 };
@@ -139,7 +143,7 @@ const AddPatient: React.FC = () => {
         phone: patientToEdit.phoneNumber || '',
         email: patientToEdit.email || '',
         dob: patientToEdit.dateOfBirth
-          ? moment(patientToEdit.dateOfBirth).format('YYYY-MM-DD')
+          ? moment(patientToEdit.dateOfBirth).format('DD/MM/YYYY')
           : '',
         street: patientToEdit.streetAddress || '',
         city: patientToEdit.city || '',
@@ -283,7 +287,9 @@ const AddPatient: React.FC = () => {
         lName: lName.trim(),
         phoneNumber: phone.trim(),
         email: email.trim(),
-        dateOfBirth: dob,
+        dateOfBirth: moment(dob, ['DD/MM/YYYY', 'YYYY-MM-DD']).format(
+          'YYYY-MM-DD',
+        ),
         streetAddress: street.trim(),
         city: city.trim(),
         zip: zip.trim(),
@@ -426,7 +432,7 @@ const AddPatient: React.FC = () => {
                   value={dob}
                   isMandatory
                   onPress={() => setDatePickerOpen(true)}
-                  placeholder={t(STRING.selectDateOfBirth)}
+                  placeholder={t(STRING.ddmmyyyy)}
                   placeholderTextColor={COLORS._7A7A7A}
                   label={t(STRING.dateOfBirth)}
                   error={errors.dob}
@@ -826,7 +832,7 @@ const AddPatient: React.FC = () => {
       </AppBottomSheet>
 
       <DatePicker
-        locale={locale}
+        locale={getDatePickerLocale(locale)}
         title={t(STRING.selectDate)}
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
@@ -839,7 +845,7 @@ const AddPatient: React.FC = () => {
         onConfirm={date => {
           setDatePickerOpen(false);
           setSelectedDate(date);
-          setDob(moment(date).format('YYYY-MM-DD'));
+          setDob(moment(date).format('DD/MM/YYYY'));
           setErrors(prev => ({ ...prev, dob: '' }));
         }}
         onCancel={() => {

@@ -225,7 +225,7 @@ const PatientDetail: React.FC = () => {
                 >
                   {t(STRING.dob)}{' '}
                   {patient?.dateOfBirth
-                    ? moment(patient.dateOfBirth).format('MMM DD, YYYY')
+                    ? moment(patient.dateOfBirth).format('DD/MM/YYYY')
                     : '---'}{' '}
                   ({patient?.age || 0}yo)
                 </AppText>

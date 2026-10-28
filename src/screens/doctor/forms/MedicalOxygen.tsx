@@ -19,6 +19,7 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
+import { getDatePickerLocale } from '../../../utils/languageHelper';
 
 import {
   AppCheckBox,
@@ -769,7 +770,7 @@ const MedicalOxygen = forwardRef<MedicalOxygenRef, MedicalOxygenProps>(
         </KeyboardAwareScrollView>
 
         <DatePicker
-          locale={locale}
+          locale={getDatePickerLocale(locale)}
           title={t(STRING.selectDate)}
           cancelText={t(STRING.cancel)}
           confirmText={t(STRING.confirm)}

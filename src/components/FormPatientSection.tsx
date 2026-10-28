@@ -18,6 +18,7 @@ import { IMAGES } from '../assets/images';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
 import { useSelector } from 'react-redux';
+import { getDatePickerLocale } from '../utils/languageHelper';
 
 export interface PatientSectionProps {
   state: any;
@@ -124,7 +125,7 @@ const FormPatientSection: React.FC<PatientSectionProps> = ({
       </View>
 
       <DatePicker
-        locale={locale}
+        locale={getDatePickerLocale(locale)}
         title={t(STRING.selectDate)}
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}

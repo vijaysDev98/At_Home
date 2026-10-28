@@ -18,6 +18,7 @@ import {
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import { calculateTni } from '../../../utils/formUtils';
+import { getDatePickerLocale } from '../../../utils/languageHelper';
 
 import {
   AppText,
@@ -1129,7 +1130,7 @@ const AntibiotherapyInfusionForm = forwardRef<
       </KeyboardAwareScrollView>
 
       <DatePicker
-        locale={locale}
+        locale={getDatePickerLocale(locale)}
         title={t(STRING.selectDate)}
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}

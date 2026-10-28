@@ -19,6 +19,16 @@ export const syncMomentLocale = (language: string) => {
 };
 
 /**
+ * Resolves date picker locale to ensure European Day/Month/Year order.
+ * In react-native-date-picker, 'en' defaults to US Month/Day/Year,
+ * whereas 'en-GB' and 'fr' ensure Day/Month/Year order.
+ */
+export const getDatePickerLocale = (language?: string): string => {
+  const lang = language || getCurrentLanguage();
+  return lang.startsWith('fr') ? 'fr' : 'en-GB';
+};
+
+/**
  * Formats a date string or Date object with localized moment formatting
  * @param date date string or Date object
  * @param formatStr moment format string, defaults to 'DD MMM YYYY'

@@ -18,6 +18,7 @@ import { IMAGES } from '../assets/images';
 import { STRING } from '../constant';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
+import { getDatePickerLocale } from '../utils/languageHelper';
 
 export interface FormPrescriptionDetailsProps {
   state: any;
@@ -102,7 +103,7 @@ const FormPrescriptionDetails: React.FC<FormPrescriptionDetailsProps> = ({
       )}
 
       <DatePicker
-        locale={locale}
+        locale={getDatePickerLocale(locale)}
         title={t(STRING.selectDate)}
         cancelText={t(STRING.cancel)}
         confirmText={t(STRING.confirm)}
