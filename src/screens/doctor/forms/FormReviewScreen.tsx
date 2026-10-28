@@ -32,6 +32,7 @@ import ServiceFormRenderer from './ServiceFormRenderer';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
+import { ChatEntryButton } from '../../../components/ChatEntryButton';
 
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
@@ -213,6 +214,17 @@ const FormReviewScreen: React.FC = () => {
                     requestData={requestData}
                   />
                 )}
+
+                <View style={{ paddingHorizontal: getScaleSize(16) }}>
+                  <ChatEntryButton
+                    serviceRequestId={
+                      requestId ||
+                      requestData?.id ||
+                      (requestData as any)?._id
+                    }
+                    requestIdLabel={requestData?.requestId}
+                  />
+                </View>
 
                 <View
                   style={{

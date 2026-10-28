@@ -50,6 +50,7 @@ import {
   isDocumentFile,
   getDisplayFileName,
 } from '../../../utils/documentPickerHelper';
+import { getChatAccess } from '../../../services/chatService';
 
 interface ProviderPreRequestDetailScreenProps { }
 
@@ -383,6 +384,10 @@ export const ProviderPreRequestDetailScreen: React.FC<
     requestData?.preRequestStatus === 'accepted' ||
     !!requestData?.delegateFormToProvider;
 
+  const canShowChat =
+    requestData?.preRequestStatus === 'accepted' ||
+    requestData?.status === REQUEST_STATUS.IN_PROGRESS;
+
   const handleCall = () => {
     if (doctorPhone) {
       Linking.openURL(`tel:${doctorPhone}`).catch(() => {
@@ -398,14 +403,6 @@ export const ProviderPreRequestDetailScreen: React.FC<
         'info',
       );
     }
-  };
-
-  const handleChat = () => {
-    SHOW_TOAST(
-      t(STRING.chatUnderDevelopment) ||
-      'Chat feature is under development and will be available soon!',
-      'info',
-    );
   };
 
   const handleFillForm = () => {
@@ -457,6 +454,29 @@ export const ProviderPreRequestDetailScreen: React.FC<
     : [displayRequestId, createdAtFormatted].filter(Boolean).join(' • ') ||
     undefined;
   const showBottomActions = !isLoading && !!requestData;
+
+  const handleChat = async () => {
+    const srId =
+      requestId ||
+      requestData?.id ||
+      (requestData as any)?._id;
+    if (!srId) {
+      return;
+    }
+    const access = await getChatAccess(String(srId));
+    if (access?.canChat) {
+      NavigationService.navigate(SCREENS.CHAT, {
+        serviceRequestId: String(srId),
+        requestIdLabel: displayRequestId || undefined,
+      });
+      return;
+    }
+    SHOW_TOAST(
+      t(STRING.chatUnderDevelopment) ||
+        'Chat is available after the pre-request is accepted.',
+      'info',
+    );
+  };
 
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
@@ -601,6 +621,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
 
                 {canContactDoctor && (
                   <View style={styles.doctorActionsRow}>
+                    {canShowChat && (
                     <TouchableOpacity
                       activeOpacity={0.8}
                       style={styles.doctorActionBtnChat}
@@ -618,6 +639,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
                         {t(STRING.chatNow) || 'Chat Now'}
                       </AppText>
                     </TouchableOpacity>
+                    )}
 
                     <TouchableOpacity
                       activeOpacity={0.8}

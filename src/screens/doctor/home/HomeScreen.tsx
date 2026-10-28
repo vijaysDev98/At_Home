@@ -10,7 +10,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { AppSafeAreaView, AppText, ProfileAvatar } from '../../../components';
+import {
+  AppSafeAreaView,
+  AppText,
+  ProfileAvatar,
+  HomeChatNotificationActions,
+} from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -190,32 +195,12 @@ const HomeScreen: React.FC = () => {
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={() =>
+          <HomeChatNotificationActions
+            unreadNotificationCount={unreadCount}
+            onNotificationPress={() =>
               NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
             }
-            activeOpacity={0.7}
-            style={styles.notificationBtn}
-          >
-            <View style={styles.notificationIconContainer}>
-              <Image
-                source={IMAGES.notification_icon}
-                style={styles.notificationIcon}
-              />
-              {unreadCount > 0 && (
-                <View style={styles.badgeContainer}>
-                  <AppText
-                    size={getScaleSize(8)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS.white}
-                    style={styles.badgeText}
-                  >
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </AppText>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
+          />
         </View>
 
         <ScrollView

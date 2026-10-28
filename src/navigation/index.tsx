@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import {
   NavigationContainer,
   NavigatorScreenParams,
@@ -40,6 +41,8 @@ import ProviderNotification from '../screens/provider/notification/ProviderNotif
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
 import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDischargeRequestScreen';
 import ProviderPreRequestDetailScreen from '../screens/provider/request/ProviderPreRequestDetailScreen';
+import ChatScreen from '../screens/chat/ChatScreen';
+import ChatListScreen from '../screens/chat/ChatListScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -112,6 +115,13 @@ export type RootStackParamList = {
     request?: any;
     action?: string;
   } | undefined;
+  Chat: {
+    serviceRequestId: string;
+    requestIdLabel?: string;
+    peerName?: string;
+    peerProfileImg?: string | null;
+  };
+  ChatList: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -282,6 +292,21 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.PROVIDER_PRE_REQUEST_DETAIL}
           component={ProviderPreRequestDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.CHAT}
+          component={ChatScreen}
+          options={{
+            headerShown: false,
+            ...(Platform.OS === 'android'
+              ? { androidKeyboardInputMode: 'adjustResize' as const }
+              : {}),
+          }}
+        />
+        <Stack.Screen
+          name={SCREENS.CHAT_LIST}
+          component={ChatListScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -32,6 +32,8 @@ export const SCREENS = {
   PROVIDERS_CALL_LIST: "ProvidersCallList",
   PDF_VIEWER: 'PdfViewer',
   PROVIDER_PRE_REQUEST_DETAIL: 'ProviderPreRequestDetail',
+  CHAT: 'Chat',
+  CHAT_LIST: 'ChatList',
 } as const;
 
 // Doctor Bottom Tab Screen Names

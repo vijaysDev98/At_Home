@@ -15,6 +15,8 @@ export const IMAGES = {
   location_pin: require('./location_pin.png'),
   lock: require('./lock.png'),
   mail: require('./mail.png'),
+  chat_conversation: require('./ic_chat_conversation.png'),
+  chat_send: require('./ic_chat_send.png'),
   person: require('./person.png'),
   stethoscope: require('./stethoscope.png'),
   add_patient: require('./add_patient.png'),

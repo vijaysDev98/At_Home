@@ -9,8 +9,8 @@ import React, { useEffect } from 'react';
 import {
   AppState,
   AppStateStatus,
+  Platform,
   StatusBar,
-  useColorScheme,
 } from 'react-native';
 import {
   initialWindowMetrics,
@@ -116,7 +116,11 @@ function App() {
   return (
     <I18nextProvider i18n={i18nLocale}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StatusBar backgroundColor={COLORS.white} barStyle={'dark-content'} />
+        <StatusBar
+          translucent={Platform.OS === 'android' ? false : undefined}
+          backgroundColor={COLORS.white}
+          barStyle="dark-content"
+        />
         <Provider store={store}>
           <AppContent />
         </Provider>

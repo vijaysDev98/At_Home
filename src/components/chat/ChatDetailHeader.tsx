@@ -1,0 +1,103 @@
+import React from 'react';
+import {
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { IMAGES } from '../../assets/images';
+import { COLORS, FONTS } from '../../utils';
+import { getScaleSize } from '../../utils/scaleSize';
+import AppText from '../AppText';
+import ProfileAvatar from '../ProfileAvatar';
+import NavigationService from '../../navigation/NavigationService';
+import FastImage from 'react-native-fast-image';
+import { IMAGE_BASE_URL } from '../../api/apiRoutes';
+
+type Props = {
+  peerName: string;
+  peerProfileImg?: string | null;
+};
+
+export const ChatDetailHeader: React.FC<Props> = ({
+  peerName,
+  peerProfileImg,
+}) => {
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.left}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          hitSlop={16}
+          style={styles.backBtn}
+          onPress={() => NavigationService.goBack()}
+        >
+          <Image source={IMAGES.arrowLeft} style={styles.backIcon} />
+        </TouchableOpacity>
+
+        {peerProfileImg ? (
+          <FastImage
+            source={{ uri: IMAGE_BASE_URL + peerProfileImg }}
+            style={styles.avatar}
+          />
+        ) : (
+          <ProfileAvatar name={peerName || '?'} size="small" />
+        )}
+
+        <AppText
+          size={getScaleSize(16)}
+          font={FONTS.Inter.SemiBold}
+          color={COLORS._1A1D1F}
+          numberOfLines={1}
+          style={styles.name}
+        >
+          {peerName}
+        </AppText>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(10),
+    backgroundColor: COLORS.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS._E5E7EB,
+  },
+  left: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    gap: getScaleSize(10),
+    paddingRight: getScaleSize(8),
+  },
+  backBtn: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    backgroundColor: COLORS._F9FAFB,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: getScaleSize(17),
+    height: getScaleSize(15),
+    resizeMode: 'contain',
+  },
+  avatar: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    backgroundColor: COLORS._F3F4F6,
+  },
+  name: {
+    flex: 1,
+  },
+});

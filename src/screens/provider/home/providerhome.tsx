@@ -18,6 +18,7 @@ import {
   AppLoader,
   ProfileAvatar,
   AppSafeAreaView,
+  HomeChatNotificationActions,
 } from '../../../components';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
@@ -207,30 +208,12 @@ const ProviderHome: React.FC = () => {
               </AppText>
             </View>
           </View>
-          <TouchableOpacity
-            onPress={() => NavigationService.navigate(SCREENS.ALERTS)}
-            activeOpacity={0.7}
-            style={styles.notificationBtn}
-          >
-            <View style={styles.notificationIconContainer}>
-              <Image
-                source={IMAGES.notification_icon}
-                style={styles.notificationIcon}
-              />
-              {unreadCount > 0 && (
-                <View style={styles.badgeContainer}>
-                  <AppText
-                    size={getScaleSize(8)}
-                    font={FONTS.Inter.Bold}
-                    color={COLORS.white}
-                    style={styles.badgeText}
-                  >
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </AppText>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
+          <HomeChatNotificationActions
+            unreadNotificationCount={unreadCount}
+            onNotificationPress={() =>
+              NavigationService.navigate(SCREENS.ALERTS)
+            }
+          />
         </View>
         <ScrollView
           contentContainerStyle={styles.scrollContent}

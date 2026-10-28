@@ -24,6 +24,7 @@ export { default as SecurityAlertModal } from './SecurityAlertModal';
 export type { SecurityAlertModalProps } from './SecurityAlertModal';
 export { default as DocFormSubmittedModal } from './DocFormSubmittedModal';
 export { default as NotificationActionOverlay } from './NotificationActionOverlay';
+export { HomeChatNotificationActions } from './HomeChatNotificationActions';
 export { default as DocuSignRedirectModal } from './DocuSignRedirectModal';
 export { default as LegalDocumentSheet } from './LegalDocumentSheet';
 export type { LegalDocType, LegalDocumentSheetProps } from './LegalDocumentSheet';
