@@ -185,6 +185,30 @@ export function consumePendingNotification(): any {
   return payload;
 }
 
+function resetToChatFromNotification(
+  serviceRequestId: string,
+  peerName: string | undefined,
+  userRole: string,
+) {
+  const isProvider =
+    userRole === ROLES.PROVIDER || userRole === 'serviceProvider';
+  const homeTabs = isProvider
+    ? SCREENS.PROVIDER_BOTTOM_TABS
+    : SCREENS.DOCTOR_BOTTOM_TABS;
+
+  NavigationService.resetTo([
+    { name: homeTabs },
+    { name: SCREENS.CHAT_LIST },
+    {
+      name: SCREENS.CHAT,
+      params: {
+        serviceRequestId,
+        peerName: peerName || undefined,
+      },
+    },
+  ]);
+}
+
 /**
  * Smart notification router:
  * Analyzes notification data + user role to determine the exact screen to navigate to.
@@ -220,6 +244,27 @@ export async function navigateFromNotification(raw: any): Promise<boolean> {
       'RequestId:',
       info.requestId,
     );
+
+    if (
+      info.type === 'chatMessage' ||
+      typeLower === 'chatmessage' ||
+      typeLower.includes('chatmessage')
+    ) {
+      const serviceRequestId = info.serviceRequestId || info.requestId;
+      if (serviceRequestId) {
+        const peerName =
+          info.metadata?.peerName ||
+          info.metadata?.senderName ||
+          (raw?.data as any)?.peerName ||
+          '';
+        resetToChatFromNotification(
+          serviceRequestId,
+          peerName || undefined,
+          userRole,
+        );
+        return true;
+      }
+    }
 
     // ==========================================
     // PROVIDER ROLE NAVIGATION

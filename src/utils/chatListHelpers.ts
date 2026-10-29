@@ -5,6 +5,41 @@ import {
   ChatMessage,
 } from '../services/chatService';
 import { STRING } from '../constant';
+import {
+  getActiveChatConversationId,
+  getActiveChatServiceRequestId,
+} from './chatActiveSession';
+
+/** Matches backend `CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT` */
+export const CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT =
+  'notifications.previews.sharedAttachment';
+
+export const formatChatLastMessagePreview = (
+  preview?: string | null,
+  lastMessageType?: string | null,
+): string => {
+  if (
+    lastMessageType === 'attachment' ||
+    preview === CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT
+  ) {
+    return i18next.t(STRING.chatSharedAttachment);
+  }
+  if (!preview) {
+    return '';
+  }
+  return preview;
+};
+
+const buildMessageListPreview = (message: ChatMessage): string => {
+  const body = message.body?.trim() || '';
+  if (body) {
+    return body.length > 120 ? `${body.slice(0, 117)}...` : body;
+  }
+  if (message.attachments?.length) {
+    return CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT;
+  }
+  return '';
+};
 
 export const sortConversationsByLatest = (
   list: ChatConversationItem[],
@@ -44,7 +79,10 @@ export const mergeConversationWithMessage = (
   currentUserId?: string | null,
 ): { list: ChatConversationItem[]; needsRefetch: boolean } => {
   const idx = list.findIndex(
-    c => c.serviceRequestId === message.serviceRequestId,
+    c =>
+      c.id === message.conversationId ||
+      (!!message.serviceRequestId &&
+        c.serviceRequestId === message.serviceRequestId),
   );
   if (idx < 0) {
     return { list, needsRefetch: true };
@@ -53,12 +91,18 @@ export const mergeConversationWithMessage = (
   const existing = list[idx];
   const isOwnMessage =
     !!currentUserId && message.senderId === currentUserId;
+  const activeConversationId = getActiveChatConversationId();
+  const isActiveThread =
+    (!!activeConversationId &&
+      message.conversationId === activeConversationId) ||
+    message.serviceRequestId === getActiveChatServiceRequestId();
 
   const updated: ChatConversationItem = {
     ...existing,
     lastMessageAt: message.createdAt,
-    lastMessagePreview: message.body,
-    unread: isOwnMessage ? existing.unread : true,
+    lastMessagePreview: buildMessageListPreview(message),
+    lastMessageType: message.messageType,
+    unread: isOwnMessage || isActiveThread ? false : true,
   };
 
   const without = list.filter((_, i) => i !== idx);

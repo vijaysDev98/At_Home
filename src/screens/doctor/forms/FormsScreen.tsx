@@ -112,6 +112,12 @@ const FormsScreen: React.FC = () => {
   const serviceName = serviceObj?.serviceName || '';
   const patientData = currentReq?.patient || currentReq?.patientId || {};
 
+  const assignedProvider = useMemo(() => {
+    const raw =
+      requestData?.assignedProviderId || (request as any)?.assignedProviderId;
+    return typeof raw === 'object' && raw ? raw : null;
+  }, [request, requestData]);
+
   const warningSheetRef = useRef<ActionSheetRef>(null);
   const providerOptionSheetRef = useRef<ActionSheetRef>(null);
   const selectProviderSheetRef = useRef<ActionSheetRef>(null);
@@ -403,6 +409,14 @@ const FormsScreen: React.FC = () => {
                   patientData={patientData as any}
                   serviceName={serviceName}
                   requestData={requestData}
+                  serviceRequestId={requestId}
+                  requestIdLabel={requestData?.requestId || request?.requestId}
+                  chatPeerName={
+                    assignedProvider?.fullName ||
+                    assignedProvider?.name ||
+                    null
+                  }
+                  chatPeerProfileImg={assignedProvider?.profileImg || null}
                 />
                 {requestData?.status === REQUEST_STATUS.RETURNED &&
                   requestData?.returnReasons &&

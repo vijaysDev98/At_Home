@@ -116,7 +116,8 @@ export type RootStackParamList = {
     action?: string;
   } | undefined;
   Chat: {
-    serviceRequestId: string;
+    serviceRequestId?: string;
+    conversationId?: string;
     requestIdLabel?: string;
     peerName?: string;
     peerProfileImg?: string | null;

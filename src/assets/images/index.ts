@@ -17,6 +17,8 @@ export const IMAGES = {
   mail: require('./mail.png'),
   chat_conversation: require('./ic_chat_conversation.png'),
   chat_send: require('./ic_chat_send.png'),
+  chat_attach: require('./ic_chat_attach.png'),
+  chat_image_broken: require('./ic_chat_image_broken.png'),
   person: require('./person.png'),
   stethoscope: require('./stethoscope.png'),
   add_patient: require('./add_patient.png'),

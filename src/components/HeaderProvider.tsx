@@ -20,6 +20,7 @@ import {
 import AppButton from './AppButton';
 import { useTranslation } from 'react-i18next';
 import { STRING } from '../constant';
+import { HeaderChatIconButton } from './chat/HeaderChatIconButton';
 
 // Re-export for existing imports; prefer importing from hooks/pdfDownloader
 export { openPdfInBrowser } from '../hooks/pdfDownloader';
@@ -38,6 +39,10 @@ const HeaderProvider = ({
   status,
   isViewForm,
   onViewFormPress,
+  serviceRequestId,
+  requestIdLabel,
+  chatPeerName,
+  chatPeerProfileImg,
 }: {
   isBack?: boolean;
   title?: string;
@@ -52,6 +57,10 @@ const HeaderProvider = ({
   formStatus?: string;
   isViewForm?: boolean;
   onViewFormPress?: () => void;
+  serviceRequestId?: string | null;
+  requestIdLabel?: string;
+  chatPeerName?: string | null;
+  chatPeerProfileImg?: string | null;
 }) => {
   const { t } = useTranslation();
   return (
@@ -151,7 +160,15 @@ const HeaderProvider = ({
         </View>
       </View>
 
-      {leftContent && leftContent()}
+      <View style={styles.trailing}>
+        <HeaderChatIconButton
+          serviceRequestId={serviceRequestId}
+          requestIdLabel={requestIdLabel}
+          peerName={chatPeerName}
+          peerProfileImg={chatPeerProfileImg}
+        />
+        {leftContent ? leftContent() : null}
+      </View>
     </View>
   );
 };
@@ -225,5 +242,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  trailing: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: getScaleSize(4),
   },
 });

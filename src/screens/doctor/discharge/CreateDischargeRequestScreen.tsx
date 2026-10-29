@@ -29,14 +29,15 @@ import {
   AppText,
   AppLoader,
   ProfileAvatar,
-  AppBottomSheet,
 } from '../../../components';
+import { MediaFilePickerSheet } from '../../../components/MediaFilePickerSheet';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, SHOW_SUCCESS_TOAST, STRING } from '../../../constant';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
+import { getChatAccess } from '../../../services/chatService';
 import { RootStackParamList } from '../../../navigation';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import {
@@ -574,10 +575,43 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     }
   };
 
-  const handleChatAssignedProvider = () => {
+  const handleChatAssignedProvider = async () => {
+    const serviceRequestId =
+      editRequest?.id ||
+      editRequest?._id ||
+      route.params?.request?.id ||
+      route.params?.request?._id ||
+      route.params?.requestId;
+
+    if (!serviceRequestId) {
+      return;
+    }
+
+    const access = await getChatAccess(String(serviceRequestId));
+    if (access?.canChat) {
+      const providerName =
+        assignedProvider?.fullName ||
+        assignedProvider?.providerName ||
+        `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim() ||
+        undefined;
+      const requestIdLabel =
+        editRequest?.requestId &&
+        !/^[a-f0-9]{24}$/i.test(String(editRequest.requestId))
+          ? String(editRequest.requestId)
+          : undefined;
+
+      NavigationService.navigate(SCREENS.CHAT, {
+        serviceRequestId: String(serviceRequestId),
+        requestIdLabel,
+        peerName: providerName,
+        peerProfileImg: assignedProvider?.profileImg || null,
+      });
+      return;
+    }
+
     SHOW_TOAST(
       t(STRING.chatUnderDevelopment) ||
-      'Chat feature is under development and will be available soon!',
+        'Chat is available after the pre-request is accepted and a provider is assigned.',
       'info',
     );
   };
@@ -1168,7 +1202,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
                     onPress={handleChatAssignedProvider}
                   >
                     <Image
-                      source={IMAGES.mail}
+                      source={IMAGES.chat_conversation}
                       style={styles.assignedProviderActionIconChat}
                     />
                     <AppText
@@ -1896,145 +1930,16 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         onSelectProvider={handleProviderSelected}
       />
 
-      {/* Bottom Sheet 3: Prescription Picker (Take Photo / Select File) */}
-      <AppBottomSheet ref={prescriptionPickerSheetRef}>
-        <View style={styles.prescriptionSheetContent}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-            align="center"
-            style={{ marginBottom: getScaleSize(4) }}
-          >
-            {t(STRING.prescriptionDocument) || 'Prescription Document'}
-          </AppText>
-          <AppText
-            size={getScaleSize(13)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._6F767E}
-            align="center"
-            style={{ marginBottom: getScaleSize(20) }}
-          >
-            {t(STRING.takePhotoOrSelectFile) || 'Take Photo / Select File'}
-          </AppText>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.sheetOptionBtn}
-            onPress={handleTakePhoto}
-          >
-            <View style={styles.sheetOptionIconWrap}>
-              <Image
-                source={IMAGES.ic_camera}
-                style={styles.sheetOptionIcon}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.takePhoto) || 'Take Photo'}
-              </AppText>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._6F767E}
-                style={{ marginTop: 2 }}
-              >
-                {t('Use camera to capture document') ||
-                  'Use camera to capture document'}
-              </AppText>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.sheetOptionBtn}
-            onPress={handleSelectPhoto}
-          >
-            <View style={styles.sheetOptionIconWrap}>
-              <Image
-                source={IMAGES.ic_gallery}
-                style={styles.sheetOptionIcon}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.photoLibrary) || 'Photo Library'}
-              </AppText>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._6F767E}
-                style={{ marginTop: 2 }}
-              >
-                {t(STRING.chooseFromGallery) ||
-                  'Choose photo from gallery'}
-              </AppText>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.sheetOptionBtn}
-            onPress={handleSelectFile}
-          >
-            <View
-              style={[
-                styles.sheetOptionIconWrap,
-                // { backgroundColor: '#FEF2F2' },
-              ]}
-            >
-              <Image
-                source={IMAGES.ic_file}
-                style={[
-                  styles.sheetOptionIcon,
-                  // { tintColor: '#DC2626' },
-                ]}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.selectPdfOrDocument) || 'Select PDF / Document'}
-              </AppText>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._6F767E}
-                style={{ marginTop: 2 }}
-              >
-                {t(STRING.selectPdfOrDocumentDesc) ||
-                  'Choose PDF document or file from device'}
-              </AppText>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.sheetCancelBtn}
-            onPress={() => prescriptionPickerSheetRef.current?.hide()}
-          >
-            <AppText
-              size={getScaleSize(14)}
-              font={FONTS.Inter.SemiBold}
-              color={COLORS._6F767E}
-              align="center"
-            >
-              {t(STRING.cancel) || 'Cancel'}
-            </AppText>
-          </TouchableOpacity>
-        </View>
-      </AppBottomSheet>
+      <MediaFilePickerSheet
+        ref={prescriptionPickerSheetRef}
+        title={t(STRING.prescriptionDocument) || 'Prescription Document'}
+        description={
+          t(STRING.takePhotoOrSelectFile) || 'Take Photo / Select File'
+        }
+        onTakePhoto={handleTakePhoto}
+        onSelectPhoto={handleSelectPhoto}
+        onSelectFile={handleSelectFile}
+      />
 
       {/* Full-Screen Prescription Image Preview Modal */}
       <Modal
@@ -2252,9 +2157,8 @@ const styles = StyleSheet.create({
     gap: getScaleSize(8),
   },
   assignedProviderActionIconChat: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
-    tintColor: COLORS.primary,
+    width: getScaleSize(15),
+    height: getScaleSize(15),
     resizeMode: 'contain',
   },
   assignedProviderActionBtnCall: {
@@ -2997,45 +2901,6 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS.primary,
-  },
-  prescriptionSheetContent: {
-    paddingVertical: getScaleSize(8),
-    paddingHorizontal: getScaleSize(4),
-  },
-  sheetOptionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: getScaleSize(14),
-    paddingHorizontal: getScaleSize(16),
-    borderRadius: getScaleSize(12),
-    backgroundColor: '#F9FAFB',
-    marginBottom: getScaleSize(10),
-    gap: getScaleSize(14),
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
-  },
-  sheetOptionIconWrap: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetOptionIcon: {
-    width: getScaleSize(20),
-    height: getScaleSize(20),
-    resizeMode: 'contain',
-    tintColor: COLORS.primary,
-  },
-  sheetCancelBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: getScaleSize(14),
-    marginTop: getScaleSize(4),
-    borderRadius: getScaleSize(12),
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
   },
   previewModalOverlay: {
     flex: 1,

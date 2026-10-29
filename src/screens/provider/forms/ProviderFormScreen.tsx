@@ -77,6 +77,22 @@ const ProviderFormScreen: React.FC = () => {
     null,
   );
 
+  const serviceRequestId =
+    requestId ||
+    requestData?.id ||
+    (requestData as any)?._id ||
+    (request as any)?._id ||
+    null;
+
+  const doctorPeer = useMemo(() => {
+    const raw =
+      (requestData as any)?.doctor ||
+      (requestData as any)?.doctorId ||
+      (request as any)?.doctor ||
+      (request as any)?.doctorId;
+    return typeof raw === 'object' && raw ? raw : null;
+  }, [request, requestData]);
+
   const readOnly = useMemo(
     () =>
       action === 'view' ||
@@ -335,6 +351,10 @@ const ProviderFormScreen: React.FC = () => {
           isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
           formStatus={requestData?.formStatus}
           status={requestData?.status}
+          serviceRequestId={serviceRequestId}
+          requestIdLabel={requestData?.requestId || request?.requestId}
+          chatPeerName={doctorPeer?.fullName || doctorPeer?.name || null}
+          chatPeerProfileImg={doctorPeer?.profileImg || null}
           style={
             {
               ...styles.header,

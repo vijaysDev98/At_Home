@@ -21,7 +21,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
 import NavigationService from '../../../navigation/NavigationService';
-import { SCREENS } from '../../../navigation/routes';
+import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
@@ -37,6 +37,7 @@ import {
   ServiceConfig,
   getServiceIcon,
 } from '../../../constant/services';
+import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
 
 // Dashboard interfaces
 interface DashboardRequestsOverview {
@@ -97,6 +98,7 @@ const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const unreadChatCount = useChatUnreadBadge();
   const [refreshing, setRefreshing] = useState(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
 
@@ -159,12 +161,22 @@ const HomeScreen: React.FC = () => {
     ? MASTER_SERVICES_LIST
     : MASTER_SERVICES_LIST.slice(0, 6);
 
+  const openProfileTab = () => {
+    NavigationService.navigate(DOCTOR_TAB_SCREENS.PROFILE);
+  };
+
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.headerLeft}
+            activeOpacity={0.75}
+            onPress={openProfileTab}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.profile)}
+          >
             {profileData?.profileImg ? (
               <FastImage
                 source={{ uri: IMAGE_BASE_URL + profileData.profileImg }}
@@ -193,10 +205,11 @@ const HomeScreen: React.FC = () => {
                 Dr. {capitalizeFirstLetter(doctorName)}
               </AppText>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <HomeChatNotificationActions
             unreadNotificationCount={unreadCount}
+            unreadChatCount={unreadChatCount}
             onNotificationPress={() =>
               NavigationService.navigate(SCREENS.DOCTOR_NOTIFICATION)
             }

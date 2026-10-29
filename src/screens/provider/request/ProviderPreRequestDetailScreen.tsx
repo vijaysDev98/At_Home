@@ -628,7 +628,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
                       onPress={handleChat}
                     >
                       <Image
-                        source={IMAGES.mail}
+                        source={IMAGES.chat_conversation}
                         style={styles.doctorActionIconChat}
                       />
                       <AppText
@@ -1103,9 +1103,8 @@ const styles = StyleSheet.create({
     gap: getScaleSize(8),
   },
   doctorActionIconChat: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
-    tintColor: COLORS.primary,
+    width: getScaleSize(15),
+    height: getScaleSize(15),
     resizeMode: 'contain',
   },
   doctorActionBtnCall: {

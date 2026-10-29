@@ -1,7 +1,9 @@
 import React, { forwardRef } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import ActionSheet, { ActionSheetRef, ActionSheetProps } from 'react-native-actions-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../utils';
+import { getScaleSize } from '../utils/scaleSize';
 
 interface AppBottomSheetProps extends ActionSheetProps {
   children: React.ReactNode;
@@ -10,11 +12,18 @@ interface AppBottomSheetProps extends ActionSheetProps {
 
 const AppBottomSheet = forwardRef<ActionSheetRef, AppBottomSheetProps>(
   ({ children, containerStyle, ...rest }, ref) => {
+    const insets = useSafeAreaInsets();
+    const bottomPad = Math.max(insets.bottom, getScaleSize(16));
+
     return (
       <ActionSheet
         ref={ref}
         gestureEnabled
-        containerStyle={[styles.container, containerStyle]}
+        containerStyle={[
+          styles.container,
+          { paddingBottom: bottomPad },
+          containerStyle,
+        ]}
         indicatorStyle={styles.indicator}
         defaultOverlayOpacity={0.4}
         {...rest}
@@ -34,7 +43,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
-    paddingBottom: 30,
   },
   indicator: {
     width: 48,

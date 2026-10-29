@@ -35,17 +35,29 @@ export const disconnectChatSocket = () => {
 };
 
 export const joinChatRoom = async (
-  serviceRequestId: string,
+  serviceRequestId?: string | null,
+  conversationId?: string | null,
 ): Promise<boolean> => {
   const activeSocket = await connectChatSocket();
   if (!activeSocket) {
     return false;
   }
 
+  if (!serviceRequestId && !conversationId) {
+    return false;
+  }
+
+  const payload = conversationId
+    ? {
+        conversationId,
+        ...(serviceRequestId ? { serviceRequestId } : {}),
+      }
+    : { serviceRequestId };
+
   return new Promise(resolve => {
     activeSocket.emit(
       CHAT_SOCKET_EVENTS.JOIN,
-      { serviceRequestId },
+      payload,
       (ack: { ok?: boolean }) => {
         resolve(!!ack?.ok);
       },

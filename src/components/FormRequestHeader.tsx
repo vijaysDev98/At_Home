@@ -8,12 +8,17 @@ import { ServiceRequestDetail } from '../services/serviceRequestListApi';
 import { FORM_STATUS, STRING } from '../constant';
 import { DISPLAY_FORM_STATUS } from '../constant/RequestStatus';
 import { useTranslation } from 'react-i18next';
+import { HeaderChatIconButton } from './chat/HeaderChatIconButton';
 
 interface FormRequestHeaderProps {
   patientData?: PatientInfo;
   serviceName?: string;
   requestData?: ServiceRequestDetail | null;
   fromReview?: boolean;
+  serviceRequestId?: string | null;
+  requestIdLabel?: string;
+  chatPeerName?: string | null;
+  chatPeerProfileImg?: string | null;
 }
 
 // ─── Shared status badges row ─────────────────────────────────────────────────
@@ -80,8 +85,17 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
   serviceName,
   requestData,
   fromReview = false,
+  serviceRequestId,
+  requestIdLabel,
+  chatPeerName,
+  chatPeerProfileImg,
 }) => {
   const { t } = useTranslation();
+  const resolvedRequestId =
+    serviceRequestId ||
+    requestData?.id ||
+    (requestData as any)?._id ||
+    null;
   return (
     <View style={styles.container}>
       <View style={styles.row}>
@@ -109,6 +123,12 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>
+        <HeaderChatIconButton
+          serviceRequestId={resolvedRequestId}
+          requestIdLabel={requestIdLabel || requestData?.requestId}
+          peerName={chatPeerName}
+          peerProfileImg={chatPeerProfileImg}
+        />
       </View>
     </View>
   );
@@ -120,29 +140,46 @@ const FormRequestHeaderForProvider: React.FC<FormRequestHeaderProps> = ({
   serviceName,
   requestData,
   fromReview = false,
+  serviceRequestId,
+  requestIdLabel,
+  chatPeerName,
+  chatPeerProfileImg,
 }) => {
   const { t } = useTranslation();
+  const resolvedRequestId =
+    serviceRequestId ||
+    requestData?.id ||
+    (requestData as any)?._id ||
+    null;
   return (
     <View style={styles.container}>
-      <View style={styles.detailsContainer}>
-        <AppText
-          size={getScaleSize(16)}
-          color={COLORS._1A1D1F}
-          font={FONTS.Inter.Bold}
-          numberOfLines={1}
-        >
-          {`${patientData?.fullName}` || t(STRING.patient)}
-        </AppText>
-        <AppText
-          size={getScaleSize(13)}
-          color={COLORS._526674}
-          font={FONTS.Inter.Regular}
-          numberOfLines={1}
-        >
-          {serviceName} • ID #
-          {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() || ''}
-        </AppText>
-        <StatusBadges requestData={requestData} fromReview={fromReview} />
+      <View style={styles.row}>
+        <View style={styles.detailsContainer}>
+          <AppText
+            size={getScaleSize(16)}
+            color={COLORS._1A1D1F}
+            font={FONTS.Inter.Bold}
+            numberOfLines={1}
+          >
+            {`${patientData?.fullName}` || t(STRING.patient)}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._526674}
+            font={FONTS.Inter.Regular}
+            numberOfLines={1}
+          >
+            {serviceName} • ID #
+            {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() || ''}
+          </AppText>
+          <StatusBadges requestData={requestData} fromReview={fromReview} />
+        </View>
+        <HeaderChatIconButton
+          serviceRequestId={resolvedRequestId}
+          requestIdLabel={requestIdLabel || requestData?.requestId}
+          peerName={chatPeerName}
+          peerProfileImg={chatPeerProfileImg}
+        />
       </View>
     </View>
   );
@@ -162,7 +199,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: getScaleSize(12),
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   detailsContainer: {
     flex: 1,

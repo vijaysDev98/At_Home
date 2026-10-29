@@ -1,13 +1,70 @@
 import { Platform } from 'react-native';
 import { API } from '../api';
+import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { SHOW_TOAST } from '../constant';
+
+/** Turn API-relative paths (e.g. uploads/images/chat/x.jpg) into full URLs. */
+export const toAbsoluteUploadUrl = (filePath: string): string => {
+  if (!filePath) {
+    return filePath;
+  }
+  if (
+    /^https?:\/\//i.test(filePath) ||
+    filePath.startsWith('file://') ||
+    filePath.startsWith('content://')
+  ) {
+    return filePath;
+  }
+  const base = IMAGE_BASE_URL.replace(/\/$/, '');
+  const path = filePath.replace(/^\//, '');
+  return `${base}/${path}`;
+};
 
 export interface UploadResponse {
   status: number;
   data: {
     filePath: string;
   };
-}
+};
+
+const extractUploadedFilePath = (response: any): string | null => {
+  return (
+    response?.data?.data?.filePath ||
+    response?.data?.filePath ||
+    response?.data?.data?.file_url ||
+    null
+  );
+};
+
+/** Multipart upload via POST /common/file/upload (works with local or S3 server storage). */
+export const uploadFileViaMultipart = async (
+  uri: string,
+  fileName: string,
+  mimeType: string,
+  model = 'serviceRequest',
+): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', {
+    uri,
+    type: mimeType,
+    name: fileName,
+  } as any);
+  formData.append('model', model);
+
+  const response: any = await API.Instance.post(
+    API.API_ROUTES.uploadFile,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    },
+  );
+
+  const filePath = extractUploadedFilePath(response);
+  if (!filePath) {
+    throw new Error('Upload failed');
+  }
+  return filePath;
+};
 
 export const uploadImageToS3 = async (
   uri: string,
@@ -77,35 +134,47 @@ const AUDIO_MIME_MAP: Record<string, string> = {
 export const uploadAudioDirectToS3 = async (
   fileUri: string,
   extn: string = 'm4a',
+  model = 'serviceRequest',
 ): Promise<{ fileUrl: string; uploadUrl?: string }> => {
   if (!fileUri) {
     SHOW_TOAST('Invalid audio file', 'error');
     throw new Error('Invalid audio file');
   }
 
-  try {
-    // 1. Detect audio extension and matching MIME type
-    const cleanUri = fileUri.split('?')[0];
-    const detectedExt = extn
-      ? extn.replace('.', '').toLowerCase()
-      : cleanUri.split('.').pop()?.toLowerCase() || 'm4a';
-    const fileExt = detectedExt.length <= 5 ? detectedExt : 'm4a';
-    const contentType = AUDIO_MIME_MAP[fileExt] || `audio/${fileExt}`;
+  const cleanUri = fileUri.split('?')[0];
+  const detectedExt = extn
+    ? extn.replace('.', '').toLowerCase()
+    : cleanUri.split('.').pop()?.toLowerCase() || 'm4a';
+  const fileExt = detectedExt.length <= 5 ? detectedExt : 'm4a';
+  const contentType = AUDIO_MIME_MAP[fileExt] || `audio/${fileExt}`;
+  const fileName = `voice_${Date.now()}.${fileExt}`;
 
+  try {
+    const filePath = await uploadFileViaMultipart(
+      fileUri,
+      fileName,
+      contentType,
+      model,
+    );
+    return { fileUrl: toAbsoluteUploadUrl(filePath) };
+  } catch (multipartError) {
+    console.log('Audio multipart upload failed, trying presigned URL:', multipartError);
+  }
+
+  try {
     console.log('Fetching presigned URL for audio upload...', {
       fileUri,
       fileExt,
       contentType,
     });
 
-    // 2. GET presigned URL from backend
     const presignedRes: any = await API.Instance.get(
       API.API_ROUTES.getPresignedUrl,
       {
         params: {
           type: 'audios',
           extn: fileExt,
-          model: 'serviceRequest',
+          model,
         },
       },
     );
@@ -118,7 +187,6 @@ export const uploadAudioDirectToS3 = async (
       throw new Error('Failed to obtain presigned upload URL from server');
     }
 
-    // 3. PUT raw binary file directly to S3 using the presigned URL
     const cleanPath = fileUri.startsWith('file://')
       ? fileUri.replace('file://', '')
       : fileUri;
@@ -139,7 +207,7 @@ export const uploadAudioDirectToS3 = async (
 
     if (statusCode >= 200 && statusCode < 300) {
       console.log('✅ Audio uploaded to S3 successfully:', fileUrl);
-      return { fileUrl, uploadUrl };
+      return { fileUrl: toAbsoluteUploadUrl(fileUrl), uploadUrl };
     } else {
       let respBody = '';
       try {
@@ -168,7 +236,12 @@ const PRESCRIPTION_MIME_MAP: Record<string, string> = {
   heic: 'image/heic',
   heif: 'image/heif',
   pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  txt: 'text/plain',
 };
+
+const PRESIGNED_FILE_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'txt']);
 
 /**
  * Upload Prescription Document (Image or PDF) to S3 using Presigned URL
@@ -179,6 +252,7 @@ const PRESCRIPTION_MIME_MAP: Record<string, string> = {
 export const uploadPrescriptionDirectToS3 = async (
   fileUri: string,
   extn?: string,
+  model = 'serviceRequest',
 ): Promise<{ fileUrl: string; uploadUrl?: string }> => {
   if (!fileUri) {
     SHOW_TOAST('Invalid prescription file', 'error');
@@ -209,7 +283,28 @@ export const uploadPrescriptionDirectToS3 = async (
       PRESCRIPTION_MIME_MAP[fileExt] ||
       (fileExt === 'pdf' ? 'application/pdf' : 'image/jpeg');
 
-    const uploadType = fileExt === 'pdf' ? 'files' : 'images';
+    const uploadType = PRESIGNED_FILE_EXTENSIONS.has(fileExt)
+      ? 'files'
+      : 'images';
+    const fileName =
+      fileExt === 'pdf' || PRESIGNED_FILE_EXTENSIONS.has(fileExt)
+        ? `prescription_${Date.now()}.${fileExt}`
+        : `prescription_${Date.now()}.${fileExt}`;
+
+    try {
+      const filePath = await uploadFileViaMultipart(
+        fileUri,
+        fileName,
+        contentType,
+        model,
+      );
+      return { fileUrl: toAbsoluteUploadUrl(filePath) };
+    } catch (multipartError) {
+      console.log(
+        'Prescription multipart upload failed, trying presigned URL:',
+        multipartError,
+      );
+    }
 
     console.log('Fetching presigned URL for prescription upload...', {
       fileUri,
@@ -218,14 +313,13 @@ export const uploadPrescriptionDirectToS3 = async (
       uploadType,
     });
 
-    // 2. GET presigned URL from backend
     const presignedRes: any = await API.Instance.get(
       API.API_ROUTES.getPresignedUrl,
       {
         params: {
           type: uploadType,
           extn: fileExt,
-          model: 'serviceRequest',
+          model,
         },
       },
     );
@@ -272,7 +366,7 @@ export const uploadPrescriptionDirectToS3 = async (
 
     if (statusCode >= 200 && statusCode < 300) {
       console.log('✅ Prescription uploaded to S3 successfully:', fileUrl);
-      return { fileUrl, uploadUrl };
+      return { fileUrl: toAbsoluteUploadUrl(fileUrl), uploadUrl };
     } else {
       let respBody = '';
       try {

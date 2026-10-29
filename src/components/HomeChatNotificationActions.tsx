@@ -1,5 +1,11 @@
 import React from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { IMAGES } from '../assets/images';
 import { COLORS, FONTS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
@@ -9,11 +15,39 @@ import { SCREENS } from '../navigation/routes';
 
 type Props = {
   unreadNotificationCount?: number;
+  unreadChatCount?: number;
   onNotificationPress: () => void;
+};
+
+const renderBadge = (count: number) => {
+  const label = count > 99 ? '99+' : String(count);
+  const isWide = count > 9;
+
+  return (
+    <View
+      style={[
+        styles.badgeContainer,
+        isWide && styles.badgeContainerWide,
+      ]}
+    >
+      <AppText
+        size={getScaleSize(7)}
+        lineHeight={getScaleSize(9)}
+        font={FONTS.Inter.Bold}
+        color={COLORS.white}
+        align="center"
+        style={styles.badgeText}
+        allowFontScaling={false}
+      >
+        {label}
+      </AppText>
+    </View>
+  );
 };
 
 export const HomeChatNotificationActions: React.FC<Props> = ({
   unreadNotificationCount = 0,
+  unreadChatCount = 0,
   onNotificationPress,
 }) => {
   return (
@@ -27,6 +61,7 @@ export const HomeChatNotificationActions: React.FC<Props> = ({
       >
         <View style={styles.iconContainer}>
           <Image source={IMAGES.chat_conversation} style={styles.chatIcon} />
+          {unreadChatCount > 0 && renderBadge(unreadChatCount)}
         </View>
       </TouchableOpacity>
 
@@ -39,18 +74,7 @@ export const HomeChatNotificationActions: React.FC<Props> = ({
       >
         <View style={styles.iconContainer}>
           <Image source={IMAGES.notification_icon} style={styles.notificationIcon} />
-          {unreadNotificationCount > 0 && (
-            <View style={styles.badgeContainer}>
-              <AppText
-                size={getScaleSize(8)}
-                font={FONTS.Inter.Bold}
-                color={COLORS.white}
-                style={styles.badgeText}
-              >
-                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-              </AppText>
-            </View>
-          )}
+          {unreadNotificationCount > 0 && renderBadge(unreadNotificationCount)}
         </View>
       </TouchableOpacity>
     </View>
@@ -78,6 +102,7 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(18),
     resizeMode: 'contain',
+    tintColor: COLORS._526674,
   },
   badgeContainer: {
     position: 'absolute',
@@ -89,12 +114,22 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: getScaleSize(3),
+    paddingHorizontal: getScaleSize(2),
     borderWidth: 1,
     borderColor: COLORS.white,
   },
+  badgeContainerWide: {
+    minWidth: getScaleSize(20),
+    paddingHorizontal: getScaleSize(3),
+  },
   badgeText: {
-    textAlign: 'center',
-    lineHeight: getScaleSize(13),
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    ...(Platform.OS === 'ios'
+      ? {
+          marginTop: -0.5,
+          letterSpacing: -0.2,
+        }
+      : {}),
   },
 });

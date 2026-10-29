@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -47,6 +47,7 @@ import {
   capitalizeFirstLetter,
   isDelegatedToProvider,
 } from '../../../constant/smallFunctions';
+import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
 
 // Dashboard interfaces
 interface DashboardPatient {
@@ -88,6 +89,7 @@ interface DashboardData {
 }
 
 const ProviderHome: React.FC = () => {
+  const isFocused = useIsFocused();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const { profileData } = useSelector((state: RootState) => state.profile);
@@ -98,6 +100,7 @@ const ProviderHome: React.FC = () => {
     null,
   );
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const unreadChatCount = useChatUnreadBadge();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRequest, setSelectedRequest] =
     useState<DashboardRecentQueue | null>(null);
@@ -172,13 +175,23 @@ const ProviderHome: React.FC = () => {
     }
   };
 
+  const openProfileTab = () => {
+    NavigationService.navigate(PROVIDER_TAB_SCREENS.PROFILE);
+  };
+
   return (
     <AppSafeAreaView edges={['top']} style={styles.safe}>
-      <AppLoader visible={isLoading} />
+      <AppLoader visible={isFocused && isLoading} />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.headerLeft}
+            activeOpacity={0.75}
+            onPress={openProfileTab}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.profile)}
+          >
             {profileData?.profileImg ? (
               <FastImage
                 source={
@@ -207,9 +220,10 @@ const ProviderHome: React.FC = () => {
                 {capitalizeFirstLetter(profileData?.providerName || '')}
               </AppText>
             </View>
-          </View>
+          </TouchableOpacity>
           <HomeChatNotificationActions
             unreadNotificationCount={unreadCount}
+            unreadChatCount={unreadChatCount}
             onNotificationPress={() =>
               NavigationService.navigate(SCREENS.ALERTS)
             }

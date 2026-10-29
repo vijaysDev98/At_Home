@@ -11,12 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
 import {
-  AppLoader,
   AppSafeAreaView,
   AppText,
   Header,
   ProfileAvatar,
 } from '../../components';
+import { ChatListSkeleton } from '../../components/chat/ChatListSkeleton';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 import { STRING } from '../../constant';
@@ -35,6 +35,7 @@ import {
   subscribeToChatMessages,
 } from '../../services/chatSocketService';
 import {
+  formatChatLastMessagePreview,
   formatChatListTime,
   mergeConversationWithMessage,
   sortConversationsByLatest,
@@ -101,7 +102,10 @@ const ChatListScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: ChatConversationItem }) => {
-    const subtitle = item.lastMessagePreview || '';
+    const subtitle = formatChatLastMessagePreview(
+      item.lastMessagePreview,
+      item.lastMessageType,
+    );
     const timeLabel = formatChatListTime(item.lastMessageAt);
     const unread = !!item.unread;
 
@@ -111,7 +115,10 @@ const ChatListScreen: React.FC = () => {
         activeOpacity={0.78}
         onPress={() =>
           NavigationService.navigate(SCREENS.CHAT, {
-            serviceRequestId: item.serviceRequestId,
+            ...(item.serviceRequestId
+              ? { serviceRequestId: item.serviceRequestId }
+              : {}),
+            conversationId: item.id,
             peerName: item.peerName,
             peerProfileImg: item.peerProfileImg,
           })
@@ -169,55 +176,45 @@ const ChatListScreen: React.FC = () => {
   return (
     <AppSafeAreaView style={styles.safe}>
       <View style={styles.headerWrap}>
-        <Header isBack title={t(STRING.chatNow)} />
+        <Header isBack title={t(STRING.chats) || 'Chats'} />
       </View>
 
-      <AppLoader visible={loading && conversations.length === 0} />
-
-      <FlatList
-        ref={listRef}
-        data={conversations}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.listContent,
-          conversations.length === 0 && !loading && styles.listEmpty,
-        ]}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-            tintColor={COLORS.primary}
-          />
-        }
-        ListEmptyComponent={
-          !loading ? (
+      {loading && conversations.length === 0 ? (
+        <ChatListSkeleton />
+      ) : (
+        <FlatList
+          ref={listRef}
+          data={conversations}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.listContent,
+            conversations.length === 0 && styles.listEmpty,
+          ]}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
+          }
+          ListEmptyComponent={
             <View style={styles.emptyWrap}>
               <AppText
                 size={getScaleSize(15)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._1A1D1F}
-                align="center"
-              >
-                {t(STRING.chatNow)}
-              </AppText>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Regular}
+                font={FONTS.Inter.Medium}
                 color={COLORS._6F767E}
                 align="center"
-                style={styles.emptySubtitle}
               >
-                {t(STRING.noNotificationsYet) ||
-                  'No conversations yet. Chat opens after a request is accepted.'}
+                {t(STRING.chatNoConversationsYet)}
               </AppText>
             </View>
-          ) : null
-        }
-      />
+          }
+        />
+      )}
     </AppSafeAreaView>
   );
 };

@@ -10,12 +10,13 @@ export interface ChatAccess {
 
 export interface ChatConversationItem {
   id: string;
-  serviceRequestId: string;
+  serviceRequestId: string | null;
   doctorId: string;
   providerId: string;
   status: string;
   lastMessageAt?: string | null;
   lastMessagePreview?: string | null;
+  lastMessageType?: string | null;
   lastReadAt?: string | null;
   requestId?: string | null;
   peerUserId?: string | null;
@@ -25,6 +26,13 @@ export interface ChatConversationItem {
   unread?: boolean;
 }
 
+export interface ChatMessageAttachment {
+  url: string;
+  fileName?: string;
+  mimeType?: string;
+  kind?: 'image' | 'file';
+}
+
 export interface ChatMessage {
   id: string;
   conversationId: string;
@@ -32,8 +40,31 @@ export interface ChatMessage {
   senderId: string;
   body: string;
   messageType: string;
+  attachments?: ChatMessageAttachment[];
   createdAt: string;
+  /** Client-only: optimistic message still uploading/sending */
+  sendStatus?: 'sending' | 'failed';
 }
+
+export type SendChatMessagePayload = {
+  body?: string;
+  attachments?: ChatMessageAttachment[];
+};
+
+export const fetchChatUnreadCount = async (): Promise<number> => {
+  try {
+    const response: any = await API.Instance.get(
+      API.API_ROUTES.chatUnreadCount,
+    );
+    const count = response?.data?.data?.unreadCount;
+    if (response?.status && typeof count === 'number') {
+      return count;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+};
 
 export const fetchChatConversations = async (
   page = 1,
@@ -92,35 +123,92 @@ export const getChatAccess = async (
   }
 };
 
+export const CHAT_MESSAGES_PAGE_SIZE = 25;
+
+export type ChatMessagesPagination = {
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
+
+export type ChatMessagesPageResult = {
+  messages: ChatMessage[];
+  pagination: ChatMessagesPagination;
+  conversationId?: string | null;
+};
+
+const emptyMessagesPage = (page = 1, size = CHAT_MESSAGES_PAGE_SIZE): ChatMessagesPageResult => ({
+  messages: [],
+  pagination: {
+    total: 0,
+    page,
+    size,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  },
+});
+
+export const fetchChatMessagesPage = async (
+  serviceRequestId: string,
+  page = 1,
+  size = CHAT_MESSAGES_PAGE_SIZE,
+  conversationId?: string | null,
+): Promise<ChatMessagesPageResult> => {
+  try {
+    const url = conversationId
+      ? `${API.API_ROUTES.chatConversations}/${conversationId}/messages`
+      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`;
+    const response: any = await API.Instance.get(url, { params: { page, size } });
+    if (response?.status && response?.data?.data?.messages) {
+      const data = response.data.data;
+      return {
+        messages: data.messages as ChatMessage[],
+        pagination: data.pagination as ChatMessagesPagination,
+        conversationId: data.conversationId ?? null,
+      };
+    }
+    return emptyMessagesPage(page, size);
+  } catch (error: any) {
+    SHOW_TOAST(error?.message || 'Failed to load messages', 'error');
+    return emptyMessagesPage(page, size);
+  }
+};
+
+/** Latest page first (page 1 = most recent messages). */
 export const fetchChatMessages = async (
   serviceRequestId: string,
   page = 1,
-  size = 50,
+  size = CHAT_MESSAGES_PAGE_SIZE,
 ): Promise<ChatMessage[]> => {
-  try {
-    const response: any = await API.Instance.get(
-      `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`,
-      { params: { page, size } },
-    );
-    if (response?.status && response?.data?.data?.messages) {
-      return response.data.data.messages as ChatMessage[];
-    }
-    return [];
-  } catch (error: any) {
-    SHOW_TOAST(error?.message || 'Failed to load messages', 'error');
-    return [];
-  }
+  const result = await fetchChatMessagesPage(serviceRequestId, page, size);
+  return result.messages;
 };
 
 export const sendChatMessage = async (
   serviceRequestId: string,
-  body: string,
+  payload: string | SendChatMessagePayload,
+  conversationId?: string | null,
 ): Promise<ChatMessage | null> => {
+  const body =
+    typeof payload === 'string'
+      ? payload
+      : typeof payload?.body === 'string'
+        ? payload.body
+        : '';
+  const attachments =
+    typeof payload === 'object' && payload?.attachments
+      ? payload.attachments
+      : undefined;
+
   try {
-    const response: any = await API.Instance.post(
-      `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`,
-      { body },
-    );
+    const url = conversationId
+      ? `${API.API_ROUTES.chatConversations}/${conversationId}/messages`
+      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`;
+    const response: any = await API.Instance.post(url, { body, attachments });
     if (response?.status && response?.data?.data) {
       return response.data.data as ChatMessage;
     }
@@ -132,11 +220,15 @@ export const sendChatMessage = async (
   }
 };
 
-export const markChatRead = async (serviceRequestId: string): Promise<void> => {
+export const markChatRead = async (
+  serviceRequestId: string,
+  conversationId?: string | null,
+): Promise<void> => {
   try {
-    await API.Instance.patch(
-      `${API.API_ROUTES.chatAccess}/${serviceRequestId}/read`,
-    );
+    const url = conversationId
+      ? `${API.API_ROUTES.chatConversations}/${conversationId}/read`
+      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/read`;
+    await API.Instance.patch(url);
   } catch {
     // non-blocking
   }
