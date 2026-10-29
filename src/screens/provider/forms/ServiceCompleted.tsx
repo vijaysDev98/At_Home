@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -28,10 +28,17 @@ import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { SHOW_TOAST } from '../../../constant/showToast';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t, i18n } = useTranslation();
+  const profileData = useSelector((state: RootState) => state.profile.profileData);
+  const currentUserId =
+    (profileData as any)?._id?.toString?.() ||
+    (profileData as any)?.id?.toString?.() ||
+    '';
   const requestId = route?.params?.request?.id || route?.params?.request?._id || route?.params?.requestId;
 
   const [loading, setLoading] = useState(true);
@@ -95,6 +102,52 @@ const ServiceCompletedScreen: React.FC = () => {
   const pdfRequestId =
     requestData?.requestId || route?.params?.request?.requestId;
 
+  const serviceRequestId =
+    requestId ||
+    requestData?._id?.toString?.() ||
+    requestData?.id?.toString?.() ||
+    null;
+
+  const chatPeer = useMemo(() => {
+    const doctor = requestData?.doctorId;
+    const provider = requestData?.assignedProviderId;
+    const doctorId =
+      (typeof doctor === 'object' ? doctor?._id : doctor)?.toString?.() || '';
+    const providerId =
+      (typeof provider === 'object' ? provider?._id : provider)?.toString?.() ||
+      '';
+
+    const nameFrom = (user: any) =>
+      user && typeof user === 'object'
+        ? `${user.fName || ''} ${user.lName || ''}`.trim() ||
+          user.fullName ||
+          user.name ||
+          null
+        : null;
+
+    if (currentUserId && currentUserId === providerId && doctor) {
+      return {
+        name: nameFrom(doctor),
+        profileImg:
+          typeof doctor === 'object' ? doctor.profileImg || null : null,
+      };
+    }
+    if (currentUserId && currentUserId === doctorId && provider) {
+      return {
+        name: nameFrom(provider),
+        profileImg:
+          typeof provider === 'object' ? provider.profileImg || null : null,
+      };
+    }
+    if (provider && typeof provider === 'object') {
+      return { name: nameFrom(provider), profileImg: provider.profileImg || null };
+    }
+    if (doctor && typeof doctor === 'object') {
+      return { name: nameFrom(doctor), profileImg: doctor.profileImg || null };
+    }
+    return { name: null, profileImg: null };
+  }, [requestData, currentUserId]);
+
   const handleViewPdf = () => {
     if (!requestData?.signedPdfUrl) {
       SHOW_TOAST(t(STRING.failedToLoadPdf), 'error');
@@ -121,6 +174,10 @@ const ServiceCompletedScreen: React.FC = () => {
         style={styles.header}
         status={requestData?.status}
         formStatus={requestData?.formStatus}
+        serviceRequestId={serviceRequestId}
+        requestIdLabel={pdfRequestId}
+        chatPeerName={chatPeer.name}
+        chatPeerProfileImg={chatPeer.profileImg}
       />
 
       <ScrollView

@@ -17,11 +17,13 @@ import { IMAGE_BASE_URL } from '../../api/apiRoutes';
 type Props = {
   peerName: string;
   peerProfileImg?: string | null;
+  presenceLabel?: string | null;
 };
 
 export const ChatDetailHeader: React.FC<Props> = ({
   peerName,
   peerProfileImg,
+  presenceLabel,
 }) => {
   return (
     <View style={styles.wrap}>
@@ -44,15 +46,26 @@ export const ChatDetailHeader: React.FC<Props> = ({
           <ProfileAvatar name={peerName || '?'} size="small" />
         )}
 
-        <AppText
-          size={getScaleSize(16)}
-          font={FONTS.Inter.SemiBold}
-          color={COLORS._1A1D1F}
-          numberOfLines={1}
-          style={styles.name}
-        >
-          {peerName}
-        </AppText>
+        <View style={styles.nameBlock}>
+          <AppText
+            size={getScaleSize(16)}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS._1A1D1F}
+            numberOfLines={1}
+          >
+            {peerName}
+          </AppText>
+          {!!presenceLabel && (
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+              numberOfLines={1}
+            >
+              {presenceLabel}
+            </AppText>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -97,7 +110,8 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(20),
     backgroundColor: COLORS._F3F4F6,
   },
-  name: {
+  nameBlock: {
     flex: 1,
+    minWidth: 0,
   },
 });

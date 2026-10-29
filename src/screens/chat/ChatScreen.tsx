@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
-  FlatList,
   Image,
   Keyboard,
   KeyboardEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
+  SectionList,
   StatusBar,
   StyleSheet,
   TextInput,
@@ -21,7 +22,6 @@ import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { IMAGES } from '../../assets/images';
 import { AppSafeAreaView, AppText } from '../../components';
 import { MediaFilePickerSheet } from '../../components/MediaFilePickerSheet';
@@ -29,10 +29,12 @@ import {
   ChatAttachmentImagePreviewModal,
   ChatImageGalleryState,
 } from '../../components/chat/ChatAttachmentImagePreviewModal';
+import { ChatDateSectionHeader } from '../../components/chat/ChatDateSectionHeader';
 import { ChatDetailHeader } from '../../components/chat/ChatDetailHeader';
+import { ChatMessageBubble } from '../../components/chat/ChatMessageBubble';
+import { ChatMessageSwipeRow } from '../../components/chat/ChatMessageSwipeRow';
 import { ChatMessagesSkeleton } from '../../components/chat/ChatMessagesSkeleton';
 import {
-  ChatMessageAttachments,
   ChatPendingAttachment,
   ChatPendingAttachments,
 } from '../../components/chat/ChatPendingAttachments';
@@ -66,8 +68,12 @@ import {
 import {
   CHAT_MESSAGES_PAGE_SIZE,
   ChatMessage,
+  ChatPeerPresence,
+  deleteChatMessage,
+  editChatMessage,
   fetchChatMessagesPage,
   fetchChatPeerMeta,
+  fetchChatPeerPresence,
   markChatRead,
   sendChatMessage,
 } from '../../services/chatService';
@@ -75,7 +81,14 @@ import {
   connectChatSocket,
   joinChatRoom,
   subscribeToChatMessages,
+  subscribeToChatMessageUpdates,
+  subscribeToChatReadReceipts,
 } from '../../services/chatSocketService';
+import {
+  ChatMessageSection,
+  formatChatLastSeen,
+  groupChatMessagesByDate,
+} from '../../utils/chatMessageUi';
 import { RootState } from '../../redux/store';
 
 type RouteParams = {
@@ -157,7 +170,13 @@ const ChatScreen: React.FC = () => {
     ChatPendingAttachment[]
   >([]);
   const [keyboardLift, setKeyboardLift] = useState(0);
-  const listRef = useRef<FlatList>(null);
+  const listRef = useRef<SectionList<ChatMessage, ChatMessageSection>>(null);
+  const messageSections = useMemo(
+    () => groupChatMessagesByDate(messages),
+    [messages],
+  );
+  const messageSectionsRef = useRef(messageSections);
+  messageSectionsRef.current = messageSections;
   const attachmentSheetRef = useRef<ActionSheetRef>(null);
   const skipScrollAnimationOnce = useRef(true);
   const messagesPageRef = useRef(1);
@@ -165,10 +184,46 @@ const ChatScreen: React.FC = () => {
   const stickToBottomRef = useRef(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(
+    null,
+  );
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(
+    null,
+  );
+  const [presenceLabel, setPresenceLabel] = useState<string | null>(null);
 
-  const scrollToLatest = useCallback((animated: boolean) => {
+  const scrollToLatest = useCallback((animated: boolean, force = false) => {
+    if (!force && !stickToBottomRef.current) {
+      return;
+    }
     requestAnimationFrame(() => {
-      listRef.current?.scrollToEnd({ animated });
+      const list = listRef.current;
+      if (!list) {
+        return;
+      }
+
+      const scrollResponder = list.getScrollResponder?.();
+      if (
+        scrollResponder &&
+        typeof scrollResponder.scrollToEnd === 'function'
+      ) {
+        scrollResponder.scrollToEnd({ animated });
+        return;
+      }
+
+      const sections = messageSectionsRef.current;
+      if (!sections.length) {
+        return;
+      }
+      const sectionIndex = sections.length - 1;
+      const itemIndex = Math.max(sections[sectionIndex].data.length - 1, 0);
+      list.scrollToLocation({
+        sectionIndex,
+        itemIndex,
+        animated,
+        viewPosition: 1,
+      });
     });
   }, []);
 
@@ -202,7 +257,9 @@ const ChatScreen: React.FC = () => {
       if (manualKeyboardLift) {
         setKeyboardLift(computeKeyboardLift(event));
       }
-      scrollToLatest(true);
+      if (stickToBottomRef.current) {
+        scrollToLatest(true);
+      }
     };
     const onHide = () => {
       if (manualKeyboardLift) {
@@ -218,6 +275,20 @@ const ChatScreen: React.FC = () => {
       hideSub.remove();
     };
   }, [scrollToLatest, manualKeyboardLift]);
+
+  const mergeMessageUpdate = useCallback((message: ChatMessage) => {
+    setMessages(prev =>
+      prev.some(m => m.id === message.id)
+        ? prev.map(m => (m.id === message.id ? { ...m, ...message } : m))
+        : [...prev, message],
+    );
+  }, []);
+
+  const jumpToLatestMessages = useCallback(() => {
+    setNewMessagesCount(0);
+    stickToBottomRef.current = true;
+    scrollToLatest(true, true);
+  }, [scrollToLatest]);
 
   const appendMessage = useCallback(
     (message: ChatMessage) => {
@@ -237,8 +308,13 @@ const ChatScreen: React.FC = () => {
             : prev;
         return [...withoutMyPending, message];
       });
-      stickToBottomRef.current = true;
-      requestAnimationFrame(() => scrollToLatest(true));
+
+      const isIncoming = message.senderId !== currentUserId;
+      if (stickToBottomRef.current) {
+        requestAnimationFrame(() => scrollToLatest(true, true));
+      } else if (isIncoming) {
+        setNewMessagesCount(c => c + 1);
+      }
     },
     [currentUserId, scrollToLatest],
   );
@@ -297,7 +373,11 @@ const ChatScreen: React.FC = () => {
         event.nativeEvent;
       const distanceFromBottom =
         contentSize.height - layoutMeasurement.height - contentOffset.y;
-      stickToBottomRef.current = distanceFromBottom < getScaleSize(96);
+      const atBottom = distanceFromBottom < getScaleSize(96);
+      stickToBottomRef.current = atBottom;
+      if (atBottom) {
+        setNewMessagesCount(0);
+      }
 
       if (
         contentOffset.y <= getScaleSize(48) &&
@@ -310,8 +390,46 @@ const ChatScreen: React.FC = () => {
     [hasMoreOlder, loadOlderMessages],
   );
 
+  const applyPeerPresence = useCallback(
+    (presence: ChatPeerPresence) => {
+      if (presence.isOnline) {
+        setPresenceLabel(t(STRING.chatOnline));
+      } else if (presence.lastSeenAt) {
+        setPresenceLabel(formatChatLastSeen(presence.lastSeenAt));
+      } else {
+        setPresenceLabel(t(STRING.chatOffline));
+      }
+    },
+    [t],
+  );
+
+  const refreshPresence = useCallback(async () => {
+    const conversationId = resolveConversationId();
+    if (!conversationId) {
+      return;
+    }
+    const presence = await fetchChatPeerPresence(conversationId);
+    if (presence) {
+      applyPeerPresence(presence);
+    }
+  }, [applyPeerPresence]);
+
+  useEffect(() => {
+    refreshPresence();
+    const timer = setInterval(refreshPresence, 30000);
+    return () => clearInterval(timer);
+  }, [refreshPresence]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshPresence();
+    }, [refreshPresence]),
+  );
+
   useEffect(() => {
     let unsubscribe = () => {};
+    let unsubscribeUpdates = () => {};
+    let unsubscribeRead = () => {};
     let mounted = true;
 
     const init = async () => {
@@ -353,12 +471,17 @@ const ChatScreen: React.FC = () => {
         }
         if (conversationIdRef.current) {
           setActiveChatConversationId(conversationIdRef.current);
+          refreshPresence();
         }
         if (peerMeta?.name) {
           setPeerName(peerMeta.name);
+        } else if (routePeerName) {
+          setPeerName(routePeerName);
         }
         if (peerMeta?.profileImg) {
           setPeerProfileImg(peerMeta.profileImg);
+        } else if (routePeerImg) {
+          setPeerProfileImg(routePeerImg);
         }
       } catch {
         if (mounted) {
@@ -395,6 +518,42 @@ const ChatScreen: React.FC = () => {
             markChatRead(serviceRequestId || '', activeConversationId);
           }
         });
+        unsubscribeUpdates = subscribeToChatMessageUpdates(updated => {
+          const activeConversationId = conversationIdRef.current;
+          if (
+            activeConversationId &&
+            updated.conversationId !== activeConversationId
+          ) {
+            return;
+          }
+          mergeMessageUpdate(updated);
+        });
+        unsubscribeRead = subscribeToChatReadReceipts(receipt => {
+          const activeConversationId = conversationIdRef.current;
+          if (
+            activeConversationId &&
+            receipt.conversationId !== activeConversationId
+          ) {
+            return;
+          }
+          if (receipt.readerId === currentUserId) {
+            return;
+          }
+          setMessages(prev => {
+            let changed = false;
+            const next = prev.map(m => {
+              if (
+                m.senderId === currentUserId &&
+                m.deliveryStatus !== 'read'
+              ) {
+                changed = true;
+                return { ...m, deliveryStatus: 'read' };
+              }
+              return m;
+            });
+            return changed ? next : prev;
+          });
+        });
       } catch {
         // Realtime setup is best-effort; messages already loaded via REST.
       }
@@ -405,8 +564,17 @@ const ChatScreen: React.FC = () => {
     return () => {
       mounted = false;
       unsubscribe();
+      unsubscribeUpdates();
+      unsubscribeRead();
     };
-  }, [serviceRequestId, routeConversationId, appendMessage, currentUserId]);
+  }, [
+    serviceRequestId,
+    routeConversationId,
+    appendMessage,
+    mergeMessageUpdate,
+    currentUserId,
+    refreshPresence,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -437,7 +605,8 @@ const ChatScreen: React.FC = () => {
       return;
     }
     skipScrollAnimationOnce.current = false;
-    scrollToLatest(false);
+    stickToBottomRef.current = true;
+    scrollToLatest(false, true);
   }, [loading, messages.length, scrollToLatest]);
 
   const canSend =
@@ -503,7 +672,10 @@ const ChatScreen: React.FC = () => {
             if (handleImagePickerPermissionError(res, 'camera')) {
               return;
             }
-            SHOW_TOAST(res.errorMessage || 'Camera error', 'error');
+            SHOW_TOAST(
+              res.errorMessage || t(STRING.chatCameraError),
+              'error',
+            );
             return;
           }
           const asset = res.assets?.[0];
@@ -547,7 +719,10 @@ const ChatScreen: React.FC = () => {
             if (handleImagePickerPermissionError(res, 'gallery')) {
               return;
             }
-            SHOW_TOAST(res.errorMessage || 'Gallery error', 'error');
+            SHOW_TOAST(
+              res.errorMessage || t(STRING.chatGalleryError),
+              'error',
+            );
             return;
           }
           addPendingFiles(
@@ -602,7 +777,7 @@ const ChatScreen: React.FC = () => {
         const { attachment, messageImages, imageIndex = 0 } = context;
         const absoluteUrl = getChatAttachmentAbsoluteUrl(attachment);
         if (!absoluteUrl?.trim()) {
-          SHOW_TOAST('Unable to open file', 'error');
+          SHOW_TOAST(t(STRING.chatUnableOpenFile), 'error');
           return;
         }
         if (isChatAttachmentDocument(attachment)) {
@@ -611,8 +786,7 @@ const ChatScreen: React.FC = () => {
               pdfUrl: absoluteUrl,
               title:
                 getChatAttachmentDisplayName(attachment) ||
-                t(STRING.chatAddAttachment) ||
-                'Document',
+                t(STRING.chatDefaultDocument),
             });
           });
           return;
@@ -631,10 +805,71 @@ const ChatScreen: React.FC = () => {
           });
         });
       } catch {
-        SHOW_TOAST('Unable to open file', 'error');
+        SHOW_TOAST(t(STRING.chatUnableOpenFile), 'error');
       }
     },
     [t],
+  );
+
+  const handleSwipeReply = useCallback((item: ChatMessage) => {
+    if (item.isDeleted || item.sendStatus === 'sending') {
+      return;
+    }
+    setReplyToMessage(item);
+    setEditingMessageId(null);
+  }, []);
+
+  const handleMessageLongPress = useCallback(
+    (item: ChatMessage) => {
+      if (item.sendStatus === 'sending' || item.isDeleted) {
+        return;
+      }
+      const isMine = item.senderId === currentUserId;
+      const buttons: Array<{
+        text: string;
+        onPress?: () => void;
+        style?: 'default' | 'cancel' | 'destructive';
+      }> = [
+        {
+          text: t(STRING.chatReply),
+          onPress: () => setReplyToMessage(item),
+        },
+      ];
+      if (isMine && item.body?.trim()) {
+        buttons.push({
+          text: t(STRING.chatEdit),
+          onPress: () => {
+            setEditingMessageId(item.id);
+            setDraft(item.body);
+            setReplyToMessage(null);
+          },
+        });
+      }
+      if (isMine) {
+        buttons.push({
+          text: t(STRING.chatDelete),
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(t(STRING.chatDelete), t(STRING.chatDeleteConfirm), [
+              { text: t(STRING.cancel), style: 'cancel' },
+              {
+                text: t(STRING.chatDelete),
+                style: 'destructive',
+                onPress: async () => {
+                  const updated = await deleteChatMessage(item.id);
+                  if (updated) {
+                    mergeMessageUpdate(updated);
+                  }
+                },
+              },
+            ]);
+          },
+        });
+      }
+      buttons.push({ text: t(STRING.cancel), style: 'cancel' });
+      Alert.alert('', '', buttons);
+    },
+    [currentUserId, mergeMessageUpdate, t],
   );
 
   const handleSend = async () => {
@@ -648,11 +883,26 @@ const ChatScreen: React.FC = () => {
       return;
     }
 
+    if (editingMessageId) {
+      if (!text) {
+        return;
+      }
+      setSending(true);
+      const updated = await editChatMessage(editingMessageId, text);
+      if (updated) {
+        mergeMessageUpdate(updated);
+      }
+      setDraft('');
+      setEditingMessageId(null);
+      setSending(false);
+      return;
+    }
+
     const attachmentsSnapshot = [...pendingAttachments];
     const localId = `local-${Date.now()}`;
     const optimisticAttachments = attachmentsSnapshot.map(item => ({
       url: item.uri,
-      fileName: item.name || 'File',
+      fileName: item.name || t(STRING.chatDefaultFileName),
       mimeType: item.type || undefined,
       kind: (item.isImage ? 'image' : 'file') as 'image' | 'file',
     }));
@@ -676,10 +926,13 @@ const ChatScreen: React.FC = () => {
       sendStatus: 'sending',
     };
 
+    const replyId = replyToMessage?.id;
+
     setDraft('');
     setPendingAttachments([]);
+    setReplyToMessage(null);
     setMessages(prev => [...prev, optimistic]);
-    scrollToLatest(true);
+    jumpToLatestMessages();
     setSending(true);
     Keyboard.dismiss();
 
@@ -693,6 +946,7 @@ const ChatScreen: React.FC = () => {
         serviceRequestId || '',
         {
           body: text,
+          replyToMessageId: replyId,
           attachments: uploaded.map(file => ({
             url: file.url,
             fileName: file.fileName,
@@ -730,24 +984,33 @@ const ChatScreen: React.FC = () => {
         <ChatDetailHeader
           peerName={peerName || t(STRING.chatNow)}
           peerProfileImg={peerProfileImg}
+          presenceLabel={presenceLabel}
         />
 
           {loading ? (
             <ChatMessagesSkeleton />
           ) : (
-            <FlatList
+            <SectionList
               ref={listRef}
               style={styles.list}
-              data={messages}
+              sections={messageSections}
               keyExtractor={item => item.id}
               contentContainerStyle={styles.listContent}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
+              nestedScrollEnabled
+              stickySectionHeadersEnabled={false}
               maintainVisibleContentPosition={
-                messages.length > 0
+                loadingOlder && messages.length > 0
                   ? { minIndexForVisible: 1 }
                   : undefined
               }
+              onScrollBeginDrag={() => {
+                stickToBottomRef.current = false;
+              }}
+              onMomentumScrollBegin={() => {
+                stickToBottomRef.current = false;
+              }}
               onScroll={handleMessagesScroll}
               scrollEventThrottle={16}
               ListHeaderComponent={
@@ -757,59 +1020,26 @@ const ChatScreen: React.FC = () => {
                   </View>
                 ) : null
               }
-              onContentSizeChange={() => {
-                if (
-                  stickToBottomRef.current &&
-                  !loading &&
-                  messages.length > 0
-                ) {
-                  scrollToLatest(false);
-                }
-              }}
+              renderSectionHeader={({ section }) => (
+                <ChatDateSectionHeader title={section.title} />
+              )}
               renderItem={({ item }) => {
                 const isMine = item.senderId === currentUserId;
-                const attachments = item.attachments || [];
-                const isSending = isMine && item.sendStatus === 'sending';
+                const swipeDisabled =
+                  !!item.isDeleted || item.sendStatus === 'sending';
                 return (
-                  <View
-                    style={[
-                      styles.messageWrap,
-                      isMine ? styles.messageWrapMine : styles.messageWrapOther,
-                    ]}
+                  <ChatMessageSwipeRow
+                    isMine={isMine}
+                    disabled={swipeDisabled}
+                    onReply={() => handleSwipeReply(item)}
                   >
-                    <View
-                      style={[
-                        styles.bubble,
-                        isMine ? styles.bubbleMine : styles.bubbleOther,
-                      ]}
-                    >
-                      {attachments.length > 0 && (
-                        <ChatMessageAttachments
-                          attachments={attachments}
-                          isMine={isMine}
-                          onOpen={
-                            isSending ? () => {} : openChatAttachment
-                          }
-                        />
-                      )}
-                      {!!item.body?.trim() && (
-                        <AppText
-                          style={styles.messageText}
-                          color={isMine ? COLORS.white : COLORS.black}
-                        >
-                          {item.body}
-                        </AppText>
-                      )}
-                    </View>
-                    {isSending ? (
-                      <View style={styles.sendingIndicatorSide}>
-                        <ActivityIndicator
-                          size="small"
-                          color={COLORS._6F767E}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
+                    <ChatMessageBubble
+                      item={item}
+                      isMine={isMine}
+                      onOpenAttachment={openChatAttachment}
+                      onLongPress={handleMessageLongPress}
+                    />
+                  </ChatMessageSwipeRow>
                 );
               }}
               ListEmptyComponent={
@@ -822,12 +1052,102 @@ const ChatScreen: React.FC = () => {
             />
           )}
 
+          {newMessagesCount > 0 ? (
+            <TouchableOpacity
+              style={styles.newMessagesPill}
+              activeOpacity={0.88}
+              onPress={jumpToLatestMessages}
+            >
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.white}
+              >
+                {t(STRING.chatNewMessages)}
+                {newMessagesCount > 1 ? ` (${newMessagesCount})` : ''}
+              </AppText>
+            </TouchableOpacity>
+          ) : null}
+
           <View
             style={[
               styles.composerRow,
               { paddingBottom: composerPaddingBottom },
             ]}
           >
+            {replyToMessage ? (
+              <View style={styles.replyBanner}>
+                <View style={styles.replyBannerText}>
+                  <AppText
+                    size={getScaleSize(11)}
+                    font={FONTS.Inter.SemiBold}
+                    color={COLORS.primary}
+                  >
+                    {t(STRING.chatReplyingTo)}
+                  </AppText>
+                  <AppText
+                    size={getScaleSize(12)}
+                    font={FONTS.Inter.Regular}
+                    color={COLORS._6F767E}
+                    numberOfLines={2}
+                  >
+                    {replyToMessage.body?.trim() ||
+                      t(STRING.chatSharedAttachment)}
+                  </AppText>
+                </View>
+                <TouchableOpacity
+                  style={styles.bannerDismissBtn}
+                  hitSlop={{
+                    top: getScaleSize(10),
+                    bottom: getScaleSize(10),
+                    left: getScaleSize(10),
+                    right: getScaleSize(10),
+                  }}
+                  onPress={() => setReplyToMessage(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(STRING.cancel)}
+                >
+                  <AppText
+                    size={getScaleSize(20)}
+                    color={COLORS._6F767E}
+                    style={styles.bannerDismissIcon}
+                  >
+                    ×
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+            {editingMessageId ? (
+              <View style={styles.replyBanner}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS.primary}
+                >
+                  {t(STRING.chatEdit)}
+                </AppText>
+                <TouchableOpacity
+                  style={styles.bannerDismissBtn}
+                  hitSlop={{
+                    top: getScaleSize(10),
+                    bottom: getScaleSize(10),
+                    left: getScaleSize(10),
+                    right: getScaleSize(10),
+                  }}
+                  onPress={() => setEditingMessageId(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(STRING.cancel)}
+                >
+                  <AppText
+                    size={getScaleSize(20)}
+                    color={COLORS._6F767E}
+                    style={styles.bannerDismissIcon}
+                  >
+                    ×
+                  </AppText>
+                </TouchableOpacity>
+              </View>
+            ) : null}
             <ChatPendingAttachments
               items={pendingAttachments}
               onRemove={removePendingAttachment}
@@ -858,7 +1178,7 @@ const ChatScreen: React.FC = () => {
                 disabled={!canSend}
                 activeOpacity={0.85}
                 accessibilityRole="button"
-                accessibilityLabel="Send message"
+                accessibilityLabel={t(STRING.chatSendMessage)}
               >
                 <Image source={IMAGES.chat_send} style={styles.sendIcon} />
               </TouchableOpacity>
@@ -884,7 +1204,7 @@ const ChatScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeRoot: { flex: 1, backgroundColor: COLORS.white },
   safe: { flex: 1, backgroundColor: COLORS.white },
-  flex: { flex: 1 },
+  flex: { flex: 1, position: 'relative' },
   list: {
     flex: 1,
     backgroundColor: COLORS._F9FAFB,
@@ -892,7 +1212,6 @@ const styles = StyleSheet.create({
   listContent: {
     padding: getScaleSize(16),
     flexGrow: 1,
-    justifyContent: 'flex-end',
   },
   center: {
     flex: 1,
@@ -946,6 +1265,43 @@ const styles = StyleSheet.create({
   loadOlderWrap: {
     paddingVertical: getScaleSize(12),
     alignItems: 'center',
+  },
+  newMessagesPill: {
+    position: 'absolute',
+    alignSelf: 'center',
+    bottom: getScaleSize(96),
+    zIndex: 8,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(20),
+    elevation: 4,
+  },
+  replyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS._F9FAFB,
+    borderRadius: getScaleSize(8),
+    padding: getScaleSize(10),
+    marginBottom: getScaleSize(8),
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
+  },
+  replyBannerText: {
+    flex: 1,
+    paddingRight: getScaleSize(8),
+  },
+  bannerDismissBtn: {
+    minWidth: getScaleSize(36),
+    minHeight: getScaleSize(36),
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    paddingHorizontal: getScaleSize(4),
+  },
+  bannerDismissIcon: {
+    lineHeight: getScaleSize(22),
   },
   composerRow: {
     paddingHorizontal: getScaleSize(16),

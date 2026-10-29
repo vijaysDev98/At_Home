@@ -465,9 +465,14 @@ export const ProviderPreRequestDetailScreen: React.FC<
     }
     const access = await getChatAccess(String(srId));
     if (access?.canChat) {
+      const peerLabel = doctorName
+        ? `Dr. ${doctorName.replace(/^Dr\.?\s*/i, '')}`
+        : undefined;
       NavigationService.navigate(SCREENS.CHAT, {
         serviceRequestId: String(srId),
         requestIdLabel: displayRequestId || undefined,
+        peerName: peerLabel,
+        peerProfileImg: doctor?.profileImg || null,
       });
       return;
     }

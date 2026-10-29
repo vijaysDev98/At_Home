@@ -88,3 +88,51 @@ export const subscribeToChatMessages = (
     activeSocket?.off(CHAT_SOCKET_EVENTS.MESSAGE, listener);
   };
 };
+
+export type ChatReadReceiptPayload = {
+  conversationId: string;
+  readAt: string;
+  readerId: string;
+};
+
+export const subscribeToChatMessageUpdates = (
+  handler: (message: ChatMessage) => void,
+): (() => void) => {
+  let activeSocket: Socket | null = null;
+  let cancelled = false;
+  const listener = (payload: ChatMessage) => handler(payload);
+
+  connectChatSocket().then(s => {
+    if (cancelled || !s) {
+      return;
+    }
+    activeSocket = s;
+    s.on(CHAT_SOCKET_EVENTS.MESSAGE_UPDATED, listener);
+  });
+
+  return () => {
+    cancelled = true;
+    activeSocket?.off(CHAT_SOCKET_EVENTS.MESSAGE_UPDATED, listener);
+  };
+};
+
+export const subscribeToChatReadReceipts = (
+  handler: (payload: ChatReadReceiptPayload) => void,
+): (() => void) => {
+  let activeSocket: Socket | null = null;
+  let cancelled = false;
+  const listener = (payload: ChatReadReceiptPayload) => handler(payload);
+
+  connectChatSocket().then(s => {
+    if (cancelled || !s) {
+      return;
+    }
+    activeSocket = s;
+    s.on(CHAT_SOCKET_EVENTS.READ_RECEIPT, listener);
+  });
+
+  return () => {
+    cancelled = true;
+    activeSocket?.off(CHAT_SOCKET_EVENTS.READ_RECEIPT, listener);
+  };
+};

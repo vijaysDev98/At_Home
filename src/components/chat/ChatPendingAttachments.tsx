@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Image,
   ScrollView,
@@ -19,6 +20,7 @@ import {
 } from '../../utils/chatAttachmentPreview';
 import { isPdfDocument } from '../../utils/documentPickerHelper';
 import { AppText } from '..';
+import { STRING } from '../../constant';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 
@@ -36,6 +38,8 @@ type Props = {
 };
 
 export const ChatPendingAttachments: React.FC<Props> = ({ items, onRemove }) => {
+  const { t } = useTranslation();
+
   if (items.length === 0) {
     return null;
   }
@@ -70,7 +74,7 @@ export const ChatPendingAttachments: React.FC<Props> = ({ items, onRemove }) => 
                 numberOfLines={2}
                 style={styles.fileName}
               >
-                {item.name || 'File'}
+                {item.name || t(STRING.chatDefaultFileName)}
               </AppText>
             </View>
           )}
@@ -79,7 +83,7 @@ export const ChatPendingAttachments: React.FC<Props> = ({ items, onRemove }) => 
             onPress={() => onRemove(item.id)}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Remove attachment"
+            accessibilityLabel={t(STRING.chatRemoveAttachment)}
           >
             <Image
               source={IMAGES.crossIcon}

@@ -68,7 +68,7 @@ export const formatChatListTime = (date?: string | null): string => {
     return m.format('HH:mm');
   }
   if (m.isSame(moment().subtract(1, 'day'), 'day')) {
-    return lang === 'fr' ? 'Hier' : 'Yesterday';
+    return i18next.t(STRING.chatDateYesterday);
   }
   return m.format('DD MMM');
 };
@@ -97,12 +97,19 @@ export const mergeConversationWithMessage = (
       message.conversationId === activeConversationId) ||
     message.serviceRequestId === getActiveChatServiceRequestId();
 
+  const incrementUnread =
+    !isOwnMessage && !isActiveThread
+      ? (existing.unreadCount ?? (existing.unread ? 1 : 0)) + 1
+      : 0;
+
   const updated: ChatConversationItem = {
     ...existing,
     lastMessageAt: message.createdAt,
     lastMessagePreview: buildMessageListPreview(message),
     lastMessageType: message.messageType,
     unread: isOwnMessage || isActiveThread ? false : true,
+    unreadCount:
+      isOwnMessage || isActiveThread ? 0 : incrementUnread,
   };
 
   const without = list.filter((_, i) => i !== idx);

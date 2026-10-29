@@ -19,6 +19,7 @@ import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
+import { saveChatImageToDevice } from '../../utils/saveChatImage';
 import AppText from '../AppText';
 
 export type ChatImageGalleryState = {
@@ -85,7 +86,7 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
               font={FONTS.Inter.Bold}
               color={COLORS.white}
             >
-              {t(STRING.prescriptionPreview) || 'Preview'}
+              {t(STRING.chatImagePreview)}
             </AppText>
             {uris.length > 1 && (
               <AppText
@@ -94,23 +95,48 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
                 color="rgba(255,255,255,0.75)"
                 style={styles.pageIndicator}
               >
-                {pageIndex + 1} / {uris.length}
+                {t(STRING.chatPreviewPage, {
+                  current: pageIndex + 1,
+                  total: uris.length,
+                })}
               </AppText>
             )}
           </View>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.previewModalCloseBtn}
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close preview"
-          >
-            <Image
-              source={IMAGES.crossIcon}
-              style={styles.previewModalCloseIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.previewModalActionBtn}
+              onPress={() => {
+                const uri = uris[pageIndex];
+                if (uri) {
+                  saveChatImageToDevice(uri);
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.chatSaveImage)}
+            >
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.white}
+              >
+                {t(STRING.chatSaveImage)}
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.previewModalCloseBtn}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.chatClosePreview)}
+            >
+              <Image
+                source={IMAGES.crossIcon}
+                style={styles.previewModalCloseIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <FlatList
@@ -170,6 +196,17 @@ const styles = StyleSheet.create({
   },
   pageIndicator: {
     marginTop: getScaleSize(4),
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+  },
+  previewModalActionBtn: {
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(16),
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   previewModalCloseBtn: {
     width: getScaleSize(36),

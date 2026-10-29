@@ -108,6 +108,7 @@ const ChatListScreen: React.FC = () => {
     );
     const timeLabel = formatChatListTime(item.lastMessageAt);
     const unread = !!item.unread;
+    const unreadCount = item.unreadCount ?? (unread ? 1 : 0);
 
     return (
       <TouchableOpacity
@@ -167,7 +168,19 @@ const ChatListScreen: React.FC = () => {
               {timeLabel}
             </AppText>
           )}
-          {unread ? <View style={styles.unreadDot} /> : null}
+          {unreadCount > 0 ? (
+            <View style={styles.unreadBadge}>
+              <AppText
+                size={getScaleSize(10)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {unreadCount > 99
+                  ? t(STRING.chatUnreadBadgeMax)
+                  : String(unreadCount)}
+              </AppText>
+            </View>
+          ) : null}
         </View>
       </TouchableOpacity>
     );
@@ -176,7 +189,7 @@ const ChatListScreen: React.FC = () => {
   return (
     <AppSafeAreaView style={styles.safe}>
       <View style={styles.headerWrap}>
-        <Header isBack title={t(STRING.chats) || 'Chats'} />
+        <Header isBack title={t(STRING.chats)} />
       </View>
 
       {loading && conversations.length === 0 ? (
@@ -298,11 +311,14 @@ const styles = StyleSheet.create({
   timeText: {
     textAlign: 'right',
   },
-  unreadDot: {
-    width: getScaleSize(8),
-    height: getScaleSize(8),
-    borderRadius: getScaleSize(4),
+  unreadBadge: {
+    minWidth: getScaleSize(20),
+    height: getScaleSize(20),
+    borderRadius: getScaleSize(10),
     backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(5),
   },
   emptyWrap: {
     paddingHorizontal: getScaleSize(24),

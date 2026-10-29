@@ -1,5 +1,6 @@
 import { API } from '../api';
 import { SHOW_TOAST } from '../constant';
+import { ChatDeliveryStatus } from '../constant/chatConstants';
 
 export interface ChatAccess {
   canChat: boolean;
@@ -24,6 +25,21 @@ export interface ChatConversationItem {
   peerProfileImg?: string | null;
   peerRole?: string | null;
   unread?: boolean;
+  unreadCount?: number;
+}
+
+export interface ChatReplyPreview {
+  id: string;
+  senderId: string;
+  body: string;
+  messageType: string;
+  isDeleted?: boolean;
+}
+
+export interface ChatPeerPresence {
+  peerUserId: string;
+  isOnline: boolean;
+  lastSeenAt?: string | null;
 }
 
 export interface ChatMessageAttachment {
@@ -42,6 +58,10 @@ export interface ChatMessage {
   messageType: string;
   attachments?: ChatMessageAttachment[];
   createdAt: string;
+  isDeleted?: boolean;
+  editedAt?: string | null;
+  replyTo?: ChatReplyPreview | null;
+  deliveryStatus?: ChatDeliveryStatus | null;
   /** Client-only: optimistic message still uploading/sending */
   sendStatus?: 'sending' | 'failed';
 }
@@ -49,6 +69,7 @@ export interface ChatMessage {
 export type SendChatMessagePayload = {
   body?: string;
   attachments?: ChatMessageAttachment[];
+  replyToMessageId?: string;
 };
 
 export const fetchChatUnreadCount = async (): Promise<number> => {
@@ -208,7 +229,13 @@ export const sendChatMessage = async (
     const url = conversationId
       ? `${API.API_ROUTES.chatConversations}/${conversationId}/messages`
       : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`;
-    const response: any = await API.Instance.post(url, { body, attachments });
+    const replyToMessageId =
+      typeof payload === 'object' ? payload?.replyToMessageId : undefined;
+    const response: any = await API.Instance.post(url, {
+      body,
+      attachments,
+      replyToMessageId,
+    });
     if (response?.status && response?.data?.data) {
       return response.data.data as ChatMessage;
     }
@@ -231,5 +258,56 @@ export const markChatRead = async (
     await API.Instance.patch(url);
   } catch {
     // non-blocking
+  }
+};
+
+export const fetchChatPeerPresence = async (
+  conversationId: string,
+): Promise<ChatPeerPresence | null> => {
+  try {
+    const response: any = await API.Instance.get(
+      `${API.API_ROUTES.chatConversations}/${conversationId}/presence`,
+    );
+    if (response?.status && response?.data?.data) {
+      return response.data.data as ChatPeerPresence;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const deleteChatMessage = async (
+  messageId: string,
+): Promise<ChatMessage | null> => {
+  try {
+    const response: any = await API.Instance.delete(
+      `chat/messages/${messageId}`,
+    );
+    if (response?.status && response?.data?.data) {
+      return response.data.data as ChatMessage;
+    }
+    return null;
+  } catch (error: any) {
+    SHOW_TOAST(error?.message || 'Failed to delete message', 'error');
+    return null;
+  }
+};
+
+export const editChatMessage = async (
+  messageId: string,
+  body: string,
+): Promise<ChatMessage | null> => {
+  try {
+    const response: any = await API.Instance.patch(`chat/messages/${messageId}`, {
+      body,
+    });
+    if (response?.status && response?.data?.data) {
+      return response.data.data as ChatMessage;
+    }
+    return null;
+  } catch (error: any) {
+    SHOW_TOAST(error?.message || 'Failed to edit message', 'error');
+    return null;
   }
 };

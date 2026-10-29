@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+
+import { STRING } from '../constant';
 import {
   getDisplayFileName,
   isDocumentFile,
@@ -52,5 +55,5 @@ export const getChatAttachmentDisplayName = (
 ): string =>
   getDisplayFileName(
     getChatAttachmentAbsoluteUrl(file),
-    file.fileName || 'Document',
+    file.fileName || i18next.t(STRING.chatDefaultDocument),
   );

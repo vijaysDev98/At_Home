@@ -34,6 +34,7 @@ import { createNotificationChannels } from './src/services/notificationChannels'
 import { COLORS } from './src/utils';
 import { toastConfig } from './src/constant/toastConfig';
 import notifee, { AndroidImportance } from '@notifee/react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DocFormSubmittedModal, NotificationActionOverlay } from './src/components';
 
 const AppContent = () => {
@@ -114,18 +115,20 @@ function App() {
   }, []);
 
   return (
-    <I18nextProvider i18n={i18nLocale}>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <StatusBar
-          translucent={Platform.OS === 'android' ? false : undefined}
-          backgroundColor={COLORS.white}
-          barStyle="dark-content"
-        />
-        <Provider store={store}>
-          <AppContent />
-        </Provider>
-      </SafeAreaProvider>
-    </I18nextProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <I18nextProvider i18n={i18nLocale}>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <StatusBar
+            translucent={Platform.OS === 'android' ? false : undefined}
+            backgroundColor={COLORS.white}
+            barStyle="dark-content"
+          />
+          <Provider store={store}>
+            <AppContent />
+          </Provider>
+        </SafeAreaProvider>
+      </I18nextProvider>
+    </GestureHandlerRootView>
   );
 }
 

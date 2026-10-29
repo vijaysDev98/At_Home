@@ -6,8 +6,10 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import { IMAGES } from '../../assets/images';
+import { STRING } from '../../constant';
 import { COLORS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
 import { getChatAccess } from '../../services/chatService';
@@ -27,6 +29,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
   peerName,
   peerProfileImg,
 }) => {
+  const { t } = useTranslation();
   const [canChat, setCanChat] = useState(false);
 
   useFocusEffect(
@@ -68,7 +71,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
         })
       }
       accessibilityRole="button"
-      accessibilityLabel="Open chat"
+      accessibilityLabel={t(STRING.chatOpenChat)}
       hitSlop={8}
     >
       <View style={styles.iconWrap}>
