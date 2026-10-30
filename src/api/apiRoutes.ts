@@ -4,6 +4,7 @@ const API_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
 // 'http://192.168.10.103:3000/';
 
 export const IMAGE_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
+
   // 'http://192.168.10.103:3000/';
 // 'https://at-home-api-prod.prometteur.in/';
 
