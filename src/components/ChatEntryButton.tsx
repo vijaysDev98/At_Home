@@ -18,6 +18,7 @@ export const ChatEntryButton: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const [canChat, setCanChat] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
   useFocusEffect(
@@ -32,6 +33,7 @@ export const ChatEntryButton: React.FC<Props> = ({
         const access = await getChatAccess(serviceRequestId);
         if (active) {
           setCanChat(!!access?.canChat);
+          setConversationId(access?.conversationId ?? null);
           setChecking(false);
         }
       };
@@ -42,7 +44,7 @@ export const ChatEntryButton: React.FC<Props> = ({
     }, [serviceRequestId]),
   );
 
-  if (!serviceRequestId || !canChat) {
+  if (!serviceRequestId || !canChat || !conversationId) {
     return null;
   }
 
@@ -52,8 +54,7 @@ export const ChatEntryButton: React.FC<Props> = ({
       loading={checking}
       onPress={() =>
         NavigationService.navigate(SCREENS.CHAT, {
-          serviceRequestId,
-          requestIdLabel,
+          conversationId,
         })
       }
     />

@@ -18,19 +18,24 @@ import {
   ChatMessageAttachments,
   ChatAttachmentOpenContext,
 } from './ChatPendingAttachments';
+import { ChatReplyPreviewContent } from './ChatReplyPreviewContent';
 
 type Props = {
   item: ChatMessage;
   isMine: boolean;
+  highlighted?: boolean;
   onOpenAttachment: (ctx: ChatAttachmentOpenContext) => void;
   onLongPress: (item: ChatMessage) => void;
+  onPressReplyTarget?: (messageId: string) => void;
 };
 
 export const ChatMessageBubble: React.FC<Props> = ({
   item,
   isMine,
+  highlighted = false,
   onOpenAttachment,
   onLongPress,
+  onPressReplyTarget,
 }) => {
   const { t } = useTranslation();
   const isSending = isMine && item.sendStatus === 'sending';
@@ -46,7 +51,13 @@ export const ChatMessageBubble: React.FC<Props> = ({
           isMine ? styles.messageWrapMine : styles.messageWrapOther,
         ]}
       >
-        <View style={[styles.bubble, styles.bubbleDeleted]}>
+        <View
+          style={[
+            styles.bubble,
+            styles.bubbleDeleted,
+            highlighted && styles.bubbleHighlighted,
+          ]}
+        >
           <AppText size={getScaleSize(13)} font={FONTS.Inter.Regular} color={COLORS._6F767E}>
             {t(STRING.chatMessageDeleted)}
           </AppText>
@@ -78,32 +89,28 @@ export const ChatMessageBubble: React.FC<Props> = ({
         style={[
           styles.bubble,
           isMine ? styles.bubbleMine : styles.bubbleOther,
+          highlighted && styles.bubbleHighlighted,
         ]}
       >
         {item.replyTo ? (
-          <View style={[styles.replyQuote, isMine && styles.replyQuoteMine]}>
-            <AppText
-              size={getScaleSize(11)}
-              font={FONTS.Inter.SemiBold}
-              color={isMine ? COLORS.white : COLORS.primary}
-              numberOfLines={1}
-            >
-              {t(STRING.chatReplyingTo)}
-            </AppText>
-            <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Regular}
-              color={isMine ? 'rgba(255,255,255,0.85)' : COLORS._6F767E}
-              numberOfLines={2}
-            >
-              {item.replyTo.isDeleted
-                ? t(STRING.chatMessageDeleted)
-                : item.replyTo.body?.trim() ||
-                  (item.replyTo.messageType === 'attachment'
-                    ? t(STRING.chatSharedAttachment)
-                    : '')}
-            </AppText>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.82}
+            disabled={!onPressReplyTarget || !item.replyTo.id}
+            onPress={() => {
+              if (item.replyTo?.id) {
+                onPressReplyTarget?.(item.replyTo.id);
+              }
+            }}
+            style={[styles.replyQuote, isMine && styles.replyQuoteMine]}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.chatOpenOriginalMessage)}
+          >
+            <ChatReplyPreviewContent
+              reply={item.replyTo}
+              variant="bubble"
+              isMine={isMine}
+            />
+          </TouchableOpacity>
         ) : null}
 
         {attachments.length > 0 && (
@@ -203,6 +210,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS._E5E7EB,
     alignSelf: 'flex-start',
     flexShrink: 1,
+  },
+  bubbleHighlighted: {
+    borderWidth: 2,
+    borderColor: COLORS._F59E0B,
   },
   bubbleDeleted: {
     backgroundColor: COLORS._F3F4F6,

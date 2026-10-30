@@ -588,23 +588,18 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     }
 
     const access = await getChatAccess(String(serviceRequestId));
-    if (access?.canChat) {
+    if (access?.canChat && access.conversationId) {
       const providerName =
         assignedProvider?.fullName ||
         assignedProvider?.providerName ||
         `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim() ||
         undefined;
-      const requestIdLabel =
-        editRequest?.requestId &&
-        !/^[a-f0-9]{24}$/i.test(String(editRequest.requestId))
-          ? String(editRequest.requestId)
-          : undefined;
 
       NavigationService.navigate(SCREENS.CHAT, {
-        serviceRequestId: String(serviceRequestId),
-        requestIdLabel,
+        conversationId: access.conversationId,
         peerName: providerName,
         peerProfileImg: assignedProvider?.profileImg || null,
+        peerPhone: assignedProvider?.phoneNumber || undefined,
       });
       return;
     }

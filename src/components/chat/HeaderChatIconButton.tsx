@@ -31,6 +31,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const [canChat, setCanChat] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -45,6 +46,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
         const access = await getChatAccess(String(serviceRequestId));
         if (active) {
           setCanChat(!!access?.canChat);
+          setConversationId(access?.conversationId ?? null);
         }
       };
       run();
@@ -54,7 +56,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
     }, [serviceRequestId]),
   );
 
-  if (!serviceRequestId || !canChat) {
+  if (!serviceRequestId || !canChat || !conversationId) {
     return null;
   }
 
@@ -64,8 +66,7 @@ export const HeaderChatIconButton: React.FC<Props> = ({
       style={styles.btn}
       onPress={() =>
         NavigationService.navigate(SCREENS.CHAT, {
-          serviceRequestId: String(serviceRequestId),
-          requestIdLabel,
+          conversationId,
           peerName: peerName || undefined,
           peerProfileImg: peerProfileImg || undefined,
         })

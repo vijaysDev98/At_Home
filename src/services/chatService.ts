@@ -4,14 +4,12 @@ import { ChatDeliveryStatus } from '../constant/chatConstants';
 
 export interface ChatAccess {
   canChat: boolean;
-  serviceRequestId: string;
-  requestId?: string;
   conversationId?: string | null;
 }
 
 export interface ChatConversationItem {
   id: string;
-  serviceRequestId: string | null;
+  serviceRequestId?: string | null;
   doctorId: string;
   providerId: string;
   status: string;
@@ -24,6 +22,7 @@ export interface ChatConversationItem {
   peerName?: string | null;
   peerProfileImg?: string | null;
   peerRole?: string | null;
+  peerPhone?: string | null;
   unread?: boolean;
   unreadCount?: number;
 }
@@ -34,12 +33,14 @@ export interface ChatReplyPreview {
   body: string;
   messageType: string;
   isDeleted?: boolean;
+  attachments?: ChatMessageAttachment[];
 }
 
 export interface ChatPeerPresence {
   peerUserId: string;
   isOnline: boolean;
   lastSeenAt?: string | null;
+  peerPhone?: string | null;
 }
 
 export interface ChatMessageAttachment {
@@ -52,7 +53,7 @@ export interface ChatMessageAttachment {
 export interface ChatMessage {
   id: string;
   conversationId: string;
-  serviceRequestId: string;
+  serviceRequestId?: string | null;
   senderId: string;
   body: string;
   messageType: string;
@@ -128,6 +129,28 @@ export const fetchChatPeerMeta = async (
   }
 };
 
+export type OpenProviderChatResult = {
+  conversationId: string;
+  canChat?: boolean;
+  peer?: ChatPeerMeta;
+};
+
+export const openProviderChat = async (
+  providerId: string,
+): Promise<OpenProviderChatResult | null> => {
+  try {
+    const response: any = await API.Instance.post(
+      `${API.API_ROUTES.chatProviders}/${providerId}/conversation`,
+    );
+    if (response?.status && response?.data?.data?.conversationId) {
+      return response.data.data as OpenProviderChatResult;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export const getChatAccess = async (
   serviceRequestId: string,
 ): Promise<ChatAccess | null> => {
@@ -142,6 +165,14 @@ export const getChatAccess = async (
   } catch {
     return null;
   }
+};
+
+/** Resolve thread id when entering chat from a service request (lookup only). */
+export const resolveConversationIdFromServiceRequest = async (
+  serviceRequestId: string,
+): Promise<string | null> => {
+  const access = await getChatAccess(serviceRequestId);
+  return access?.conversationId ?? null;
 };
 
 export const CHAT_MESSAGES_PAGE_SIZE = 25;
@@ -174,15 +205,15 @@ const emptyMessagesPage = (page = 1, size = CHAT_MESSAGES_PAGE_SIZE): ChatMessag
 });
 
 export const fetchChatMessagesPage = async (
-  serviceRequestId: string,
+  conversationId: string,
   page = 1,
   size = CHAT_MESSAGES_PAGE_SIZE,
-  conversationId?: string | null,
 ): Promise<ChatMessagesPageResult> => {
   try {
-    const url = conversationId
-      ? `${API.API_ROUTES.chatConversations}/${conversationId}/messages`
-      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`;
+    if (!conversationId) {
+      return emptyMessagesPage(page, size);
+    }
+    const url = `${API.API_ROUTES.chatConversations}/${conversationId}/messages`;
     const response: any = await API.Instance.get(url, { params: { page, size } });
     if (response?.status && response?.data?.data?.messages) {
       const data = response.data.data;
@@ -201,18 +232,17 @@ export const fetchChatMessagesPage = async (
 
 /** Latest page first (page 1 = most recent messages). */
 export const fetchChatMessages = async (
-  serviceRequestId: string,
+  conversationId: string,
   page = 1,
   size = CHAT_MESSAGES_PAGE_SIZE,
 ): Promise<ChatMessage[]> => {
-  const result = await fetchChatMessagesPage(serviceRequestId, page, size);
+  const result = await fetchChatMessagesPage(conversationId, page, size);
   return result.messages;
 };
 
 export const sendChatMessage = async (
-  serviceRequestId: string,
+  conversationId: string,
   payload: string | SendChatMessagePayload,
-  conversationId?: string | null,
 ): Promise<ChatMessage | null> => {
   const body =
     typeof payload === 'string'
@@ -226,9 +256,11 @@ export const sendChatMessage = async (
       : undefined;
 
   try {
-    const url = conversationId
-      ? `${API.API_ROUTES.chatConversations}/${conversationId}/messages`
-      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/messages`;
+    if (!conversationId) {
+      SHOW_TOAST('Failed to send message', 'error');
+      return null;
+    }
+    const url = `${API.API_ROUTES.chatConversations}/${conversationId}/messages`;
     const replyToMessageId =
       typeof payload === 'object' ? payload?.replyToMessageId : undefined;
     const response: any = await API.Instance.post(url, {
@@ -247,14 +279,12 @@ export const sendChatMessage = async (
   }
 };
 
-export const markChatRead = async (
-  serviceRequestId: string,
-  conversationId?: string | null,
-): Promise<void> => {
+export const markChatRead = async (conversationId: string): Promise<void> => {
   try {
-    const url = conversationId
-      ? `${API.API_ROUTES.chatConversations}/${conversationId}/read`
-      : `${API.API_ROUTES.chatAccess}/${serviceRequestId}/read`;
+    if (!conversationId) {
+      return;
+    }
+    const url = `${API.API_ROUTES.chatConversations}/${conversationId}/read`;
     await API.Instance.patch(url);
   } catch {
     // non-blocking

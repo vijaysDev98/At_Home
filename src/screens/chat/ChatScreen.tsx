@@ -5,6 +5,7 @@ import {
   Dimensions,
   Image,
   Keyboard,
+  Linking,
   KeyboardEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -31,7 +32,9 @@ import {
 } from '../../components/chat/ChatAttachmentImagePreviewModal';
 import { ChatDateSectionHeader } from '../../components/chat/ChatDateSectionHeader';
 import { ChatDetailHeader } from '../../components/chat/ChatDetailHeader';
+import { ChatMessageActionModal } from '../../components/chat/ChatMessageActionModal';
 import { ChatMessageBubble } from '../../components/chat/ChatMessageBubble';
+import { ChatReplyPreviewContent } from '../../components/chat/ChatReplyPreviewContent';
 import { ChatMessageSwipeRow } from '../../components/chat/ChatMessageSwipeRow';
 import { ChatMessagesSkeleton } from '../../components/chat/ChatMessagesSkeleton';
 import {
@@ -51,7 +54,6 @@ import {
 } from '../../utils/chatAttachmentPreview';
 import {
   setActiveChatConversationId,
-  setActiveChatServiceRequestId,
 } from '../../utils/chatActiveSession';
 import { openCamera, openGallery } from '../../utils/simpleImagePicker';
 import { pickPrescriptionDocuments } from '../../utils/documentPickerHelper';
@@ -72,8 +74,8 @@ import {
   deleteChatMessage,
   editChatMessage,
   fetchChatMessagesPage,
-  fetchChatPeerMeta,
   fetchChatPeerPresence,
+  resolveConversationIdFromServiceRequest,
   markChatRead,
   sendChatMessage,
 } from '../../services/chatService';
@@ -86,6 +88,7 @@ import {
 } from '../../services/chatSocketService';
 import {
   ChatMessageSection,
+  findChatMessageInSections,
   formatChatLastSeen,
   groupChatMessagesByDate,
 } from '../../utils/chatMessageUi';
@@ -97,6 +100,7 @@ type RouteParams = {
   requestIdLabel?: string;
   peerName?: string;
   peerProfileImg?: string | null;
+  peerPhone?: string | null;
 };
 
 /** Space from bottom of window to top of keyboard (+ tiny slack, scaled). */
@@ -143,6 +147,7 @@ const ChatScreen: React.FC = () => {
     conversationId: routeConversationId,
     peerName: routePeerName,
     peerProfileImg: routePeerImg,
+    peerPhone: routePeerPhone,
   } = (route.params || {}) as RouteParams;
 
   const conversationIdRef = useRef<string | null>(routeConversationId || null);
@@ -164,6 +169,9 @@ const ChatScreen: React.FC = () => {
   const [peerProfileImg, setPeerProfileImg] = useState<string | null>(
     routePeerImg || null,
   );
+  const [peerPhone, setPeerPhone] = useState<string | null>(
+    routePeerPhone?.trim() || null,
+  );
   const [previewGallery, setPreviewGallery] =
     useState<ChatImageGalleryState>(null);
   const [pendingAttachments, setPendingAttachments] = useState<
@@ -175,10 +183,9 @@ const ChatScreen: React.FC = () => {
     () => groupChatMessagesByDate(messages),
     [messages],
   );
-  const messageSectionsRef = useRef(messageSections);
-  messageSectionsRef.current = messageSections;
   const attachmentSheetRef = useRef<ActionSheetRef>(null);
   const skipScrollAnimationOnce = useRef(true);
+  const pendingInitialScrollRef = useRef(true);
   const messagesPageRef = useRef(1);
   const loadingOlderRef = useRef(false);
   const stickToBottomRef = useRef(true);
@@ -188,44 +195,171 @@ const ChatScreen: React.FC = () => {
   const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(
     null,
   );
+  const [messageActionTarget, setMessageActionTarget] =
+    useState<ChatMessage | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(
     null,
   );
   const [presenceLabel, setPresenceLabel] = useState<string | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+  const hasMoreOlderRef = useRef(hasMoreOlder);
+  hasMoreOlderRef.current = hasMoreOlder;
+  const pendingScrollToMessageRef = useRef<{
+    sectionIndex: number;
+    itemIndex: number;
+  } | null>(null);
+  const highlightClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const visibleMessageIdsRef = useRef<Set<string>>(new Set());
+  const chatViewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 20,
+    minimumViewTime: 0,
+  }).current;
+  const onChatViewableItemsChanged = useRef(
+    ({
+      viewableItems,
+    }: {
+      viewableItems: Array<{ item?: ChatMessage; isViewable?: boolean }>;
+    }) => {
+      const ids = new Set<string>();
+      for (const entry of viewableItems) {
+        if (entry.isViewable !== false && entry.item?.id) {
+          ids.add(entry.item.id);
+        }
+      }
+      visibleMessageIdsRef.current = ids;
+    },
+  ).current;
 
-  const scrollToLatest = useCallback((animated: boolean, force = false) => {
-    if (!force && !stickToBottomRef.current) {
-      return;
-    }
-    requestAnimationFrame(() => {
+  const scrollListToEnd = useCallback(
+    (animated: boolean) => {
       const list = listRef.current;
       if (!list) {
         return;
       }
-
+      if (typeof list.scrollToEnd === 'function') {
+        list.scrollToEnd({ animated });
+        return;
+      }
       const scrollResponder = list.getScrollResponder?.();
       if (
         scrollResponder &&
         typeof scrollResponder.scrollToEnd === 'function'
       ) {
         scrollResponder.scrollToEnd({ animated });
+      }
+    },
+    [],
+  );
+
+  const scrollToLatest = useCallback(
+    (animated: boolean, force = false) => {
+      if (!force && !stickToBottomRef.current) {
         return;
       }
 
-      const sections = messageSectionsRef.current;
-      if (!sections.length) {
+      const performScroll = () => scrollListToEnd(animated);
+
+      requestAnimationFrame(() => {
+        performScroll();
+        setTimeout(performScroll, 100);
+        setTimeout(performScroll, 320);
+      });
+    },
+    [scrollListToEnd],
+  );
+
+  const scrollToMessageLocation = useCallback(
+    (
+      loc: { sectionIndex: number; itemIndex: number },
+      animated = true,
+    ) => {
+      const list = listRef.current;
+      if (!list?.scrollToLocation) {
         return;
       }
-      const sectionIndex = sections.length - 1;
-      const itemIndex = Math.max(sections[sectionIndex].data.length - 1, 0);
+      pendingScrollToMessageRef.current = loc;
+      stickToBottomRef.current = false;
       list.scrollToLocation({
-        sectionIndex,
-        itemIndex,
+        sectionIndex: loc.sectionIndex,
+        itemIndex: loc.itemIndex,
         animated,
-        viewPosition: 1,
+        viewPosition: 0.35,
       });
-    });
+    },
+    [],
+  );
+
+  const flashHighlightedMessage = useCallback((messageId: string) => {
+    setHighlightedMessageId(messageId);
+    if (highlightClearTimerRef.current) {
+      clearTimeout(highlightClearTimerRef.current);
+    }
+    highlightClearTimerRef.current = setTimeout(() => {
+      setHighlightedMessageId(null);
+      highlightClearTimerRef.current = null;
+    }, 2200);
   }, []);
+
+  const locateMessageInList = useCallback((messageId: string) => {
+    const sections = groupChatMessagesByDate(messagesRef.current);
+    return findChatMessageInSections(sections, messageId);
+  }, []);
+
+  const handleScrollToLocationFailed = useCallback(
+    (info: {
+      index: number;
+      sectionIndex?: number;
+      highestMeasuredFrameIndex: number;
+      averageItemLength: number;
+    }) => {
+      const pending = pendingScrollToMessageRef.current;
+      const list = listRef.current;
+      if (!pending || !list?.scrollToLocation) {
+        return;
+      }
+      const sectionIndex = info.sectionIndex ?? pending.sectionIndex;
+      const itemIndex = Math.max(info.index, pending.itemIndex);
+      setTimeout(() => {
+        list.scrollToLocation({
+          sectionIndex,
+          itemIndex,
+          animated: false,
+          viewPosition: 0.35,
+        });
+        pendingScrollToMessageRef.current = null;
+      }, 120);
+    },
+    [],
+  );
+
+  useEffect(
+    () => () => {
+      if (highlightClearTimerRef.current) {
+        clearTimeout(highlightClearTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const handleListContentSizeChange = useCallback(() => {
+    if (loading || loadingOlderRef.current || messages.length === 0) {
+      return;
+    }
+    if (pendingInitialScrollRef.current) {
+      pendingInitialScrollRef.current = false;
+      scrollToLatest(false, true);
+      return;
+    }
+    if (stickToBottomRef.current) {
+      scrollToLatest(false, true);
+    }
+  }, [loading, messages.length, scrollToLatest]);
 
   useFocusEffect(
     useCallback(() => {
@@ -335,14 +469,10 @@ const ChatScreen: React.FC = () => {
     [],
   );
 
-  const loadOlderMessages = useCallback(async () => {
+  const loadOlderMessages = useCallback(async (): Promise<boolean> => {
     const conversationId = resolveConversationId();
-    if (
-      (!serviceRequestId && !conversationId) ||
-      loadingOlderRef.current ||
-      !hasMoreOlder
-    ) {
-      return;
+    if (!conversationId || loadingOlderRef.current || !hasMoreOlderRef.current) {
+      return false;
     }
     loadingOlderRef.current = true;
     setLoadingOlder(true);
@@ -350,22 +480,69 @@ const ChatScreen: React.FC = () => {
 
     const nextPage = messagesPageRef.current + 1;
     const page = await fetchChatMessagesPage(
-      serviceRequestId || '',
+      conversationId,
       nextPage,
       CHAT_MESSAGES_PAGE_SIZE,
-      conversationId,
     );
 
     setMessages(prev => {
       const seen = new Set(prev.map(m => m.id));
       const older = page.messages.filter(m => !seen.has(m.id));
-      return older.length ? [...older, ...prev] : prev;
+      const next = older.length ? [...older, ...prev] : prev;
+      messagesRef.current = next;
+      return next;
     });
     messagesPageRef.current = nextPage;
-    setHasMoreOlder(!!page.pagination?.hasNextPage);
+    const hasNext = !!page.pagination?.hasNextPage;
+    hasMoreOlderRef.current = hasNext;
+    setHasMoreOlder(hasNext);
     loadingOlderRef.current = false;
     setLoadingOlder(false);
-  }, [serviceRequestId, routeConversationId, hasMoreOlder]);
+    return page.messages.length > 0 || hasNext;
+  }, [routeConversationId]);
+
+  const scrollToMessageById = useCallback(
+    async (messageId: string) => {
+      if (!messageId) {
+        return;
+      }
+
+      let loc = locateMessageInList(messageId);
+      let pageLoads = 0;
+      const maxPageLoads = 25;
+
+      while (!loc && hasMoreOlderRef.current && pageLoads < maxPageLoads) {
+        pageLoads += 1;
+        const loaded = await loadOlderMessages();
+        if (!loaded) {
+          break;
+        }
+        loc = locateMessageInList(messageId);
+      }
+
+      if (!loc) {
+        SHOW_TOAST(t(STRING.chatOriginalMessageNotFound), 'info');
+        return;
+      }
+
+      flashHighlightedMessage(messageId);
+
+      if (visibleMessageIdsRef.current.has(messageId)) {
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        scrollToMessageLocation(loc!, true);
+      });
+    },
+    [
+      flashHighlightedMessage,
+      locateMessageInList,
+      loadOlderMessages,
+      scrollToMessageLocation,
+      t,
+    ],
+  );
 
   const handleMessagesScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -399,9 +576,29 @@ const ChatScreen: React.FC = () => {
       } else {
         setPresenceLabel(t(STRING.chatOffline));
       }
+      const phone = presence.peerPhone?.trim();
+      if (phone) {
+        setPeerPhone(phone);
+      }
     },
     [t],
   );
+
+  const handleCallPeer = useCallback(() => {
+    const phone = peerPhone?.trim();
+    if (!phone) {
+      SHOW_TOAST(t(STRING.noProviderPhoneNumberAvailable), 'info');
+      return;
+    }
+    const tel = phone.replace(/[^\d+]/g, '');
+    if (!tel) {
+      SHOW_TOAST(t(STRING.noProviderPhoneNumberAvailable), 'info');
+      return;
+    }
+    Linking.openURL(`tel:${tel}`).catch(() => {
+      SHOW_TOAST(t(STRING.unableToOpenPhoneDialer), 'error');
+    });
+  }, [peerPhone, t]);
 
   const refreshPresence = useCallback(async () => {
     const conversationId = resolveConversationId();
@@ -433,36 +630,43 @@ const ChatScreen: React.FC = () => {
     let mounted = true;
 
     const init = async () => {
-      const conversationId = resolveConversationId();
-      if (!serviceRequestId && !conversationId) {
+      let activeConversationId = resolveConversationId();
+      if (!activeConversationId && serviceRequestId) {
+        activeConversationId =
+          (await resolveConversationIdFromServiceRequest(serviceRequestId)) ||
+          null;
+        if (activeConversationId) {
+          conversationIdRef.current = activeConversationId;
+        }
+      }
+      if (!activeConversationId) {
         setLoading(false);
         return;
       }
 
       messagesPageRef.current = 1;
+      hasMoreOlderRef.current = false;
       setHasMoreOlder(false);
       stickToBottomRef.current = true;
+      pendingInitialScrollRef.current = true;
       skipScrollAnimationOnce.current = true;
 
       try {
-        const [initialPage, peerMeta] = await Promise.all([
-          fetchChatMessagesPage(
-            serviceRequestId || '',
-            1,
-            CHAT_MESSAGES_PAGE_SIZE,
-            conversationId,
-          ),
-          serviceRequestId
-            ? fetchChatPeerMeta(serviceRequestId)
-            : Promise.resolve(null),
-        ]);
+        const initialPage = await fetchChatMessagesPage(
+          activeConversationId,
+          1,
+          CHAT_MESSAGES_PAGE_SIZE,
+        );
 
         if (!mounted) {
           return;
         }
 
+        messagesRef.current = initialPage.messages;
         setMessages(initialPage.messages);
-        setHasMoreOlder(!!initialPage.pagination?.hasNextPage);
+        const initialHasMore = !!initialPage.pagination?.hasNextPage;
+        hasMoreOlderRef.current = initialHasMore;
+        setHasMoreOlder(initialHasMore);
         messagesPageRef.current = 1;
         if (initialPage.conversationId) {
           conversationIdRef.current = initialPage.conversationId;
@@ -473,14 +677,10 @@ const ChatScreen: React.FC = () => {
           setActiveChatConversationId(conversationIdRef.current);
           refreshPresence();
         }
-        if (peerMeta?.name) {
-          setPeerName(peerMeta.name);
-        } else if (routePeerName) {
+        if (routePeerName) {
           setPeerName(routePeerName);
         }
-        if (peerMeta?.profileImg) {
-          setPeerProfileImg(peerMeta.profileImg);
-        } else if (routePeerImg) {
+        if (routePeerImg) {
           setPeerProfileImg(routePeerImg);
         }
       } catch {
@@ -493,29 +693,26 @@ const ChatScreen: React.FC = () => {
         }
       }
 
-      if (!mounted || (!serviceRequestId && !conversationId)) {
+      const socketConversationId = conversationIdRef.current;
+      if (!mounted || !socketConversationId) {
         return;
       }
 
       try {
-        await markChatRead(serviceRequestId || '', conversationId);
+        await markChatRead(socketConversationId);
         await connectChatSocket();
-        await joinChatRoom(serviceRequestId, conversationId);
+        await joinChatRoom(null, socketConversationId);
         unsubscribe = subscribeToChatMessages(incoming => {
-          const activeConversationId = conversationIdRef.current;
-          if (activeConversationId) {
-            if (incoming.conversationId !== activeConversationId) {
-              return;
-            }
-          } else if (
-            serviceRequestId &&
-            incoming.serviceRequestId !== serviceRequestId
+          const currentConversationId = conversationIdRef.current;
+          if (
+            currentConversationId &&
+            incoming.conversationId !== currentConversationId
           ) {
             return;
           }
           appendMessage(incoming);
-          if (incoming.senderId !== currentUserId) {
-            markChatRead(serviceRequestId || '', activeConversationId);
+          if (incoming.senderId !== currentUserId && currentConversationId) {
+            markChatRead(currentConversationId);
           }
         });
         unsubscribeUpdates = subscribeToChatMessageUpdates(updated => {
@@ -579,23 +776,22 @@ const ChatScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       const conversationId = resolveConversationId();
-      if (!serviceRequestId && !conversationId) {
+      if (!conversationId) {
         return undefined;
       }
-      setActiveChatServiceRequestId(serviceRequestId || null);
       setActiveChatConversationId(conversationId);
-      markChatRead(serviceRequestId || '', conversationId);
+      markChatRead(conversationId);
       return () => {
-        setActiveChatServiceRequestId(null);
         setActiveChatConversationId(null);
-        markChatRead(serviceRequestId || '', conversationId);
+        markChatRead(conversationId);
       };
-    }, [serviceRequestId, routeConversationId]),
+    }, [routeConversationId]),
   );
 
   useEffect(() => {
+    pendingInitialScrollRef.current = true;
     skipScrollAnimationOnce.current = true;
-  }, [serviceRequestId]);
+  }, [routeConversationId]);
 
   useEffect(() => {
     if (loading || messages.length === 0) {
@@ -606,6 +802,7 @@ const ChatScreen: React.FC = () => {
     }
     skipScrollAnimationOnce.current = false;
     stickToBottomRef.current = true;
+    pendingInitialScrollRef.current = true;
     scrollToLatest(false, true);
   }, [loading, messages.length, scrollToLatest]);
 
@@ -819,67 +1016,47 @@ const ChatScreen: React.FC = () => {
     setEditingMessageId(null);
   }, []);
 
-  const handleMessageLongPress = useCallback(
+  const handleMessageLongPress = useCallback((item: ChatMessage) => {
+    if (item.sendStatus === 'sending' || item.isDeleted) {
+      return;
+    }
+    setMessageActionTarget(item);
+  }, []);
+
+  const handleMessageActionReply = useCallback((item: ChatMessage) => {
+    setReplyToMessage(item);
+    setEditingMessageId(null);
+  }, []);
+
+  const handleMessageActionEdit = useCallback((item: ChatMessage) => {
+    setEditingMessageId(item.id);
+    setDraft(item.body);
+    setReplyToMessage(null);
+  }, []);
+
+  const handleMessageActionDelete = useCallback(
     (item: ChatMessage) => {
-      if (item.sendStatus === 'sending' || item.isDeleted) {
-        return;
-      }
-      const isMine = item.senderId === currentUserId;
-      const buttons: Array<{
-        text: string;
-        onPress?: () => void;
-        style?: 'default' | 'cancel' | 'destructive';
-      }> = [
+      Alert.alert(t(STRING.chatDelete), t(STRING.chatDeleteConfirm), [
+        { text: t(STRING.cancel), style: 'cancel' },
         {
-          text: t(STRING.chatReply),
-          onPress: () => setReplyToMessage(item),
-        },
-      ];
-      if (isMine && item.body?.trim()) {
-        buttons.push({
-          text: t(STRING.chatEdit),
-          onPress: () => {
-            setEditingMessageId(item.id);
-            setDraft(item.body);
-            setReplyToMessage(null);
-          },
-        });
-      }
-      if (isMine) {
-        buttons.push({
           text: t(STRING.chatDelete),
           style: 'destructive',
-          onPress: () => {
-            Alert.alert(t(STRING.chatDelete), t(STRING.chatDeleteConfirm), [
-              { text: t(STRING.cancel), style: 'cancel' },
-              {
-                text: t(STRING.chatDelete),
-                style: 'destructive',
-                onPress: async () => {
-                  const updated = await deleteChatMessage(item.id);
-                  if (updated) {
-                    mergeMessageUpdate(updated);
-                  }
-                },
-              },
-            ]);
+          onPress: async () => {
+            const updated = await deleteChatMessage(item.id);
+            if (updated) {
+              mergeMessageUpdate(updated);
+            }
           },
-        });
-      }
-      buttons.push({ text: t(STRING.cancel), style: 'cancel' });
-      Alert.alert('', '', buttons);
+        },
+      ]);
     },
-    [currentUserId, mergeMessageUpdate, t],
+    [mergeMessageUpdate, t],
   );
 
   const handleSend = async () => {
     const text = draft.trim();
     const conversationId = resolveConversationId();
-    if (
-      (!text && pendingAttachments.length === 0) ||
-      (!serviceRequestId && !conversationId) ||
-      sending
-    ) {
+    if ((!text && pendingAttachments.length === 0) || !conversationId || sending) {
       return;
     }
 
@@ -907,10 +1084,21 @@ const ChatScreen: React.FC = () => {
       kind: (item.isImage ? 'image' : 'file') as 'image' | 'file',
     }));
 
+    const replyId = replyToMessage?.id;
+    const replySnapshot = replyToMessage
+      ? {
+          id: replyToMessage.id,
+          senderId: replyToMessage.senderId,
+          body: replyToMessage.body || '',
+          messageType: replyToMessage.messageType,
+          isDeleted: replyToMessage.isDeleted,
+          attachments: replyToMessage.attachments,
+        }
+      : undefined;
+
     const optimistic: ChatMessage = {
       id: localId,
-      conversationId: conversationId || '',
-      serviceRequestId: serviceRequestId || '',
+      conversationId,
       senderId: currentUserId,
       body: text,
       messageType:
@@ -924,9 +1112,8 @@ const ChatScreen: React.FC = () => {
         : undefined,
       createdAt: new Date().toISOString(),
       sendStatus: 'sending',
+      replyTo: replySnapshot,
     };
-
-    const replyId = replyToMessage?.id;
 
     setDraft('');
     setPendingAttachments([]);
@@ -942,20 +1129,16 @@ const ChatScreen: React.FC = () => {
           uploadChatAttachment(item.uri, item.name, item.type),
         ),
       );
-      const sent = await sendChatMessage(
-        serviceRequestId || '',
-        {
-          body: text,
-          replyToMessageId: replyId,
-          attachments: uploaded.map(file => ({
-            url: file.url,
-            fileName: file.fileName,
-            mimeType: file.mimeType,
-            kind: file.kind,
-          })),
-        },
-        conversationId,
-      );
+      const sent = await sendChatMessage(conversationId, {
+        body: text,
+        replyToMessageId: replyId,
+        attachments: uploaded.map(file => ({
+          url: file.url,
+          fileName: file.fileName,
+          mimeType: file.mimeType,
+          kind: file.kind,
+        })),
+      });
       if (sent) {
         replaceLocalMessage(localId, sent);
       } else {
@@ -985,6 +1168,8 @@ const ChatScreen: React.FC = () => {
           peerName={peerName || t(STRING.chatNow)}
           peerProfileImg={peerProfileImg}
           presenceLabel={presenceLabel}
+          onPressCall={handleCallPeer}
+          callAccessibilityLabel={t(STRING.callNow)}
         />
 
           {loading ? (
@@ -1013,6 +1198,10 @@ const ChatScreen: React.FC = () => {
               }}
               onScroll={handleMessagesScroll}
               scrollEventThrottle={16}
+              viewabilityConfig={chatViewabilityConfig}
+              onViewableItemsChanged={onChatViewableItemsChanged}
+              onContentSizeChange={handleListContentSizeChange}
+              onScrollToLocationFailed={handleScrollToLocationFailed}
               ListHeaderComponent={
                 loadingOlder ? (
                   <View style={styles.loadOlderWrap}>
@@ -1036,8 +1225,10 @@ const ChatScreen: React.FC = () => {
                     <ChatMessageBubble
                       item={item}
                       isMine={isMine}
+                      highlighted={highlightedMessageId === item.id}
                       onOpenAttachment={openChatAttachment}
                       onLongPress={handleMessageLongPress}
+                      onPressReplyTarget={scrollToMessageById}
                     />
                   </ChatMessageSwipeRow>
                 );
@@ -1078,22 +1269,17 @@ const ChatScreen: React.FC = () => {
             {replyToMessage ? (
               <View style={styles.replyBanner}>
                 <View style={styles.replyBannerText}>
-                  <AppText
-                    size={getScaleSize(11)}
-                    font={FONTS.Inter.SemiBold}
-                    color={COLORS.primary}
-                  >
-                    {t(STRING.chatReplyingTo)}
-                  </AppText>
-                  <AppText
-                    size={getScaleSize(12)}
-                    font={FONTS.Inter.Regular}
-                    color={COLORS._6F767E}
-                    numberOfLines={2}
-                  >
-                    {replyToMessage.body?.trim() ||
-                      t(STRING.chatSharedAttachment)}
-                  </AppText>
+                  <ChatReplyPreviewContent
+                    reply={{
+                      id: replyToMessage.id,
+                      senderId: replyToMessage.senderId,
+                      body: replyToMessage.body || '',
+                      messageType: replyToMessage.messageType,
+                      isDeleted: replyToMessage.isDeleted,
+                      attachments: replyToMessage.attachments,
+                    }}
+                    variant="banner"
+                  />
                 </View>
                 <TouchableOpacity
                   style={styles.bannerDismissBtn}
@@ -1196,6 +1382,14 @@ const ChatScreen: React.FC = () => {
         <ChatAttachmentImagePreviewModal
           gallery={previewGallery}
           onClose={() => setPreviewGallery(null)}
+        />
+        <ChatMessageActionModal
+          message={messageActionTarget}
+          currentUserId={currentUserId}
+          onClose={() => setMessageActionTarget(null)}
+          onReply={handleMessageActionReply}
+          onEdit={handleMessageActionEdit}
+          onDelete={handleMessageActionDelete}
         />
     </AppSafeAreaView>
   );

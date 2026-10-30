@@ -186,7 +186,7 @@ export function consumePendingNotification(): any {
 }
 
 function resetToChatFromNotification(
-  serviceRequestId: string,
+  conversationId: string,
   peerName: string | undefined,
   userRole: string,
 ) {
@@ -202,7 +202,7 @@ function resetToChatFromNotification(
     {
       name: SCREENS.CHAT,
       params: {
-        serviceRequestId,
+        conversationId,
         peerName: peerName || undefined,
       },
     },
@@ -250,15 +250,18 @@ export async function navigateFromNotification(raw: any): Promise<boolean> {
       typeLower === 'chatmessage' ||
       typeLower.includes('chatmessage')
     ) {
-      const serviceRequestId = info.serviceRequestId || info.requestId;
-      if (serviceRequestId) {
+      const conversationId =
+        info.metadata?.conversationId ||
+        info.conversationId ||
+        (raw?.data as any)?.conversationId;
+      if (conversationId) {
         const peerName =
           info.metadata?.peerName ||
           info.metadata?.senderName ||
           (raw?.data as any)?.peerName ||
           '';
         resetToChatFromNotification(
-          serviceRequestId,
+          String(conversationId),
           peerName || undefined,
           userRole,
         );

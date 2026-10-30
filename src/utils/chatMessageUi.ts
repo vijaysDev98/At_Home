@@ -85,6 +85,24 @@ export const groupChatMessagesByDate = (
   return sections;
 };
 
+export const findChatMessageInSections = (
+  sections: ChatMessageSection[],
+  messageId: string,
+): { sectionIndex: number; itemIndex: number } | null => {
+  if (!messageId) {
+    return null;
+  }
+  for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+    const itemIndex = sections[sectionIndex].data.findIndex(
+      m => m.id === messageId,
+    );
+    if (itemIndex >= 0) {
+      return { sectionIndex, itemIndex };
+    }
+  }
+  return null;
+};
+
 export const formatChatMessageTime = (createdAt?: string | null): string => {
   if (!createdAt) {
     return '';

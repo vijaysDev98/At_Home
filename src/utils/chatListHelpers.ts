@@ -5,10 +5,7 @@ import {
   ChatMessage,
 } from '../services/chatService';
 import { STRING } from '../constant';
-import {
-  getActiveChatConversationId,
-  getActiveChatServiceRequestId,
-} from './chatActiveSession';
+import { getActiveChatConversationId } from './chatActiveSession';
 
 /** Matches backend `CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT` */
 export const CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT =
@@ -17,6 +14,7 @@ export const CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT =
 export const formatChatLastMessagePreview = (
   preview?: string | null,
   lastMessageType?: string | null,
+  lastMessageAt?: string | null,
 ): string => {
   if (
     lastMessageType === 'attachment' ||
@@ -24,13 +22,21 @@ export const formatChatLastMessagePreview = (
   ) {
     return i18next.t(STRING.chatSharedAttachment);
   }
-  if (!preview) {
+  const trimmed = preview?.trim() || '';
+  if (!trimmed) {
+    // API may leave preview empty when the latest message was deleted (no BE list fix).
+    if (lastMessageAt) {
+      return i18next.t(STRING.chatMessageDeleted);
+    }
     return '';
   }
-  return preview;
+  return trimmed;
 };
 
-const buildMessageListPreview = (message: ChatMessage): string => {
+export const buildMessageListPreview = (message: ChatMessage): string => {
+  if (message.isDeleted) {
+    return i18next.t(STRING.chatMessageDeleted);
+  }
   const body = message.body?.trim() || '';
   if (body) {
     return body.length > 120 ? `${body.slice(0, 117)}...` : body;
@@ -39,6 +45,73 @@ const buildMessageListPreview = (message: ChatMessage): string => {
     return CHAT_LAST_MESSAGE_PREVIEW_SHARED_ATTACHMENT;
   }
   return '';
+};
+
+const isMessageLatestInConversation = (
+  conversation: ChatConversationItem,
+  message: ChatMessage,
+): boolean => {
+  if (!conversation.lastMessageAt) {
+    return true;
+  }
+  return (
+    new Date(message.createdAt).getTime() >=
+    new Date(conversation.lastMessageAt).getTime()
+  );
+};
+
+export const mergeConversationWithMessageUpdate = (
+  list: ChatConversationItem[],
+  message: ChatMessage,
+): { list: ChatConversationItem[]; needsRefetch: boolean } => {
+  const idx = list.findIndex(c => c.id === message.conversationId);
+  if (idx < 0) {
+    return { list, needsRefetch: true };
+  }
+
+  const existing = list[idx];
+  if (!isMessageLatestInConversation(existing, message)) {
+    return { list, needsRefetch: false };
+  }
+
+  if (message.isDeleted) {
+    const updated: ChatConversationItem = {
+      ...existing,
+      lastMessagePreview: buildMessageListPreview(message),
+      lastMessageType: message.messageType,
+    };
+    const without = list.filter((_, i) => i !== idx);
+    return {
+      list: sortConversationsByLatest([updated, ...without]),
+      needsRefetch: false,
+    };
+  }
+
+  const updated: ChatConversationItem = {
+    ...existing,
+    lastMessagePreview: buildMessageListPreview(message),
+    lastMessageType: message.messageType,
+  };
+
+  const without = list.filter((_, i) => i !== idx);
+  return {
+    list: sortConversationsByLatest([updated, ...without]),
+    needsRefetch: false,
+  };
+};
+
+export const filterConversationsBySearch = (
+  list: ChatConversationItem[],
+  query: string,
+): ChatConversationItem[] => {
+  const q = query.trim().toLowerCase();
+  if (!q) {
+    return list;
+  }
+  return list.filter(item => {
+    const name = (item.peerName || '').trim().toLowerCase();
+    return name.includes(q);
+  });
 };
 
 export const sortConversationsByLatest = (
@@ -78,12 +151,7 @@ export const mergeConversationWithMessage = (
   message: ChatMessage,
   currentUserId?: string | null,
 ): { list: ChatConversationItem[]; needsRefetch: boolean } => {
-  const idx = list.findIndex(
-    c =>
-      c.id === message.conversationId ||
-      (!!message.serviceRequestId &&
-        c.serviceRequestId === message.serviceRequestId),
-  );
+  const idx = list.findIndex(c => c.id === message.conversationId);
   if (idx < 0) {
     return { list, needsRefetch: true };
   }
@@ -93,9 +161,8 @@ export const mergeConversationWithMessage = (
     !!currentUserId && message.senderId === currentUserId;
   const activeConversationId = getActiveChatConversationId();
   const isActiveThread =
-    (!!activeConversationId &&
-      message.conversationId === activeConversationId) ||
-    message.serviceRequestId === getActiveChatServiceRequestId();
+    !!activeConversationId &&
+    message.conversationId === activeConversationId;
 
   const incrementUnread =
     !isOwnMessage && !isActiveThread

@@ -48,11 +48,14 @@ export const joinChatRoom = async (
   }
 
   const payload = conversationId
-    ? {
-        conversationId,
-        ...(serviceRequestId ? { serviceRequestId } : {}),
-      }
-    : { serviceRequestId };
+    ? { conversationId }
+    : serviceRequestId
+      ? { serviceRequestId }
+      : null;
+
+  if (!payload) {
+    return false;
+  }
 
   return new Promise(resolve => {
     activeSocket.emit(

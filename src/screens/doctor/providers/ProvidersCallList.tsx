@@ -3,13 +3,11 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  Linking,
   RefreshControl,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { showNotificationOverlay } from '../../../actions/common/notificationOverlaySlice';
@@ -23,11 +21,11 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 import { getProvidersService } from '../../../services/patientService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
-import { STRING } from '../../../constant';
-
-export type ProvidersCallListProps = NativeStackScreenProps<any, 'ProvidersCallList'>;
+import { openProviderChat } from '../../../services/chatService';
+import { SHOW_TOAST, STRING } from '../../../constant';
 
 export interface Provider {
   id: string;
@@ -47,98 +45,147 @@ export interface Provider {
   serviceDetails?: any[];
 }
 
-const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(({ provider }) => {
-  const dispatch = useDispatch();
-  const { t } = useTranslation();
-  const name =
-    provider.providerName ||
-    'Healthcare Provider';
+const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
+  ({ provider }) => {
+    const dispatch = useDispatch();
+    const { t } = useTranslation();
+    const [openingChat, setOpeningChat] = useState(false);
+    const name =
+      provider.providerName ||
+      provider.fullName ||
+      `${provider.fName || ''} ${provider.lName || ''}`.trim() ||
+      'Healthcare Provider';
+    const providerUserId = String(provider._id || provider.id || '');
 
-  const handleCall = () => {
-    if (provider.phoneNumber) {
-      dispatch(
-        showNotificationOverlay({
-          type: 'contactProvider',
-          payload: {
-            phoneNumber: provider.phoneNumber,
-            providerName: name,
-            position: 'center',
-          },
-        }),
-      );
-    }
-  };
-
-  return (
-    <View style={styles.card}>
-      <ProfileAvatar
-        name={name}
-        imageUrl={
-          provider.profileImg ? IMAGE_BASE_URL + provider.profileImg : undefined
+    const handleChat = async () => {
+      if (!providerUserId || openingChat) {
+        return;
+      }
+      setOpeningChat(true);
+      try {
+        const result = await openProviderChat(providerUserId);
+        if (!result?.conversationId) {
+          SHOW_TOAST(t(STRING.somethingWentWrong), 'error');
+          return;
         }
-        size="medium"
-      />
+        NavigationService.navigate(SCREENS.CHAT, {
+          conversationId: result.conversationId,
+          peerName: result.peer?.name || name,
+          peerProfileImg:
+            provider.profileImg || result.peer?.profileImg || undefined,
+          peerPhone: provider.phoneNumber || result.peer?.phoneNumber,
+        });
+      } finally {
+        setOpeningChat(false);
+      }
+    };
 
-      <View style={styles.infoCol}>
-        <AppText
-          size={getScaleSize(15)}
-          font={FONTS.Inter.Bold}
-          color={COLORS._1A1D1F}
-          numberOfLines={1}
-        >
-          {name}
-        </AppText>
+    const handleCall = () => {
+      if (provider.phoneNumber) {
+        dispatch(
+          showNotificationOverlay({
+            type: 'contactProvider',
+            payload: {
+              phoneNumber: provider.phoneNumber,
+              providerName: name,
+              position: 'center',
+            },
+          }),
+        );
+      } else {
+        SHOW_TOAST(t(STRING.noProviderPhoneNumberAvailable), 'info');
+      }
+    };
 
-        {provider.specialty ? (
+    return (
+      <View style={styles.card}>
+        <ProfileAvatar
+          name={name}
+          imageUrl={
+            provider.profileImg ? IMAGE_BASE_URL + provider.profileImg : undefined
+          }
+          size="medium"
+        />
+
+        <View style={styles.infoCol}>
           <AppText
-            size={getScaleSize(12)}
-            font={FONTS.Inter.Medium}
-            color={COLORS.primary}
-            style={{ marginTop: 2 }}
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
             numberOfLines={1}
           >
-            {provider.specialty}
+            {name}
           </AppText>
-        ) : null}
 
-        {provider.email ? (
-          <AppText
-            size={getScaleSize(12)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._6F767E}
-            style={{ marginTop: 2 }}
-            numberOfLines={1}
-          >
-            {provider.email}
-          </AppText>
-        ) : null}
-
-        {provider.phoneNumber ? (
-          <View style={styles.phoneRow}>
-            <Image source={IMAGES.phone} style={styles.phoneIconSmall} />
+          {provider.specialty ? (
             <AppText
               size={getScaleSize(12)}
-              font={FONTS.Inter.SemiBold}
-              color={COLORS._48B02C}
+              font={FONTS.Inter.Medium}
+              color={COLORS.primary}
+              style={{ marginTop: 2 }}
+              numberOfLines={1}
             >
-              {provider.phoneNumber}
+              {provider.specialty}
             </AppText>
-          </View>
-        ) : null}
+          ) : null}
+
+          {provider.email ? (
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+              style={{ marginTop: 2 }}
+              numberOfLines={1}
+            >
+              {provider.email}
+            </AppText>
+          ) : null}
+
+          {provider.phoneNumber ? (
+            <View style={styles.phoneRow}>
+              <Image source={IMAGES.phone} style={styles.phoneIconSmall} />
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._48B02C}
+              >
+                {provider.phoneNumber}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.actionsCol}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleChat}
+            style={styles.chatBtn}
+            disabled={openingChat}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.chatOpenChat)}
+          >
+            {openingChat ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Image source={IMAGES.chat_conversation} style={styles.chatIcon} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleCall}
+            style={styles.callBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.callNow)}
+          >
+            <Image source={IMAGES.phone} style={styles.callIcon} />
+          </TouchableOpacity>
+        </View>
       </View>
+    );
+  },
+);
 
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={handleCall}
-        style={styles.callBtn}
-      >
-        <Image source={IMAGES.phone} style={styles.callIcon} />
-      </TouchableOpacity>
-    </View>
-  );
-});
-
-const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
+const ProvidersCallList: React.FC = () => {
   const { t, i18n } = useTranslation();
 
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -166,7 +213,10 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
         langParam,
       );
 
-      if (response?.status && (response?.code === 200 || response?.status === 200)) {
+      if (
+        response?.status &&
+        (response?.code === 200 || response?.status === 200)
+      ) {
         const rawData = response.data?.data || response.data;
         const newList: Provider[] =
           rawData?.providers ||
@@ -198,12 +248,10 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchProviders(1, '', false);
   }, []);
 
-  // Debounced API search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchProviders(1, search, true);
@@ -231,7 +279,6 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={{ flex: 0.5 }}>
             <TouchableOpacity
@@ -256,7 +303,6 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
           <View style={{ flex: 0.5 }} />
         </View>
 
-        {/* Search Bar */}
         <View style={styles.searchWrapper}>
           <Input
             value={search}
@@ -269,7 +315,6 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
           />
         </View>
 
-        {/* Provider List */}
         {isLoading && page === 1 ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
@@ -277,7 +322,9 @@ const ProvidersCallList: React.FC<ProvidersCallListProps> = () => {
         ) : (
           <FlatList
             data={providers}
-            keyExtractor={(item, index) => item.id || item._id || index.toString()}
+            keyExtractor={(item, index) =>
+              item.id || item._id || index.toString()
+            }
             renderItem={({ item }) => <ProviderCallItem provider={item} />}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
@@ -356,7 +403,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchWrapper: {
-    // paddingHorizontal: getScaleSize(16),
     paddingVertical: getScaleSize(12),
     backgroundColor: COLORS.white,
   },
@@ -409,6 +455,27 @@ const styles = StyleSheet.create({
     height: getScaleSize(14),
     resizeMode: 'contain',
     tintColor: COLORS._48B02C,
+  },
+  actionsCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+  },
+  chatBtn: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(20),
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  chatIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
   },
   callBtn: {
     backgroundColor: COLORS._48B02C,

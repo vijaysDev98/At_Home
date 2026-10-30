@@ -1,5 +1,6 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import i18next from 'i18next';
 import { SHOW_TOAST } from '../constant';
 import { STRING } from '../constant/strings';
@@ -9,10 +10,35 @@ const fileNameFromUrl = (url: string): string => {
   return base.includes('.') ? base : `${base}.jpg`;
 };
 
-export const saveChatImageToDevice = async (url: string): Promise<boolean> => {
+const toFileUri = (path: string): string =>
+  path.startsWith('file://') ? path : `file://${path}`;
+
+export type SaveChatImageOptions = {
+  /** When false, caller shows feedback (e.g. inside a Modal). Default true. */
+  showToast?: boolean;
+};
+
+export const saveChatImageToDevice = async (
+  url: string,
+  options: SaveChatImageOptions = {},
+): Promise<boolean> => {
+  const showToast = options.showToast !== false;
+
   if (!url?.trim()) {
     return false;
   }
+
+  const notify = (ok: boolean) => {
+    if (!showToast) {
+      return;
+    }
+    SHOW_TOAST(
+      i18next.t(
+        ok ? STRING.chatSaveImageSuccess : STRING.chatSaveImageFailed,
+      ),
+      ok ? 'success' : 'error',
+    );
+  };
 
   try {
     if (Platform.OS === 'android' && Number(Platform.Version) <= 28) {
@@ -20,7 +46,7 @@ export const saveChatImageToDevice = async (url: string): Promise<boolean> => {
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
       );
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        SHOW_TOAST(i18next.t(STRING.chatSaveImageFailed), 'error');
+        notify(false);
         return false;
       }
     }
@@ -28,22 +54,24 @@ export const saveChatImageToDevice = async (url: string): Promise<boolean> => {
     const fileName = fileNameFromUrl(url);
     const tempPath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`;
 
-    const res = await ReactNativeBlobUtil.config({ fileCache: true, path: tempPath }).fetch(
-      'GET',
-      url,
-    );
+    const res = await ReactNativeBlobUtil.config({
+      fileCache: true,
+      path: tempPath,
+    }).fetch('GET', url);
     const status = res.info().status;
     if (status < 200 || status >= 300) {
-      SHOW_TOAST(i18next.t(STRING.chatSaveImageFailed), 'error');
+      notify(false);
       return false;
     }
 
     const sourcePath = res.path();
-    const mime = fileName.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+    const mime = fileName.toLowerCase().endsWith('.png')
+      ? 'image/png'
+      : 'image/jpeg';
 
     if (Platform.OS === 'ios') {
-      await ReactNativeBlobUtil.ios.previewDocument(sourcePath);
-      SHOW_TOAST(i18next.t(STRING.chatSaveImageSuccess), 'success');
+      await CameraRoll.saveAsset(toFileUri(sourcePath), { type: 'photo' });
+      notify(true);
       return true;
     }
 
@@ -59,10 +87,10 @@ export const saveChatImageToDevice = async (url: string): Promise<boolean> => {
       await ReactNativeBlobUtil.fs.scanFile([{ path: destPath, mime }]);
     }
 
-    SHOW_TOAST(i18next.t(STRING.chatSaveImageSuccess), 'success');
+    notify(true);
     return true;
   } catch {
-    SHOW_TOAST(i18next.t(STRING.chatSaveImageFailed), 'error');
+    notify(false);
     return false;
   }
 };

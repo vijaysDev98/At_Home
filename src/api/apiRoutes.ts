@@ -1,12 +1,11 @@
-const API_BASE_URL = 'https://at-home-api.prometteur.in/';
-// 'http://192.168.10.103:3000/';
-// 'https://at-home-api-prod.prometteur.in/';
-// 'http://163.227.92.122:3047/';
+const API_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
 
-export const IMAGE_BASE_URL =
+// 'https://at-home-api.prometteur.in/';
+// 'http://192.168.10.103:3000/';
+
+export const IMAGE_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
   // 'http://192.168.10.103:3000/';
 // 'https://at-home-api-prod.prometteur.in/';
-'https://at-home-api.prometteur.in/';
 
 export { API_BASE_URL };
 
@@ -71,6 +70,7 @@ const API_ROUTES = {
   departmentList: 'common/department-list',
   chatAccess: 'chat/service-requests',
   chatConversations: 'chat/conversations',
+  chatProviders: 'chat/providers',
   chatUnreadCount: 'chat/unread-count',
 };
 

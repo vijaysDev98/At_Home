@@ -41,12 +41,22 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
   const { t } = useTranslation();
   const listRef = useRef<FlatList<string>>(null);
   const [pageIndex, setPageIndex] = useState(0);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const saveFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const uris = gallery?.uris ?? [];
   const visible = uris.length > 0;
 
   useEffect(() => {
     if (!visible) {
+      setSaveFeedback(null);
+      if (saveFeedbackTimer.current) {
+        clearTimeout(saveFeedbackTimer.current);
+        saveFeedbackTimer.current = null;
+      }
       return;
     }
     const start = Math.min(
@@ -70,6 +80,28 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
     [uris.length],
   );
 
+  const handleSaveImage = useCallback(async () => {
+    const uri = uris[pageIndex];
+    if (!uri) {
+      return;
+    }
+    if (saveFeedbackTimer.current) {
+      clearTimeout(saveFeedbackTimer.current);
+    }
+    setSaveFeedback(null);
+    const ok = await saveChatImageToDevice(uri, { showToast: false });
+    setSaveFeedback({
+      type: ok ? 'success' : 'error',
+      message: t(
+        ok ? STRING.chatSaveImageSuccess : STRING.chatSaveImageFailed,
+      ),
+    });
+    saveFeedbackTimer.current = setTimeout(() => {
+      setSaveFeedback(null);
+      saveFeedbackTimer.current = null;
+    }, 3500);
+  }, [pageIndex, t, uris]);
+
   return (
     <Modal
       visible={visible}
@@ -79,6 +111,25 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
       presentationStyle="overFullScreen"
     >
       <View style={styles.previewModalOverlay}>
+        {saveFeedback ? (
+          <View
+            style={[
+              styles.saveFeedbackBanner,
+              saveFeedback.type === 'success'
+                ? styles.saveFeedbackSuccess
+                : styles.saveFeedbackError,
+            ]}
+          >
+            <AppText
+              size={getScaleSize(13)}
+              font={FONTS.Inter.SemiBold}
+              color={COLORS.white}
+              numberOfLines={2}
+            >
+              {saveFeedback.message}
+            </AppText>
+          </View>
+        ) : null}
         <View style={styles.previewModalHeader}>
           <View>
             <AppText
@@ -106,12 +157,7 @@ export const ChatAttachmentImagePreviewModal: React.FC<Props> = ({
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.previewModalActionBtn}
-              onPress={() => {
-                const uri = uris[pageIndex];
-                if (uri) {
-                  saveChatImageToDevice(uri);
-                }
-              }}
+              onPress={handleSaveImage}
               accessibilityRole="button"
               accessibilityLabel={t(STRING.chatSaveImage)}
             >
@@ -185,6 +231,23 @@ const styles = StyleSheet.create({
   previewModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',
+  },
+  saveFeedbackBanner: {
+    position: 'absolute',
+    left: getScaleSize(16),
+    right: getScaleSize(16),
+    top: Platform.OS === 'ios' ? getScaleSize(52) : getScaleSize(24),
+    zIndex: 20,
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(10),
+    borderRadius: getScaleSize(10),
+    elevation: 8,
+  },
+  saveFeedbackSuccess: {
+    backgroundColor: 'rgba(34, 139, 34, 0.95)',
+  },
+  saveFeedbackError: {
+    backgroundColor: 'rgba(220, 38, 38, 0.95)',
   },
   previewModalHeader: {
     flexDirection: 'row',

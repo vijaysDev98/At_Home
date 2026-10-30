@@ -20,6 +20,7 @@ export const IMAGES = {
   chat_attach: require('./ic_chat_attach.png'),
   chat_image_broken: require('./ic_chat_image_broken.png'),
   chat_message_ticks: require('./ic_chat_message_ticks.png'),
+  chat_reply: require('./ic_chat_reply.png'),
   person: require('./person.png'),
   stethoscope: require('./stethoscope.png'),
   add_patient: require('./add_patient.png'),

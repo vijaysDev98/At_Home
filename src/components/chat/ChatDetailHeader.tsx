@@ -18,12 +18,16 @@ type Props = {
   peerName: string;
   peerProfileImg?: string | null;
   presenceLabel?: string | null;
+  onPressCall?: () => void;
+  callAccessibilityLabel?: string;
 };
 
 export const ChatDetailHeader: React.FC<Props> = ({
   peerName,
   peerProfileImg,
   presenceLabel,
+  onPressCall,
+  callAccessibilityLabel,
 }) => {
   return (
     <View style={styles.wrap}>
@@ -67,6 +71,18 @@ export const ChatDetailHeader: React.FC<Props> = ({
           )}
         </View>
       </View>
+
+      {onPressCall ? (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onPressCall}
+          style={styles.callBtn}
+          accessibilityRole="button"
+          accessibilityLabel={callAccessibilityLabel}
+        >
+          <Image source={IMAGES.phone} style={styles.callIcon} />
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 };
@@ -113,5 +129,22 @@ const styles = StyleSheet.create({
   nameBlock: {
     flex: 1,
     minWidth: 0,
+  },
+  callBtn: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(20),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: getScaleSize(4),
+  },
+  callIcon: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
   },
 });
