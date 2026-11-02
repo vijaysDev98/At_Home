@@ -204,6 +204,9 @@ const ChatScreen: React.FC = () => {
   const [highlightedMessageId, setHighlightedMessageId] = useState<
     string | null
   >(null);
+  const [messageBubbleWidths, setMessageBubbleWidths] = useState<
+    Record<string, number>
+  >({});
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const hasMoreOlderRef = useRef(hasMoreOlder);
@@ -1008,6 +1011,19 @@ const ChatScreen: React.FC = () => {
     [t],
   );
 
+  const handleMessageBubbleLayout = useCallback(
+    (messageId: string, width: number) => {
+      setMessageBubbleWidths(prev => {
+        const rounded = Math.round(width);
+        if (prev[messageId] === rounded) {
+          return prev;
+        }
+        return { ...prev, [messageId]: rounded };
+      });
+    },
+    [],
+  );
+
   const handleSwipeReply = useCallback((item: ChatMessage) => {
     if (item.isDeleted || item.sendStatus === 'sending') {
       return;
@@ -1226,6 +1242,12 @@ const ChatScreen: React.FC = () => {
                       item={item}
                       isMine={isMine}
                       highlighted={highlightedMessageId === item.id}
+                      replyTargetMinWidth={
+                        item.replyTo?.id
+                          ? messageBubbleWidths[item.replyTo.id]
+                          : undefined
+                      }
+                      onBubbleLayout={handleMessageBubbleLayout}
                       onOpenAttachment={openChatAttachment}
                       onLongPress={handleMessageLongPress}
                       onPressReplyTarget={scrollToMessageById}

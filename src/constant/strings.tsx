@@ -145,6 +145,11 @@ export const STRING = {
   submitted: 'Submitted',
   returned: 'Returned',
   actionRequired: 'Action Required',
+  homeNewActionToComplete: 'You have a new action to complete.',
+  homeYourTreatedPatients: 'Your treated patients',
+  homeOrderAmbulance: 'Order an ambulance',
+  homeCommunityPharmacies:
+    'Community pharmacies, drugs available in primary care',
   formAwaitingSignature: 'Form Awaiting Signature',
   totalPatients: 'Total Patients',
   patients: 'Patients',
@@ -662,6 +667,9 @@ export const STRING = {
   signed: 'Signed',
   signNow: 'Sign Now',
   proceedToSignTheForm: 'Proceed to sign the form',
+  formReviewSignForm: 'Sign Form',
+  formReviewSignHintFooter:
+    'When you have reviewed the form, use Sign at the bottom of the screen.',
 
   //image picker
   selectImage: 'Select Image',
@@ -1047,6 +1055,7 @@ export const STRING = {
   chatMaxAttachments: 'You can attach up to 5 files per message',
   callNow: 'Call Now',
   comingSoon: 'Coming Soon',
+  featureUnderDevelopment: 'Feature under development',
   chatUnderDevelopment: 'Chat feature is under development and will be available soon!',
   chatNewMessages: 'New messages',
   chatMessageDeleted: 'This message was deleted',

@@ -24,6 +24,9 @@ type Props = {
   item: ChatMessage;
   isMine: boolean;
   highlighted?: boolean;
+  /** Match bubble width to the message being quoted in a reply. */
+  replyTargetMinWidth?: number;
+  onBubbleLayout?: (messageId: string, width: number) => void;
   onOpenAttachment: (ctx: ChatAttachmentOpenContext) => void;
   onLongPress: (item: ChatMessage) => void;
   onPressReplyTarget?: (messageId: string) => void;
@@ -33,6 +36,8 @@ export const ChatMessageBubble: React.FC<Props> = ({
   item,
   isMine,
   highlighted = false,
+  replyTargetMinWidth,
+  onBubbleLayout,
   onOpenAttachment,
   onLongPress,
   onPressReplyTarget,
@@ -52,10 +57,19 @@ export const ChatMessageBubble: React.FC<Props> = ({
         ]}
       >
         <View
+          onLayout={event => {
+            const width = event.nativeEvent.layout.width;
+            if (width > 0) {
+              onBubbleLayout?.(item.id, width);
+            }
+          }}
           style={[
             styles.bubble,
             styles.bubbleDeleted,
             highlighted && styles.bubbleHighlighted,
+            replyTargetMinWidth != null && replyTargetMinWidth > 0
+              ? { minWidth: replyTargetMinWidth }
+              : null,
           ]}
         >
           <AppText size={getScaleSize(13)} font={FONTS.Inter.Regular} color={COLORS._6F767E}>
@@ -86,10 +100,19 @@ export const ChatMessageBubble: React.FC<Props> = ({
       ]}
     >
       <View
+        onLayout={event => {
+          const width = event.nativeEvent.layout.width;
+          if (width > 0) {
+            onBubbleLayout?.(item.id, width);
+          }
+        }}
         style={[
           styles.bubble,
           isMine ? styles.bubbleMine : styles.bubbleOther,
           highlighted && styles.bubbleHighlighted,
+          replyTargetMinWidth != null && replyTargetMinWidth > 0
+            ? { minWidth: replyTargetMinWidth }
+            : null,
         ]}
       >
         {item.replyTo ? (
@@ -228,6 +251,8 @@ const styles = StyleSheet.create({
     lineHeight: getScaleSize(21),
   },
   replyQuote: {
+    alignSelf: 'stretch',
+    width: '100%',
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
     paddingLeft: getScaleSize(8),

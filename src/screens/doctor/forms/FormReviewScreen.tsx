@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 
@@ -12,6 +12,7 @@ import {
   Header,
   FormSignature,
 } from '../../../components';
+import type { FormSignatureHandle } from '../../../components/FormSignature';
 
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -78,14 +79,30 @@ const FormReviewScreen: React.FC = () => {
     (state: RootState) => state.profile.profileData,
   );
   const formRef = useRef<any>(null);
+  const formSignatureRef = useRef<FormSignatureHandle>(null);
+  const hasLoadedRequestRef = useRef(false);
   const isReadOnly = useMemo(() => {
     return (
       requestData?.status === REQUEST_STATUS.SUBMITTED ||
       requestData?.status === REQUEST_STATUS.IN_PROGRESS ||
       requestData?.status === REQUEST_STATUS.COMPLETED ||
-      requestData?.status === REQUEST_STATUS.RETURNED
+      requestData?.status === REQUEST_STATUS.RETURNED ||
+      requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE
     );
   }, [requestData]);
+
+  const isSigned = !!requestData?.digitalSignature?.signatureData;
+
+  /** Backend allows signing when formStatus is submitted or awaitingSignature. */
+  const showSignInFooter = useMemo(() => {
+    if (isSigned) return false;
+    const formStatus = requestData?.formStatus;
+    return (
+      formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
+      formStatus === FORM_STATUS.SUBMITTED
+    );
+  }, [requestData?.formStatus, isSigned]);
+
   // Use custom hook for lock refresh
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
   useFormLockRefresh({
@@ -134,30 +151,40 @@ const FormReviewScreen: React.FC = () => {
     return typeof raw === 'object' && raw ? raw : null;
   }, [request, requestData]);
 
-  useEffect(() => {
-    if (requestId && !requestData?.formData) {
-      fetchServiceRequestDetails();
-    }
-  }, [requestId]);
-
-  const fetchServiceRequestDetails = async () => {
-    try {
-      setHasError(false);
-
-      const data = await serviceRequestApi.getServiceRequestDetails(
-        requestId || '',
-      );
-      if (data) {
-        setRequestData(data);
-      } else {
+  const fetchServiceRequestDetails = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!requestId) {
+        setIsFetched(true);
         setHasError(true);
+        return;
       }
-    } catch (error) {
-      setHasError(true);
-    } finally {
-      setIsFetched(true);
-    }
-  };
+      try {
+        setHasError(false);
+
+        const data = await serviceRequestApi.getServiceRequestDetails(
+          requestId,
+          options,
+        );
+        if (data) {
+          setRequestData(data);
+        } else {
+          setHasError(true);
+        }
+      } catch (error) {
+        setHasError(true);
+      } finally {
+        setIsFetched(true);
+      }
+    },
+    [requestId],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchServiceRequestDetails({ silent: hasLoadedRequestRef.current });
+      hasLoadedRequestRef.current = true;
+    }, [fetchServiceRequestDetails]),
+  );
   const handleSigningStart = () => {
     setIsSigning(true);
   };
@@ -247,37 +274,62 @@ const FormReviewScreen: React.FC = () => {
                   )}
                 </View>
 
-                <View style={styles.signatureContainer}>
-                  <FormSignature
-                    readOnly={isReadOnly}
-                    requestData={requestData}
-                    patientData={patientData}
-                    onSignatureCompleted={fetchServiceRequestDetails}
-                    onSigningStart={handleSigningStart}
-                    onSigningEnd={handleSigningEnd}
-                    onGoBack={handleGoBack}
-                  />
-                </View>
               </ScrollView>
             </View>
 
-            {(
-              <View style={styles.bottomBar}>
+            {showSignInFooter ? (
+              <FormSignature
+                ref={formSignatureRef}
+                readOnly
+                hideUI
+                requestData={requestData}
+                patientData={patientData}
+                onSignatureCompleted={fetchServiceRequestDetails}
+                onSigningStart={handleSigningStart}
+                onSigningEnd={handleSigningEnd}
+                onGoBack={handleGoBack}
+              />
+            ) : null}
+
+            <View style={styles.bottomBar}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={[
+                  styles.footerBtn,
+                  styles.saveBtn,
+                  !showSignInFooter && styles.footerBtnFull,
+                ]}
+                onPress={handleLeftButtonPress}
+              >
+                <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._1A1D1F}
+                  align="center"
+                  numberOfLines={1}
+                >
+                  {t(STRING.editForm)}
+                </AppText>
+              </TouchableOpacity>
+
+              {showSignInFooter ? (
                 <TouchableOpacity
                   activeOpacity={0.9}
-                  style={styles.saveBtn}
-                  onPress={handleLeftButtonPress}
+                  style={[styles.footerBtn, styles.submitBtn]}
+                  onPress={() => formSignatureRef.current?.triggerSign()}
                 >
                   <AppText
-                    size={getScaleSize(16)}
+                    size={getScaleSize(13)}
                     font={FONTS.Inter.Bold}
-                    color={COLORS._1A1D1F}
+                    color={COLORS.white}
+                    align="center"
+                    numberOfLines={1}
                   >
-                    {t(STRING.editForm)}
+                    {t(STRING.formReviewSignForm)}
                   </AppText>
                 </TouchableOpacity>
-              </View>
-            )}
+              ) : null}
+            </View>
           </>
         )}
       </View>
@@ -324,10 +376,6 @@ const styles = StyleSheet.create({
     gap: 18,
   },
 
-  signatureContainer: {
-    paddingHorizontal: getScaleSize(16),
-  },
-
   bottomBar: {
     position: 'absolute',
     left: 0,
@@ -343,24 +391,30 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  saveBtn: {
+  footerBtn: {
     flex: 1,
-    height: getScaleSize(56),
-    borderRadius: getScaleSize(14),
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
+    minHeight: getScaleSize(50),
+    maxHeight: getScaleSize(52),
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
 
+  footerBtnFull: {
+    flex: 1,
+  },
+
+  saveBtn: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+
   submitBtn: {
-    flex: 1.4,
-    height: getScaleSize(56),
-    borderRadius: getScaleSize(14),
+    flex: 1.05,
     backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   nextDisabled: {

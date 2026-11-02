@@ -111,12 +111,8 @@ export const formatChatMessageTime = (createdAt?: string | null): string => {
   if (!m.isValid()) {
     return '';
   }
-  const lang = i18next.language === 'fr' ? 'fr' : 'en';
-  m.locale(lang);
-  if (m.isSame(moment(), 'day')) {
-    return m.format('HH:mm');
-  }
-  return m.format('DD MMM, HH:mm');
+  m.locale(chatMomentLocale());
+  return m.format('HH:mm');
 };
 
 export const formatChatLastSeen = (lastSeenAt?: string | null): string => {

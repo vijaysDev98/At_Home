@@ -22,6 +22,7 @@ export const SCREENS = {
   SIGNATURE_FORM: 'SignatureForm',
   SERVICE_COMPLETED: 'ServiceCompleted',
   SERVICE_SCREEN: 'ServiceScreen',
+  DOCTOR_HOME_SERVICES: 'DoctorHomeServices',
   DOCTOR_REQUEST: 'DoctorRequest',
   FORMS_SCREEN: 'Forms_Screen',
   PROVIDER_FORMS_SCREEN: 'ProviderFormScreen',

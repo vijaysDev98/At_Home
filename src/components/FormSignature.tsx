@@ -35,9 +35,17 @@ export interface FormSignatureProps {
   onSigningStart?: () => void;
   onSigningEnd?: () => void;
   onGoBack?: () => void;
+  /** When false, sign is triggered only via ref (e.g. sticky footer). */
+  showInlineSignButton?: boolean;
+  /** Renders modals + signing logic only (no signature card on screen). */
+  hideUI?: boolean;
 }
 
-const FormSignature: React.FC<FormSignatureProps> = ({
+export type FormSignatureHandle = {
+  triggerSign: () => void;
+};
+
+const FormSignature = React.forwardRef<FormSignatureHandle, FormSignatureProps>(({
   title = STRING.physicianSignature,
   readOnly = false,
   requestData,
@@ -46,7 +54,9 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   onSigningStart,
   onSigningEnd,
   onGoBack,
-}) => {
+  showInlineSignButton = true,
+  hideUI = false,
+}, ref) => {
   const [showPatientChoiceAttestation, setShowPatientChoiceAttestation] =
     React.useState(false);
   const [showDocuSignRedirect, setShowDocuSignRedirect] = React.useState(false);
@@ -63,11 +73,28 @@ const FormSignature: React.FC<FormSignatureProps> = ({
   } = useBiometricAuth({
     title: t(STRING.authorizeSignature),
   });
+
+  const isSigned = !!requestData?.digitalSignature?.signatureData;
+
+  const handleSignPress = React.useCallback(() => {
+    setShowPatientChoiceAttestation(true);
+  }, []);
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      triggerSign: () => {
+        if (!requestData?.digitalSignature?.signatureData) {
+          handleSignPress();
+        }
+      },
+    }),
+    [handleSignPress, requestData?.digitalSignature?.signatureData],
+  );
+
   if (!readOnly || readOnly === null) {
     return null;
   }
-
-  const isSigned = !!requestData?.digitalSignature?.signatureData;
 
   /**
    * Poll signature status until document is signed or an error occurs.
@@ -187,10 +214,6 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     }
   };
 
-  const handleSignPress = () => {
-    setShowPatientChoiceAttestation(true);
-  };
-
   const handleAttestationConfirmed = () => {
     setShowPatientChoiceAttestation(false);
     setShowDocuSignRedirect(true);
@@ -251,6 +274,37 @@ const FormSignature: React.FC<FormSignatureProps> = ({
     }
   };
 
+  const signingModals = (
+    <>
+      <PatientChoiceAttestationModal
+        visible={showPatientChoiceAttestation}
+        onClose={() => setShowPatientChoiceAttestation(false)}
+        onConfirm={handleAttestationConfirmed}
+        requestData={requestData}
+        patientData={patientData}
+      />
+
+      <DocuSignRedirectModal
+        visible={showDocuSignRedirect}
+        onClose={() => setShowDocuSignRedirect(false)}
+        onContinue={proceedWithSigningFlow}
+      />
+
+      <SecurityAlertModal
+        visible={showSecurityAlert}
+        onCancel={() => setShowSecurityAlert(false)}
+        onProceed={() => {
+          setShowSecurityAlert(false);
+          handleSignature();
+        }}
+      />
+    </>
+  );
+
+  if (hideUI) {
+    return signingModals;
+  }
+
   return (
     <View style={styles.container}>
       <AppText
@@ -279,7 +333,7 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 {t(STRING.signed)}
               </AppText>
             </>
-          ) : (
+          ) : showInlineSignButton ? (
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleSignPress}
@@ -293,6 +347,15 @@ const FormSignature: React.FC<FormSignatureProps> = ({
                 {t(STRING.proceedToSignTheForm)}
               </AppText>
             </TouchableOpacity>
+          ) : (
+            <AppText
+              size={getScaleSize(13)}
+              color={COLORS._6F767E}
+              font={FONTS.Inter.Medium}
+              style={styles.signHintText}
+            >
+              {t(STRING.formReviewSignHintFooter)}
+            </AppText>
           )}
         </View>
 
@@ -330,31 +393,12 @@ const FormSignature: React.FC<FormSignatureProps> = ({
         </View>
       </View>
 
-      <PatientChoiceAttestationModal
-        visible={showPatientChoiceAttestation}
-        onClose={() => setShowPatientChoiceAttestation(false)}
-        onConfirm={handleAttestationConfirmed}
-        requestData={requestData}
-        patientData={patientData}
-      />
-
-      <DocuSignRedirectModal
-        visible={showDocuSignRedirect}
-        onClose={() => setShowDocuSignRedirect(false)}
-        onContinue={proceedWithSigningFlow}
-      />
-
-      <SecurityAlertModal
-        visible={showSecurityAlert}
-        onCancel={() => setShowSecurityAlert(false)}
-        onProceed={() => {
-          setShowSecurityAlert(false);
-          handleSignature();
-        }}
-      />
+      {signingModals}
     </View>
   );
-};
+});
+
+FormSignature.displayName = 'FormSignature';
 
 const styles = StyleSheet.create({
   container: {},
@@ -396,6 +440,11 @@ const styles = StyleSheet.create({
     minWidth: getScaleSize(140),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  signHintText: {
+    textAlign: 'center',
+    paddingHorizontal: getScaleSize(12),
   },
 
   divider: {

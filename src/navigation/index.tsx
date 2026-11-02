@@ -37,6 +37,7 @@ import EditProviderProfile from '../screens/provider/profile/editProviderProfile
 import DoctorList from '../screens/provider/doctorList/DoctorList';
 import PdfViewerScreen from '../screens/common/PdfViewerScreen';
 import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
+import DoctorHomeServicesScreen from '../screens/doctor/home/DoctorHomeServicesScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
 import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDischargeRequestScreen';
@@ -111,6 +112,7 @@ export type RootStackParamList = {
     selectedService?: any;
     serviceId?: string;
   } | undefined;
+  DoctorHomeServices: undefined;
   ProviderPreRequestDetail: {
     request?: any;
     action?: string;
@@ -283,6 +285,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.SERVICE_SCREEN}
           component={ServiceDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.DOCTOR_HOME_SERVICES}
+          component={DoctorHomeServicesScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

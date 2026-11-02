@@ -1,12 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   View,
   RefreshControl,
-  Platform,
   useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
+import { SHOW_TOAST } from '../../../constant/showToast';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
@@ -32,11 +33,6 @@ import { setLoading } from '../../../actions/common/commonSlice';
 import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
 import FastImage from 'react-native-fast-image';
-import {
-  MASTER_SERVICES_LIST,
-  ServiceConfig,
-  getServiceIcon,
-} from '../../../constant/services';
 import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
 
 // Dashboard interfaces
@@ -72,12 +68,9 @@ const DOCHOME_LOGO_ASPECT = {
 } as const;
 
 const HOME_BTN_ASPECT = {
-  en: 1356 / 768,
-  fr: 1024 / 580,
+  en: 984 / 352,
+  fr: 960 / 338,
 } as const;
-
-/** Home CTA image width as a fraction of the content area (banner stays full width). */
-const HOME_BTN_WIDTH_RATIO = 0.60;
 
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
@@ -92,18 +85,25 @@ const HomeScreen: React.FC = () => {
   const contentWidth = windowWidth;
   const docHomeLogoHeight =
     contentWidth / DOCHOME_LOGO_ASPECT[isFrench ? 'fr' : 'en'];
-  const homeBtnWidth = contentWidth * HOME_BTN_WIDTH_RATIO;
-  const homeBtnHeight =
-    homeBtnWidth / HOME_BTN_ASPECT[isFrench ? 'fr' : 'en'];
+  const homeBtnAspect = HOME_BTN_ASPECT[isFrench ? 'fr' : 'en'];
+  const homeBtnWidth = contentWidth - getScaleSize(36);
+  const homeBtnHeight = homeBtnWidth / homeBtnAspect;
   const dispatch = useDispatch<AppDispatch>();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const unreadChatCount = useChatUnreadBadge();
   const [refreshing, setRefreshing] = useState(false);
-  const [showAllServices, setShowAllServices] = useState<boolean>(false);
 
   const doctorName =
     (profileData?.fName || '') + ' ' + (profileData?.lName || '');
+
+  const pendingSignatureCount =
+    dashboardData?.actionRequired?.awaitingSignatureCount ?? 0;
+
+  const hasPendingFormActions = useMemo(
+    () => pendingSignatureCount > 0,
+    [pendingSignatureCount],
+  );
 
   // Fetch dashboard data when screen is focused
   useFocusEffect(
@@ -138,28 +138,21 @@ const HomeScreen: React.FC = () => {
     setRefreshing(false);
   }, []);
 
-  const handleServicePress = (service: ServiceConfig) => {
-    NavigationService.navigate(SCREENS.SERVICE_SCREEN, {
-      selectedService: service,
-      serviceId: service.id,
-    });
+  const handleOpenActionServices = () => {
+    NavigationService.navigate(SCREENS.DOCTOR_HOME_SERVICES);
   };
 
   const handleEmergencyCall = () => {
     NavigationService.navigate(SCREENS.PROVIDERS_CALL_LIST);
   };
 
-  const getServiceCount = (service: ServiceConfig): number => {
-    const awaitingByService =
-      dashboardData?.actionRequired?.awaitingSignatureByService;
-    if (!awaitingByService || !service?.id) return 0;
-
-    return awaitingByService[service.id] || 0;
+  const showFeatureUnderDevelopmentToast = () => {
+    SHOW_TOAST(t(STRING.featureUnderDevelopment), 'info');
   };
 
-  const displayedServices = showAllServices
-    ? MASTER_SERVICES_LIST
-    : MASTER_SERVICES_LIST.slice(0, 6);
+  const openTreatedPatients = () => {
+    NavigationService.navigate(DOCTOR_TAB_SCREENS.PATIENTS);
+  };
 
   const openProfileTab = () => {
     NavigationService.navigate(DOCTOR_TAB_SCREENS.PROFILE);
@@ -237,81 +230,121 @@ const HomeScreen: React.FC = () => {
             resizeMode="contain"
           />
 
-          {/* Services Section Header with "See All" */}
-          <View style={styles.servicesHeaderRow}>
-            <AppText
-              size={getScaleSize(15)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-            >
-              {t(STRING.services)} ({displayedServices.length}/12)
-            </AppText>
-
+          {hasPendingFormActions ? (
             <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setShowAllServices(!showAllServices)}
-              style={styles.seeAllBtn}
+              activeOpacity={0.85}
+              onPress={handleOpenActionServices}
+              style={styles.actionAlertCard}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeNewActionToComplete)}
             >
+              <Image
+                source={IMAGES.ic_home_action_alert}
+                style={styles.actionAlertIcon}
+              />
               <AppText
-                size={getScaleSize(13)}
-                font={FONTS.Inter.Bold}
-                color={COLORS.primary}
+                size={getScaleSize(14)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._1A1D1F}
+                style={styles.actionAlertText}
               >
-                {showAllServices ? t(STRING.showLess) : t(STRING.seeAll)}
+                {t(STRING.homeNewActionToComplete)}
               </AppText>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.actionAlertChevron}
+              />
             </TouchableOpacity>
-          </View>
+          ) : null}
 
-          {/* 6 Services Grid (or 12 when expanded) */}
-          <View style={styles.servicesGrid}>
-            {displayedServices.map(service => {
-              const count = getServiceCount(service);
-              return (
-                <TouchableOpacity
-                  key={service.id}
-                  activeOpacity={0.9}
-                  onPress={() => handleServicePress(service)}
-                  style={[
-                    styles.serviceCard,
-                    { backgroundColor: service.bgColor },
-                  ]}
-                >
-                  <View style={styles.cardIconBox}>
-                    <Image
-                      source={getServiceIcon(service.id)}
-                      style={styles.serviceIcon}
-                    />
-                  </View>
-                  <View style={styles.cardTextBox}>
-                    <AppText
-                      size={getScaleSize(13)}
-                      font={FONTS.Inter.Bold}
-                      color={COLORS.white}
-                      style={styles.cardTitleText}
-                      numberOfLines={2}
-                    >
-                      {t(service.name)}
-                    </AppText>
-                  </View>
-                  {count > 0 && (
-                    <View style={styles.serviceBadgeCircle}>
-                      <AppText
-                        size={getScaleSize(11)}
-                        font={FONTS.Inter.Bold}
-                        color={COLORS.white}
-                        style={styles.serviceBadgeText}
-                      >
-                        {count > 99 ? '99+' : count}
-                      </AppText>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <View style={styles.homeFeatureRow}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.homeFeatureCard, styles.homeFeatureCardMint]}
+              onPress={openTreatedPatients}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeYourTreatedPatients)}
+            >
+              <Image
+                source={IMAGES.ic_home_card_patients}
+                style={styles.homeFeatureIcon}
+              />
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                align="center"
+                style={styles.homeFeatureLabel}
+                numberOfLines={4}
+              >
+                {t(STRING.homeYourTreatedPatients)}
+              </AppText>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.homeFeatureChevron}
+              />
+            </TouchableOpacity>
 
-          {/* Section Divider */}
-          <View style={styles.sectionDivider} />
+            <Pressable
+              style={({ pressed }) => [
+                styles.homeFeatureCard,
+                styles.homeFeatureCardBlue,
+                pressed ? styles.homeFeatureCardPressed : null,
+              ]}
+              onPress={showFeatureUnderDevelopmentToast}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeOrderAmbulance)}
+            >
+              <Image
+                source={IMAGES.ic_home_card_ambulance}
+                style={styles.homeFeatureIcon}
+              />
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                align="center"
+                style={styles.homeFeatureLabel}
+                numberOfLines={4}
+              >
+                {t(STRING.homeOrderAmbulance)}
+              </AppText>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.homeFeatureChevron}
+              />
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.homeFeatureCard,
+                styles.homeFeatureCardPurple,
+                pressed ? styles.homeFeatureCardPressed : null,
+              ]}
+              onPress={showFeatureUnderDevelopmentToast}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeCommunityPharmacies)}
+            >
+              <Image
+                source={IMAGES.ic_home_card_pharmacy}
+                style={styles.homeFeatureIcon}
+              />
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                align="center"
+                style={styles.homeFeatureLabel}
+                numberOfLines={4}
+              >
+                {t(STRING.homeCommunityPharmacies)}
+              </AppText>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.homeFeatureChevron}
+              />
+            </Pressable>
+          </View>
 
           {/* Info Badges Row */}
           {/* <View style={styles.infoBadgesRow}>
@@ -349,7 +382,7 @@ const HomeScreen: React.FC = () => {
             onPress={() =>
               NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST)
             }
-            style={styles.homeBtnTouchable}
+            style={[styles.homeBtnTouchable, { width: homeBtnWidth }]}
           >
             <Image
               source={homeBtnImage}
@@ -357,7 +390,7 @@ const HomeScreen: React.FC = () => {
                 styles.homeBtnImage,
                 { width: homeBtnWidth, height: homeBtnHeight },
               ]}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </TouchableOpacity>
 
@@ -366,7 +399,7 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => NavigationService.navigate(SCREENS.ADD_PATIENT)}
-              style={[styles.actionBtnItem, { backgroundColor: COLORS._5BBA47 }]}
+              style={[styles.actionBtnItem, { backgroundColor: COLORS._0072CE }]}
             >
               <Image
                 source={IMAGES.add_patient}
@@ -388,7 +421,7 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => NavigationService.navigate(SCREENS.CREATE_REQUEST)}
-              style={[styles.actionBtnItem, { backgroundColor: COLORS._6C4A9C }]}
+              style={[styles.actionBtnItem, { backgroundColor: COLORS._7C3AED }]}
             >
               <Image
                 source={IMAGES.add_form}
@@ -508,13 +541,104 @@ const styles = StyleSheet.create({
     marginBottom: getScaleSize(12),
     borderRadius: getScaleSize(16),
   },
+  actionAlertCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: getScaleSize(18),
+    marginBottom: getScaleSize(14),
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(14),
+    borderRadius: getScaleSize(16),
+    backgroundColor: '#FDF2F4',
+    gap: getScaleSize(12),
+    elevation: 4,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  actionAlertIcon: {
+    width: getScaleSize(44),
+    height: getScaleSize(44),
+    resizeMode: 'contain',
+  },
+  actionAlertText: {
+    flex: 1,
+    lineHeight: getScaleSize(20),
+  },
+  actionAlertChevron: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+  },
+  homeFeatureRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    paddingHorizontal: getScaleSize(18),
+    marginBottom: getScaleSize(14),
+    gap: getScaleSize(8),
+  },
+  homeFeatureCard: {
+    flex: 1,
+    borderRadius: getScaleSize(16),
+    paddingHorizontal: getScaleSize(8),
+    paddingTop: getScaleSize(12),
+    paddingBottom: getScaleSize(10),
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    minHeight: getScaleSize(168),
+    elevation: 4,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  homeFeatureCardMint: {
+    backgroundColor: '#EBF7F3',
+  },
+  homeFeatureCardBlue: {
+    backgroundColor: '#E8F2FE',
+  },
+  homeFeatureCardPurple: {
+    backgroundColor: '#F2F0FF',
+  },
+  homeFeatureCardPressed: {
+    opacity: 0.88,
+  },
+  homeFeatureIcon: {
+    width: getScaleSize(72),
+    height: getScaleSize(72),
+    resizeMode: 'contain',
+    marginBottom: getScaleSize(8),
+  },
+  homeFeatureLabel: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    lineHeight: getScaleSize(14),
+  },
+  homeFeatureChevron: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+    alignSelf: 'center',
+    marginTop: getScaleSize(6),
+  },
   homeBtnTouchable: {
     alignSelf: 'center',
-    marginTop: getScaleSize(9),
+    marginTop: getScaleSize(4),
+    borderRadius: getScaleSize(16),
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
   homeBtnImage: {
-    alignSelf: 'center',
-    elevation: 3,
+    borderRadius: getScaleSize(16),
   },
   headingSection: {
     alignItems: 'center',
@@ -524,84 +648,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: getScaleSize(30),
     letterSpacing: -0.3,
-  },
-  servicesHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: getScaleSize(20),
-    marginBottom: getScaleSize(12),
-  },
-  seeAllBtn: {
-    paddingHorizontal: getScaleSize(8),
-    paddingVertical: getScaleSize(4),
-  },
-  servicesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: getScaleSize(18),
-    gap: getScaleSize(10),
-  },
-  serviceCard: {
-    width: '48%',
-    height: getScaleSize(84),
-    borderRadius: getScaleSize(16),
-    paddingHorizontal: getScaleSize(12),
-    paddingVertical: getScaleSize(10),
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: getScaleSize(10),
-    position: 'relative',
-    elevation: 3,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-  },
-  cardIconBox: {
-    width: getScaleSize(42),
-    height: getScaleSize(54),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  serviceIcon: {
-    width: getScaleSize(40),
-    height: getScaleSize(50),
-    resizeMode: 'contain',
-  },
-  cardTextBox: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  cardTitleText: {
-    lineHeight: getScaleSize(16),
-  },
-  serviceBadgeCircle: {
-    position: 'absolute',
-    top: -getScaleSize(6),
-    right: -getScaleSize(6),
-    backgroundColor: '#E52323',
-    minWidth: getScaleSize(26),
-    height: getScaleSize(26),
-    borderRadius: getScaleSize(13),
-    borderWidth: 1,
-    borderColor: COLORS.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: getScaleSize(4),
-    zIndex: 20,
-    elevation: 6,
-  },
-  serviceBadgeText: {
-    textAlign: 'center',
-    lineHeight: Platform.OS === 'android' ? getScaleSize(14) : undefined,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: COLORS._E5E7EB,
-    marginHorizontal: getScaleSize(18),
-    marginTop: getScaleSize(18),
   },
   infoBadgesRow: {
     flexDirection: 'row',
@@ -655,11 +701,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: getScaleSize(6),
-    elevation: 3,
+    elevation: 4,
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
     paddingHorizontal: getScaleSize(8),
   },
   actionBtnIcon: {
