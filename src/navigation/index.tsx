@@ -40,6 +40,8 @@ import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
 import DoctorHomeServicesScreen from '../screens/doctor/home/DoctorHomeServicesScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
+import ProviderDetailScreen from '../screens/doctor/providers/ProviderDetailScreen';
+import type { Provider } from '../screens/doctor/providers/providerTypes';
 import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDischargeRequestScreen';
 import ProviderPreRequestDetailScreen from '../screens/provider/request/ProviderPreRequestDetailScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
@@ -55,6 +57,8 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   Alerts: undefined;
   ProvidersCallList: undefined;
+  ProviderDetail: { provider: Provider; hideFooterActions?: boolean };
+  OrderAmbulance: undefined;
   OtpVerification: { email?: string; isForgotPassword?: boolean } | undefined;
   ResetPassword:
   | {
@@ -123,6 +127,8 @@ export type RootStackParamList = {
     requestIdLabel?: string;
     peerName?: string;
     peerProfileImg?: string | null;
+    peerPhone?: string;
+    peerUserId?: string;
   };
   ChatList: undefined;
 };
@@ -294,6 +300,16 @@ export default function RootNavigation() {
         />
         <Stack.Screen
           name={SCREENS.PROVIDERS_CALL_LIST}
+          component={ProvidersCallList}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PROVIDER_DETAIL}
+          component={ProviderDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.ORDER_AMBULANCE}
           component={ProvidersCallList}
           options={{ headerShown: false }}
         />

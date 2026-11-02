@@ -31,6 +31,8 @@ export const SCREENS = {
   ALERTS: "Alerts",
   DOCTOR_LIST: "DoctorList",
   PROVIDERS_CALL_LIST: "ProvidersCallList",
+  PROVIDER_DETAIL: 'ProviderDetail',
+  ORDER_AMBULANCE: 'OrderAmbulance',
   PDF_VIEWER: 'PdfViewer',
   PROVIDER_PRE_REQUEST_DETAIL: 'ProviderPreRequestDetail',
   CHAT: 'Chat',

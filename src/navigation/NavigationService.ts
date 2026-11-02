@@ -8,6 +8,13 @@ function setTopLevelNavigator(navigatorRef: any) {
 }
 
 function navigate(routeName: string, params?: object) {
+  if (!navigator) {
+    return;
+  }
+  if (typeof navigator.navigate === 'function') {
+    navigator.navigate(routeName as never, params as never);
+    return;
+  }
   navigator.dispatch(
     CommonActions.navigate({
       name: routeName,
@@ -18,8 +25,11 @@ function navigate(routeName: string, params?: object) {
 function pop(n = 1) {
   navigator.dispatch(StackActions.pop(n));
 }
-function push(routeName: string) {
-  navigator.dispatch(StackActions.push(routeName));
+function push(routeName: string, params?: object) {
+  if (!navigator) {
+    return;
+  }
+  navigator.dispatch(StackActions.push(routeName, params));
 }
 function reset(route: string) {
   navigator.dispatch(

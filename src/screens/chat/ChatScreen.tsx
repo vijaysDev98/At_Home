@@ -101,6 +101,7 @@ type RouteParams = {
   peerName?: string;
   peerProfileImg?: string | null;
   peerPhone?: string | null;
+  peerUserId?: string;
 };
 
 /** Space from bottom of window to top of keyboard (+ tiny slack, scaled). */
@@ -148,6 +149,7 @@ const ChatScreen: React.FC = () => {
     peerName: routePeerName,
     peerProfileImg: routePeerImg,
     peerPhone: routePeerPhone,
+    peerUserId: routePeerUserId,
   } = (route.params || {}) as RouteParams;
 
   const conversationIdRef = useRef<string | null>(routeConversationId || null);
@@ -171,6 +173,9 @@ const ChatScreen: React.FC = () => {
   );
   const [peerPhone, setPeerPhone] = useState<string | null>(
     routePeerPhone?.trim() || null,
+  );
+  const [peerUserId, setPeerUserId] = useState<string | null>(
+    routePeerUserId?.trim() || null,
   );
   const [previewGallery, setPreviewGallery] =
     useState<ChatImageGalleryState>(null);
@@ -582,6 +587,9 @@ const ChatScreen: React.FC = () => {
       const phone = presence.peerPhone?.trim();
       if (phone) {
         setPeerPhone(phone);
+      }
+      if (presence.peerUserId) {
+        setPeerUserId(presence.peerUserId);
       }
     },
     [t],

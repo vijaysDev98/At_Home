@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRoute } from '@react-navigation/native';
 import {
   ActivityIndicator,
   FlatList,
@@ -26,35 +27,18 @@ import { getProvidersService } from '../../../services/patientService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { openProviderChat } from '../../../services/chatService';
 import { SHOW_TOAST, STRING } from '../../../constant';
+import { getProviderDisplayName } from './providerDisplay';
+import { Provider, providerForNavigation } from './providerTypes';
+import ProviderScreenHeader from './ProviderScreenHeader';
 
-export interface Provider {
-  id: string;
-  _id?: string;
-  fName?: string;
-  lName?: string;
-  fullName?: string;
-  providerName?: string;
-  email?: string;
-  phoneNumber?: string;
-  specialty?: string;
-  profileImg?: string;
-  roles?: string[];
-  status?: string;
-  operatingDepartments?: string[];
-  assignedServices?: string[];
-  serviceDetails?: any[];
-}
+export type { Provider } from './providerTypes';
 
 const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
   ({ provider }) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const [openingChat, setOpeningChat] = useState(false);
-    const name =
-      provider.providerName ||
-      provider.fullName ||
-      `${provider.fName || ''} ${provider.lName || ''}`.trim() ||
-      'Healthcare Provider';
+    const name = getProviderDisplayName(provider);
     const providerUserId = String(provider._id || provider.id || '');
 
     const handleChat = async () => {
@@ -74,6 +58,7 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
           peerProfileImg:
             provider.profileImg || result.peer?.profileImg || undefined,
           peerPhone: provider.phoneNumber || result.peer?.phoneNumber,
+          peerUserId: providerUserId,
         });
       } finally {
         setOpeningChat(false);
@@ -97,63 +82,79 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
       }
     };
 
+    const openDetail = () => {
+      NavigationService.push(SCREENS.PROVIDER_DETAIL, {
+        provider: providerForNavigation(provider),
+      });
+    };
+
     return (
       <View style={styles.card}>
-        <ProfileAvatar
-          name={name}
-          imageUrl={
-            provider.profileImg ? IMAGE_BASE_URL + provider.profileImg : undefined
-          }
-          size="medium"
-        />
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={openDetail}
+          style={styles.cardMain}
+          accessibilityRole="button"
+          accessibilityLabel={name}
+        >
+          <ProfileAvatar
+            name={name}
+            imageUrl={
+              provider.profileImg
+                ? IMAGE_BASE_URL + provider.profileImg
+                : undefined
+            }
+            size="medium"
+          />
 
-        <View style={styles.infoCol}>
-          <AppText
-            size={getScaleSize(15)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-            numberOfLines={1}
-          >
-            {name}
-          </AppText>
-
-          {provider.specialty ? (
+          <View style={styles.infoCol}>
             <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Medium}
-              color={COLORS.primary}
-              style={{ marginTop: 2 }}
+              size={getScaleSize(15)}
+              font={FONTS.Inter.Bold}
+              color={COLORS._1A1D1F}
               numberOfLines={1}
             >
-              {provider.specialty}
+              {name}
             </AppText>
-          ) : null}
 
-          {provider.email ? (
-            <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._6F767E}
-              style={{ marginTop: 2 }}
-              numberOfLines={1}
-            >
-              {provider.email}
-            </AppText>
-          ) : null}
-
-          {provider.phoneNumber ? (
-            <View style={styles.phoneRow}>
-              <Image source={IMAGES.phone} style={styles.phoneIconSmall} />
+            {provider.specialty ? (
               <AppText
                 size={getScaleSize(12)}
-                font={FONTS.Inter.SemiBold}
-                color={COLORS._48B02C}
+                font={FONTS.Inter.Medium}
+                color={COLORS.primary}
+                style={{ marginTop: 2 }}
+                numberOfLines={1}
               >
-                {provider.phoneNumber}
+                {provider.specialty}
               </AppText>
-            </View>
-          ) : null}
-        </View>
+            ) : null}
+
+            {provider.email ? (
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                style={{ marginTop: 2 }}
+                numberOfLines={1}
+              >
+                {provider.email}
+              </AppText>
+            ) : null}
+
+            {provider.phoneNumber ? (
+              <View style={styles.phoneRow}>
+                <Image source={IMAGES.phone} style={styles.phoneIconSmall} />
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS._48B02C}
+                >
+                  {provider.phoneNumber}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+        </TouchableOpacity>
 
         <View style={styles.actionsCol}>
           <TouchableOpacity
@@ -187,6 +188,23 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
 
 const ProvidersCallList: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const route = useRoute();
+
+  const isAmbulanceStaffScreen = route.name === SCREENS.ORDER_AMBULANCE;
+
+  const headerTitle = useMemo(() => {
+    if (isAmbulanceStaffScreen) {
+      return t(STRING.ambulanceStaff);
+    }
+    return t(STRING.approvedProvidersCallCenter);
+  }, [isAmbulanceStaffScreen, t]);
+
+  const searchPlaceholder = useMemo(() => {
+    if (isAmbulanceStaffScreen) {
+      return t(STRING.searchAmbulanceStaffPlaceholder);
+    }
+    return t(STRING.searchProviderPlaceholder);
+  }, [isAmbulanceStaffScreen, t]);
 
   const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -279,35 +297,13 @@ const ProvidersCallList: React.FC = () => {
   return (
     <AppSafeAreaView style={{ backgroundColor: COLORS.white }}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={{ flex: 0.5 }}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              activeOpacity={0.8}
-              onPress={() => NavigationService.goBack()}
-            >
-              <Image source={IMAGES.arrowLeft} style={styles.backIcon} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.headerCenter}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
-            >
-              {t(STRING.approvedProvidersCallCenter)}
-            </AppText>
-          </View>
-
-          <View style={{ flex: 0.5 }} />
-        </View>
+        <ProviderScreenHeader title={headerTitle} />
 
         <View style={styles.searchWrapper}>
           <Input
             value={search}
             onChangeText={handleSearchChange}
-            placeholder={t(STRING.searchProviderPlaceholder)}
+            placeholder={searchPlaceholder}
             placeholderTextColor={COLORS._6F767E}
             leftIcon={IMAGES.search}
             inputWrapperStyle={styles.searchInputWrapper}
@@ -373,35 +369,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: getScaleSize(20),
-    paddingVertical: getScaleSize(14),
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS._EFEFEF,
-  },
-  backBtn: {
-    width: getScaleSize(36),
-    height: getScaleSize(36),
-    borderRadius: getScaleSize(18),
-    backgroundColor: COLORS._F8F9FA,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS._EFEFEF,
-  },
-  backIcon: {
-    width: getScaleSize(16),
-    height: getScaleSize(16),
-    resizeMode: 'contain',
-  },
-  headerCenter: {
-    alignItems: 'center',
-    flex: 1,
-  },
   searchWrapper: {
     paddingVertical: getScaleSize(12),
     backgroundColor: COLORS.white,
@@ -438,6 +405,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
+  },
+  cardMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
   },
   infoCol: {
     flex: 1,

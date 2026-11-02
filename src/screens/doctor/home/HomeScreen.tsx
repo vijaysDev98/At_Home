@@ -105,7 +105,6 @@ const HomeScreen: React.FC = () => {
     [pendingSignatureCount],
   );
 
-  // Fetch dashboard data when screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchDashboardData();
@@ -144,6 +143,10 @@ const HomeScreen: React.FC = () => {
 
   const handleEmergencyCall = () => {
     NavigationService.navigate(SCREENS.PROVIDERS_CALL_LIST);
+  };
+
+  const handleOrderAmbulance = () => {
+    NavigationService.navigate(SCREENS.ORDER_AMBULANCE);
   };
 
   const showFeatureUnderDevelopmentToast = () => {
@@ -291,7 +294,7 @@ const HomeScreen: React.FC = () => {
                 styles.homeFeatureCardBlue,
                 pressed ? styles.homeFeatureCardPressed : null,
               ]}
-              onPress={showFeatureUnderDevelopmentToast}
+              onPress={handleOrderAmbulance}
               accessibilityRole="button"
               accessibilityLabel={t(STRING.homeOrderAmbulance)}
             >

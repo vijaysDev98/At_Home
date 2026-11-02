@@ -148,6 +148,8 @@ export const STRING = {
   homeNewActionToComplete: 'You have a new action to complete.',
   homeYourTreatedPatients: 'Your treated patients',
   homeOrderAmbulance: 'Order an ambulance',
+  ambulanceStaff: 'Ambulance Staff',
+  searchAmbulanceStaffPlaceholder: 'Search ambulance staff',
   homeCommunityPharmacies:
     'Community pharmacies, drugs available in primary care',
   formAwaitingSignature: 'Form Awaiting Signature',
@@ -892,6 +894,7 @@ export const STRING = {
   authFailed: 'Authentication failed',
 
   // Providers & Call Center
+  providerDetails: 'Provider Details',
   approvedProvidersCallCenter: 'Approved Providers',
   approvedProvider: 'Approved Provider',
   assignedProvider: 'Assigned Provider',
@@ -1035,6 +1038,7 @@ export const STRING = {
   preRequestRejectedSubtitle: 'The assigned provider was unable to accept this pre-request. You can update instructions or reassign to another provider.',
   reassignProvider: 'Reassign Provider',
   chatNow: 'Chat Now',
+  chat: 'Chat',
   chats: 'Chats',
   chatNoMessages: 'No messages yet',
   chatNoConversationsYet: 'No conversation yet',
