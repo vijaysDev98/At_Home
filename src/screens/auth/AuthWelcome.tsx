@@ -3,7 +3,13 @@ import { Image, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { COLORS, FONTS } from '../../utils';
-import { AppButton, AppSafeAreaView, AppText, LanguagePickerSheet } from '../../components';
+import {
+  AppButton,
+  AppSafeAreaView,
+  AppText,
+  LanguagePickerSheet,
+  LegalDocumentSheet,
+} from '../../components';
 import { getScaleSize } from '../../utils/scaleSize';
 import { IMAGES } from '../../assets/images';
 import { STRING } from '../../constant/strings';
@@ -15,6 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { updateLanguage, fetchLanguage } from '../../actions/language/languageAction';
 import { SHOW_TOAST } from '../../constant';
+import { Storage } from '../../constant/storage';
 
 export type AuthWelcomeProps = NativeStackScreenProps<
   RootStackParamList,
@@ -26,11 +33,35 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
   const dispatch = useDispatch();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
   const languageSheetRef = useRef<ActionSheetRef>(null);
+  const legalDocSheetRef = useRef<ActionSheetRef>(null);
 
   // Fetch stored language on component mount
   useEffect(() => {
     dispatch(fetchLanguage() as any);
   }, [dispatch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const alreadySeenPromise = Storage.get(Storage.LEGAL_DOCS_FIRST_SEEN);
+
+    const showTimer = setTimeout(async () => {
+      const alreadySeen = await alreadySeenPromise;
+      if (cancelled || alreadySeen) {
+        return;
+      }
+      legalDocSheetRef.current?.show();
+      Storage.save(Storage.LEGAL_DOCS_FIRST_SEEN, '1');
+    }, 1000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(showTimer);
+    };
+  }, []);
+
+  const handleOpenLegalDocs = () => {
+    legalDocSheetRef.current?.show();
+  };
 
   const handleLanguagePicker = () => {
     languageSheetRef.current?.show();
@@ -51,13 +82,24 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
     <>
       <AppSafeAreaView style={styles.safe}>
         <View style={styles.container}>
-          <TouchableOpacity
-            style={styles.languageButton}
-            onPress={handleLanguagePicker}
-            activeOpacity={0.8}
-          >
-            <Image source={IMAGES.language} style={styles.languageIcon} />
-          </TouchableOpacity>
+          <View style={styles.topRightActions}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={handleOpenLegalDocs}
+              activeOpacity={0.8}
+              accessibilityLabel={t(STRING.legalInformation)}
+            >
+              <Image source={IMAGES.info} style={styles.headerIcon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={handleLanguagePicker}
+              activeOpacity={0.8}
+              accessibilityLabel={t(STRING.selectLanguage)}
+            >
+              <Image source={IMAGES.language} style={styles.headerIcon} />
+            </TouchableOpacity>
+          </View>
           <Image source={IMAGES.logo} style={styles.logo} resizeMode="cover" />
           <AppText
             size={getScaleSize(32)}
@@ -97,6 +139,10 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
           onLanguageSelect={handleLanguageSelect}
           currentLanguage={currentLanguage}
         />
+        <LegalDocumentSheet
+          ref={legalDocSheetRef}
+          initialDoc="terms_and_conditions"
+        />
       </AppSafeAreaView>
     </>
   );
@@ -135,10 +181,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
   },
-  languageButton: {
+  topRightActions: {
     position: 'absolute',
     top: getScaleSize(20),
     right: getScaleSize(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    zIndex: 10,
+  },
+  headerIconButton: {
     width: getScaleSize(40),
     height: getScaleSize(40),
     borderRadius: getScaleSize(20),
@@ -148,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
   },
-  languageIcon: {
+  headerIcon: {
     width: getScaleSize(20),
     height: getScaleSize(20),
     tintColor: COLORS._526674,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Image,
   ScrollView,
@@ -20,7 +20,6 @@ import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { STRING } from '../../../constant/strings';
-import { SHOW_TOAST } from '../../../constant/showToast';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
@@ -100,10 +99,10 @@ const HomeScreen: React.FC = () => {
   const pendingSignatureCount =
     dashboardData?.actionRequired?.awaitingSignatureCount ?? 0;
 
-  const hasPendingFormActions = useMemo(
-    () => pendingSignatureCount > 0,
-    [pendingSignatureCount],
-  );
+  const hasPendingFormActions = pendingSignatureCount > 0;
+  const actionAlertText = hasPendingFormActions
+    ? t(STRING.homeNewActionToComplete)
+    : t(STRING.homeNoActionToComplete);
 
   useFocusEffect(
     useCallback(() => {
@@ -149,8 +148,8 @@ const HomeScreen: React.FC = () => {
     NavigationService.navigate(SCREENS.ORDER_AMBULANCE);
   };
 
-  const showFeatureUnderDevelopmentToast = () => {
-    SHOW_TOAST(t(STRING.featureUnderDevelopment), 'info');
+  const openPharmacyAssistant = () => {
+    NavigationService.navigate(SCREENS.PHARMACY_AI_CHAT);
   };
 
   const openTreatedPatients = () => {
@@ -233,13 +232,13 @@ const HomeScreen: React.FC = () => {
             resizeMode="contain"
           />
 
-          {hasPendingFormActions ? (
+          {dashboardData ? (
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleOpenActionServices}
               style={styles.actionAlertCard}
               accessibilityRole="button"
-              accessibilityLabel={t(STRING.homeNewActionToComplete)}
+              accessibilityLabel={actionAlertText}
             >
               <Image
                 source={IMAGES.ic_home_action_alert}
@@ -251,7 +250,7 @@ const HomeScreen: React.FC = () => {
                 color={COLORS._1A1D1F}
                 style={styles.actionAlertText}
               >
-                {t(STRING.homeNewActionToComplete)}
+                {actionAlertText}
               </AppText>
               <Image
                 source={IMAGES.arrow_right}
@@ -272,16 +271,18 @@ const HomeScreen: React.FC = () => {
                 source={IMAGES.ic_home_card_patients}
                 style={styles.homeFeatureIcon}
               />
-              <AppText
-                size={getScaleSize(11)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-                align="center"
-                style={styles.homeFeatureLabel}
-                numberOfLines={4}
-              >
-                {t(STRING.homeYourTreatedPatients)}
-              </AppText>
+              <View style={styles.homeFeatureLabelWrap}>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  align="center"
+                  style={styles.homeFeatureLabel}
+                  numberOfLines={4}
+                >
+                  {t(STRING.homeYourTreatedPatients)}
+                </AppText>
+              </View>
               <Image
                 source={IMAGES.arrow_right}
                 style={styles.homeFeatureChevron}
@@ -302,16 +303,18 @@ const HomeScreen: React.FC = () => {
                 source={IMAGES.ic_home_card_ambulance}
                 style={styles.homeFeatureIcon}
               />
-              <AppText
-                size={getScaleSize(11)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-                align="center"
-                style={styles.homeFeatureLabel}
-                numberOfLines={4}
-              >
-                {t(STRING.homeOrderAmbulance)}
-              </AppText>
+              <View style={styles.homeFeatureLabelWrap}>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  align="center"
+                  style={styles.homeFeatureLabel}
+                  numberOfLines={4}
+                >
+                  {t(STRING.homeOrderAmbulance)}
+                </AppText>
+              </View>
               <Image
                 source={IMAGES.arrow_right}
                 style={styles.homeFeatureChevron}
@@ -324,7 +327,7 @@ const HomeScreen: React.FC = () => {
                 styles.homeFeatureCardPurple,
                 pressed ? styles.homeFeatureCardPressed : null,
               ]}
-              onPress={showFeatureUnderDevelopmentToast}
+              onPress={openPharmacyAssistant}
               accessibilityRole="button"
               accessibilityLabel={t(STRING.homeCommunityPharmacies)}
             >
@@ -332,16 +335,18 @@ const HomeScreen: React.FC = () => {
                 source={IMAGES.ic_home_card_pharmacy}
                 style={styles.homeFeatureIcon}
               />
-              <AppText
-                size={getScaleSize(11)}
-                font={FONTS.Inter.Bold}
-                color={COLORS._1A1D1F}
-                align="center"
-                style={styles.homeFeatureLabel}
-                numberOfLines={4}
-              >
-                {t(STRING.homeCommunityPharmacies)}
-              </AppText>
+              <View style={styles.homeFeatureLabelWrap}>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  align="center"
+                  style={styles.homeFeatureLabel}
+                  numberOfLines={4}
+                >
+                  {t(STRING.homeCommunityPharmacies)}
+                </AppText>
+              </View>
               <Image
                 source={IMAGES.arrow_right}
                 style={styles.homeFeatureChevron}
@@ -548,7 +553,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: getScaleSize(18),
-    marginBottom: getScaleSize(14),
+    marginBottom: 0,
     paddingHorizontal: getScaleSize(14),
     paddingVertical: getScaleSize(14),
     borderRadius: getScaleSize(16),
@@ -579,6 +584,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     paddingHorizontal: getScaleSize(18),
+    marginTop: getScaleSize(14),
     marginBottom: getScaleSize(14),
     gap: getScaleSize(8),
   },
@@ -586,8 +592,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: getScaleSize(16),
     paddingHorizontal: getScaleSize(8),
-    paddingTop: getScaleSize(12),
-    paddingBottom: getScaleSize(10),
+    paddingVertical: getScaleSize(10),
     alignItems: 'center',
     justifyContent: 'flex-start',
     minHeight: getScaleSize(168),
@@ -613,12 +618,15 @@ const styles = StyleSheet.create({
     width: getScaleSize(72),
     height: getScaleSize(72),
     resizeMode: 'contain',
-    marginBottom: getScaleSize(8),
   },
-  homeFeatureLabel: {
+  homeFeatureLabelWrap: {
     flex: 1,
     width: '100%',
-    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  homeFeatureLabel: {
+    width: '100%',
     lineHeight: getScaleSize(14),
   },
   homeFeatureChevron: {
@@ -627,11 +635,10 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     tintColor: COLORS._6F767E,
     alignSelf: 'center',
-    marginTop: getScaleSize(6),
   },
   homeBtnTouchable: {
     alignSelf: 'center',
-    marginTop: getScaleSize(4),
+    marginTop: 0,
     borderRadius: getScaleSize(16),
     overflow: 'hidden',
     elevation: 4,

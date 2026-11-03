@@ -79,6 +79,7 @@ export const IMAGES = {
   serviceAttachmentJpgIcon: require('./figma_service_file_jpg.png'),
   serviceEyeIcon: require('./figma_service_eye.png'),
   serviceAttachmentPdfIcon: require('./figma_service_file_pdf.png'),
+  cardPdfIcon: require('./card_pdf_icon.png'),
   serviceViewActionIcon: require('./figma_service_action_view.png'),
   serviceDownloadActionIcon: require('./figma_service_action_download.png'),
   ic_announcement: require('./ic_announcement.png'),

@@ -348,7 +348,10 @@ const ProviderFormScreen: React.FC = () => {
             );
           }}
           isBack
-          isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
+          isViewForm={
+            requestData?.status === REQUEST_STATUS.IN_PROGRESS ||
+            !!requestData?.signedPdfUrl
+          }
           formStatus={requestData?.formStatus}
           status={requestData?.status}
           serviceRequestId={serviceRequestId}

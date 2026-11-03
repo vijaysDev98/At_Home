@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
   Image,
   FlatList,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import {
   AppSafeAreaView,
@@ -25,6 +25,7 @@ import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { fetchPatientDetails } from '../../../actions/patient/patientAction';
+import { getPatientRequestsService } from '../../../services/patientService';
 import {
   getButtonConfig,
   REQUEST_STATUS,
@@ -43,6 +44,8 @@ import { ActionSheetRef } from 'react-native-actions-sheet';
 import { setLoading } from '../../../actions/common/commonSlice';
 import serviceRequestApi from '../../../services/serviceRequestApi';
 import { fetchProfile } from '../../../actions/profile/profileAction';
+
+const REQUEST_PAGE_SIZE = 10;
 
 const PatientDetail: React.FC = () => {
   const isFocused = useIsFocused();
@@ -64,6 +67,12 @@ const PatientDetail: React.FC = () => {
     null,
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [requestsPagination, setRequestsPagination] = useState<any>(null);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [loadingMoreRequests, setLoadingMoreRequests] = useState(false);
+  const requestPageRef = useRef(1);
+  const requestFetchIdRef = useRef(0);
 
   const homeAddress = [patient?.streetAddress, patient?.city, patient?.zip]
     .filter(item => item && item !== 'null')
@@ -79,11 +88,78 @@ const PatientDetail: React.FC = () => {
     }
   };
 
+  const fetchRequests = useCallback(
+    async (page: number) => {
+      if (!id) {
+        return;
+      }
+
+      const fetchId = ++requestFetchIdRef.current;
+      if (page === 1) {
+        setRequests([]);
+        setRequestsPagination(null);
+        setRequestsLoading(true);
+      } else {
+        setLoadingMoreRequests(true);
+      }
+
+      try {
+        const response: any = await getPatientRequestsService(
+          id,
+          page,
+          REQUEST_PAGE_SIZE,
+        );
+
+        if (fetchId !== requestFetchIdRef.current) {
+          return;
+        }
+
+        if (response?.status && response?.code === 200) {
+          const payload = response.data?.data || {};
+          const next = payload.requests || [];
+          setRequests(prev => (page === 1 ? next : [...prev, ...next]));
+          setRequestsPagination(payload.pagination || null);
+          requestPageRef.current = page;
+        } else {
+          SHOW_TOAST(response?.data?.message || response?.message, 'error');
+        }
+      } catch (error: any) {
+        if (fetchId !== requestFetchIdRef.current) {
+          return;
+        }
+        SHOW_TOAST(error?.message, 'error');
+      } finally {
+        if (fetchId === requestFetchIdRef.current) {
+          setRequestsLoading(false);
+          setLoadingMoreRequests(false);
+        }
+      }
+    },
+    [id],
+  );
+
+  const loadMoreRequests = useCallback(() => {
+    if (
+      requestsLoading ||
+      loadingMoreRequests ||
+      !requestsPagination?.hasNextPage
+    ) {
+      return;
+    }
+    fetchRequests(requestPageRef.current + 1);
+  }, [
+    requestsLoading,
+    loadingMoreRequests,
+    requestsPagination,
+    fetchRequests,
+  ]);
+
   useEffect(() => {
     if (id && isFocused) {
       fetchPatientData();
+      fetchRequests(1);
     }
-  }, [id, isFocused]);
+  }, [id, isFocused, fetchRequests]);
 
   useEffect(() => {
     return () => {
@@ -129,13 +205,14 @@ const PatientDetail: React.FC = () => {
         SHOW_TOAST(response.message, 'success');
         reviewSheetRef?.current?.hide();
         fetchPatientData();
+        fetchRequests(1);
       } else {
         SHOW_TOAST(response.error, 'error');
       }
     } catch (error: any) {
       SHOW_TOAST(error?.message, 'error');
     } finally {
-      dispatch(setLoading(true));
+      dispatch(setLoading(false));
     }
   };
 
@@ -143,12 +220,13 @@ const PatientDetail: React.FC = () => {
     setRefreshing(true);
     try {
       await fetchPatientData();
+      await fetchRequests(1);
     } catch (error) {
       console.log('Error refreshing profile:', error);
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch]);
+  }, [fetchRequests, id]);
 
   return (
     <AppSafeAreaView
@@ -165,10 +243,13 @@ const PatientDetail: React.FC = () => {
       />
 
       <View style={styles.container}>
-        <ScrollView
-          nestedScrollEnabled={true}
+        <FlatList
+          data={requests}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          onEndReached={loadMoreRequests}
+          onEndReachedThreshold={0.4}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -177,7 +258,8 @@ const PatientDetail: React.FC = () => {
               tintColor={COLORS._526674}
             />
           }
-        >
+          ListHeaderComponent={
+            <View style={styles.headerBlock}>
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.editBtn}
@@ -443,12 +525,10 @@ const PatientDetail: React.FC = () => {
               />
             </TouchableOpacity>
           </View>
-
-          <FlatList
-            data={(patient?.linkedRequests || []) as any[]}
-            nestedScrollEnabled={true}
-            scrollEnabled={false}
-            ListEmptyComponent={() => (
+            </View>
+          }
+          ListEmptyComponent={() =>
+            requestsLoading ? null : (
               <View style={styles.emptyContainer}>
                 <AppText
                   size={getScaleSize(14)}
@@ -459,8 +539,16 @@ const PatientDetail: React.FC = () => {
                   {t(STRING.noLinkedRequestsFound)}
                 </AppText>
               </View>
-            )}
-            renderItem={({ item }) => {
+            )
+          }
+          ListFooterComponent={() =>
+            loadingMoreRequests || (requestsLoading && requests.length === 0) ? (
+              <View style={styles.paginationLoader}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null
+          }
+          renderItem={({ item }) => {
               const formStatus = item?.formStatus;
               const buttonConfig = getButtonConfig(formStatus, item?.status);
               const buttonConfigProvider = getButtonConfigProvider(
@@ -472,6 +560,7 @@ const PatientDetail: React.FC = () => {
                   {isServiceProvider ? (
                     <RequestCardProvider
                       name={patient?.fullName || ''}
+                      request={item}
                       requestId={item.requestId}
                       requestType={item?.service?.serviceName || ''}
                       formStatus={formStatus}
@@ -538,6 +627,7 @@ const PatientDetail: React.FC = () => {
                   ) : (
                     <RequestCardDoctor
                       name={patient?.fullName}
+                      request={item}
                       requestId={item?.requestId}
                       requestType={item?.service?.serviceName}
                       status={item?.status}
@@ -589,9 +679,7 @@ const PatientDetail: React.FC = () => {
                 </View>
               );
             }}
-            keyExtractor={item => item.id}
           />
-        </ScrollView>
       </View>
       <ReviewRequestSheet
         ref={reviewSheetRef}
@@ -621,7 +709,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
     paddingTop: 16,
+  },
+  headerBlock: {
     gap: 16,
+    marginBottom: 16,
+  },
+  paginationLoader: {
+    paddingVertical: getScaleSize(16),
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',

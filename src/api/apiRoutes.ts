@@ -73,6 +73,7 @@ const API_ROUTES = {
   chatConversations: 'chat/conversations',
   chatProviders: 'chat/providers',
   chatUnreadCount: 'chat/unread-count',
+  pharmacyAiChat: 'ai/pharmacy-chat',
 };
 
 export { API_ROUTES, DISABLE_API_LOGS };

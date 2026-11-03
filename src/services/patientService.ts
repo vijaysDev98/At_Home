@@ -19,6 +19,17 @@ export const getPatientDetailsService = async (id: string) => {
   return await API.Instance.get(`${API.API_ROUTES.getPatientDetails}/${id}`);
 };
 
+export const getPatientRequestsService = async (
+  id: string,
+  page: number,
+  size: number,
+) => {
+  return await API.Instance.get(
+    `${API.API_ROUTES.getPatientRequests}/${id}/requests`,
+    { params: { page, size } },
+  );
+};
+
 export const updatePatientService = async (id: string, data: any) => {
   return await API.Instance.put(`${API.API_ROUTES.addPatient}/${id}`, data);
 };

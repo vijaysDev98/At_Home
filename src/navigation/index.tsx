@@ -46,6 +46,7 @@ import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDisc
 import ProviderPreRequestDetailScreen from '../screens/provider/request/ProviderPreRequestDetailScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import ChatListScreen from '../screens/chat/ChatListScreen';
+import PharmacyAiChatScreen from '../screens/doctor/ai/PharmacyAiChatScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -131,6 +132,7 @@ export type RootStackParamList = {
     peerUserId?: string;
   };
   ChatList: undefined;
+  PharmacyAiChat: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -332,6 +334,16 @@ export default function RootNavigation() {
           name={SCREENS.CHAT_LIST}
           component={ChatListScreen}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PHARMACY_AI_CHAT}
+          component={PharmacyAiChatScreen}
+          options={{
+            headerShown: false,
+            ...(Platform.OS === 'android'
+              ? { androidKeyboardInputMode: 'adjustResize' as const }
+              : {}),
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

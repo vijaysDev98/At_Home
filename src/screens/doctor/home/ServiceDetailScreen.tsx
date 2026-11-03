@@ -210,6 +210,7 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
                   <View style={styles.cardItem}>
                     <RequestCardDoctor
                       name={item.patient?.fullName || 'Patient'}
+                      request={item}
                       requestId={item.requestId}
                       requestType={item.service?.serviceName ? t(item.service.serviceName) : t(selectedService.name)}
                       formStatus={formStatus}

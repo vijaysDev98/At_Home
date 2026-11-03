@@ -6,31 +6,30 @@ import { setLoading } from '../common/commonSlice';
 
 export const fetchProfile = () => async (dispatch: AppDispatch) => {
   try {
-    // dispatch(setLoading(true));
-
-    // As requested: "just pass token"
     const token = await Storage.get(Storage.USER_TOKEN);
-    let data = {
-      token: token,
-    };
+    if (!token) {
+      return false;
+    }
 
-    const response: any = await API.Instance.get(
-      API.API_ROUTES.getProfile,
-      //   , {
-      //   params: data,
-      // }
-    );
+    const response: any = await API.Instance.get(API.API_ROUTES.getProfile);
 
-    if (response?.status && response?.code === 200) {
-      dispatch(setProfileData(response?.data?.data ?? null));
-    } else {
+    if (response?.status && response?.code === 200 && response?.data?.data) {
+      dispatch(setProfileData(response.data.data));
+      return true;
+    }
+
+    const sessionStillValid = await Storage.get(Storage.USER_TOKEN);
+    if (sessionStillValid) {
       SHOW_TOAST(response?.data?.message || response?.message, 'error');
     }
+    return false;
   } catch (e: any) {
     console.log('Fetch Profile Error', e);
-    SHOW_TOAST(undefined, 'error');
-  } finally {
-    // dispatch(setLoading(false));
+    const sessionStillValid = await Storage.get(Storage.USER_TOKEN);
+    if (sessionStillValid) {
+      SHOW_TOAST(undefined, 'error');
+    }
+    return false;
   }
 };
 export const updateProfile =

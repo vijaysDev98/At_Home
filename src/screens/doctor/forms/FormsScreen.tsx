@@ -373,7 +373,10 @@ const FormsScreen: React.FC = () => {
           isBack={true}
           onBackPress={handleBackPress}
           style={styles.header}
-          isViewForm={requestData?.status === REQUEST_STATUS.IN_PROGRESS}
+          isViewForm={
+            requestData?.status === REQUEST_STATUS.IN_PROGRESS ||
+            !!requestData?.signedPdfUrl
+          }
           onViewFormPress={() => {
             viewSignedPdf(
               requestData?.signedPdfUrl,

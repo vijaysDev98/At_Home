@@ -22,6 +22,7 @@ import { STRING } from '../constant';
 import { isDelegatedToProvider } from '../constant/smallFunctions';
 import { serviceRequestApi } from '../services/serviceRequestApi';
 import { IMAGES } from '../assets/images';
+import { viewSignedPdf } from '../hooks/pdfDownloader';
 
 interface RequestCardProps {
   name?: string;
@@ -109,6 +110,8 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
     };
   }, [targetRequestId, isAcceptedPreRequest, delegateFormToProvider, request]);
 
+  const signedPdfUrl = request?.signedPdfUrl as string | null | undefined;
+
   const badgeColor = getStatusBadgeColor(effectiveStatus);
   const badgeBgColor = getStatusBadgeBgColor(effectiveStatus);
 
@@ -183,19 +186,35 @@ const RequestCardProvider: React.FC<RequestCardProps> = ({
           )}
         </View>
 
-        <View
-          style={[
-            styles.statusBadgeContainer,
-            { backgroundColor: badgeBgColor },
-          ]}
-        >
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.SemiBold}
-            color={badgeColor}
+        <View style={styles.headerActions}>
+          {signedPdfUrl ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.pdfBtn}
+              hitSlop={8}
+              onPress={() =>
+                viewSignedPdf(signedPdfUrl, undefined, requestId)
+              }
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.viewForm)}
+            >
+              <Image source={IMAGES.cardPdfIcon} style={styles.pdfIcon} />
+            </TouchableOpacity>
+          ) : null}
+          <View
+            style={[
+              styles.statusBadgeContainer,
+              { backgroundColor: badgeBgColor },
+            ]}
           >
-            {t(displayStatus)}
-          </AppText>
+            <AppText
+              size={getScaleSize(11)}
+              font={FONTS.Inter.SemiBold}
+              color={badgeColor}
+            >
+              {t(displayStatus)}
+            </AppText>
+          </View>
         </View>
       </View>
 
@@ -364,6 +383,22 @@ const styles = StyleSheet.create({
   patientInfoContainer: {
     marginLeft: getScaleSize(12),
     flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+  },
+  pdfBtn: {
+    width: getScaleSize(32),
+    height: getScaleSize(32),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pdfIcon: {
+    width: getScaleSize(28),
+    height: getScaleSize(28),
+    resizeMode: 'contain',
   },
   statusBadgeContainer: {
     alignItems: 'center',

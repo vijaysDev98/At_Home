@@ -66,6 +66,7 @@ export interface ServiceRequest {
   initialNotes?: string;
   voiceMessageUrl?: string | null;
   prescriptionFiles?: string[] | null;
+  signedPdfUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   patient?: PatientInfo | null;

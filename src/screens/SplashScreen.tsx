@@ -79,7 +79,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ }) => {
         // Upload FCM token for existing logged-in users
         await uploadFcmToken();
 
-        await dispatch(fetchProfile());
+        const profileLoaded = await dispatch(fetchProfile());
+        const sessionToken = await Storage.get(Storage.USER_TOKEN);
+
+        // A 401 while switching API hosts clears the session and opens Welcome.
+        // Do not continue into Home after that.
+        if (!sessionToken || !profileLoaded) {
+          consumePendingNotification();
+          if (sessionToken) {
+            NavigationService.replace(SCREENS.WELCOME as any);
+          }
+          return;
+        }
 
         // Handle initial notification if app was opened from killed state
         if (hasPendingNotification()) {

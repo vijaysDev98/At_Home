@@ -37,6 +37,7 @@ export const SCREENS = {
   PROVIDER_PRE_REQUEST_DETAIL: 'ProviderPreRequestDetail',
   CHAT: 'Chat',
   CHAT_LIST: 'ChatList',
+  PHARMACY_AI_CHAT: 'PharmacyAiChat',
 } as const;
 
 // Doctor Bottom Tab Screen Names
