@@ -1,11 +1,13 @@
-const API_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
+const API_BASE_URL = 
+'https://at-home-api-prod.prometteur.in/';
 
 // 'https://at-home-api.prometteur.in/';
-// 'http://192.168.10.103:3000/';
+// 'http://192.168.10.123:3000/';
 
-export const IMAGE_BASE_URL = 'https://at-home-api-prod.prometteur.in/';
-
-  // 'http://192.168.10.103:3000/';
+export const IMAGE_BASE_URL = 
+'https://at-home-api-prod.prometteur.in/';
+// 'https://at-home-api.prometteur.in/';
+  // 'http://192.168.10.123:3000/';
 // 'https://at-home-api-prod.prometteur.in/';
 
 export { API_BASE_URL };
@@ -55,6 +57,7 @@ const API_ROUTES = {
   addPatient: 'patients',
   getPatients: 'patients',
   getPatientDetails: 'patients',
+  getPatientRequests: 'patients',
   getServices: 'services',
   createServiceRequest: 'service-requests',
   getServiceRequests: 'service-requests',

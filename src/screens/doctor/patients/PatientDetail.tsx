@@ -18,7 +18,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { useRoute, useIsFocused } from '@react-navigation/native';
-import { AppLoader } from '../../../components';
+import { PatientDetailSkeleton } from '../../../components/patients/PatientDetailSkeleton';
 import moment from 'moment';
 import NavigationService from '../../../navigation/NavigationService';
 import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
@@ -71,6 +71,7 @@ const PatientDetail: React.FC = () => {
   const [requestsPagination, setRequestsPagination] = useState<any>(null);
   const [requestsLoading, setRequestsLoading] = useState(false);
   const [loadingMoreRequests, setLoadingMoreRequests] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(true);
   const requestPageRef = useRef(1);
   const requestFetchIdRef = useRef(0);
 
@@ -78,13 +79,18 @@ const PatientDetail: React.FC = () => {
     .filter(item => item && item !== 'null')
     .join(', ');
 
-  const { isLoading: globalLoading } = useSelector(
-    (state: RootState) => state.common,
-  );
-
   const fetchPatientData = async () => {
-    if (id) {
-      dispatch(fetchPatientDetails(id));
+    if (!id) {
+      setDetailLoading(false);
+      return;
+    }
+    if (!patient?.id) {
+      setDetailLoading(true);
+    }
+    try {
+      await dispatch(fetchPatientDetails(id));
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -233,16 +239,16 @@ const PatientDetail: React.FC = () => {
       edges={['top', 'bottom']}
       style={{ backgroundColor: COLORS.white }}
     >
-      <AppLoader visible={globalLoading && !patient?.id} />
-
       <Header
         isBack
-        backIcon={IMAGES.arrowLeft}
         title={t(STRING.patientDetail)}
         style={styles.headerStyle}
       />
 
       <View style={styles.container}>
+        {detailLoading && !patient?.id ? (
+          <PatientDetailSkeleton />
+        ) : (
         <FlatList
           data={requests}
           keyExtractor={item => item.id}
@@ -680,6 +686,7 @@ const PatientDetail: React.FC = () => {
               );
             }}
           />
+        )}
       </View>
       <ReviewRequestSheet
         ref={reviewSheetRef}
@@ -793,6 +800,7 @@ const styles = StyleSheet.create({
     height: getScaleSize(18),
     width: getScaleSize(18),
     resizeMode: 'contain',
+    tintColor: COLORS.primary,
   },
   infoContent: {
     flex: 1,

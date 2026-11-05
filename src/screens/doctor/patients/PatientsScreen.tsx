@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   FlatList,
   Image,
   ScrollView,
@@ -17,13 +18,13 @@ import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { fetchPatients } from '../../../actions/patient/patientAction';
 import {
-  AppLoader,
   AppSafeAreaView,
   AppText,
   Header,
   PrimaryButton,
   ProfileAvatar,
 } from '../../../components';
+import { PatientListSkeleton } from '../../../components/patients/PatientListSkeleton';
 import { STRING } from '../../../constant/strings';
 import { SCREENS } from '../../../navigation/routes';
 import NavigationService from '../../../navigation/NavigationService';
@@ -41,15 +42,20 @@ const PatientsScreen: React.FC = () => {
     (state: RootState) => state.patient,
   );
 
-  const { isLoading } = useSelector((state: RootState) => state.common);
-
   const [selectedChip, setSelectedChip] = useState(STRING.all);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
+  const [visibleNameIds, setVisibleNameIds] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pageOneInFlightRef = useRef(false);
+  const patientsCountRef = useRef(0);
+  patientsCountRef.current = patients.length;
 
   const getFilterValue = (chip: string): string | undefined => {
     switch (chip) {
@@ -70,15 +76,25 @@ const PatientsScreen: React.FC = () => {
     refresh: boolean = false,
     f?: string,
   ) => {
-    if (isLoading && !refresh && p === 1) return;
+    if (pageOneInFlightRef.current && !refresh && p === 1) return;
+
+    if (p === 1 && !refresh) {
+      pageOneInFlightRef.current = true;
+    }
 
     if (p > 1) {
       setIsFetchingNextPage(true);
+    } else if (!refresh && patientsCountRef.current === 0) {
+      setListLoading(true);
     }
 
     try {
       await dispatch(fetchPatients(p, s, f));
     } finally {
+      if (p === 1 && !refresh) {
+        pageOneInFlightRef.current = false;
+      }
+      setListLoading(false);
       setIsFetchingNextPage(false);
       setIsRefreshing(false);
     }
@@ -86,7 +102,13 @@ const PatientsScreen: React.FC = () => {
 
   useEffect(() => {
     fetchPatientsData(1, '', false, getFilterValue(selectedChip));
+    const appStateSub = AppState.addEventListener('change', nextState => {
+      if (nextState !== 'active') {
+        setVisibleNameIds({});
+      }
+    });
     return () => {
+      appStateSub.remove();
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
@@ -106,12 +128,17 @@ const PatientsScreen: React.FC = () => {
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
+      setVisibleNameIds({});
       // Fetch patients with default filter (All)
       fetchPatientsData(1, '', false, undefined);
+      return () => {
+        setVisibleNameIds({});
+      };
     }, []),
   );
 
   const handleChipPress = (chip: string) => {
+    setVisibleNameIds({});
     setSelectedChip(chip);
     setPage(1);
 
@@ -124,6 +151,7 @@ const PatientsScreen: React.FC = () => {
   };
 
   const handleSearchChange = (text: string) => {
+    setVisibleNameIds({});
     setSearch(text);
 
     if (searchDebounceRef.current) {
@@ -138,6 +166,7 @@ const PatientsScreen: React.FC = () => {
   };
 
   const onRefresh = () => {
+    setVisibleNameIds({});
     setIsRefreshing(true);
     setPage(1);
 
@@ -150,7 +179,8 @@ const PatientsScreen: React.FC = () => {
   };
 
   const onLoadMore = () => {
-    if (pagination?.hasNextPage && !isFetchingNextPage && !isLoading) {
+    setVisibleNameIds({});
+    if (pagination?.hasNextPage && !isFetchingNextPage && !listLoading) {
       const nextPage = page + 1;
       setPage(nextPage);
 
@@ -159,8 +189,26 @@ const PatientsScreen: React.FC = () => {
     }
   };
 
+  const hideAllNames = useCallback(() => {
+    setVisibleNameIds({});
+  }, []);
+
+  const toggleNameVisibility = useCallback((id: string) => {
+    setVisibleNameIds(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
   const PatientItem = memo(
-    ({ item, onPress }: { item: any; onPress: () => void }) => (
+    ({
+      item,
+      revealed,
+      onPress,
+      onToggleName,
+    }: {
+      item: any;
+      revealed: boolean;
+      onPress: () => void;
+      onToggleName: () => void;
+    }) => (
       <TouchableOpacity
         activeOpacity={0.9}
         style={styles.card}
@@ -169,10 +217,44 @@ const PatientsScreen: React.FC = () => {
         <View style={styles.cardLeft}>
           <ProfileAvatar name={`${item.fName} ${item.lName}`} size="medium" />
 
-          <View>
-            <AppText font={FONTS.Inter.Bold} style={styles.name}>
-              {item.fName} {item.lName}
-            </AppText>
+          <View style={styles.infoCol}>
+            <View style={styles.nameLine}>
+              <View style={styles.nameMask}>
+                {revealed ? (
+                  <AppText
+                    font={FONTS.Inter.Bold}
+                    numberOfLines={1}
+                    style={styles.name}
+                  >
+                    {item.fName} {item.lName}
+                  </AppText>
+                ) : (
+                  <View style={styles.hiddenPart}>
+                    <AppText
+                      font={FONTS.Inter.Bold}
+                      numberOfLines={1}
+                      style={[styles.name, styles.nameBlurred]}
+                    >
+                      {item.fName} {item.lName}
+                    </AppText>
+                    <View pointerEvents="none" style={styles.nameFog} />
+                  </View>
+                )}
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                onPress={onToggleName}
+                style={styles.eyeBtn}
+              >
+                <Image
+                  source={
+                    revealed ? IMAGES.open_eye_icon : IMAGES.close_eye_icon
+                  }
+                  style={revealed ? styles.eyeIconOpen : styles.eyeIcon}
+                />
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.phoneRow}>
               <Image source={IMAGES.phone} style={styles.phoneIcon} />
@@ -192,6 +274,8 @@ const PatientsScreen: React.FC = () => {
   const renderItem = ({ item }: { item: any }) => (
     <PatientItem
       item={item}
+      revealed={!!visibleNameIds[item.id]}
+      onToggleName={() => toggleNameVisibility(String(item.id))}
       onPress={() =>
         NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
           id: item.id,
@@ -200,9 +284,10 @@ const PatientsScreen: React.FC = () => {
     />
   );
 
+  const showSkeleton = listLoading && page === 1 && !isRefreshing;
+
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
-      <AppLoader visible={isLoading && page === 1 && !isRefreshing} />
       <View style={styles.container}>
         <Header
           title={t(STRING.patients)}
@@ -265,6 +350,9 @@ const PatientsScreen: React.FC = () => {
           {/* )} */}
         </View>
 
+        {showSkeleton ? (
+          <PatientListSkeleton />
+        ) : (
         <FlatList
           data={patients || []}
           style={styles.flatListContainer}
@@ -279,6 +367,7 @@ const PatientsScreen: React.FC = () => {
           refreshing={isRefreshing}
           onEndReached={onLoadMore}
           onEndReachedThreshold={0.5}
+          onScrollBeginDrag={hideAllNames}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
               <AppText
@@ -304,6 +393,7 @@ const PatientsScreen: React.FC = () => {
           initialNumToRender={10}
           windowSize={10}
         />
+        )}
 
         <View style={styles.footer}>
           <PrimaryButton
@@ -419,11 +509,55 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#526674',
   },
+  infoCol: {
+    flex: 1,
+  },
+  nameLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  nameMask: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 4,
+  },
+  hiddenPart: {
+    flexShrink: 1,
+    borderRadius: 4,
+  },
   name: {
     fontSize: 16,
     fontWeight: '800',
     color: '#1A1D1F',
-    marginBottom: 4,
+  },
+  nameBlurred: {
+    color: 'transparent',
+  },
+  nameFog: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#E3E9EE',
+    borderRadius: 4,
+  },
+  eyeBtn: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  eyeIconOpen: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
   },
   phoneRow: {
     flexDirection: 'row',

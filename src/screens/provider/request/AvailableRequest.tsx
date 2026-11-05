@@ -35,6 +35,7 @@ import {
   REQUEST_STATUS,
 } from '../../../constant/RequestStatus';
 import RequestCardProvider from '../../../components/RequestCardProvider';
+import { RequestListSkeleton } from '../../../components/requests/RequestListSkeleton';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { SHOW_TOAST } from '../../../constant/showToast';
@@ -525,7 +526,12 @@ const AvailableRequest: React.FC = () => {
 
         <View style={{ flex: 1 }}>
           {isLoading && requests.length === 0 ? (
-            <AppLoader visible={true} />
+            <RequestListSkeleton
+              style={{
+                paddingHorizontal: getScaleSize(20),
+                paddingTop: getScaleSize(16),
+              }}
+            />
           ) : (
             <FlatList
               data={requests}

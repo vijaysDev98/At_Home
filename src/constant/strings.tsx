@@ -676,6 +676,7 @@ export const STRING = {
   //formrequestheader
   patient: 'Patient',
   requestStatus: 'Request Status',
+  reqStatusShort: 'Req. status',
 
   //signature
   doctorSignature: 'Physician Signature',

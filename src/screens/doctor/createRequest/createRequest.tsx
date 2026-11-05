@@ -109,16 +109,13 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
 
   const { patients } = useSelector((state: RootState) => state.patient);
 
-  const { isLoading: globalLoading } = useSelector(
-    (state: RootState) => state.common,
-  );
-
   const [selectedId, setSelectedId] = useState<string>('');
   const [selectedChip, setSelectedChip] = useState<PatientFilterType>(
     STRING.all,
   );
   const [search, setSearch] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [patientsLoading, setPatientsLoading] = useState(false);
 
   const getFilterValue = (chip: PatientFilterType): string | undefined => {
     switch (chip) {
@@ -142,8 +139,15 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
     refresh: boolean = false,
     f?: string,
   ) => {
-    await dispatch(fetchPatients(p, s, f));
-    setIsRefreshing(false);
+    if (!refresh && patients.length === 0) {
+      setPatientsLoading(true);
+    }
+    try {
+      await dispatch(fetchPatients(p, s, f));
+    } finally {
+      setPatientsLoading(false);
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -278,7 +282,7 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
 
         {/* BODY */}
         <View style={styles.content}>
-          {globalLoading && patients.length === 0 ? (
+          {patientsLoading && patients.length === 0 ? (
             <View style={styles.loaderContainer}>
               <AppLoader visible />
             </View>

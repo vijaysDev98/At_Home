@@ -28,6 +28,7 @@ import { SCREENS } from '../../../navigation/routes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import { RequestListSkeleton } from '../../../components/requests/RequestListSkeleton';
 import {
   serviceRequestListApi,
   ServiceRequest,
@@ -452,7 +453,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
 
       <View style={styles.listContainer}>
         {isLoading && requests.length === 0 ? (
-          <AppLoader visible={true} />
+          <RequestListSkeleton />
         ) : (
           <FlatList
             data={filteredRequests}

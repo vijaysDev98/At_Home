@@ -30,6 +30,7 @@ import { SHOW_TOAST, STRING } from '../../../constant';
 import { getProviderDisplayName } from './providerDisplay';
 import { Provider, providerForNavigation } from './providerTypes';
 import ProviderScreenHeader from './ProviderScreenHeader';
+import { ProviderCallListSkeleton } from '../../../components/providers/ProviderCallListSkeleton';
 
 export type { Provider } from './providerTypes';
 
@@ -312,9 +313,7 @@ const ProvidersCallList: React.FC = () => {
         </View>
 
         {isLoading && page === 1 ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          </View>
+          <ProviderCallListSkeleton />
         ) : (
           <FlatList
             data={providers}

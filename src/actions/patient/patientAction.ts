@@ -1,5 +1,5 @@
 import { SHOW_TOAST } from '../../constant';
-import { AppDispatch, RootState } from '../../redux/store';
+import { AppDispatch } from '../../redux/store';
 import { setLoading } from '../common/commonSlice';
 import { API } from '../../api';
 import NavigationService from '../../navigation/NavigationService';
@@ -18,14 +18,9 @@ import {
 
 export const fetchPatients =
   (p: number = 1, s: string = '', f?: string) =>
-  async (dispatch: AppDispatch, getState: () => RootState) => {
+  async (dispatch: AppDispatch) => {
     try {
-      const { patients } = getState().patient;
-      // Only show loader on first page if list is empty
-      if (p === 1 && patients.length === 0) dispatch(setLoading(true));
       const response: any = await getPatientsService(p, 10, s, f);
-
-      dispatch(setLoading(false));
 
       if (response?.status && response?.code === 200) {
         const { patients, pagination } = response.data.data;
@@ -38,22 +33,15 @@ export const fetchPatients =
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     } catch (e: any) {
-      dispatch(setLoading(false));
       console.log('Fetch Patients Error', e);
       SHOW_TOAST(e?.message, 'error');
     }
   };
 
 export const fetchPatientDetails =
-  (id: string) => async (dispatch: AppDispatch, getState: () => RootState) => {
+  (id: string) => async (dispatch: AppDispatch) => {
     try {
-      const { selectedPatient } = getState().patient;
-      // Only show loader if we don't have this patient or data is missing
-      if (!selectedPatient || selectedPatient.id !== id) {
-        dispatch(setLoading(true));
-      }
       const response: any = await getPatientDetailsService(id);
-      dispatch(setLoading(false));
 
       if (response?.status && response?.code === 200) {
         dispatch(setSelectedPatient(response.data.data));
@@ -61,7 +49,6 @@ export const fetchPatientDetails =
         SHOW_TOAST(response?.data?.message || response?.message, 'error');
       }
     } catch (e: any) {
-      dispatch(setLoading(false));
       console.log('Fetch Patient Details Error', e);
       SHOW_TOAST(e?.message, 'error');
     }

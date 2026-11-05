@@ -11,6 +11,7 @@ import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
+import { NotificationListSkeleton } from '../../../components/notifications/NotificationListSkeleton';
 import Header from '../../../components/HeaderDoctor';
 import { getScaleSize } from '../../../utils/scaleSize';
 import {
@@ -271,9 +272,7 @@ const ProviderNotification: React.FC = () => {
 
   return (
     <AppSafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: COLORS.white }}>
-      <AppLoader
-        visible={(initialLoading && !isRefreshing) || isMarkingAllRead}
-      />
+      <AppLoader visible={isMarkingAllRead} />
       <View style={styles.container}>
         <Header
           style={styles.headerStyle}
@@ -323,6 +322,9 @@ const ProviderNotification: React.FC = () => {
         </View>
 
         {/* Notifications List */}
+        {initialLoading && !isRefreshing && notifications.length === 0 ? (
+          <NotificationListSkeleton />
+        ) : (
         <FlatList
           data={notifications}
           style={styles.scroll}
@@ -357,6 +359,7 @@ const ProviderNotification: React.FC = () => {
             ) : null
           }
         />
+        )}
       </View>
     </AppSafeAreaView>
   );

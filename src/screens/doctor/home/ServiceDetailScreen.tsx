@@ -11,7 +11,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { AppSafeAreaView, AppText, AppLoader } from '../../../components';
+import { AppSafeAreaView, AppText } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -25,6 +25,7 @@ import {
   ServiceRequest,
 } from '../../../services/serviceRequestListApi';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
+import { RequestListSkeleton } from '../../../components/requests/RequestListSkeleton';
 import { getButtonConfig } from '../../../constant';
 import { REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { getServiceIcon } from '../createRequest/createRequestStep2';
@@ -169,10 +170,8 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
             </AppText>
           </View>
 
-          {isLoading ? (
-            <View style={styles.loaderBox}>
-              <AppLoader visible={true} />
-            </View>
+          {isLoading && !refreshing ? (
+            <RequestListSkeleton />
           ) : (
             <FlatList
               data={requests}
@@ -405,10 +404,6 @@ const styles = StyleSheet.create({
   },
   cardItem: {
     marginBottom: getScaleSize(12),
-  },
-  loaderBox: {
-    paddingVertical: getScaleSize(40),
-    alignItems: 'center',
   },
   emptyState: {
     paddingVertical: getScaleSize(60),

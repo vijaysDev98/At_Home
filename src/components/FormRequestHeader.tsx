@@ -34,14 +34,16 @@ const StatusBadges: React.FC<{
           size={getScaleSize(12)}
           color={COLORS._526674}
           font={FONTS.Inter.Regular}
+          numberOfLines={1}
         >
-          {t(STRING.requestStatus)}:
+          {t(STRING.reqStatusShort)}:
         </AppText>
         <AppText
           size={getScaleSize(12)}
           color={COLORS[requestData?.status]}
           font={FONTS.Inter.SemiBold}
           style={styles.statusValue}
+          numberOfLines={1}
         >
           {t(
             DISPLAY_FORM_STATUS[requestData?.status] ||
@@ -55,6 +57,7 @@ const StatusBadges: React.FC<{
           size={getScaleSize(12)}
           color={COLORS._526674}
           font={FONTS.Inter.Regular}
+          numberOfLines={1}
         >
           {t(STRING.formStatus)}:
         </AppText>
@@ -69,6 +72,7 @@ const StatusBadges: React.FC<{
           }
           font={FONTS.Inter.SemiBold}
           style={styles.statusValue}
+          numberOfLines={1}
         >
           {fromReview
             ? t(DISPLAY_FORM_STATUS[FORM_STATUS.AWAITING_SIGNATURE])
@@ -119,7 +123,14 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
             font={FONTS.Inter.Regular}
             numberOfLines={1}
           >
-            {serviceName} • ID #{requestData?.requestId || ''}
+            {serviceName}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._526674}
+            font={FONTS.Inter.Regular}
+          >
+            ID #{requestData?.requestId || ''}
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>
@@ -169,7 +180,14 @@ const FormRequestHeaderForProvider: React.FC<FormRequestHeaderProps> = ({
             font={FONTS.Inter.Regular}
             numberOfLines={1}
           >
-            {serviceName} • ID #
+            {serviceName}
+          </AppText>
+          <AppText
+            size={getScaleSize(13)}
+            color={COLORS._526674}
+            font={FONTS.Inter.Regular}
+          >
+            ID #
             {(requestData?._id || requestData?.id)?.slice(-4).toUpperCase() || ''}
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
@@ -209,13 +227,14 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap', // badges wrap to next line instead of clipping
+    flexWrap: 'nowrap', // keep request and form status side by side
     gap: getScaleSize(8),
     marginTop: getScaleSize(4),
   },
   statusBadge: {
     flexDirection: 'row',
-    flexShrink: 1, // shrink if not enough space before wrapping
+    flexShrink: 1, // badge fits its text; shrinks only when the row is full
+    minWidth: 0,
     gap: getScaleSize(4),
     alignItems: 'center',
   },

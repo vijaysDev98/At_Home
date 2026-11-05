@@ -332,7 +332,7 @@ const AddPatient: React.FC = () => {
       <Header
         isBack
         title={isEdit ? t(STRING.editPatient) : t(STRING.addPatientTitle)}
-        backIcon={IMAGES.arrowLeft}
+        onBackPress={handleCancel}
         style={styles.headerStyle}
         {...(!isEdit && {
           leftContent: () => (
