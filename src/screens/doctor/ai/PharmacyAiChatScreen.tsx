@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import {
   AppSafeAreaView,
   AppText,
+  DrugProfileCard,
 } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -139,7 +140,7 @@ const PharmacyAiChatScreen: React.FC = () => {
 
     stickToBottomRef.current = true;
 
-    const history: PharmacyAiTurn[] = messages.slice(-2).map(({ role, text: turnText }) => ({
+    const history: PharmacyAiTurn[] = messages.slice(-4).map(({ role, text: turnText }) => ({
       role,
       text: turnText.slice(0, 280),
     }));
@@ -155,12 +156,19 @@ const PharmacyAiChatScreen: React.FC = () => {
 
     try {
       const result = await askPharmacyAi(question, history);
+      const drug = result.drugProfile;
+      const assistantText =
+        result.type === 'drug_profile' && drug
+          ? `${drug.medicineName}${drug.inn ? ` (${drug.inn})` : ''}`
+          : result.reply;
       setMessages(prev => [
         ...prev,
         {
           id: `${Date.now()}-assistant`,
           role: 'assistant',
-          text: result.reply,
+          text: assistantText,
+          type: result.type,
+          drugProfile: result.drugProfile,
         },
       ]);
     } catch (error: any) {
@@ -260,6 +268,9 @@ const PharmacyAiChatScreen: React.FC = () => {
           }
           renderItem={({ item }) => {
             const isUser = item.role === 'user';
+            if (!isUser && item.type === 'drug_profile' && item.drugProfile) {
+              return <DrugProfileCard data={item.drugProfile} />;
+            }
             return (
               <View
                 style={[

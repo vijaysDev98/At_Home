@@ -7,6 +7,7 @@ export interface Provider {
   providerName?: string;
   email?: string;
   phoneNumber?: string;
+  country?: string;
   specialty?: string;
   profileImg?: string;
   roles?: string[];
@@ -25,6 +26,7 @@ export const providerForNavigation = (provider: Provider): Provider => ({
   providerName: provider.providerName,
   email: provider.email,
   phoneNumber: provider.phoneNumber,
+  country: provider.country,
   specialty: provider.specialty,
   profileImg: provider.profileImg,
   roles: provider.roles,

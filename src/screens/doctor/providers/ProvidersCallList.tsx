@@ -59,6 +59,7 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
           peerProfileImg:
             provider.profileImg || result.peer?.profileImg || undefined,
           peerPhone: provider.phoneNumber || result.peer?.phoneNumber,
+          peerCountry: provider.country || result.peer?.country || undefined,
           peerUserId: providerUserId,
         });
       } finally {
@@ -73,6 +74,7 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
             type: 'contactProvider',
             payload: {
               phoneNumber: provider.phoneNumber,
+              country: provider.country,
               providerName: name,
               position: 'center',
             },

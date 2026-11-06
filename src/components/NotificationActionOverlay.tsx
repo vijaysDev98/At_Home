@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootState } from '../redux/store';
 import { hideNotificationOverlay } from '../actions/common/notificationOverlaySlice';
+import { toDialablePhone } from '../constant/getCountryCode';
 import { NOTIFICATION_OVERLAY_CONFIG } from '../constant/notificationOverlayConfig';
 import { serviceRequestApi } from '../services/serviceRequestApi';
 import NavigationService from '../navigation/NavigationService';
@@ -190,7 +191,9 @@ const NotificationActionOverlay: React.FC = () => {
         // 2. Contact Provider
         if (notificationType === 'contactProvider') {
           if (payload?.phoneNumber) {
-            Linking.openURL(`tel:${payload.phoneNumber}`).catch(() => {
+            Linking.openURL(
+              `tel:${toDialablePhone(payload.phoneNumber, payload.country)}`,
+            ).catch(() => {
               console.log('Unable to open phone dialer');
             });
           } else {

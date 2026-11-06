@@ -31,3 +31,4 @@ export { default as LegalDocumentSheet } from './LegalDocumentSheet';
 export type { LegalDocType, LegalDocumentSheetProps } from './LegalDocumentSheet';
 export { default as PatientChoiceAttestationModal } from './PatientChoiceAttestationModal';
 export type { PatientChoiceAttestationModalProps } from './PatientChoiceAttestationModal';
+export { default as DrugProfileCard } from './DrugProfileCard';

@@ -51,6 +51,7 @@ import {
   getDisplayFileName,
 } from '../../../utils/documentPickerHelper';
 import { getChatAccess } from '../../../services/chatService';
+import { toDialablePhone } from '../../../constant/getCountryCode';
 
 interface ProviderPreRequestDetailScreenProps { }
 
@@ -390,7 +391,9 @@ export const ProviderPreRequestDetailScreen: React.FC<
 
   const handleCall = () => {
     if (doctorPhone) {
-      Linking.openURL(`tel:${doctorPhone}`).catch(() => {
+      Linking.openURL(
+        `tel:${toDialablePhone(doctorPhone, doctor?.country)}`,
+      ).catch(() => {
         SHOW_TOAST(
           t(STRING.unableToOpenPhoneDialer) || 'Unable to open phone dialer',
           'error',
@@ -473,6 +476,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
         peerName: peerLabel,
         peerProfileImg: doctor?.profileImg || null,
         peerPhone: doctorPhone || undefined,
+        peerCountry: doctor?.country || undefined,
       });
       return;
     }

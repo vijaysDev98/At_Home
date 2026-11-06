@@ -92,7 +92,7 @@ import {
   formatChatLastSeen,
   groupChatMessagesByDate,
 } from '../../utils/chatMessageUi';
-import { RootState } from '../../redux/store';
+import { toDialablePhone } from '../../constant/getCountryCode';
 
 type RouteParams = {
   serviceRequestId?: string;
@@ -101,6 +101,7 @@ type RouteParams = {
   peerName?: string;
   peerProfileImg?: string | null;
   peerPhone?: string | null;
+  peerCountry?: string | null;
   peerUserId?: string;
 };
 
@@ -149,6 +150,7 @@ const ChatScreen: React.FC = () => {
     peerName: routePeerName,
     peerProfileImg: routePeerImg,
     peerPhone: routePeerPhone,
+    peerCountry: routePeerCountry,
     peerUserId: routePeerUserId,
   } = (route.params || {}) as RouteParams;
 
@@ -173,6 +175,9 @@ const ChatScreen: React.FC = () => {
   );
   const [peerPhone, setPeerPhone] = useState<string | null>(
     routePeerPhone?.trim() || null,
+  );
+  const [peerCountry, setPeerCountry] = useState<string | null>(
+    routePeerCountry?.trim() || null,
   );
   const [peerUserId, setPeerUserId] = useState<string | null>(
     routePeerUserId?.trim() || null,
@@ -588,6 +593,9 @@ const ChatScreen: React.FC = () => {
       if (phone) {
         setPeerPhone(phone);
       }
+      if (presence.peerCountry) {
+        setPeerCountry(presence.peerCountry);
+      }
       if (presence.peerUserId) {
         setPeerUserId(presence.peerUserId);
       }
@@ -601,7 +609,7 @@ const ChatScreen: React.FC = () => {
       SHOW_TOAST(t(STRING.noProviderPhoneNumberAvailable), 'info');
       return;
     }
-    const tel = phone.replace(/[^\d+]/g, '');
+    const tel = toDialablePhone(phone, peerCountry);
     if (!tel) {
       SHOW_TOAST(t(STRING.noProviderPhoneNumberAvailable), 'info');
       return;
@@ -609,7 +617,7 @@ const ChatScreen: React.FC = () => {
     Linking.openURL(`tel:${tel}`).catch(() => {
       SHOW_TOAST(t(STRING.unableToOpenPhoneDialer), 'error');
     });
-  }, [peerPhone, t]);
+  }, [peerPhone, peerCountry, t]);
 
   const refreshPresence = useCallback(async () => {
     const conversationId = resolveConversationId();

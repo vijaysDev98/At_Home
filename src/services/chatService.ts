@@ -23,6 +23,7 @@ export interface ChatConversationItem {
   peerProfileImg?: string | null;
   peerRole?: string | null;
   peerPhone?: string | null;
+  peerCountry?: string | null;
   unread?: boolean;
   unreadCount?: number;
 }
@@ -41,6 +42,7 @@ export interface ChatPeerPresence {
   isOnline: boolean;
   lastSeenAt?: string | null;
   peerPhone?: string | null;
+  peerCountry?: string | null;
 }
 
 export interface ChatMessageAttachment {
@@ -111,6 +113,7 @@ export interface ChatPeerMeta {
   name?: string | null;
   profileImg?: string | null;
   phoneNumber?: string | null;
+  country?: string | null;
 }
 
 export const fetchChatPeerMeta = async (

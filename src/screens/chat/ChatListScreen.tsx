@@ -155,6 +155,7 @@ const ChatListScreen: React.FC = () => {
             peerName: item.peerName,
             peerProfileImg: item.peerProfileImg,
             peerPhone: item.peerPhone,
+            peerCountry: item.peerCountry || undefined,
             peerUserId: item.peerUserId || undefined,
           })
         }

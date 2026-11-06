@@ -38,6 +38,7 @@ import DoctorList from '../screens/provider/doctorList/DoctorList';
 import PdfViewerScreen from '../screens/common/PdfViewerScreen';
 import ServiceDetailScreen from '../screens/doctor/home/ServiceDetailScreen';
 import DoctorHomeServicesScreen from '../screens/doctor/home/DoctorHomeServicesScreen';
+import OrderAmbulanceScreen from '../screens/doctor/home/OrderAmbulanceScreen';
 import ProviderNotification from '../screens/provider/notification/ProviderNotification';
 import ProvidersCallList from '../screens/doctor/providers/ProvidersCallList';
 import ProviderDetailScreen from '../screens/doctor/providers/ProviderDetailScreen';
@@ -129,6 +130,7 @@ export type RootStackParamList = {
     peerName?: string;
     peerProfileImg?: string | null;
     peerPhone?: string;
+    peerCountry?: string;
     peerUserId?: string;
   };
   ChatList: undefined;
@@ -312,7 +314,7 @@ export default function RootNavigation() {
         />
         <Stack.Screen
           name={SCREENS.ORDER_AMBULANCE}
-          component={ProvidersCallList}
+          component={OrderAmbulanceScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

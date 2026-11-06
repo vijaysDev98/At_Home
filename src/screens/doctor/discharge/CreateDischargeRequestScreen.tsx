@@ -562,6 +562,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           type: 'contactProvider',
           payload: {
             phoneNumber: phone,
+            country: assignedProvider?.country,
             position: 'center',
           },
         }),
@@ -600,6 +601,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
         peerName: providerName,
         peerProfileImg: assignedProvider?.profileImg || null,
         peerPhone: assignedProvider?.phoneNumber || undefined,
+        peerCountry: assignedProvider?.country || undefined,
       });
       return;
     }

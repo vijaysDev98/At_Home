@@ -47,6 +47,8 @@
 	<array>
 		<string>_metro._tcp</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>At Home uses your location to find nearby ambulance services.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow access to your camera to take photos of prescriptions, medical documents, or profile pictures.</string>
 	<key>NSFaceIDUsageDescription</key>
