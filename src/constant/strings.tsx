@@ -169,13 +169,12 @@ export const STRING = {
   pharmacyAiTitle: 'Pharmacy assistant',
   pharmacyAiIntroTitle: 'Trusted healthcare guidance',
   pharmacyAiIntroBody:
-    'Ask about symptoms, conditions, medicines, and clinical practice.\nAnswers follow established healthcare and medical information.',
+    'The pharmaceutical data provided in this application are compiled and cross-checked using authoritative sources (ANSM, HAS, VIDAL, etc.). This information may change in accordance with regulatory updates and the availability of medicinal substances, particularly in community pharmacies. Despite regular updates, users are advised to verify the information against current official sources.',
   pharmacyAiGotIt: 'Got it',
-  pharmacyAiPlaceholder: 'Ask for a medicine or a question',
+  pharmacyAiPlaceholder: 'Molecules or name of medical Products',
   pharmacyAiSend: 'Send',
   pharmacyAiDisclaimer:
     'General information only. Not a prescription or a patient-specific order.',
-  pharmacyAiEmpty: 'Ask a medical or health question.',
   pharmacyAiShowTips: 'Show tips',
   pharmacyAiThinking: 'Thinking',
   drugProfile: 'DRUG PROFILE',

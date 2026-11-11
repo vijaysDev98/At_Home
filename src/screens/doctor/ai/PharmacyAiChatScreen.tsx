@@ -240,18 +240,6 @@ const PharmacyAiChatScreen: React.FC = () => {
               scrollToLatest(true);
             }
           }}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <AppText
-                size={getScaleSize(14)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-                align="center"
-              >
-                {t(STRING.pharmacyAiEmpty)}
-              </AppText>
-            </View>
-          }
           ListFooterComponent={
             sending ? (
               <View style={[styles.bubble, styles.bubbleAssistant]}>
@@ -421,11 +409,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(16),
     paddingVertical: getScaleSize(16),
     gap: getScaleSize(10),
-  },
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingTop: getScaleSize(24),
   },
   bubble: {
     maxWidth: '86%',
