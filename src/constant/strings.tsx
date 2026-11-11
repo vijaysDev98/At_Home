@@ -169,7 +169,7 @@ export const STRING = {
   pharmacyAiTitle: 'Pharmacy assistant',
   pharmacyAiIntroTitle: 'Trusted healthcare guidance',
   pharmacyAiIntroBody:
-    'The pharmaceutical data provided in this application are compiled and cross-checked using authoritative sources (ANSM, HAS, VIDAL, etc.). This information may change in accordance with regulatory updates and the availability of medicinal substances, particularly in community pharmacies. Despite regular updates, users are advised to verify the information against current official sources.',
+    'The pharmaceutical data provided in this application are compiled and cross-checked using authoritative sources (ANSM, HAS, VIDAL, etc.). This information may change in accordance with regulatory updates and the availability of medicinal substances, particularly in community pharmacies.',
   pharmacyAiGotIt: 'Got it',
   pharmacyAiPlaceholder: 'Molecules or name of medical Products',
   pharmacyAiSend: 'Send',
