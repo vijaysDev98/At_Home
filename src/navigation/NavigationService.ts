@@ -31,11 +31,11 @@ function push(routeName: string, params?: object) {
   }
   navigator.dispatch(StackActions.push(routeName, params));
 }
-function reset(route: string) {
+function reset(route: string, params?: object) {
   navigator.dispatch(
     CommonActions.reset({
       index: 0,
-      routes: [{ name: route }],
+      routes: [{ name: route, params }],
     }),
   );
 }

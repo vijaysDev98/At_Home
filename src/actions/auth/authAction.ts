@@ -103,12 +103,12 @@ export const userLogin = (data: any) => async (dispatch: AppDispatch) => {
       SHOW_TOAST(responseData?.data?.message, 'success');
       dispatch(setLoading(false));
 
-      // Role-based navigation
-      if (roles.includes('provider') || roles.includes('nurse')) {
-        NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
-      } else {
-        NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
-      }
+      // Role-based navigation to post-login welcome screen
+      const isProvider = roles.includes('provider') || roles.includes('nurse');
+      const targetScreen = isProvider
+        ? SCREENS.PROVIDER_BOTTOM_TABS
+        : SCREENS.DOCTOR_BOTTOM_TABS;
+      NavigationService.reset(SCREENS.POST_LOGIN_WELCOME, { targetScreen });
     } else {
       console.log('Login failed:', response);
       if (response?.code === 401) {
@@ -185,14 +185,17 @@ export const verifyOtp = (data: any) => async (dispatch: AppDispatch) => {
 
       dispatch(setLoading(false));
 
-      // Role-based navigation
+      // Role-based navigation to post-login welcome screen
       const roles = innerData?.roles || [];
       SHOW_TOAST(response?.data?.message || response?.message, 'success');
-      if (roles.includes('serviceProvider')) {
-        NavigationService.reset(SCREENS.PROVIDER_BOTTOM_TABS);
-      } else {
-        NavigationService.reset(SCREENS.DOCTOR_BOTTOM_TABS);
-      }
+      const isProvider =
+        roles.includes('serviceProvider') ||
+        roles.includes('provider') ||
+        roles.includes('nurse');
+      const targetScreen = isProvider
+        ? SCREENS.PROVIDER_BOTTOM_TABS
+        : SCREENS.DOCTOR_BOTTOM_TABS;
+      NavigationService.reset(SCREENS.POST_LOGIN_WELCOME, { targetScreen });
       return { success: true };
     } else {
       dispatch(setLoading(false));

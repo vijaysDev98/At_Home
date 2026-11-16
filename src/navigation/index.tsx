@@ -7,6 +7,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/auth/Login';
+import PostLoginWelcomeScreen from '../screens/auth/PostLoginWelcomeScreen';
 import WelcomeScreen from '../screens/auth/AuthWelcome';
 import RegisterScreen from '../screens/auth/Register';
 import DoctorRegisteredScreen from '../screens/auth/DoctorRegisteredScreen';
@@ -53,6 +54,7 @@ export type RootStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   Login: undefined;
+  PostLoginWelcome: { targetScreen?: any } | undefined;
   Register: undefined;
   DoctorRegistered: undefined;
   RegisterSuccess: undefined;
@@ -165,6 +167,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.LOGIN}
           component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.POST_LOGIN_WELCOME}
+          component={PostLoginWelcomeScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

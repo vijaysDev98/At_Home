@@ -1066,5 +1066,19 @@
   "Open chat": "Ouvrir la conversation",
   "99+": "99+",
   "{{current}} / {{total}}": "{{current}} / {{total}}",
-  "Image preview": "Aperçu de l'image"
+  "Image preview": "Aperçu de l'image",
+  "Specialties & Forms Awaiting Signature": "Spécialités et formulaires en attente de signature",
+  "You have {{count}} form(s) pending signature in this category": "Vous avez {{count}} formulaire(s) en attente de signature dans cette catégorie",
+  "No form pending signature in this category": "Aucun formulaire en attente de signature dans cette catégorie",
+  "Infusion & Hygiene": "Perfusion & Soins d'hygiène",
+  "Oxygen Therapy": "Oxygénothérapie",
+  "Nutrition": "Nutrition",
+  "Pain Management": "Prise en charge de la douleur",
+  "Specific Care": "Soins spécifiques",
+  "General": "Général",
+  "Use your microphone to dictate your medical order in this form.": "Utilisez votre microphone pour dicter votre ordonnance médicale dans ce formulaire.",
+  "(Oral Nutritional Supplements)": "(Compléments Nutritionnels Oraux)",
+  "(Central and Peripheral)": "(Centrale et Périphérique)",
+  "(Enteral / Artificial Nutrition)": "(Entérale / Artificielle)",
+  "(Patient-Controlled Analgesia)": "(Analgésie Contrôlée par le Patient)"
 }

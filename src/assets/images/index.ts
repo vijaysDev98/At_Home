@@ -166,4 +166,13 @@ export const IMAGES = {
   ic_drug_availability: require('./ic_drug_availability.png'),
   ic_drug_sources: require('./ic_drug_sources.png'),
   ic_drug_chevron_down: require('./ic_drug_chevron_down.png'),
+  post_login_welcome: require('./post_login_welcome.jpg'),
+  post_login_welcome_en: require('./post_login_welcome_en.jpg'),
+  post_login_welcome_fr: require('./post_login_welcome_fr.jpg'),
+  cat_infusion: require('./cat_infusion.png'),
+  cat_oxygen: require('./cat_oxygen.png'),
+  cat_nutrition: require('./cat_nutrition.png'),
+  cat_pain: require('./cat_pain.png'),
+  cat_care: require('./cat_care.png'),
+  cat_general: require('./cat_general.png'),
 };

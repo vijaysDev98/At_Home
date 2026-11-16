@@ -2,6 +2,7 @@ export const SCREENS = {
   SPLASH: 'Splash',
   WELCOME: 'Welcome',
   LOGIN: 'Login',
+  POST_LOGIN_WELCOME: 'PostLoginWelcome',
   REGISTER: 'Register',
   DOCTOR_REGISTERED: 'DoctorRegistered',
   REGISTER_SUCCESS: 'RegisterSuccess',

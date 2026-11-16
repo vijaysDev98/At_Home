@@ -1067,5 +1067,19 @@
   "Open chat": "Open chat",
   "99+": "99+",
   "{{current}} / {{total}}": "{{current}} / {{total}}",
-  "Image preview": "Image preview"
+  "Image preview": "Image preview",
+  "Specialties & Forms Awaiting Signature": "Specialties & Forms Awaiting Signature",
+  "You have {{count}} form(s) pending signature in this category": "You have {{count}} form(s) pending signature in this category",
+  "No form pending signature in this category": "No form pending signature in this category",
+  "Infusion & Hygiene": "Infusion & Hygiene",
+  "Oxygen Therapy": "Oxygen Therapy",
+  "Nutrition": "Nutrition",
+  "Pain Management": "Pain Management",
+  "Specific Care": "Specific Care",
+  "General": "General",
+  "Use your microphone to dictate your medical order in this form.": "Use your microphone to dictate your medical order in this form.",
+  "(Oral Nutritional Supplements)": "(Oral Nutritional Supplements)",
+  "(Central and Peripheral)": "(Central and Peripheral)",
+  "(Enteral / Artificial Nutrition)": "(Enteral / Artificial Nutrition)",
+  "(Patient-Controlled Analgesia)": "(Patient-Controlled Analgesia)"
 }

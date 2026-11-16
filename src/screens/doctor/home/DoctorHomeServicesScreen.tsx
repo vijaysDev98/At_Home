@@ -92,12 +92,13 @@ const DoctorHomeServicesScreen: React.FC = () => {
           </View>
           <View style={styles.headerCenter}>
             <AppText
-              size={getScaleSize(16)}
+              size={getScaleSize(15)}
               font={FONTS.Inter.Bold}
               color={COLORS._1A1D1F}
-              numberOfLines={1}
+              numberOfLines={2}
+              align="center"
             >
-              {t(STRING.actionRequired)}
+              {t(STRING.specialtiesAndFormsAwaitingSignature)}
             </AppText>
           </View>
           <View style={styles.headerSide} />
@@ -115,16 +116,6 @@ const DoctorHomeServicesScreen: React.FC = () => {
             />
           }
         >
-          <View style={styles.sectionHeaderRow}>
-            <AppText
-              size={getScaleSize(15)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-            >
-              {t(STRING.services)} ({MASTER_SERVICES_LIST.length})
-            </AppText>
-          </View>
-
           <DoctorServicesGrid
             awaitingSignatureByService={awaitingSignatureByService}
             onServicePress={handleServicePress}
@@ -150,11 +141,13 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS._EFEFEF,
   },
   headerSide: {
-    flex: 0.5,
+    width: getScaleSize(40),
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: getScaleSize(4),
   },
   backBtn: {
     width: getScaleSize(36),
