@@ -1178,5 +1178,18 @@ export const STRING = {
   parenteralSubtitle: '(Central and Peripheral)',
   artificialNutritionSubtitle: '(Enteral / Artificial Nutrition)',
   pcaSubtitle: '(Patient-Controlled Analgesia)',
+  areYouMedicalResident: 'Are you a medical resident (intern)?',
+  headOfDepartment: 'Head of Department',
+  headOfDepartmentFirstName: 'Head of Department First Name',
+  enterHeadOfDepartmentFirstName: 'Enter head of department first name',
+  headOfDepartmentLastName: 'Head of Department Last Name',
+  enterHeadOfDepartmentLastName: 'Enter head of department last name',
+  headOfDepartmentRppsNumber: "Head of Department's RPPS Number",
+  enterHeadOfDepartmentRppsNumber: "Enter head of department's RPPS number",
+  headOfDepartmentFirstNameRequired: 'Head of department first name is required',
+  headOfDepartmentLastNameRequired: 'Head of department last name is required',
+  headOfDepartmentRppsRequired: 'Head of department RPPS number is required',
+  medicalResidentIntern: 'Medical Resident (Intern)',
+  doctorColon: 'Doctor',
 };
 

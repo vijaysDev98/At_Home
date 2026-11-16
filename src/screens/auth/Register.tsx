@@ -113,6 +113,18 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
+  const [isMedicalResident, setIsMedicalResident] = useState(
+    Boolean(userData.isMedicalResident) || false,
+  );
+  const [headOfDepartmentFirstName, setHeadOfDepartmentFirstName] = useState(
+    userData.headOfDepartmentFirstName || '',
+  );
+  const [headOfDepartmentLastName, setHeadOfDepartmentLastName] = useState(
+    userData.headOfDepartmentLastName || '',
+  );
+  const [headOfDepartmentRpps, setHeadOfDepartmentRpps] = useState(
+    userData.headOfDepartmentRppsNumber || '',
+  );
   const [finess, setFiness] = useState(userData.finessNumber || '');
   const [specialty, setSpecialty] = useState(userData.specialty || null);
   const [placeOfPractice, setPlaceOfPractice] = useState(
@@ -187,10 +199,30 @@ const Register: React.FC = () => {
           STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number,
         );
       }
-      if (!rpps.trim()) {
-        newErrors.rpps = t(STRING.rppsNumberRequired);
-      } else if (!/^\d{11}$/.test(rpps.trim())) {
-        newErrors.rpps = t(STRING.rppsNumberMustBe11Digits);
+      if (isMedicalResident) {
+        if (!headOfDepartmentFirstName.trim()) {
+          newErrors.headOfDepartmentFirstName = t(
+            STRING.headOfDepartmentFirstNameRequired,
+          );
+        }
+        if (!headOfDepartmentLastName.trim()) {
+          newErrors.headOfDepartmentLastName = t(
+            STRING.headOfDepartmentLastNameRequired,
+          );
+        }
+        if (!headOfDepartmentRpps.trim()) {
+          newErrors.headOfDepartmentRpps = t(
+            STRING.headOfDepartmentRppsRequired,
+          );
+        } else if (!/^\d{11}$/.test(headOfDepartmentRpps.trim())) {
+          newErrors.headOfDepartmentRpps = t(STRING.rppsNumberMustBe11Digits);
+        }
+      } else {
+        if (!rpps.trim()) {
+          newErrors.rpps = t(STRING.rppsNumberRequired);
+        } else if (!/^\d{11}$/.test(rpps.trim())) {
+          newErrors.rpps = t(STRING.rppsNumberMustBe11Digits);
+        }
       }
       if (!finess.trim()) {
         newErrors.finess = t(STRING.finessNumberRequired);
@@ -231,12 +263,20 @@ const Register: React.FC = () => {
         facilityName
       );
     }
+    const rppsValid = isMedicalResident
+      ? !!(
+          headOfDepartmentFirstName.trim() &&
+          headOfDepartmentLastName.trim() &&
+          headOfDepartmentRpps.trim()
+        )
+      : !!rpps.trim();
+
     return !!(
       fName &&
       lName &&
       email &&
       password &&
-      rpps &&
+      rppsValid &&
       finess &&
       specialty &&
       address &&
@@ -267,7 +307,7 @@ const Register: React.FC = () => {
         }
       }
 
-      const updateData = {
+      const updateData: any = {
         fName: fName.trim(),
         lName: lName.trim(),
         phoneNumber: phone.trim(),
@@ -277,6 +317,12 @@ const Register: React.FC = () => {
         practiceType: placeOfPractice.trim(),
         profileImg: profileImageUrl,
       };
+      if (isMedicalResident) {
+        updateData.headOfDepartmentFirstName =
+          headOfDepartmentFirstName.trim();
+        updateData.headOfDepartmentLastName =
+          headOfDepartmentLastName.trim();
+      }
       const isSuccess = await dispatch(updateProfile(updateData));
       if (isSuccess) {
         navigation.goBack();
@@ -286,7 +332,11 @@ const Register: React.FC = () => {
       return;
     }
 
-    const registerData = {
+    const effectiveRpps = isMedicalResident
+      ? headOfDepartmentRpps.trim()
+      : rpps.trim();
+
+    const registerData: any = {
       fName: fName.trim(),
       lName: lName.trim(),
       email: email.trim(),
@@ -294,13 +344,22 @@ const Register: React.FC = () => {
       phoneNumber: phone.trim(),
       role: ROLES.DOCTOR,
       country: country,
-      rppsNumber: rpps.trim(),
+      rppsNumber: effectiveRpps,
+      isMedicalResident: Boolean(isMedicalResident),
       finessNumber: finess.trim(),
       specialty: specialty,
       facilityName: facilityName.trim(),
       businessAddress: address.trim(),
       practiceType: placeOfPractice.trim(),
     };
+
+    if (isMedicalResident) {
+      registerData.headOfDepartmentFirstName =
+        headOfDepartmentFirstName.trim();
+      registerData.headOfDepartmentLastName = headOfDepartmentLastName.trim();
+      registerData.headOfDepartmentRppsNumber = headOfDepartmentRpps.trim();
+    }
+
     await dispatch(userRegister(registerData));
   };
 
@@ -442,26 +501,188 @@ const Register: React.FC = () => {
                 }}
               />
 
-              <Input
-                label={t(STRING.rppsNumber)}
-                isMandatory
-                isNumberOnly
-                maxLength={11}
-                placeholder={`${t(STRING.enterRppsNumber)} (${t(
-                  STRING.elevenDigit,
-                )})`}
-                leftIcon={IMAGES.card}
-                value={rpps}
-                onChangeText={t => {
-                  setRpps(t);
-                  setErrors(e => ({ ...e, rpps: '' }));
-                }}
-                keyboardType="number-pad"
-                error={errors.rpps}
-                helper={errors.rpps ? undefined : t(STRING.rppsNumber)}
-                style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
-                helperStyle={{ marginTop: getScaleSize(8) }}
-              />
+              <View style={styles.residentQuestionContainer}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS.slate900}
+                  style={styles.residentQuestionTitle}
+                >
+                  {t(STRING.areYouMedicalResident)}{' '}
+                  <AppText color={COLORS.error}>*</AppText>
+                </AppText>
+                <View style={styles.residentOptionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setIsMedicalResident(true);
+                      setErrors(e => ({
+                        ...e,
+                        rpps: '',
+                        headOfDepartmentFirstName: '',
+                        headOfDepartmentLastName: '',
+                        headOfDepartmentRpps: '',
+                      }));
+                    }}
+                    style={styles.residentRadioOption}
+                  >
+                    <View
+                      style={[
+                        styles.radioCircle,
+                        isMedicalResident && styles.radioCircleSelected,
+                      ]}
+                    >
+                      {isMedicalResident && (
+                        <View style={styles.radioInnerDot} />
+                      )}
+                    </View>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={
+                        isMedicalResident
+                          ? FONTS.Inter.SemiBold
+                          : FONTS.Inter.Regular
+                      }
+                      color={
+                        isMedicalResident ? COLORS.primary : COLORS.slate700
+                      }
+                    >
+                      {t(STRING.yes)}
+                    </AppText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setIsMedicalResident(false);
+                      setErrors(e => ({
+                        ...e,
+                        rpps: '',
+                        headOfDepartmentFirstName: '',
+                        headOfDepartmentLastName: '',
+                        headOfDepartmentRpps: '',
+                      }));
+                    }}
+                    style={styles.residentRadioOption}
+                  >
+                    <View
+                      style={[
+                        styles.radioCircle,
+                        !isMedicalResident && styles.radioCircleSelected,
+                      ]}
+                    >
+                      {!isMedicalResident && (
+                        <View style={styles.radioInnerDot} />
+                      )}
+                    </View>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={
+                        !isMedicalResident
+                          ? FONTS.Inter.SemiBold
+                          : FONTS.Inter.Regular
+                      }
+                      color={
+                        !isMedicalResident ? COLORS.primary : COLORS.slate700
+                      }
+                    >
+                      {t(STRING.no)}
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {isMedicalResident ? (
+                <>
+                  <Input
+                    label={t(STRING.headOfDepartmentFirstName)}
+                    isMandatory
+                    placeholder={t(STRING.enterFName)}
+                    leftIcon={IMAGES.person}
+                    value={headOfDepartmentFirstName}
+                    onChangeText={t => {
+                      setHeadOfDepartmentFirstName(t);
+                      setErrors(e => ({
+                        ...e,
+                        headOfDepartmentFirstName: '',
+                      }));
+                    }}
+                    error={errors.headOfDepartmentFirstName}
+                    style={{
+                      marginBottom: getScaleSize(
+                        errors.headOfDepartmentFirstName ? 4 : 20,
+                      ),
+                    }}
+                  />
+
+                  <Input
+                    label={t(STRING.headOfDepartmentLastName)}
+                    isMandatory
+                    placeholder={t(STRING.enterLName)}
+                    leftIcon={IMAGES.person}
+                    value={headOfDepartmentLastName}
+                    onChangeText={t => {
+                      setHeadOfDepartmentLastName(t);
+                      setErrors(e => ({
+                        ...e,
+                        headOfDepartmentLastName: '',
+                      }));
+                    }}
+                    error={errors.headOfDepartmentLastName}
+                    style={{
+                      marginBottom: getScaleSize(
+                        errors.headOfDepartmentLastName ? 4 : 20,
+                      ),
+                    }}
+                  />
+
+                  <Input
+                    label={t(STRING.headOfDepartmentRppsNumber)}
+                    isMandatory
+                    isNumberOnly
+                    maxLength={11}
+                    placeholder={t(STRING.enterRppsNumber)}
+                    leftIcon={IMAGES.card}
+                    value={headOfDepartmentRpps}
+                    onChangeText={t => {
+                      setHeadOfDepartmentRpps(t);
+                      setErrors(e => ({ ...e, headOfDepartmentRpps: '' }));
+                    }}
+                    keyboardType="number-pad"
+                    error={errors.headOfDepartmentRpps}
+                    helper={
+                      errors.headOfDepartmentRpps
+                        ? undefined
+                        : t(STRING.headOfDepartmentRppsNumber)
+                    }
+                    style={{
+                      marginBottom: getScaleSize(
+                        errors.headOfDepartmentRpps ? 4 : 20,
+                      ),
+                    }}
+                    helperStyle={{ marginTop: getScaleSize(8) }}
+                  />
+                </>
+              ) : (
+                <Input
+                  label={t(STRING.rppsNumber)}
+                  isMandatory
+                  isNumberOnly
+                  maxLength={11}
+                  placeholder={t(STRING.enterRppsNumber)}
+                  leftIcon={IMAGES.card}
+                  value={rpps}
+                  onChangeText={t => {
+                    setRpps(t);
+                    setErrors(e => ({ ...e, rpps: '' }));
+                  }}
+                  keyboardType="number-pad"
+                  error={errors.rpps}
+                  helper={errors.rpps ? undefined : t(STRING.rppsNumber)}
+                  style={{ marginBottom: getScaleSize(errors.rpps ? 4 : 20) }}
+                  helperStyle={{ marginTop: getScaleSize(8) }}
+                />
+              )}
 
               <Input
                 label={t(STRING.phoneNumber)}
@@ -836,6 +1057,43 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Inter.Medium,
     color: COLORS.slate400,
     marginTop: getScaleSize(12),
+  },
+  residentQuestionContainer: {
+    marginBottom: getScaleSize(16),
+    paddingHorizontal: getScaleSize(24),
+  },
+  residentQuestionTitle: {
+    marginBottom: getScaleSize(8),
+  },
+  residentOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(28),
+  },
+  residentRadioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+    paddingVertical: getScaleSize(4),
+  },
+  radioCircle: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    borderRadius: getScaleSize(9),
+    borderWidth: 1.8,
+    borderColor: COLORS.slate400,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  radioCircleSelected: {
+    borderColor: COLORS.primary,
+  },
+  radioInnerDot: {
+    width: getScaleSize(9),
+    height: getScaleSize(9),
+    borderRadius: getScaleSize(4.5),
+    backgroundColor: COLORS.primary,
   },
 });
 

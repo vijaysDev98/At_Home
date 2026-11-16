@@ -25,6 +25,10 @@ interface ProfileData {
   isFirstLogin: boolean;
   isBlocked: boolean;
   facilityName?: string;
+  isMedicalResident?: boolean;
+  headOfDepartmentFirstName?: string;
+  headOfDepartmentLastName?: string;
+  headOfDepartmentRppsNumber?: string;
   updatedBy?: {
     id: string;
   };

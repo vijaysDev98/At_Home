@@ -151,6 +151,10 @@ const DoctorProfile: React.FC = () => {
         profileImg: profileData?.profileImg,
         roles: profileData?.roles,
         facilityName: profileData?.facilityName,
+        isMedicalResident: profileData?.isMedicalResident,
+        headOfDepartmentFirstName: profileData?.headOfDepartmentFirstName,
+        headOfDepartmentLastName: profileData?.headOfDepartmentLastName,
+        headOfDepartmentRppsNumber: profileData?.headOfDepartmentRppsNumber,
       },
     });
   };
@@ -221,11 +225,12 @@ const DoctorProfile: React.FC = () => {
               </View>
             )}
             <View style={styles.avatarInfo}>
-              <View>
+              <View style={styles.nameContainer}>
                 <AppText
                   size={getScaleSize(18)}
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
+                  align="center"
                 >
                   {`Dr. ${fullName}`}
                 </AppText>
@@ -237,6 +242,18 @@ const DoctorProfile: React.FC = () => {
                 >
                   {capitalizeFirstLetter(userSpecialty || '')}
                 </AppText>
+                {profileData?.isMedicalResident && (
+                  <View style={styles.residentTag}>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.SemiBold}
+                      color={COLORS.primary}
+                      align="center"
+                    >
+                      {t(STRING.medicalResidentIntern)}
+                    </AppText>
+                  </View>
+                )}
               </View>
               <TouchableOpacity
                 style={styles.editBtn}
@@ -333,17 +350,52 @@ const DoctorProfile: React.FC = () => {
             >
               {t(STRING.professionalCredentials)}
             </AppText>
-            <View style={styles.fieldBlock}>
-              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
-              <Input
-                label={t(STRING.rppsNumber)}
-                style={styles.inputContainer}
-                value={userRpps}
-                isLocked={false}
-                editable={false}
-                leftIcon={IMAGES.card}
-              />
-            </View>
+            {profileData?.isMedicalResident ? (
+              <>
+                <View style={styles.fieldBlock}>
+                  <Input
+                    label={t(STRING.headOfDepartment)}
+                    style={styles.inputContainer}
+                    value={
+                      profileData.headOfDepartmentFirstName ||
+                      profileData.headOfDepartmentLastName
+                        ? `Dr. ${[
+                            profileData.headOfDepartmentFirstName,
+                            profileData.headOfDepartmentLastName,
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}`
+                        : ''
+                    }
+                    isLocked={false}
+                    editable={false}
+                    leftIcon={IMAGES.person}
+                  />
+                </View>
+                <View style={styles.fieldBlock}>
+                  <Input
+                    label={t(STRING.headOfDepartmentRppsNumber)}
+                    style={styles.inputContainer}
+                    value={profileData.headOfDepartmentRppsNumber || userRpps}
+                    isLocked={false}
+                    editable={false}
+                    leftIcon={IMAGES.card}
+                  />
+                </View>
+              </>
+            ) : (
+              <View style={styles.fieldBlock}>
+                {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
+                <Input
+                  label={t(STRING.rppsNumber)}
+                  style={styles.inputContainer}
+                  value={userRpps}
+                  isLocked={false}
+                  editable={false}
+                  leftIcon={IMAGES.card}
+                />
+              </View>
+            )}
             <View style={styles.fieldBlock}>
               {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
               <Input
@@ -898,7 +950,13 @@ const styles = StyleSheet.create({
   },
   avatarInfo: {
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    width: '100%',
+  },
+  nameContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   editBtn: {
     flexDirection: 'row',
@@ -967,6 +1025,18 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     tintColor: COLORS._526674,
     resizeMode: 'contain',
+  },
+  residentTag: {
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(12),
+    backgroundColor: COLORS._EFF6FF,
+    borderWidth: 1,
+    borderColor: COLORS._DBEAFE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: getScaleSize(2),
   },
 });
 

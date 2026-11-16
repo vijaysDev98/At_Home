@@ -1080,5 +1080,18 @@
   "(Oral Nutritional Supplements)": "(Compléments Nutritionnels Oraux)",
   "(Central and Peripheral)": "(Centrale et Périphérique)",
   "(Enteral / Artificial Nutrition)": "(Entérale / Artificielle)",
-  "(Patient-Controlled Analgesia)": "(Analgésie Contrôlée par le Patient)"
+  "(Patient-Controlled Analgesia)": "(Analgésie Contrôlée par le Patient)",
+  "Are you a medical resident (intern)?": "Êtes-vous interne en médecine ?",
+  "Head of Department": "Chef de service",
+  "Head of Department First Name": "Prénom du chef de service",
+  "Enter head of department first name": "Entrez le prénom du chef de service",
+  "Head of Department Last Name": "Nom du chef de service",
+  "Enter head of department last name": "Entrez le nom du chef de service",
+  "Head of Department's RPPS Number": "Numéro RPPS du chef de service",
+  "Enter head of department's RPPS number": "Entrez le numéro RPPS du chef de service",
+  "Head of department first name is required": "Le prénom du chef de service est requis",
+  "Head of department last name is required": "Le nom du chef de service est requis",
+  "Head of department RPPS number is required": "Le numéro RPPS du chef de service est requis",
+  "Medical Resident (Intern)": "Interne en médecine",
+  "Doctor": "Médecin"
 }

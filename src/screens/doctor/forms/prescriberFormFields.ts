@@ -46,18 +46,57 @@ export const getPrescriberFormFields = (prescriber?: any) => {
   const finess =
     prescriber.finessNumber || prescriber.finess || prescriber.prescriber_finess || '';
 
+  const isResident = Boolean(
+    prescriber.isMedicalResident === true ||
+    prescriber.isMedicalResident === 'true' ||
+    prescriber.is_medical_resident === true ||
+    prescriber.is_medical_resident === 'true'
+  );
+
+  const headOfDeptFirstName =
+    prescriber.headOfDepartmentFirstName ||
+    prescriber.head_of_department_first_name ||
+    '';
+  const headOfDeptLastName =
+    prescriber.headOfDepartmentLastName ||
+    prescriber.head_of_department_last_name ||
+    '';
+  const headOfDeptFullName = [headOfDeptFirstName, headOfDeptLastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  const headOfDeptName =
+    prescriber.headOfDepartmentName ||
+    prescriber.head_of_department_name ||
+    (headOfDeptFullName ? `Dr. ${headOfDeptFullName}` : '');
+
+  const headOfDeptRpps =
+    prescriber.headOfDepartmentRppsNumber ||
+    prescriber.head_of_department_rpps ||
+    '';
+
+  const rppsId = isResident
+    ? (headOfDeptRpps || prescriber.rppsNumber || prescriber.rppsId || '')
+    : (prescriber.rppsNumber || prescriber.rppsId || '');
+
   return {
     prescriber_last_name: lastName,
     prescriber_first_name: firstName,
     prescriber_phone: formattedPhone,
     prescriber_emergency_phone: formattedPhone,
     prescriber_contact_phone: formattedPhone,
-    rpps_id: prescriber.rppsNumber || prescriber.rppsId || '',
+    rpps_id: rppsId,
     hospital_name: facilityName,
     hospital_address: facilityAddress,
     finess_number: finess,
     prescriber_finess: finess,
     doctor_name: `${firstName} ${lastName}`.trim(),
+    is_medical_resident: isResident,
+    head_of_department_first_name: headOfDeptFirstName,
+    head_of_department_last_name: headOfDeptLastName,
+    head_of_department_name: headOfDeptName,
+    head_of_department_rpps: headOfDeptRpps,
   };
 };
 

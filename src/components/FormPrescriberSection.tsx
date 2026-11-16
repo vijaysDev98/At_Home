@@ -39,46 +39,107 @@ const FormPrescriberSection: React.FC<PrescriberSectionProps> = ({
     </View>
   );
 
+  const isResident = Boolean(
+    state?.is_medical_resident === true ||
+    state?.is_medical_resident === 'true'
+  );
+
+  const residentDoctorName =
+    state?.doctor_name ||
+    `${capitalizeFirstLetter(state?.prescriber_first_name || '')} ${capitalizeFirstLetter(
+      state?.prescriber_last_name || '',
+    )}`.trim();
+
+  const headOfDeptFormatted = state?.head_of_department_name
+    ? state.head_of_department_name.startsWith('Dr.')
+      ? state.head_of_department_name
+      : `Dr. ${state.head_of_department_name}`
+    : state?.head_of_department_first_name || state?.head_of_department_last_name
+    ? `Dr. ${capitalizeFirstLetter(
+        state?.head_of_department_first_name || '',
+      )} ${capitalizeFirstLetter(state?.head_of_department_last_name || '')}`.trim()
+    : '';
+
+  const effectiveRpps = state?.head_of_department_rpps || state?.rpps_id || '';
+
   return (
     <View style={styles.card}>
       {renderSectionHeader(t(title), IMAGES.stethoscopeIcon)}
-      <View style={styles.row}>
-        <Input
-          isLocked
-          label={t(STRING.firstName)}
-          value={capitalizeFirstLetter(state.prescriber_first_name || '')}
-          style={[styles.inputField, { flex: 1 }]}
-        />
-        <Input
-          isLocked
-          label={t(STRING.lastName)}
-          value={capitalizeFirstLetter(state.prescriber_last_name || '')}
-          style={[styles.inputField, { flex: 1 }]}
-        />
-      </View>
-      {/* <View style={styles.row}> */}
-      {showFiness ? (
-        <Input
-          isLocked
-          label={t(STRING.finess)}
-          value={state.prescriber_finess}
-          style={[styles.inputField, { flex: 1 }]}
-        />
+      {isResident ? (
+        <>
+          <Input
+            isLocked
+            label={t(STRING.doctorColon)}
+            value={residentDoctorName}
+            style={styles.inputField}
+          />
+          <Input
+            isLocked
+            label={t(STRING.headOfDepartment)}
+            value={headOfDeptFormatted}
+            style={styles.inputField}
+          />
+          {showFiness ? (
+            <Input
+              isLocked
+              label={t(STRING.finess)}
+              value={state.prescriber_finess}
+              style={styles.inputField}
+            />
+          ) : (
+            <Input
+              isLocked
+              label={t(STRING.phone)}
+              value={state.prescriber_phone || state.prescriber_emergency_phone}
+              style={styles.inputField}
+            />
+          )}
+          <Input
+            isLocked
+            label={t(STRING.rppsNumber)}
+            value={effectiveRpps}
+            style={styles.inputField}
+          />
+        </>
       ) : (
-        <Input
-          isLocked
-          label={t(STRING.phone)}
-          value={state.prescriber_phone || state.prescriber_emergency_phone}
-          style={[styles.inputField, { flex: 1 }]}
-        />
+        <>
+          <View style={styles.row}>
+            <Input
+              isLocked
+              label={t(STRING.firstName)}
+              value={capitalizeFirstLetter(state.prescriber_first_name || '')}
+              style={[styles.inputField, { flex: 1 }]}
+            />
+            <Input
+              isLocked
+              label={t(STRING.lastName)}
+              value={capitalizeFirstLetter(state.prescriber_last_name || '')}
+              style={[styles.inputField, { flex: 1 }]}
+            />
+          </View>
+          {showFiness ? (
+            <Input
+              isLocked
+              label={t(STRING.finess)}
+              value={state.prescriber_finess}
+              style={[styles.inputField, { flex: 1 }]}
+            />
+          ) : (
+            <Input
+              isLocked
+              label={t(STRING.phone)}
+              value={state.prescriber_phone || state.prescriber_emergency_phone}
+              style={[styles.inputField, { flex: 1 }]}
+            />
+          )}
+          <Input
+            isLocked
+            label={t(STRING.rppsId)}
+            value={state.rpps_id}
+            style={[styles.inputField, { flex: 1 }]}
+          />
+        </>
       )}
-      <Input
-        isLocked
-        label={t(STRING.rppsId)}
-        value={state.rpps_id}
-        style={[styles.inputField, { flex: 1 }]}
-      />
-      {/* </View> */}
       <AppText
         size={getScaleSize(12)}
         color={COLORS._6F767E}

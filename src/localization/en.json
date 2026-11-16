@@ -1081,5 +1081,18 @@
   "(Oral Nutritional Supplements)": "(Oral Nutritional Supplements)",
   "(Central and Peripheral)": "(Central and Peripheral)",
   "(Enteral / Artificial Nutrition)": "(Enteral / Artificial Nutrition)",
-  "(Patient-Controlled Analgesia)": "(Patient-Controlled Analgesia)"
+  "(Patient-Controlled Analgesia)": "(Patient-Controlled Analgesia)",
+  "Are you a medical resident (intern)?": "Are you a medical resident (intern)?",
+  "Head of Department": "Head of Department",
+  "Head of Department First Name": "Head of Department First Name",
+  "Enter head of department first name": "Enter head of department first name",
+  "Head of Department Last Name": "Head of Department Last Name",
+  "Enter head of department last name": "Enter head of department last name",
+  "Head of Department's RPPS Number": "Head of Department's RPPS Number",
+  "Enter head of department's RPPS number": "Enter head of department's RPPS number",
+  "Head of department first name is required": "Head of department first name is required",
+  "Head of department last name is required": "Head of department last name is required",
+  "Head of department RPPS number is required": "Head of department RPPS number is required",
+  "Medical Resident (Intern)": "Medical Resident (Intern)",
+  "Doctor": "Doctor"
 }
