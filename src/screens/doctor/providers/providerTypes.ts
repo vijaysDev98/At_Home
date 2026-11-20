@@ -9,12 +9,18 @@ export interface Provider {
   phoneNumber?: string;
   country?: string;
   specialty?: string;
+  profession?: string;
   profileImg?: string;
   roles?: string[];
   status?: string;
   operatingDepartments?: string[];
   assignedServices?: string[];
-  serviceDetails?: Array<{ serviceName?: string; name?: string } | string>;
+  serviceDetails?: Array<
+    { serviceName?: string; name?: string; description?: string } | string
+  >;
+  registrationId?: string;
+  businessAddress?: string;
+  facilityName?: string;
 }
 
 export const providerForNavigation = (provider: Provider): Provider => ({
@@ -28,10 +34,14 @@ export const providerForNavigation = (provider: Provider): Provider => ({
   phoneNumber: provider.phoneNumber,
   country: provider.country,
   specialty: provider.specialty,
+  profession: provider.profession,
   profileImg: provider.profileImg,
   roles: provider.roles,
   status: provider.status,
   operatingDepartments: provider.operatingDepartments,
   assignedServices: provider.assignedServices,
   serviceDetails: provider.serviceDetails,
+  registrationId: provider.registrationId,
+  businessAddress: provider.businessAddress,
+  facilityName: provider.facilityName,
 });

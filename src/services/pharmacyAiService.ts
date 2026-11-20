@@ -37,11 +37,20 @@ export type PharmacyAiReply = {
 export const askPharmacyAi = async (
   message: string,
   history: PharmacyAiTurn[],
+  lang: string = 'en',
 ): Promise<PharmacyAiReply> => {
-  const response: any = await API.Instance.post(API.API_ROUTES.pharmacyAiChat, {
-    message,
-    history: history.map(({ role, text }) => ({ role, text })),
-  });
+  const normalizedLang = lang.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  const response: any = await API.Instance.post(
+    API.API_ROUTES.pharmacyAiChat,
+    {
+      message,
+      history: history.map(({ role, text }) => ({ role, text })),
+      lang: normalizedLang,
+    },
+    {
+      params: { lang: normalizedLang },
+    },
+  );
 
   if (!response?.status) {
     throw new Error(response?.message || 'Request failed');

@@ -4,12 +4,14 @@ interface PatientState {
   patients: any[];
   pagination: any;
   selectedPatient: any;
+  lastProcessedPatient: { id: string; name: string; timestamp?: number } | null;
 }
 
 const initialState: PatientState = {
   patients: [],
   pagination: null,
   selectedPatient: null,
+  lastProcessedPatient: null,
 };
 
 const patientSlice = createSlice({
@@ -84,6 +86,17 @@ const patientSlice = createSlice({
     },
 
     /**
+     * Stores the most recently viewed or processed patient record.
+     * Used for quick access shortcut button on the home screen.
+     */
+    setLastProcessedPatient: (
+      state,
+      action: PayloadAction<{ id: string; name: string; timestamp?: number } | null>,
+    ) => {
+      state.lastProcessedPatient = action.payload;
+    },
+
+    /**
      * Resets the entire patient state to initial state.
      * Used on logout and account deletion.
      */
@@ -98,6 +111,7 @@ export const {
   updatePatientInList,
   addPatientToList,
   clearSelectedPatient,
+  setLastProcessedPatient,
   resetPatient,
 } = patientSlice.actions;
 

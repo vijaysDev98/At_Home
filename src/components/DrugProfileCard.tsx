@@ -97,7 +97,8 @@ const SECTIONS: SectionConfig[] = [
 ];
 
 export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isFrench = i18n.language?.startsWith('fr');
   // By default, the first section (Indication) can start expanded
   const [expandedKeys, setExpandedKeys] = useState<{ [key: string]: boolean }>({
     indication: true,
@@ -111,12 +112,16 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
     }));
   };
 
-  const medicineName = data.medicineName || 'Medicine';
+  const medicineName =
+    data.medicineName || (isFrench ? 'Médicament' : 'Medicine');
   const inn = data.inn || '—';
   const strength = data.strength || '—';
   const route = data.route || '—';
-  const sources = data.sources || t(STRING.sourcesLabel);
-  const lastUpdated = data.lastUpdated || 'Jan 2025';
+  const sources = data.sources
+    ? t(data.sources) || data.sources
+    : t(STRING.sourcesLabel);
+  const lastUpdated =
+    data.lastUpdated || (isFrench ? 'Janvier 2025' : 'Jan 2025');
 
   return (
     <View style={styles.container}>

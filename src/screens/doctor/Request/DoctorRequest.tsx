@@ -38,6 +38,7 @@ import { getButtonConfig, STRING } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { useRoute, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { getProviderSpecialty } from '../providers/providerDisplay';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { PreRequestDetailSheet } from '../../../components/ActionSheets';
 import { isDelegatedToProvider } from '../../../constant/smallFunctions';
@@ -324,7 +325,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           delegateFormToProvider={isDelegated}
           request={item}
           providerName={providerName}
-          providerSpecialty={provider?.specialty || provider?.profession}
+          providerSpecialty={
+            provider ? getProviderSpecialty(provider, t) : undefined
+          }
           buttonText={
             buttonConfig.show
               ? t(buttonConfig.label || '') || undefined

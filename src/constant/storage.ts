@@ -8,6 +8,7 @@ const Storage = {
     LANGUAGE_KEY: '@app_language',
     LEGAL_DOCS_FIRST_SEEN: '@legal_docs_first_seen',
     PHARMACY_AI_INTRO_SEEN: '@pharmacy_ai_intro_seen',
+    LAST_VIEWED_PATIENT: '@last_viewed_patient',
     async save(key: string, value: string): Promise<boolean> {
         try {
             await AsyncStorage.setItem(key, value ?? '');

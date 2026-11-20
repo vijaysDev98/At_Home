@@ -27,7 +27,10 @@ import { getProvidersService } from '../../../services/patientService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { openProviderChat } from '../../../services/chatService';
 import { SHOW_TOAST, STRING } from '../../../constant';
-import { getProviderDisplayName } from './providerDisplay';
+import {
+  getProviderDisplayName,
+  getProviderSpecialty,
+} from './providerDisplay';
 import { Provider, providerForNavigation } from './providerTypes';
 import ProviderScreenHeader from './ProviderScreenHeader';
 import { ProviderCallListSkeleton } from '../../../components/providers/ProviderCallListSkeleton';
@@ -39,7 +42,8 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const [openingChat, setOpeningChat] = useState(false);
-    const name = getProviderDisplayName(provider);
+    const name = getProviderDisplayName(provider, t);
+    const specialty = getProviderSpecialty(provider, t);
     const providerUserId = String(provider._id || provider.id || '');
 
     const handleChat = async () => {
@@ -120,7 +124,7 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
               {name}
             </AppText>
 
-            {provider.specialty ? (
+            {specialty ? (
               <AppText
                 size={getScaleSize(12)}
                 font={FONTS.Inter.Medium}
@@ -128,7 +132,7 @@ const ProviderCallItem: React.FC<{ provider: Provider }> = React.memo(
                 style={{ marginTop: 2 }}
                 numberOfLines={1}
               >
-                {provider.specialty}
+                {specialty}
               </AppText>
             ) : null}
 
@@ -349,9 +353,8 @@ const ProvidersCallList: React.FC = () => {
                     size={getScaleSize(14)}
                     font={FONTS.Inter.Medium}
                     color={COLORS._6F767E}
-                    style={{ textAlign: 'center' }}
                   >
-                    {t(STRING.noApprovedProvidersFound)}
+                    {t(STRING.noProvidersFound)}
                   </AppText>
                 </View>
               ) : null

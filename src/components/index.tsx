@@ -32,3 +32,5 @@ export type { LegalDocType, LegalDocumentSheetProps } from './LegalDocumentSheet
 export { default as PatientChoiceAttestationModal } from './PatientChoiceAttestationModal';
 export type { PatientChoiceAttestationModalProps } from './PatientChoiceAttestationModal';
 export { default as DrugProfileCard } from './DrugProfileCard';
+export { default as RequestUnderReviewModal } from './RequestUnderReviewModal';
+export type { RequestUnderReviewModalProps } from './RequestUnderReviewModal';

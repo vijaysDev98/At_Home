@@ -21,10 +21,13 @@ import { useRoute, useIsFocused } from '@react-navigation/native';
 import { PatientDetailSkeleton } from '../../../components/patients/PatientDetailSkeleton';
 import moment from 'moment';
 import NavigationService from '../../../navigation/NavigationService';
-import { DOCTOR_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
+import { SCREENS } from '../../../navigation/routes';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
-import { fetchPatientDetails } from '../../../actions/patient/patientAction';
+import {
+  fetchPatientDetails,
+  saveLastProcessedPatient,
+} from '../../../actions/patient/patientAction';
 import { getPatientRequestsService } from '../../../services/patientService';
 import {
   getButtonConfig,
@@ -32,7 +35,10 @@ import {
   SHOW_TOAST,
   STRING,
 } from '../../../constant';
-import { clearSelectedPatient } from '../../../actions/patient/patientSlice';
+import {
+  clearSelectedPatient,
+  setSelectedPatient,
+} from '../../../actions/patient/patientSlice';
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { useTranslation } from 'react-i18next';
 import { getCountryCode } from '../../../constant/getCountryCode';
@@ -233,6 +239,39 @@ const PatientDetail: React.FC = () => {
       setRefreshing(false);
     }
   }, [fetchRequests, id]);
+
+  const handleCreateLinkedRequest = useCallback(() => {
+    if (!patient) {
+      SHOW_TOAST(t(STRING.somethingWentWrong), 'error');
+      return;
+    }
+    const patientId = patient.id || patient._id || id;
+    if (!patientId) {
+      SHOW_TOAST(t(STRING.missingID), 'error');
+      return;
+    }
+
+    dispatch(setSelectedPatient(patient));
+    const patientName =
+      `${patient.fName || ''} ${patient.lName || ''}`.trim() ||
+      patient.name ||
+      '';
+    dispatch(
+      saveLastProcessedPatient({
+        id: String(patientId),
+        name: patientName,
+      }),
+    );
+
+    const nextScreen = isServiceProvider
+      ? SCREENS.DOCTOR_LIST
+      : SCREENS.CREATE_REQUEST_STEP2;
+
+    NavigationService.navigate(nextScreen, {
+      patientId: String(patientId),
+      fromPatient: true,
+    });
+  }, [patient, id, dispatch, isServiceProvider, t]);
 
   return (
     <AppSafeAreaView
@@ -517,11 +556,7 @@ const PatientDetail: React.FC = () => {
             </AppText>
 
             <TouchableOpacity
-              onPress={() => {
-                NavigationService.replace(DOCTOR_TAB_SCREENS.CREATE_REQUEST, {
-                  fromPatient: true,
-                });
-              }}
+              onPress={handleCreateLinkedRequest}
               style={styles.plusBtn}
               activeOpacity={0.8}
             >

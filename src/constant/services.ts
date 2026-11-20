@@ -132,14 +132,27 @@ export const MASTER_SERVICES_LIST: ServiceConfig[] = [
 export const getServiceDetails = (serviceOrId: any): ServiceConfig => {
   if (!serviceOrId) return MASTER_SERVICES_LIST[0];
 
-  const id = typeof serviceOrId === 'string' ? serviceOrId : serviceOrId?.id;
-  const name = typeof serviceOrId === 'object' ? serviceOrId?.name || serviceOrId?.serviceName : '';
+  const id =
+    typeof serviceOrId === 'string'
+      ? serviceOrId
+      : serviceOrId?._id || serviceOrId?.id;
+  const name =
+    typeof serviceOrId === 'string'
+      ? serviceOrId
+      : serviceOrId?.serviceName || serviceOrId?.name || '';
 
+  // 1. Match by exact id
   let match = MASTER_SERVICES_LIST.find(s => s.id === id);
+
+  // 2. If no match by id, match by name or string lookup
   if (!match && name) {
-    const lowerName = name.toLowerCase();
+    const lowerName = name.trim().toLowerCase();
     match = MASTER_SERVICES_LIST.find(
-      s => s.name.toLowerCase().includes(lowerName) || lowerName.includes(s.name.toLowerCase())
+      s =>
+        s.name.toLowerCase() === lowerName ||
+        s.id.toLowerCase() === lowerName ||
+        s.name.toLowerCase().includes(lowerName) ||
+        lowerName.includes(s.name.toLowerCase()),
     );
   }
 

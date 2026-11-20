@@ -25,7 +25,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { RootStackParamList } from '../../../navigation';
 import { STRING } from '../../../constant';
-import { fetchPatients } from '../../../actions/patient/patientAction';
+import {
+  fetchPatients,
+  saveLastProcessedPatient,
+} from '../../../actions/patient/patientAction';
 import { setSelectedPatient } from '../../../actions/patient/patientSlice';
 import {
   useFocusEffect,
@@ -214,6 +217,13 @@ const CreateRequest: React.FC<CreateRequestProps> = ({ navigation }) => {
 
     if (patient) {
       dispatch(setSelectedPatient(patient));
+      const patientName = `${patient.fName || ''} ${patient.lName || ''}`.trim() || patient.name || '';
+      dispatch(
+        saveLastProcessedPatient({
+          id: selectedId,
+          name: patientName,
+        }),
+      );
 
       const preRequestId = (route.params as any)?.preRequestId;
       NavigationService.navigate(

@@ -602,7 +602,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
                           textTransform: 'capitalize',
                         }}
                       >
-                        {doctor.specialty}
+                        {t(doctor.specialty)}
                       </AppText>
                     )}
                     {!!doctor?.email && (

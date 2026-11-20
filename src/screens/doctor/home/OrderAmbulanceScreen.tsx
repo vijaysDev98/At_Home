@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import { AppSafeAreaView, AppText, Header } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -19,6 +21,12 @@ import { IMAGES } from '../../../assets/images';
 import { SHOW_TOAST, STRING } from '../../../constant';
 import { getEmergencyNumbers } from '../../../constant/emergencyNumbers';
 import { getNearbyPlacesService } from '../../../services/nearbyPlacesService';
+import {
+  recordProviderContact,
+  getProviderContactSummary,
+  getContactCountFor,
+  ProviderContactSummary,
+} from '../../../services/providerContactTracker';
 
 type NearbyPlace = {
   id: string;
@@ -61,17 +69,8 @@ const formatDistance = (
   return t(STRING.nearbyDistanceKm, { count });
 };
 
-// Static France coordinates for testing (Paris). Used only in development builds.
-const USE_TEST_LOCATION = __DEV__;
-const TEST_LOCATION = { latitude: 48.8566, longitude: 2.3522 };
-
 const readPosition = () =>
   new Promise<{ latitude: number; longitude: number }>((resolve, reject) => {
-    if (USE_TEST_LOCATION) {
-      resolve(TEST_LOCATION);
-      return;
-    }
-
     Geolocation.getCurrentPosition(
       position => {
         resolve({
@@ -102,6 +101,14 @@ const requestLocationAccess = async () => {
 
 const OrderAmbulanceScreen: React.FC = () => {
   const { t } = useTranslation();
+  const { userData } = useSelector((state: RootState) => state.login);
+  const { profileData } = useSelector((state: RootState) => state.profile);
+  const userId = userData?._id || userData?.id || profileData?.id || '';
+
+  const [contactSummary, setContactSummary] =
+    useState<ProviderContactSummary | null>(null);
+  const [showTopNotice, setShowTopNotice] = useState<boolean>(true);
+
   const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
   const emergency = detectedCountry
     ? getEmergencyNumbers(detectedCountry)
@@ -112,10 +119,16 @@ const OrderAmbulanceScreen: React.FC = () => {
   const [locationDenied, setLocationDenied] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  const loadContacts = useCallback(async () => {
+    const summary = await getProviderContactSummary(userId, 7);
+    setContactSummary(summary);
+  }, [userId]);
+
   const loadPlaces = useCallback(
     async (refresh = false) => {
       if (refresh) {
         setIsRefreshing(true);
+        loadContacts();
       } else {
         setIsLoading(true);
       }
@@ -123,7 +136,7 @@ const OrderAmbulanceScreen: React.FC = () => {
       setHasError(false);
 
       try {
-        const allowed = USE_TEST_LOCATION || (await requestLocationAccess());
+        const allowed = await requestLocationAccess();
         if (!allowed) {
           setPlaces([]);
           setLocationDenied(true);
@@ -159,14 +172,41 @@ const OrderAmbulanceScreen: React.FC = () => {
         setIsRefreshing(false);
       }
     },
-    [t],
+    [loadContacts, t],
   );
 
   useEffect(() => {
     loadPlaces(false);
+    loadContacts();
     // Load once when the screen opens. Pull to refresh loads again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleCallPlace = async (place: NearbyPlace) => {
+    if (!place.phone) return;
+    try {
+      await recordProviderContact(userId, {
+        id: place.id,
+        name: place.name,
+        phone: place.phone,
+        category: 'ambulance',
+      });
+      loadContacts();
+    } catch (e) {
+      console.log('Error recording provider contact:', e);
+    }
+    dial(place.phone);
+  };
+
+  const hasFrequentNearbyAmbulance = useMemo(() => {
+    if (isLoading || places.length === 0 || !contactSummary) {
+      return false;
+    }
+    return places.some(place => {
+      const count = getContactCountFor(contactSummary, place.id, place.phone);
+      return count >= 3;
+    });
+  }, [isLoading, places, contactSummary]);
 
   const renderPlace = ({ item }: { item: NearbyPlace }) => {
     const distance = formatDistance(item.distanceMeters, t);
@@ -175,17 +215,51 @@ const OrderAmbulanceScreen: React.FC = () => {
         ? t(STRING.nearbyAmbulance)
         : t(STRING.nearbyHospital);
 
+    const contactCount = getContactCountFor(
+      contactSummary,
+      item.id,
+      item.phone,
+    );
+    const showIndependenceWarning = contactCount >= 3;
+
     return (
       <View style={styles.card}>
         <View style={styles.cardTop}>
-          <View style={styles.kindBadge}>
-            <AppText
-              size={getScaleSize(11)}
-              font={FONTS.Inter.SemiBold}
-              color={COLORS.primary}
-            >
-              {kindLabel}
-            </AppText>
+          <View style={styles.badgeRow}>
+            <View style={styles.kindBadge}>
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.primary}
+              >
+                {kindLabel}
+              </AppText>
+            </View>
+            {contactCount > 0 ? (
+              <View
+                style={[
+                  styles.contactCountBadge,
+                  contactCount >= 3 && styles.contactCountBadgeWarning,
+                ]}
+              >
+                <Image
+                  source={IMAGES.phone}
+                  style={[
+                    styles.contactCountIcon,
+                    contactCount >= 3 && styles.contactCountIconWarning,
+                  ]}
+                />
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.SemiBold}
+                  color={contactCount >= 3 ? '#B45309' : COLORS.primary}
+                >
+                  {contactCount === 1
+                    ? t(STRING.contactedThisWeekSingular)
+                    : t(STRING.contactedThisWeek, { count: contactCount })}
+                </AppText>
+              </View>
+            ) : null}
           </View>
           {distance ? (
             <AppText
@@ -228,12 +302,26 @@ const OrderAmbulanceScreen: React.FC = () => {
           </AppText>
         ) : null}
 
+        {showIndependenceWarning ? (
+          <View style={styles.independenceWarningBox}>
+            <Image source={IMAGES.info} style={styles.warningInfoIcon} />
+            <AppText
+              size={getScaleSize(11)}
+              font={FONTS.Inter.Regular}
+              color="#92400E"
+              style={styles.warningText}
+            >
+              {t(STRING.ambulanceIndependenceWarning, { count: contactCount })}
+            </AppText>
+          </View>
+        ) : null}
+
         <View style={styles.actions}>
           {item.phone ? (
             <TouchableOpacity
               activeOpacity={0.85}
               style={styles.callBtn}
-              onPress={() => dial(item.phone)}
+              onPress={() => handleCallPlace(item)}
             >
               <Image source={IMAGES.phone} style={styles.callIcon} />
               <AppText
@@ -279,6 +367,36 @@ const OrderAmbulanceScreen: React.FC = () => {
         title={t(STRING.nearbyAmbulancesTitle)}
         style={{ paddingHorizontal: getScaleSize(16) }}
       />
+
+      {!isLoading && hasFrequentNearbyAmbulance && showTopNotice ? (
+        <View style={styles.topIndependenceBanner}>
+          <Image source={IMAGES.info} style={styles.topBannerInfoIcon} />
+          <View style={{ flex: 1 }}>
+            <AppText
+              size={getScaleSize(12)}
+              font={FONTS.Inter.Bold}
+              color="#92400E"
+            >
+              {t(STRING.commercialIndependenceReminder)}
+            </AppText>
+            <AppText
+              size={getScaleSize(11)}
+              font={FONTS.Inter.Regular}
+              color="#78350F"
+              style={{ marginTop: 2 }}
+            >
+              {t(STRING.ambulanceIndependenceNotice)}
+            </AppText>
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowTopNotice(false)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.topBannerDismiss}
+          >
+            <Image source={IMAGES.crossIcon} style={styles.dismissCrossIcon} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {emergency ? (
       <View style={styles.emergencyCard}>
@@ -424,11 +542,92 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+    flexWrap: 'wrap',
+  },
   kindBadge: {
     backgroundColor: '#E8EDF1',
     borderRadius: getScaleSize(20),
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(4),
+  },
+  contactCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(4),
+    backgroundColor: '#EFF6FF',
+    borderRadius: getScaleSize(20),
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(4),
+    borderWidth: 0.8,
+    borderColor: '#BFDBFE',
+  },
+  contactCountBadgeWarning: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  contactCountIcon: {
+    width: getScaleSize(10),
+    height: getScaleSize(10),
+    tintColor: COLORS.primary,
+    resizeMode: 'contain',
+  },
+  contactCountIconWarning: {
+    tintColor: '#B45309',
+  },
+  independenceWarningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: getScaleSize(8),
+    backgroundColor: '#FFFBEB',
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    padding: getScaleSize(10),
+    marginTop: getScaleSize(10),
+  },
+  warningInfoIcon: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    tintColor: '#D97706',
+    resizeMode: 'contain',
+    marginTop: getScaleSize(2),
+  },
+  warningText: {
+    flex: 1,
+    lineHeight: getScaleSize(16),
+  },
+  topIndependenceBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: getScaleSize(10),
+    marginHorizontal: getScaleSize(16),
+    marginTop: getScaleSize(8),
+    marginBottom: getScaleSize(4),
+    padding: getScaleSize(12),
+    backgroundColor: '#FEF3C7',
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  topBannerInfoIcon: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    tintColor: '#B45309',
+    resizeMode: 'contain',
+    marginTop: getScaleSize(2),
+  },
+  topBannerDismiss: {
+    padding: getScaleSize(4),
+  },
+  dismissCrossIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: '#92400E',
+    resizeMode: 'contain',
   },
   placeName: {
     marginTop: getScaleSize(8),

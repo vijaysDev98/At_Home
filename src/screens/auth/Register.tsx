@@ -113,8 +113,10 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
+  // As of now, hide medical resident (intern) option from doctor registration
+  const SHOW_RESIDENT_OPTION = false;
   const [isMedicalResident, setIsMedicalResident] = useState(
-    Boolean(userData.isMedicalResident) || false,
+    SHOW_RESIDENT_OPTION && Boolean(userData.isMedicalResident),
   );
   const [headOfDepartmentFirstName, setHeadOfDepartmentFirstName] = useState(
     userData.headOfDepartmentFirstName || '',
@@ -199,7 +201,7 @@ const Register: React.FC = () => {
           STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number,
         );
       }
-      if (isMedicalResident) {
+      if (SHOW_RESIDENT_OPTION && isMedicalResident) {
         if (!headOfDepartmentFirstName.trim()) {
           newErrors.headOfDepartmentFirstName = t(
             STRING.headOfDepartmentFirstNameRequired,
@@ -263,13 +265,14 @@ const Register: React.FC = () => {
         facilityName
       );
     }
-    const rppsValid = isMedicalResident
-      ? !!(
-          headOfDepartmentFirstName.trim() &&
-          headOfDepartmentLastName.trim() &&
-          headOfDepartmentRpps.trim()
-        )
-      : !!rpps.trim();
+    const rppsValid =
+      SHOW_RESIDENT_OPTION && isMedicalResident
+        ? !!(
+            headOfDepartmentFirstName.trim() &&
+            headOfDepartmentLastName.trim() &&
+            headOfDepartmentRpps.trim()
+          )
+        : !!rpps.trim();
 
     return !!(
       fName &&
@@ -317,7 +320,7 @@ const Register: React.FC = () => {
         practiceType: placeOfPractice.trim(),
         profileImg: profileImageUrl,
       };
-      if (isMedicalResident) {
+      if (SHOW_RESIDENT_OPTION && isMedicalResident) {
         updateData.headOfDepartmentFirstName =
           headOfDepartmentFirstName.trim();
         updateData.headOfDepartmentLastName =
@@ -332,9 +335,10 @@ const Register: React.FC = () => {
       return;
     }
 
-    const effectiveRpps = isMedicalResident
-      ? headOfDepartmentRpps.trim()
-      : rpps.trim();
+    const effectiveRpps =
+      SHOW_RESIDENT_OPTION && isMedicalResident
+        ? headOfDepartmentRpps.trim()
+        : rpps.trim();
 
     const registerData: any = {
       fName: fName.trim(),
@@ -345,7 +349,7 @@ const Register: React.FC = () => {
       role: ROLES.DOCTOR,
       country: country,
       rppsNumber: effectiveRpps,
-      isMedicalResident: Boolean(isMedicalResident),
+      isMedicalResident: Boolean(SHOW_RESIDENT_OPTION && isMedicalResident),
       finessNumber: finess.trim(),
       specialty: specialty,
       facilityName: facilityName.trim(),
@@ -353,7 +357,7 @@ const Register: React.FC = () => {
       practiceType: placeOfPractice.trim(),
     };
 
-    if (isMedicalResident) {
+    if (SHOW_RESIDENT_OPTION && isMedicalResident) {
       registerData.headOfDepartmentFirstName =
         headOfDepartmentFirstName.trim();
       registerData.headOfDepartmentLastName = headOfDepartmentLastName.trim();
@@ -501,98 +505,100 @@ const Register: React.FC = () => {
                 }}
               />
 
-              <View style={styles.residentQuestionContainer}>
-                <AppText
-                  size={getScaleSize(14)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS.slate900}
-                  style={styles.residentQuestionTitle}
-                >
-                  {t(STRING.areYouMedicalResident)}{' '}
-                  <AppText color={COLORS.error}>*</AppText>
-                </AppText>
-                <View style={styles.residentOptionsRow}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setIsMedicalResident(true);
-                      setErrors(e => ({
-                        ...e,
-                        rpps: '',
-                        headOfDepartmentFirstName: '',
-                        headOfDepartmentLastName: '',
-                        headOfDepartmentRpps: '',
-                      }));
-                    }}
-                    style={styles.residentRadioOption}
+              {SHOW_RESIDENT_OPTION && (
+                <View style={styles.residentQuestionContainer}>
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Medium}
+                    color={COLORS.slate900}
+                    style={styles.residentQuestionTitle}
                   >
-                    <View
-                      style={[
-                        styles.radioCircle,
-                        isMedicalResident && styles.radioCircleSelected,
-                      ]}
+                    {t(STRING.areYouMedicalResident)}{' '}
+                    <AppText color={COLORS.error}>*</AppText>
+                  </AppText>
+                  <View style={styles.residentOptionsRow}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setIsMedicalResident(true);
+                        setErrors(e => ({
+                          ...e,
+                          rpps: '',
+                          headOfDepartmentFirstName: '',
+                          headOfDepartmentLastName: '',
+                          headOfDepartmentRpps: '',
+                        }));
+                      }}
+                      style={styles.residentRadioOption}
                     >
-                      {isMedicalResident && (
-                        <View style={styles.radioInnerDot} />
-                      )}
-                    </View>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={
-                        isMedicalResident
-                          ? FONTS.Inter.SemiBold
-                          : FONTS.Inter.Regular
-                      }
-                      color={
-                        isMedicalResident ? COLORS.primary : COLORS.slate700
-                      }
-                    >
-                      {t(STRING.yes)}
-                    </AppText>
-                  </TouchableOpacity>
+                      <View
+                        style={[
+                          styles.radioCircle,
+                          isMedicalResident && styles.radioCircleSelected,
+                        ]}
+                      >
+                        {isMedicalResident && (
+                          <View style={styles.radioInnerDot} />
+                        )}
+                      </View>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={
+                          isMedicalResident
+                            ? FONTS.Inter.SemiBold
+                            : FONTS.Inter.Regular
+                        }
+                        color={
+                          isMedicalResident ? COLORS.primary : COLORS.slate700
+                        }
+                      >
+                        {t(STRING.yes)}
+                      </AppText>
+                    </TouchableOpacity>
 
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setIsMedicalResident(false);
-                      setErrors(e => ({
-                        ...e,
-                        rpps: '',
-                        headOfDepartmentFirstName: '',
-                        headOfDepartmentLastName: '',
-                        headOfDepartmentRpps: '',
-                      }));
-                    }}
-                    style={styles.residentRadioOption}
-                  >
-                    <View
-                      style={[
-                        styles.radioCircle,
-                        !isMedicalResident && styles.radioCircleSelected,
-                      ]}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setIsMedicalResident(false);
+                        setErrors(e => ({
+                          ...e,
+                          rpps: '',
+                          headOfDepartmentFirstName: '',
+                          headOfDepartmentLastName: '',
+                          headOfDepartmentRpps: '',
+                        }));
+                      }}
+                      style={styles.residentRadioOption}
                     >
-                      {!isMedicalResident && (
-                        <View style={styles.radioInnerDot} />
-                      )}
-                    </View>
-                    <AppText
-                      size={getScaleSize(14)}
-                      font={
-                        !isMedicalResident
-                          ? FONTS.Inter.SemiBold
-                          : FONTS.Inter.Regular
-                      }
-                      color={
-                        !isMedicalResident ? COLORS.primary : COLORS.slate700
-                      }
-                    >
-                      {t(STRING.no)}
-                    </AppText>
-                  </TouchableOpacity>
+                      <View
+                        style={[
+                          styles.radioCircle,
+                          !isMedicalResident && styles.radioCircleSelected,
+                        ]}
+                      >
+                        {!isMedicalResident && (
+                          <View style={styles.radioInnerDot} />
+                        )}
+                      </View>
+                      <AppText
+                        size={getScaleSize(14)}
+                        font={
+                          !isMedicalResident
+                            ? FONTS.Inter.SemiBold
+                            : FONTS.Inter.Regular
+                        }
+                        color={
+                          !isMedicalResident ? COLORS.primary : COLORS.slate700
+                        }
+                      >
+                        {t(STRING.no)}
+                      </AppText>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              )}
 
-              {isMedicalResident ? (
+              {SHOW_RESIDENT_OPTION && isMedicalResident ? (
                 <>
                   <Input
                     label={t(STRING.headOfDepartmentFirstName)}

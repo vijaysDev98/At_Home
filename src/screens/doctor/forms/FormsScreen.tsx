@@ -38,6 +38,7 @@ import {
   REVIEW_REASONS,
   ProviderOptionSheet,
   SelectProviderSheet,
+  RequestUnderReviewModal,
 } from '../../../components';
 import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -127,6 +128,59 @@ const FormsScreen: React.FC = () => {
 
   // Ref to store form ref
   const formRef = useRef<any>(null);
+
+  const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
+  const hasDismissedReviewModalRef = useRef(false);
+
+  const isDoctor = useMemo(() => {
+    const roles = (profileData as any)?.roles;
+    if (Array.isArray(roles) && roles.length > 0) {
+      return roles.includes(ROLES.DOCTOR) || roles.includes('doctor');
+    }
+    return true;
+  }, [profileData]);
+
+  // Check condition: Doctor side, RequestStatus : submitted, FormStatus : signed, and unclaimed
+  useEffect(() => {
+    if (!isDoctor) return;
+    if (hasDismissedReviewModalRef.current) return;
+
+    const currentStatus = (requestData?.status || request?.status || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+    const currentFormStatus = (
+      requestData?.formStatus ||
+      request?.formStatus ||
+      ''
+    )
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    const isSubmitted = currentStatus === 'submitted';
+    const isSigned = currentFormStatus === 'signed';
+    const isUnclaimed =
+      currentStatus !== 'inprogress' && currentStatus !== 'in_progress';
+
+    if (isSubmitted && isSigned && isUnclaimed) {
+      setShowUnderReviewModal(true);
+    } else {
+      setShowUnderReviewModal(false);
+    }
+  }, [
+    isDoctor,
+    requestData?.status,
+    requestData?.formStatus,
+    request?.status,
+    request?.formStatus,
+  ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      hasDismissedReviewModalRef.current = false;
+    }, []),
+  );
 
   const handleSendToAllProviders = async () => {
     providerOptionSheetRef.current?.hide();
@@ -502,6 +556,13 @@ const FormsScreen: React.FC = () => {
           </>
         )}
       </View>
+      <RequestUnderReviewModal
+        visible={showUnderReviewModal}
+        onClose={() => {
+          hasDismissedReviewModalRef.current = true;
+          setShowUnderReviewModal(false);
+        }}
+      />
     </AppSafeAreaView>
   );
 };

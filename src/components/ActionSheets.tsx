@@ -35,6 +35,10 @@ import {
 import { MASTER_SERVICES_LIST } from '../constant/services';
 import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { Provider } from '../screens/doctor/providers/ProvidersCallList';
+import {
+  getProviderDisplayName,
+  getProviderSpecialty,
+} from '../screens/doctor/providers/providerDisplay';
 import moment from 'moment';
 import { useSound } from 'react-native-nitro-sound';
 import { serviceRequestApi } from '../services/serviceRequestApi';
@@ -1701,11 +1705,8 @@ export const SelectProviderSheet = React.forwardRef<
                 (selectedProvider?._id &&
                   selectedProvider?._id === item._id);
 
-              const name =
-                item.fullName ||
-                item.providerName ||
-                `${item.fName || ''} ${item.lName || ''}`.trim() ||
-                'Healthcare Provider';
+              const name = getProviderDisplayName(item, t);
+              const specialty = getProviderSpecialty(item, t);
 
               return (
                 <TouchableOpacity
@@ -1736,7 +1737,7 @@ export const SelectProviderSheet = React.forwardRef<
                       {name}
                     </AppText>
 
-                    {item.specialty ? (
+                    {specialty ? (
                       <AppText
                         size={getScaleSize(12)}
                         font={FONTS.Inter.Medium}
@@ -1744,7 +1745,7 @@ export const SelectProviderSheet = React.forwardRef<
                         style={{ marginTop: 2 }}
                         numberOfLines={1}
                       >
-                        {item.specialty}
+                        {specialty}
                       </AppText>
                     ) : null}
 
@@ -2421,11 +2422,8 @@ export const PreRequestDetailSheet = React.forwardRef<
             request?.claimedBy;
           if (!provider) return null;
 
-          const providerName =
-            provider?.fullName ||
-            provider?.providerName ||
-            `${provider?.fName || ''} ${provider?.lName || ''}`.trim() ||
-            'Healthcare Provider';
+          const providerName = getProviderDisplayName(provider, t);
+          const providerSpecialtyText = getProviderSpecialty(provider, t);
 
           const isDelegated = !!request?.delegateFormToProvider;
 
@@ -2518,13 +2516,13 @@ export const PreRequestDetailSheet = React.forwardRef<
                   >
                     {providerName}
                   </AppText>
-                  {!!(provider.specialty || provider.profession) && (
+                  {!!providerSpecialtyText && (
                     <AppText
                       size={getScaleSize(11)}
                       font={FONTS.Inter.Medium}
                       color={COLORS._6F767E}
                     >
-                      {provider.specialty || provider.profession}
+                      {providerSpecialtyText}
                     </AppText>
                   )}
                 </View>

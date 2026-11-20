@@ -45,6 +45,7 @@ import {
   SelectProviderSheet,
 } from '../../../components/ActionSheets';
 import { Provider } from '../providers/ProvidersCallList';
+import { getProviderSpecialty } from '../providers/providerDisplay';
 import {
   uploadAudioDirectToS3,
   uploadPrescriptionDirectToS3,
@@ -1043,10 +1044,12 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
             `${assignedProvider?.fName || ''} ${assignedProvider?.lName || ''}`.trim() ||
             (isDelegated
               ? t(STRING.assignedProvider) || 'Assigned Provider'
-              : 'Healthcare Provider');
+              : t(STRING.healthcareProvider) || 'Healthcare Provider');
 
           const profileImg = assignedProvider?.profileImg;
-          const specialty = assignedProvider?.specialty;
+          const specialty = assignedProvider
+            ? getProviderSpecialty(assignedProvider, t)
+            : '';
           const phoneNumber = assignedProvider?.phoneNumber;
           const email = assignedProvider?.email;
           const canContactProvider =

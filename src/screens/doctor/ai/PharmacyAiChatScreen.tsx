@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import {
   AppSafeAreaView,
   AppText,
@@ -59,7 +61,13 @@ const shouldApplyManualKeyboardLift = (): boolean => {
 };
 
 const PharmacyAiChatScreen: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { currentLanguage } = useSelector((state: RootState) => state.language);
+  const activeLang = (currentLanguage || i18n.language || 'en')
+    .toLowerCase()
+    .startsWith('fr')
+    ? 'fr'
+    : 'en';
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<Message>>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -155,7 +163,7 @@ const PharmacyAiChatScreen: React.FC = () => {
     setSending(true);
 
     try {
-      const result = await askPharmacyAi(question, history);
+      const result = await askPharmacyAi(question, history, activeLang);
       const drug = result.drugProfile;
       const assistantText =
         result.type === 'drug_profile' && drug

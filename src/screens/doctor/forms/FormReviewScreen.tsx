@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import {
   AppLoader,
   Header,
   FormSignature,
+  RequestUnderReviewModal,
 } from '../../../components';
 import type { FormSignatureHandle } from '../../../components/FormSignature';
 
@@ -93,6 +94,49 @@ const FormReviewScreen: React.FC = () => {
 
   const isSigned = !!requestData?.digitalSignature?.signatureData;
 
+  const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
+  const hasDismissedReviewModalRef = useRef(false);
+
+  useEffect(() => {
+    if (hasDismissedReviewModalRef.current) return;
+
+    const currentStatus = (requestData?.status || request?.status || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+    const currentFormStatus = (
+      requestData?.formStatus ||
+      request?.formStatus ||
+      ''
+    )
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    const isSubmitted = currentStatus === 'submitted';
+    const formIsSigned = currentFormStatus === 'signed' || isSigned;
+    const isUnclaimed =
+      currentStatus !== 'inprogress' && currentStatus !== 'in_progress';
+
+    if (isSubmitted && formIsSigned && isUnclaimed) {
+      setShowUnderReviewModal(true);
+    } else {
+      setShowUnderReviewModal(false);
+    }
+  }, [
+    isSigned,
+    requestData?.status,
+    requestData?.formStatus,
+    request?.status,
+    request?.formStatus,
+  ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      hasDismissedReviewModalRef.current = false;
+    }, []),
+  );
+
   /** Backend allows signing when formStatus is submitted or awaitingSignature. */
   const showSignInFooter = useMemo(() => {
     if (isSigned) return false;
@@ -120,7 +164,10 @@ const FormReviewScreen: React.FC = () => {
 
   const patientData = useMemo(() => {
     return (
-      request?.patient || requestData?.patient || requestData?.patientId || {}
+      request?.patient ||
+      (requestData as any)?.patient ||
+      requestData?.patientId ||
+      {}
     );
   }, [request, requestData]);
 
@@ -139,7 +186,10 @@ const FormReviewScreen: React.FC = () => {
   };
 
   const service: ServiceInfo =
-    requestData?.service || requestData?.serviceId || request?.service || {};
+    (requestData as any)?.service ||
+    requestData?.serviceId ||
+    request?.service ||
+    ({} as any);
 
   const serviceId = service?._id || service?.id;
 
@@ -333,6 +383,13 @@ const FormReviewScreen: React.FC = () => {
           </>
         )}
       </View>
+      <RequestUnderReviewModal
+        visible={showUnderReviewModal}
+        onClose={() => {
+          hasDismissedReviewModalRef.current = true;
+          setShowUnderReviewModal(false);
+        }}
+      />
     </AppSafeAreaView>
   );
 };

@@ -33,6 +33,8 @@ import { fetchProfile } from '../../../actions/profile/profileAction';
 import { getUnreadCountService } from '../../../services/notificationService';
 import FastImage from 'react-native-fast-image';
 import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
+import { SHOW_TOAST } from '../../../constant';
+import { loadLastProcessedPatient } from '../../../actions/patient/patientAction';
 
 // Dashboard interfaces
 interface DashboardRequestsOverview {
@@ -74,6 +76,9 @@ const HOME_BTN_ASPECT = {
 const HomeScreen: React.FC = () => {
   const { profileData } = useSelector((state: RootState) => state.profile);
   const { currentLanguage } = useSelector((state: RootState) => state.language);
+  const { lastProcessedPatient } = useSelector(
+    (state: RootState) => state.patient,
+  );
   const { width: windowWidth } = useWindowDimensions();
   const { t, i18n } = useTranslation();
   const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
@@ -108,7 +113,8 @@ const HomeScreen: React.FC = () => {
     useCallback(() => {
       fetchDashboardData();
       dispatch(fetchProfile());
-    }, []),
+      dispatch(loadLastProcessedPatient());
+    }, [dispatch]),
   );
 
   const fetchDashboardData = async () => {
@@ -133,8 +139,9 @@ const HomeScreen: React.FC = () => {
     setRefreshing(true);
     await fetchDashboardData();
     dispatch(fetchProfile());
+    dispatch(loadLastProcessedPatient());
     setRefreshing(false);
-  }, []);
+  }, [dispatch]);
 
   const handleOpenActionServices = () => {
     NavigationService.navigate(SCREENS.DOCTOR_HOME_SERVICES);
@@ -155,6 +162,17 @@ const HomeScreen: React.FC = () => {
   const openTreatedPatients = () => {
     NavigationService.navigate(DOCTOR_TAB_SCREENS.PATIENTS);
   };
+
+  const handleOpenLastPatientRecord = useCallback(() => {
+    if (lastProcessedPatient?.id) {
+      NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
+        id: lastProcessedPatient.id,
+      });
+    } else {
+      SHOW_TOAST(t(STRING.noRecentPatientFound), 'info');
+      NavigationService.navigate(DOCTOR_TAB_SCREENS.PATIENTS);
+    }
+  }, [lastProcessedPatient, t]);
 
   const openProfileTab = () => {
     NavigationService.navigate(DOCTOR_TAB_SCREENS.PROFILE);
@@ -448,6 +466,64 @@ const HomeScreen: React.FC = () => {
               </AppText>
             </TouchableOpacity>
           </View>
+
+          {/* Quick Access: LAST PATIENT RECORD (Mission 2) */}
+          <TouchableOpacity
+            activeOpacity={0.88}
+            onPress={handleOpenLastPatientRecord}
+            style={styles.lastPatientCard}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.lastPatientRecord)}
+          >
+            <View style={styles.lastPatientIconWrap}>
+              <Image
+                source={IMAGES.clipboard}
+                style={styles.lastPatientIcon}
+              />
+            </View>
+
+            <View style={styles.lastPatientTextWrap}>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                numberOfLines={1}
+              >
+                {t(STRING.lastPatientRecord)}
+              </AppText>
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={
+                  lastProcessedPatient?.name ? COLORS._1A1D1F : COLORS._6F767E
+                }
+                numberOfLines={1}
+                style={styles.lastPatientSubtext}
+              >
+                {lastProcessedPatient?.name
+                  ? lastProcessedPatient.name
+                  : t(STRING.resumeLastPatientRecord)}
+              </AppText>
+            </View>
+
+            {lastProcessedPatient?.name ? (
+              <View style={styles.lastPatientBadge}>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.SemiBold}
+                  color={COLORS.primary}
+                  style={styles.lastPatientBadgeText}
+                >
+                  {isFrench ? 'Reprendre' : 'Resume'}
+                </AppText>
+              </View>
+            ) : null}
+
+            <Image
+              source={IMAGES.arrow_right}
+              style={styles.lastPatientChevron}
+            />
+          </TouchableOpacity>
 
 
 
@@ -754,6 +830,67 @@ const styles = StyleSheet.create({
     height: getScaleSize(28),
     resizeMode: 'contain',
     tintColor: COLORS._48B02C,
+  },
+  lastPatientCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: getScaleSize(18),
+    marginTop: getScaleSize(12),
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(12),
+    borderRadius: getScaleSize(16),
+    backgroundColor: COLORS.white,
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    gap: getScaleSize(12),
+    elevation: 3,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  lastPatientIconWrap: {
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    borderRadius: getScaleSize(12),
+    backgroundColor: '#EDF4FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lastPatientIcon: {
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
+  },
+  lastPatientTextWrap: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  lastPatientSubtext: {
+    marginTop: getScaleSize(3),
+    lineHeight: getScaleSize(16),
+  },
+  lastPatientBadge: {
+    backgroundColor: '#EDF4FE',
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(5),
+    borderRadius: getScaleSize(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  lastPatientBadgeText: {
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    lineHeight: getScaleSize(14),
+  },
+  lastPatientChevron: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
   },
 
 });

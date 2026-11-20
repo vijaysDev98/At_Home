@@ -17,6 +17,7 @@ import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
 import { STRING, SHOW_TOAST } from '../../../constant';
+import { getCountryCode } from '../../../constant/getCountryCode';
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { showNotificationOverlay } from '../../../actions/common/notificationOverlaySlice';
@@ -24,7 +25,8 @@ import { openProviderChat } from '../../../services/chatService';
 import { Provider } from './providerTypes';
 import {
   getProviderDisplayName,
-  getProviderServiceLabels,
+  getProviderServiceItems,
+  getProviderSpecialty,
 } from './providerDisplay';
 
 type RouteParams = {
@@ -61,7 +63,8 @@ const DetailRow = ({
           size={getScaleSize(14)}
           font={FONTS.Inter.SemiBold}
           color={COLORS._1A1D1F}
-          style={{ marginTop: getScaleSize(2) }}
+          style={styles.detailRowValue}
+          numberOfLines={3}
         >
           {value}
         </AppText>
@@ -80,16 +83,38 @@ const ProviderDetailScreen: React.FC = () => {
   const [openingChat, setOpeningChat] = useState(false);
 
   const name = useMemo(
-    () => (provider ? getProviderDisplayName(provider) : ''),
-    [provider],
+    () => (provider ? getProviderDisplayName(provider, t) : ''),
+    [provider, t],
+  );
+  const specialty = useMemo(
+    () => (provider ? getProviderSpecialty(provider, t) : ''),
+    [provider, t],
   );
   const providerUserId = String(provider?._id || provider?.id || '');
-  const serviceLabels = useMemo(
-    () => (provider ? getProviderServiceLabels(provider) : []),
+  const serviceItems = useMemo(
+    () => (provider ? getProviderServiceItems(provider) : []),
     [provider],
   );
   const departments =
     provider?.operatingDepartments?.filter(Boolean).join(', ') || '';
+  const phoneDisplay = useMemo(() => {
+    const phone = String(provider?.phoneNumber || '').trim();
+    if (!phone) {
+      return '';
+    }
+    const dial = getCountryCode(provider?.country);
+    const digits = phone.replace(/[^\d+]/g, '');
+    const dialDigits = dial.replace(/\D/g, '');
+    let national = digits.replace(/^\+/, '').replace(/^00/, '');
+    if (dialDigits && national.startsWith(dialDigits)) {
+      national = national.slice(dialDigits.length);
+    }
+    national = national.replace(/^0+/, '');
+    if (!national) {
+      return `${dial} ${phone.replace(/\s+/g, ' ').trim()}`.trim();
+    }
+    return `${dial} ${national}`.trim();
+  }, [provider?.phoneNumber, provider?.country]);
 
   const handleChat = async () => {
     if (!providerUserId || openingChat) {
@@ -175,14 +200,14 @@ const ProviderDetailScreen: React.FC = () => {
           >
             {name}
           </AppText>
-          {provider.specialty ? (
+          {specialty ? (
             <AppText
               size={getScaleSize(13)}
               font={FONTS.Inter.Medium}
               color={COLORS.primary}
               align="center"
             >
-              {provider.specialty}
+              {specialty}
             </AppText>
           ) : null}
         </View>
@@ -203,7 +228,7 @@ const ProviderDetailScreen: React.FC = () => {
           />
           <DetailRow
             label={t(STRING.phoneNumber)}
-            value={provider.phoneNumber || ''}
+            value={phoneDisplay}
             icon={IMAGES.phone}
           />
           <DetailRow
@@ -211,9 +236,16 @@ const ProviderDetailScreen: React.FC = () => {
             value={departments}
             icon={IMAGES.location_pin}
           />
+          {provider.businessAddress ? (
+            <DetailRow
+              label={t(STRING.businessAddress)}
+              value={provider.businessAddress}
+              icon={IMAGES.location_pin}
+            />
+          ) : null}
         </View>
 
-        {serviceLabels.length > 0 ? (
+        {serviceItems.length > 0 ? (
           <View style={styles.section}>
             <AppText
               size={getScaleSize(14)}
@@ -223,16 +255,33 @@ const ProviderDetailScreen: React.FC = () => {
             >
               {t(STRING.services)}
             </AppText>
-            <View style={styles.tagWrap}>
-              {serviceLabels.map(label => (
-                <View key={label} style={styles.tag}>
-                  <AppText
-                    size={getScaleSize(12)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS.primary}
-                  >
-                    {label}
-                  </AppText>
+            <View style={styles.serviceCardsContainer}>
+              {serviceItems.map((item, index) => (
+                <View
+                  key={`${item.id || item.name}-${index}`}
+                  style={styles.serviceCard}
+                >
+                  <View style={styles.serviceCardHeader}>
+                    <View style={styles.serviceTag}>
+                      <AppText
+                        size={getScaleSize(13)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                      >
+                        {t(item.name)}
+                      </AppText>
+                    </View>
+                  </View>
+                  {item.description ? (
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                      style={styles.serviceDescription}
+                    >
+                      {t(item.description)}
+                    </AppText>
+                  ) : null}
                 </View>
               ))}
             </View>
@@ -321,24 +370,28 @@ const styles = StyleSheet.create({
     marginTop: getScaleSize(14),
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
+    gap: getScaleSize(12),
   },
   sectionTitle: {
-    marginBottom: getScaleSize(12),
+    marginBottom: 0,
   },
   detailRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: getScaleSize(10),
-    marginBottom: getScaleSize(12),
   },
   detailRowIcon: {
     width: getScaleSize(20),
     height: getScaleSize(20),
-    marginTop: getScaleSize(2),
     tintColor: COLORS._6F767E,
   },
   detailRowText: {
     flex: 1,
+    flexShrink: 1,
+  },
+  detailRowValue: {
+    marginTop: getScaleSize(2),
+    flexShrink: 1,
   },
   tagWrap: {
     flexDirection: 'row',
@@ -350,6 +403,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(6),
     borderRadius: getScaleSize(8),
+  },
+  serviceCardsContainer: {
+    gap: getScaleSize(10),
+  },
+  serviceCard: {
+    backgroundColor: COLORS._F9FAFB,
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+  },
+  serviceCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: getScaleSize(4),
+  },
+  serviceTag: {
+    backgroundColor: COLORS._DBEAFE,
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(4),
+    borderRadius: getScaleSize(8),
+    alignSelf: 'flex-start',
+  },
+  serviceDescription: {
+    lineHeight: getScaleSize(18),
+    marginTop: getScaleSize(4),
   },
   footer: {
     flexDirection: 'row',

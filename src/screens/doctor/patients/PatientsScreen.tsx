@@ -16,7 +16,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
 import { IMAGES } from '../../../assets/images';
-import { fetchPatients } from '../../../actions/patient/patientAction';
+import {
+  fetchPatients,
+  saveLastProcessedPatient,
+} from '../../../actions/patient/patientAction';
 import {
   AppSafeAreaView,
   AppText,
@@ -276,11 +279,21 @@ const PatientsScreen: React.FC = () => {
       item={item}
       revealed={!!visibleNameIds[item.id]}
       onToggleName={() => toggleNameVisibility(String(item.id))}
-      onPress={() =>
+      onPress={() => {
+        if (item?.id || item?._id) {
+          const patientName =
+            `${item.fName || ''} ${item.lName || ''}`.trim() || item.name || '';
+          dispatch(
+            saveLastProcessedPatient({
+              id: String(item.id || item._id),
+              name: patientName,
+            }),
+          );
+        }
         NavigationService.navigate(SCREENS.PATIENT_DETAIL, {
           id: item.id,
-        } as never)
-      }
+        } as never);
+      }}
     />
   );
 
