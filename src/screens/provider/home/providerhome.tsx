@@ -179,6 +179,10 @@ const ProviderHome: React.FC = () => {
     NavigationService.navigate(PROVIDER_TAB_SCREENS.PROFILE);
   };
 
+  const handleOrderAmbulance = useCallback(() => {
+    NavigationService.navigate(SCREENS.ORDER_AMBULANCE);
+  }, []);
+
   return (
     <AppSafeAreaView edges={['top']} style={styles.safe}>
       <AppLoader visible={isFocused && isLoading} />
@@ -341,6 +345,39 @@ const ProviderHome: React.FC = () => {
                 >
                   {dashboardData?.overview?.completedTodayCount || '0'}{' '}
                   {t(STRING.services)}
+                </AppText>
+              </View>
+            </View>
+            <Image source={IMAGES.arrow_right} style={styles.chevron} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={styles.ambulanceQuickCard}
+            onPress={handleOrderAmbulance}
+            accessibilityRole="button"
+            accessibilityLabel={t(STRING.homeOrderAmbulance)}
+          >
+            <View style={styles.kpiWideLeft}>
+              <Image
+                source={IMAGES.ic_home_card_ambulance}
+                style={styles.ambulanceQuickIcon}
+              />
+              <View style={styles.ambulanceQuickText}>
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.homeOrderAmbulance)}
+                </AppText>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                  numberOfLines={2}
+                >
+                  {t(STRING.nearbyAmbulancesTitle)}
                 </AppText>
               </View>
             </View>
@@ -688,6 +725,33 @@ const styles = StyleSheet.create({
   kpiWideLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: getScaleSize(8),
+  },
+  ambulanceQuickCard: {
+    marginTop: getScaleSize(12),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#E8F2FE',
+    borderRadius: getScaleSize(12),
+    padding: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  ambulanceQuickIcon: {
+    width: getScaleSize(52),
+    height: getScaleSize(52),
+    resizeMode: 'contain',
+  },
+  ambulanceQuickText: {
+    flex: 1,
+    marginLeft: getScaleSize(12),
   },
   completedIcon: {
     height: getScaleSize(40),
