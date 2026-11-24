@@ -14,6 +14,7 @@ export interface NormalizedNotificationInfo {
   metadata: any;
   title?: string;
   body?: string;
+  conversationId?: string;
 }
 
 /**

@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/auth/Login';
 import PostLoginWelcomeScreen from '../screens/auth/PostLoginWelcomeScreen';
 import WelcomeScreen from '../screens/auth/AuthWelcome';
+import ProfessionalStatusScreen from '../screens/auth/ProfessionalStatusScreen';
 import RegisterScreen from '../screens/auth/Register';
 import DoctorRegisteredScreen from '../screens/auth/DoctorRegisteredScreen';
 import RegisterSuccess from '../screens/auth/RegisterSuccess';
@@ -55,7 +56,14 @@ export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
   PostLoginWelcome: { targetScreen?: any } | undefined;
-  Register: undefined;
+  ProfessionalStatus: undefined;
+  Register:
+    | {
+        userType?: 'doctor' | 'medicalResident' | 'careCoordinator';
+        isEdit?: boolean;
+        userData?: any;
+      }
+    | undefined;
   DoctorRegistered: undefined;
   RegisterSuccess: undefined;
   ForgotPassword: undefined;
@@ -172,6 +180,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.POST_LOGIN_WELCOME}
           component={PostLoginWelcomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.PROFESSIONAL_STATUS}
+          component={ProfessionalStatusScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

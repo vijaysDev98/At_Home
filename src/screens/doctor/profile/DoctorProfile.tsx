@@ -44,6 +44,8 @@ import {
 } from '../../../actions/language/languageAction';
 import { SHOW_TOAST } from '../../../constant';
 import { STRING } from '../../../constant/strings';
+import { ROLES } from '../../../constant/getRole';
+import { userApi } from '../../../services/userApi';
 import { useSimpleImagePicker } from '../../../hooks/useSimpleImagePicker';
 import { uploadImageToS3 } from '../../../services/uploadService';
 import { IMAGE_BASE_URL } from '../../../api/apiRoutes';
@@ -135,6 +137,11 @@ const DoctorProfile: React.FC = () => {
     }
   };
 
+  const isCareCoordinator =
+    Boolean(profileData?.isCareCoordinator) ||
+    Boolean(profileData?.roles?.includes('careCoordinator')) ||
+    Boolean(profileData?.roles?.includes(ROLES.CARE_COORDINATOR));
+
   const handleEditProfile = () => {
     navigation.navigate(SCREENS.REGISTER, {
       isEdit: true,
@@ -152,6 +159,7 @@ const DoctorProfile: React.FC = () => {
         roles: profileData?.roles,
         facilityName: profileData?.facilityName,
         isMedicalResident: profileData?.isMedicalResident,
+        isCareCoordinator: isCareCoordinator,
         headOfDepartmentFirstName: profileData?.headOfDepartmentFirstName,
         headOfDepartmentLastName: profileData?.headOfDepartmentLastName,
         headOfDepartmentRppsNumber: profileData?.headOfDepartmentRppsNumber,
@@ -232,7 +240,7 @@ const DoctorProfile: React.FC = () => {
                   color={COLORS._1A1D1F}
                   align="center"
                 >
-                  {`Dr. ${fullName}`}
+                  {isCareCoordinator ? fullName : `Dr. ${fullName}`}
                 </AppText>
                 <AppText
                   size={getScaleSize(14)}
@@ -240,7 +248,9 @@ const DoctorProfile: React.FC = () => {
                   style={{ marginVertical: getScaleSize(5) }}
                   color={COLORS._6B7280}
                 >
-                  {capitalizeFirstLetter(userSpecialty || '')}
+                  {isCareCoordinator
+                    ? t(STRING.careCoordinator)
+                    : capitalizeFirstLetter(userSpecialty || '')}
                 </AppText>
                 {profileData?.isMedicalResident && (
                   <View style={styles.residentTag}>
@@ -251,6 +261,26 @@ const DoctorProfile: React.FC = () => {
                       align="center"
                     >
                       {t(STRING.medicalResidentIntern)}
+                    </AppText>
+                  </View>
+                )}
+                {isCareCoordinator && (
+                  <View
+                    style={[
+                      styles.residentTag,
+                      {
+                        backgroundColor: '#ECFDF5',
+                        borderColor: '#A7F3D0',
+                      },
+                    ]}
+                  >
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.SemiBold}
+                      color="#047857"
+                      align="center"
+                    >
+                      {t(STRING.careCoordinator)}
                     </AppText>
                   </View>
                 )}
@@ -383,9 +413,8 @@ const DoctorProfile: React.FC = () => {
                   />
                 </View>
               </>
-            ) : (
+            ) : isCareCoordinator ? null : (
               <View style={styles.fieldBlock}>
-                {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>RPPS Number</AppText> */}
                 <Input
                   label={t(STRING.rppsNumber)}
                   style={styles.inputContainer}
@@ -396,17 +425,22 @@ const DoctorProfile: React.FC = () => {
                 />
               </View>
             )}
-            <View style={styles.fieldBlock}>
-              {/* <AppText size={getScaleSize(12)} font={FONTS.Inter.SemiBold} color={COLORS._6F767E}>FINESS Number</AppText> */}
-              <Input
-                label={t(STRING.finessNumber)}
-                style={styles.inputContainer}
-                value={userFiness}
-                isLocked={false}
-                editable={false}
-                leftIcon={IMAGES.card}
-              />
-            </View>
+            {(!isCareCoordinator || userFiness) && (
+              <View style={styles.fieldBlock}>
+                <Input
+                  label={
+                    profileData?.isMedicalResident
+                      ? t(STRING.headOfDepartmentFinessNumber)
+                      : t(STRING.finessNumber)
+                  }
+                  style={styles.inputContainer}
+                  value={userFiness}
+                  isLocked={false}
+                  editable={false}
+                  leftIcon={IMAGES.card}
+                />
+              </View>
+            )}
 
             <View style={styles.fieldBlock}>
               <Input

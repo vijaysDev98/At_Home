@@ -5,6 +5,7 @@ import { RootState } from "../redux/store";
 export const ROLES = {
     DOCTOR: 'doctor',
     PROVIDER: 'serviceProvider',
+    CARE_COORDINATOR: 'careCoordinator',
 };
 
 // hooks/useUserRole.ts

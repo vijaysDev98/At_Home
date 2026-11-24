@@ -127,7 +127,7 @@ const AuthWelcome: React.FC<AuthWelcomeProps> = ({ navigation }) => {
             />
             <AppButton
               title={t(STRING.createAccount)}
-              onPress={() => NavigationService.navigate(SCREENS.REGISTER)}
+              onPress={() => NavigationService.navigate(SCREENS.PROFESSIONAL_STATUS)}
               backgroundColor={COLORS._F8F9FA}
               textColor={COLORS.primary}
               style={styles.createAccountButton}

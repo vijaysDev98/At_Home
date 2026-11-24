@@ -280,7 +280,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('Register')}
+              onPress={() => NavigationService.navigate(SCREENS.PROFESSIONAL_STATUS)}
             >
               <AppText
                 size={getScaleSize(15)}

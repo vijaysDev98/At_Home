@@ -26,6 +26,7 @@ interface ProfileData {
   isBlocked: boolean;
   facilityName?: string;
   isMedicalResident?: boolean;
+  isCareCoordinator?: boolean;
   headOfDepartmentFirstName?: string;
   headOfDepartmentLastName?: string;
   headOfDepartmentRppsNumber?: string;

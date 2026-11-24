@@ -176,4 +176,7 @@ export const IMAGES = {
   cat_care: require('./cat_care.png'),
   cat_general: require('./cat_general.png'),
   request_under_review_ill: require('./request_under_review_ill.png'),
+  role_doctor: require('./role_doctor.png'),
+  role_intern: require('./role_intern.png'),
+  role_coordinator: require('./role_coordinator.png'),
 };

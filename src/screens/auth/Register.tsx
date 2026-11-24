@@ -113,11 +113,22 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rpps, setRpps] = useState(userData.rppsNumber || '');
-  // As of now, hide medical resident (intern) option from doctor registration
-  const SHOW_RESIDENT_OPTION = false;
+  const userType: 'doctor' | 'medicalResident' | 'careCoordinator' =
+    route.params?.userType ||
+    (userData.isMedicalResident
+      ? 'medicalResident'
+      : userData.isCareCoordinator || userData.roles?.includes('careCoordinator')
+      ? 'careCoordinator'
+      : 'doctor');
+
   const [isMedicalResident, setIsMedicalResident] = useState(
-    SHOW_RESIDENT_OPTION && Boolean(userData.isMedicalResident),
+    userType === 'medicalResident' || Boolean(userData.isMedicalResident),
   );
+  const isCareCoordinator =
+    userType === 'careCoordinator' ||
+    Boolean(userData.isCareCoordinator) ||
+    Boolean(userData.roles?.includes('careCoordinator'));
+
   const [headOfDepartmentFirstName, setHeadOfDepartmentFirstName] = useState(
     userData.headOfDepartmentFirstName || '',
   );
@@ -201,7 +212,12 @@ const Register: React.FC = () => {
           STRING.passwordMustBe8To16CharactersWithAtLeast1Uppercase1LowercaseAnd1Number,
         );
       }
-      if (SHOW_RESIDENT_OPTION && isMedicalResident) {
+      if (isCareCoordinator) {
+        // Care Coordinator: No RPPS, no HoD RPPS. FINESS optional.
+        if (finess.trim() && !/^\d{9}$/.test(finess.trim())) {
+          newErrors.finess = t(STRING.finessNumberMustBe9Digits);
+        }
+      } else if (isMedicalResident) {
         if (!headOfDepartmentFirstName.trim()) {
           newErrors.headOfDepartmentFirstName = t(
             STRING.headOfDepartmentFirstNameRequired,
@@ -219,20 +235,25 @@ const Register: React.FC = () => {
         } else if (!/^\d{11}$/.test(headOfDepartmentRpps.trim())) {
           newErrors.headOfDepartmentRpps = t(STRING.rppsNumberMustBe11Digits);
         }
+        if (!finess.trim()) {
+          newErrors.finess = t(STRING.headOfDepartmentFinessRequired);
+        } else if (!/^\d{9}$/.test(finess.trim())) {
+          newErrors.finess = t(STRING.finessNumberMustBe9Digits);
+        }
       } else {
         if (!rpps.trim()) {
           newErrors.rpps = t(STRING.rppsNumberRequired);
         } else if (!/^\d{11}$/.test(rpps.trim())) {
           newErrors.rpps = t(STRING.rppsNumberMustBe11Digits);
         }
-      }
-      if (!finess.trim()) {
-        newErrors.finess = t(STRING.finessNumberRequired);
-      } else if (!/^\d{9}$/.test(finess.trim())) {
-        newErrors.finess = t(STRING.finessNumberMustBe9Digits);
+        if (!finess.trim()) {
+          newErrors.finess = t(STRING.finessNumberRequired);
+        } else if (!/^\d{9}$/.test(finess.trim())) {
+          newErrors.finess = t(STRING.finessNumberMustBe9Digits);
+        }
       }
     }
-    if (!specialty) {
+    if (!isCareCoordinator && !specialty) {
       newErrors.specialty = t(STRING.pleaseSelectYourSpecialty);
     }
     if (!placeOfPractice.trim()) {
@@ -259,20 +280,21 @@ const Register: React.FC = () => {
       return !!(
         fName &&
         lName &&
-        specialty &&
+        (isCareCoordinator || specialty) &&
         address &&
         placeOfPractice &&
         facilityName
       );
     }
-    const rppsValid =
-      SHOW_RESIDENT_OPTION && isMedicalResident
-        ? !!(
-            headOfDepartmentFirstName.trim() &&
-            headOfDepartmentLastName.trim() &&
-            headOfDepartmentRpps.trim()
-          )
-        : !!rpps.trim();
+    const rppsValid = isCareCoordinator
+      ? true
+      : isMedicalResident
+      ? !!(
+          headOfDepartmentFirstName.trim() &&
+          headOfDepartmentLastName.trim() &&
+          headOfDepartmentRpps.trim()
+        )
+      : !!rpps.trim();
 
     return !!(
       fName &&
@@ -280,10 +302,11 @@ const Register: React.FC = () => {
       email &&
       password &&
       rppsValid &&
-      finess &&
-      specialty &&
+      (isCareCoordinator || finess) &&
+      (isCareCoordinator || specialty) &&
       address &&
       placeOfPractice &&
+      facilityName &&
       agreed
     );
   };
@@ -320,11 +343,15 @@ const Register: React.FC = () => {
         practiceType: placeOfPractice.trim(),
         profileImg: profileImageUrl,
       };
-      if (SHOW_RESIDENT_OPTION && isMedicalResident) {
+      if (isMedicalResident) {
         updateData.headOfDepartmentFirstName =
           headOfDepartmentFirstName.trim();
         updateData.headOfDepartmentLastName =
           headOfDepartmentLastName.trim();
+        updateData.headOfDepartmentRppsNumber =
+          headOfDepartmentRpps.trim();
+        updateData.headOfDepartmentFinessNumber =
+          finess.trim();
       }
       const isSuccess = await dispatch(updateProfile(updateData));
       if (isSuccess) {
@@ -335,10 +362,11 @@ const Register: React.FC = () => {
       return;
     }
 
-    const effectiveRpps =
-      SHOW_RESIDENT_OPTION && isMedicalResident
-        ? headOfDepartmentRpps.trim()
-        : rpps.trim();
+    const effectiveRpps = isCareCoordinator
+      ? ''
+      : isMedicalResident
+      ? headOfDepartmentRpps.trim()
+      : rpps.trim();
 
     const registerData: any = {
       fName: fName.trim(),
@@ -346,22 +374,24 @@ const Register: React.FC = () => {
       email: email.trim(),
       password: password.trim(),
       phoneNumber: phone.trim(),
-      role: ROLES.DOCTOR,
+      role: isCareCoordinator ? ROLES.CARE_COORDINATOR : ROLES.DOCTOR,
       country: country,
       rppsNumber: effectiveRpps,
-      isMedicalResident: Boolean(SHOW_RESIDENT_OPTION && isMedicalResident),
+      isMedicalResident: Boolean(isMedicalResident),
+      isCareCoordinator: Boolean(isCareCoordinator),
       finessNumber: finess.trim(),
-      specialty: specialty,
+      specialty: specialty || (isCareCoordinator ? 'generalPractice' : ''),
       facilityName: facilityName.trim(),
       businessAddress: address.trim(),
       practiceType: placeOfPractice.trim(),
     };
 
-    if (SHOW_RESIDENT_OPTION && isMedicalResident) {
+    if (isMedicalResident) {
       registerData.headOfDepartmentFirstName =
         headOfDepartmentFirstName.trim();
       registerData.headOfDepartmentLastName = headOfDepartmentLastName.trim();
       registerData.headOfDepartmentRppsNumber = headOfDepartmentRpps.trim();
+      registerData.headOfDepartmentFinessNumber = finess.trim();
     }
 
     await dispatch(userRegister(registerData));
@@ -505,101 +535,84 @@ const Register: React.FC = () => {
                 }}
               />
 
-              {SHOW_RESIDENT_OPTION && (
-                <View style={styles.residentQuestionContainer}>
-                  <AppText
-                    size={getScaleSize(14)}
-                    font={FONTS.Inter.Medium}
-                    color={COLORS.slate900}
-                    style={styles.residentQuestionTitle}
-                  >
-                    {t(STRING.areYouMedicalResident)}{' '}
-                    <AppText color={COLORS.error}>*</AppText>
-                  </AppText>
-                  <View style={styles.residentOptionsRow}>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        setIsMedicalResident(true);
-                        setErrors(e => ({
-                          ...e,
-                          rpps: '',
-                          headOfDepartmentFirstName: '',
-                          headOfDepartmentLastName: '',
-                          headOfDepartmentRpps: '',
-                        }));
-                      }}
-                      style={styles.residentRadioOption}
+              {/* Selected Profile Banner */}
+              <View style={styles.roleHeaderCard}>
+                <View style={styles.roleBadgeRow}>
+                  <Image
+                    source={
+                      isCareCoordinator
+                        ? IMAGES.role_coordinator
+                        : isMedicalResident
+                        ? IMAGES.role_intern
+                        : IMAGES.role_doctor
+                    }
+                    style={styles.roleHeaderAvatar}
+                    resizeMode="cover"
+                  />
+                  <View style={{ flex: 1 }}>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
                     >
-                      <View
-                        style={[
-                          styles.radioCircle,
-                          isMedicalResident && styles.radioCircleSelected,
-                        ]}
-                      >
-                        {isMedicalResident && (
-                          <View style={styles.radioInnerDot} />
-                        )}
-                      </View>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={
-                          isMedicalResident
-                            ? FONTS.Inter.SemiBold
-                            : FONTS.Inter.Regular
-                        }
-                        color={
-                          isMedicalResident ? COLORS.primary : COLORS.slate700
-                        }
-                      >
-                        {t(STRING.yes)}
-                      </AppText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        setIsMedicalResident(false);
-                        setErrors(e => ({
-                          ...e,
-                          rpps: '',
-                          headOfDepartmentFirstName: '',
-                          headOfDepartmentLastName: '',
-                          headOfDepartmentRpps: '',
-                        }));
-                      }}
-                      style={styles.residentRadioOption}
-                    >
-                      <View
-                        style={[
-                          styles.radioCircle,
-                          !isMedicalResident && styles.radioCircleSelected,
-                        ]}
-                      >
-                        {!isMedicalResident && (
-                          <View style={styles.radioInnerDot} />
-                        )}
-                      </View>
-                      <AppText
-                        size={getScaleSize(14)}
-                        font={
-                          !isMedicalResident
-                            ? FONTS.Inter.SemiBold
-                            : FONTS.Inter.Regular
-                        }
-                        color={
-                          !isMedicalResident ? COLORS.primary : COLORS.slate700
-                        }
-                      >
-                        {t(STRING.no)}
-                      </AppText>
-                    </TouchableOpacity>
+                      {isCareCoordinator
+                        ? t(STRING.careCoordinator)
+                        : isMedicalResident
+                        ? t(STRING.medicalStudentInternWithoutRpps)
+                        : t(STRING.doctorWithRpps)}
+                    </AppText>
                   </View>
+                  {!isEdit && (
+                    <TouchableOpacity
+                      onPress={() => navigation.goBack()}
+                      style={styles.changeRoleBtn}
+                      activeOpacity={0.7}
+                    >
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS.primary}
+                      >
+                        {t(STRING.edit) || 'Change'}
+                      </AppText>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              )}
 
-              {SHOW_RESIDENT_OPTION && isMedicalResident ? (
+                {isCareCoordinator && (
+                  <View style={styles.coordinatorNoticeBox}>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._526674}
+                      lineHeight={getScaleSize(17)}
+                    >
+                      {t(STRING.careCoordinatorRoleNotice)}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+
+              {isMedicalResident ? (
                 <>
+                  <View style={styles.sectionHeaderWrap}>
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS.slate900}
+                    >
+                      {t(STRING.supervisingDoctorInfo)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6F767E}
+                      style={{ marginTop: getScaleSize(2) }}
+                    >
+                      {t(STRING.supervisingDoctorInfoDesc)}
+                    </AppText>
+                  </View>
+
                   <Input
                     label={t(STRING.headOfDepartmentFirstName)}
                     isMandatory
@@ -668,8 +681,35 @@ const Register: React.FC = () => {
                     }}
                     helperStyle={{ marginTop: getScaleSize(8) }}
                   />
+
+                  <Input
+                    label={t(STRING.headOfDepartmentFinessNumber)}
+                    isMandatory
+                    isNumberOnly
+                    maxLength={9}
+                    placeholder={`${t(STRING.enterFinessNumber)} (${t(
+                      STRING.nineDigit,
+                    )})`}
+                    leftIcon={IMAGES.hospital}
+                    value={finess}
+                    onChangeText={t => {
+                      setFiness(t);
+                      setErrors(e => ({ ...e, finess: '' }));
+                    }}
+                    keyboardType="number-pad"
+                    error={errors.finess}
+                    helper={
+                      errors.finess
+                        ? undefined
+                        : t(STRING.headOfDepartmentFinessHelper)
+                    }
+                    style={{
+                      marginBottom: getScaleSize(errors.finess ? 4 : 20),
+                    }}
+                    helperStyle={{ marginTop: getScaleSize(8) }}
+                  />
                 </>
-              ) : (
+              ) : isCareCoordinator ? null : (
                 <Input
                   label={t(STRING.rppsNumber)}
                   isMandatory
@@ -710,48 +750,52 @@ const Register: React.FC = () => {
                 style={{ marginBottom: getScaleSize(errors.phone ? 4 : 20) }}
               />
 
-              <Input
-                label={t(STRING.finessNumber)}
-                isMandatory
-                placeholder={`${t(STRING.enterFinessNumber)} (${t(
-                  STRING.nineDigit,
-                )})`}
-                leftIcon={IMAGES.hospital}
-                value={finess}
-                onChangeText={t => {
-                  setFiness(t);
-                  setErrors(e => ({ ...e, finess: '' }));
-                }}
-                maxLength={9}
-                // isFiness={true}
-                keyboardType="number-pad"
-                error={errors.finess}
-                helper={
-                  errors.finess
-                    ? undefined
-                    : t(STRING.facilityIdentificationNumber)
-                }
-                style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
-                helperStyle={{ marginTop: getScaleSize(8) }}
-              />
+              {!isMedicalResident && (
+                <Input
+                  label={t(STRING.finessNumber)}
+                  isMandatory={!isCareCoordinator}
+                  placeholder={`${t(STRING.enterFinessNumber)} (${t(
+                    STRING.nineDigit,
+                  )})`}
+                  leftIcon={IMAGES.hospital}
+                  value={finess}
+                  onChangeText={t => {
+                    setFiness(t);
+                    setErrors(e => ({ ...e, finess: '' }));
+                  }}
+                  maxLength={9}
+                  // isFiness={true}
+                  keyboardType="number-pad"
+                  error={errors.finess}
+                  helper={
+                    errors.finess
+                      ? undefined
+                      : t(STRING.facilityIdentificationNumber)
+                  }
+                  style={{ marginBottom: getScaleSize(errors.finess ? 4 : 20) }}
+                  helperStyle={{ marginTop: getScaleSize(8) }}
+                />
+              )}
             </>
           )}
 
           {/* Specialty Dropdown */}
-          <CustomDropdown
-            label={t(STRING.specialty)}
-            isMandatory
-            data={doctorSpecialities}
-            value={specialty}
-            onChange={val => {
-              setSpecialty(val);
-              setErrors(e => ({ ...e, specialty: '' }));
-            }}
-            placeholder={t(STRING.selectYourSpecialty)}
-            leftIcon={IMAGES.stethoscope}
-            error={errors.specialty}
-            zIndex={1000}
-          />
+          {!isCareCoordinator && (
+            <CustomDropdown
+              label={t(STRING.specialty)}
+              isMandatory
+              data={doctorSpecialities}
+              value={specialty}
+              onChange={val => {
+                setSpecialty(val);
+                setErrors(e => ({ ...e, specialty: '' }));
+              }}
+              placeholder={t(STRING.selectYourSpecialty)}
+              leftIcon={IMAGES.stethoscope}
+              error={errors.specialty}
+              zIndex={1000}
+            />
+          )}
 
           {/* Place of Practice Dropdown */}
           <CustomDropdown
@@ -1063,6 +1107,43 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Inter.Medium,
     color: COLORS.slate400,
     marginTop: getScaleSize(12),
+  },
+  roleHeaderCard: {
+    marginHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(20),
+    padding: getScaleSize(14),
+    borderRadius: getScaleSize(14),
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  roleBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
+  },
+  roleHeaderAvatar: {
+    width: getScaleSize(46),
+    height: getScaleSize(46),
+    borderRadius: getScaleSize(23),
+  },
+  changeRoleBtn: {
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(8),
+    backgroundColor: '#EFF6FF',
+  },
+  coordinatorNoticeBox: {
+    marginTop: getScaleSize(10),
+    padding: getScaleSize(10),
+    backgroundColor: '#F1F5F9',
+    borderRadius: getScaleSize(8),
+    borderLeftWidth: 3,
+    borderLeftColor: '#059669',
+  },
+  sectionHeaderWrap: {
+    paddingHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(14),
   },
   residentQuestionContainer: {
     marginBottom: getScaleSize(16),

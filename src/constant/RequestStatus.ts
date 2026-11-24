@@ -191,6 +191,23 @@ export const getFormScreenButtons = (
   action?: string,
   from?: string,
 ): FormScreenButtonConfig => {
+  // ── Care Coordinator flow (Cannot sign, delegates to Doctor) ───────────
+  if (role === ROLES.CARE_COORDINATOR || role === 'careCoordinator') {
+    if (action === 'view') return {};
+    return {
+      left: {
+        label: STRING.saveProgress,
+        variant: 'outline',
+        handler: 'saveAsDraft',
+      },
+      right: {
+        label: STRING.sendToDoctorForSignature,
+        variant: 'primary',
+        handler: 'submitForReview',
+      },
+    };
+  }
+
   // ── Doctor flow ──────────────────────────────────────────────────────────
   if (role === ROLES.DOCTOR) {
     // View-only → no buttons

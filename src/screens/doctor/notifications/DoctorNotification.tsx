@@ -5,6 +5,7 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../../utils';
@@ -34,6 +35,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
+import { userApi } from '../../../services/userApi';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 
 const DoctorNotification: React.FC = () => {
@@ -280,11 +282,54 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
+  const handleReviewIntern = (item: any) => {
+    const internId = item?.metadata?.internId || item?.referenceId;
+    const internName = item?.metadata?.internName || 'Medical Intern';
+    if (!internId) return;
+
+    Alert.alert(
+      t(STRING.reviewIntern) || 'Review Intern Request',
+      `${internName}\n${item?.message || item?.title || ''}`,
+      [
+        {
+          text: t(STRING.cancel) || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t(STRING.rejectIntern) || 'Reject',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await userApi.rejectIntern(internId);
+            if (success) {
+              onRefresh();
+            }
+          },
+        },
+        {
+          text: t(STRING.approveIntern) || 'Approve',
+          onPress: async () => {
+            const success = await userApi.approveIntern(internId);
+            if (success) {
+              onRefresh();
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const getNotificationAction = (item: any) => {
     let label = {
       txt: '',
       onPress: null as (() => void) | null,
     };
+
+    if (item?.type === 'internRegistration') {
+      label.txt = t(STRING.reviewIntern) || 'Review';
+      label.onPress = () => handleReviewIntern(item);
+      return label;
+    }
+
     const targetRequestId =
       item?.metadata?.requestId ||
       item?.referenceId ||

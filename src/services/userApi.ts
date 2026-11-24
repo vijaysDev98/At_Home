@@ -55,4 +55,69 @@ export const userApi = {
       store.dispatch(setLoading(false));
     }
   },
+
+  /**
+   * Supervising Doctor: Get interns assigned to this doctor
+   */
+  getSupervisedInterns: async (status?: string): Promise<any> => {
+    try {
+      const response: any = await API.Instance.get(
+        API.API_ROUTES.doctorInterns,
+        {
+          params: status ? { status } : undefined,
+        },
+      );
+      return response?.data?.data || response?.data || response || [];
+    } catch (error) {
+      console.log('Error fetching interns:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Supervising Doctor: Approve intern
+   */
+  approveIntern: async (internId: string): Promise<boolean> => {
+    try {
+      store.dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        `${API.API_ROUTES.doctorInterns}/${internId}/approve`,
+      );
+      store.dispatch(setLoading(false));
+      if (response?.status || response?.code === 200) {
+        SHOW_SUCCESS_TOAST(response?.message || 'Intern approved successfully');
+        return true;
+      }
+      SHOW_TOAST(response?.message || 'Failed to approve intern');
+      return false;
+    } catch (error) {
+      store.dispatch(setLoading(false));
+      SHOW_TOAST(undefined, 'error');
+      return false;
+    }
+  },
+
+  /**
+   * Supervising Doctor: Reject intern
+   */
+  rejectIntern: async (internId: string, reason?: string): Promise<boolean> => {
+    try {
+      store.dispatch(setLoading(true));
+      const response: any = await API.Instance.post(
+        `${API.API_ROUTES.doctorInterns}/${internId}/reject`,
+        { reason },
+      );
+      store.dispatch(setLoading(false));
+      if (response?.status || response?.code === 200) {
+        SHOW_SUCCESS_TOAST(response?.message || 'Intern rejected');
+        return true;
+      }
+      SHOW_TOAST(response?.message || 'Failed to reject intern');
+      return false;
+    } catch (error) {
+      store.dispatch(setLoading(false));
+      SHOW_TOAST(undefined, 'error');
+      return false;
+    }
+  },
 };
