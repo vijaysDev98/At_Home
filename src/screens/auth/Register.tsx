@@ -13,6 +13,7 @@ import {
   Image,
   Linking,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
@@ -51,7 +52,8 @@ import {
   PRIVACY_POLICY_URL,
   TERMS_OF_SERVICE_URL,
 } from '../../api/apiRoutes';
-import { SHOW_TOAST } from '../../constant';
+import { SHOW_TOAST, SHOW_SUCCESS_TOAST } from '../../constant';
+import { userApi } from '../../services/userApi';
 import { CustomDropdown } from '../../components/CustomDropDown';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTranslation } from 'react-i18next';
@@ -147,6 +149,16 @@ const Register: React.FC = () => {
   const [facilityName, setFacilityName] = useState(userData.facilityName || '');
   const [agreed, setAgreed] = useState(isEdit); // Auto-agreed if editing
 
+  const [isSearchingDoctor, setIsSearchingDoctor] = useState(false);
+  const [foundDoctor, setFoundDoctor] = useState<any>(null);
+  const [doctorImageError, setDoctorImageError] = useState(false);
+  const [isDoctorConfirmed, setIsDoctorConfirmed] = useState(
+    Boolean(
+      userData.headOfDepartmentFirstName &&
+        userData.headOfDepartmentRppsNumber,
+    ),
+  );
+
   const [userAvatar, setUserAvatar] = useState<string | null>(
     userData.profileImg || null,
   );
@@ -218,6 +230,17 @@ const Register: React.FC = () => {
           newErrors.finess = t(STRING.finessNumberMustBe9Digits);
         }
       } else if (isMedicalResident) {
+        if (!headOfDepartmentRpps.trim()) {
+          newErrors.headOfDepartmentRpps = t(
+            STRING.headOfDepartmentRppsRequired,
+          );
+        } else if (!/^\d{11}$/.test(headOfDepartmentRpps.trim())) {
+          newErrors.headOfDepartmentRpps = t(STRING.rppsNumberMustBe11Digits);
+        } else if (!isDoctorConfirmed || !headOfDepartmentFirstName.trim()) {
+          newErrors.headOfDepartmentRpps = t(
+            STRING.pleaseConfirmSupervisingDoctor,
+          );
+        }
         if (!headOfDepartmentFirstName.trim()) {
           newErrors.headOfDepartmentFirstName = t(
             STRING.headOfDepartmentFirstNameRequired,
@@ -227,13 +250,6 @@ const Register: React.FC = () => {
           newErrors.headOfDepartmentLastName = t(
             STRING.headOfDepartmentLastNameRequired,
           );
-        }
-        if (!headOfDepartmentRpps.trim()) {
-          newErrors.headOfDepartmentRpps = t(
-            STRING.headOfDepartmentRppsRequired,
-          );
-        } else if (!/^\d{11}$/.test(headOfDepartmentRpps.trim())) {
-          newErrors.headOfDepartmentRpps = t(STRING.rppsNumberMustBe11Digits);
         }
         if (!finess.trim()) {
           newErrors.finess = t(STRING.headOfDepartmentFinessRequired);
@@ -308,6 +324,113 @@ const Register: React.FC = () => {
       placeOfPractice &&
       facilityName &&
       agreed
+    );
+  };
+
+  const handleFindDoctor = async () => {
+    const cleanRpps = headOfDepartmentRpps.trim();
+    if (!cleanRpps || cleanRpps.length !== 11) {
+      setErrors(e => ({
+        ...e,
+        headOfDepartmentRpps:
+          t(STRING.pleaseEnter11DigitRpps) ||
+          'Please enter an 11-digit RPPS number to find your doctor',
+      }));
+      SHOW_TOAST(
+        t(STRING.pleaseEnter11DigitRpps) ||
+          'Please enter an 11-digit RPPS number',
+        'error',
+      );
+      return;
+    }
+
+    try {
+      setIsSearchingDoctor(true);
+      const res = await userApi.lookupDoctorByRpps(cleanRpps);
+      if (res.success && res.data) {
+        const raw = res.data;
+        const doctorData =
+          raw?.data !== undefined ? raw.data : raw;
+        setFoundDoctor(doctorData);
+        setDoctorImageError(false);
+        setIsDoctorConfirmed(false);
+        setErrors(e => ({ ...e, headOfDepartmentRpps: '' }));
+      } else {
+        setFoundDoctor(null);
+        setDoctorImageError(false);
+        SHOW_TOAST(
+          res.message ||
+            t(STRING.doctorNotFoundWithRpps) ||
+            'No licensed doctor found with this RPPS number',
+          'error',
+        );
+      }
+    } catch (err: any) {
+      setFoundDoctor(null);
+      setDoctorImageError(false);
+      SHOW_TOAST(
+        err?.message ||
+          t(STRING.doctorNotFoundWithRpps) ||
+          'Failed to lookup doctor',
+        'error',
+      );
+    } finally {
+      setIsSearchingDoctor(false);
+    }
+  };
+
+  const handleConfirmDoctor = () => {
+    if (!foundDoctor) return;
+    const doc =
+      foundDoctor?.data !== undefined ? foundDoctor.data : foundDoctor;
+    const firstName =
+      doc.fName || doc.firstName || doc.first_name || '';
+    const lastName =
+      doc.lName || doc.lastName || doc.last_name || '';
+    const finessNum =
+      doc.finessNumber || doc.finess || doc.headOfDepartmentFinessNumber || '';
+    const facility =
+      doc.facilityName || doc.facility || '';
+    const practice =
+      doc.practiceType || doc.placeOfPractice || '';
+    const spec =
+      doc.specialty || '';
+    const busAddress =
+      doc.businessAddress || doc.address || '';
+
+    setHeadOfDepartmentFirstName(firstName);
+    setHeadOfDepartmentLastName(lastName);
+    if (finessNum) {
+      setFiness(finessNum);
+    }
+    if (facility) {
+      setFacilityName(facility);
+    }
+    if (practice) {
+      setPlaceOfPractice(practice);
+    }
+    if (spec) {
+      setSpecialty(spec);
+    }
+    if (busAddress) {
+      setAddress(busAddress);
+    }
+    setIsDoctorConfirmed(true);
+    setFoundDoctor(null);
+    setDoctorImageError(false);
+    setErrors(e => ({
+      ...e,
+      headOfDepartmentFirstName: '',
+      headOfDepartmentLastName: '',
+      headOfDepartmentRpps: '',
+      finess: '',
+      facilityName: '',
+      specialty: '',
+      placeOfPractice: '',
+      address: '',
+    }));
+    SHOW_SUCCESS_TOAST(
+      t(STRING.doctorConfirmedSuccess) || 'Supervising doctor confirmed',
     );
   };
 
@@ -613,48 +736,7 @@ const Register: React.FC = () => {
                     </AppText>
                   </View>
 
-                  <Input
-                    label={t(STRING.headOfDepartmentFirstName)}
-                    isMandatory
-                    placeholder={t(STRING.enterFName)}
-                    leftIcon={IMAGES.person}
-                    value={headOfDepartmentFirstName}
-                    onChangeText={t => {
-                      setHeadOfDepartmentFirstName(t);
-                      setErrors(e => ({
-                        ...e,
-                        headOfDepartmentFirstName: '',
-                      }));
-                    }}
-                    error={errors.headOfDepartmentFirstName}
-                    style={{
-                      marginBottom: getScaleSize(
-                        errors.headOfDepartmentFirstName ? 4 : 20,
-                      ),
-                    }}
-                  />
-
-                  <Input
-                    label={t(STRING.headOfDepartmentLastName)}
-                    isMandatory
-                    placeholder={t(STRING.enterLName)}
-                    leftIcon={IMAGES.person}
-                    value={headOfDepartmentLastName}
-                    onChangeText={t => {
-                      setHeadOfDepartmentLastName(t);
-                      setErrors(e => ({
-                        ...e,
-                        headOfDepartmentLastName: '',
-                      }));
-                    }}
-                    error={errors.headOfDepartmentLastName}
-                    style={{
-                      marginBottom: getScaleSize(
-                        errors.headOfDepartmentLastName ? 4 : 20,
-                      ),
-                    }}
-                  />
-
+                  {/* Supervising Doctor RPPS Number with Find Button */}
                   <Input
                     label={t(STRING.headOfDepartmentRppsNumber)}
                     isMandatory
@@ -666,6 +748,15 @@ const Register: React.FC = () => {
                     onChangeText={t => {
                       setHeadOfDepartmentRpps(t);
                       setErrors(e => ({ ...e, headOfDepartmentRpps: '' }));
+                      if (foundDoctor) {
+                        setFoundDoctor(null);
+                      }
+                      if (isDoctorConfirmed) {
+                        setIsDoctorConfirmed(false);
+                        setHeadOfDepartmentFirstName('');
+                        setHeadOfDepartmentLastName('');
+                        setFiness('');
+                      }
                     }}
                     keyboardType="number-pad"
                     error={errors.headOfDepartmentRpps}
@@ -676,38 +767,282 @@ const Register: React.FC = () => {
                     }
                     style={{
                       marginBottom: getScaleSize(
-                        errors.headOfDepartmentRpps ? 4 : 20,
+                        errors.headOfDepartmentRpps
+                          ? 4
+                          : foundDoctor || isDoctorConfirmed
+                          ? 10
+                          : 16,
                       ),
                     }}
                     helperStyle={{ marginTop: getScaleSize(8) }}
+                    trailing={
+                      <TouchableOpacity
+                        style={[
+                          styles.findDoctorBtn,
+                          isSearchingDoctor && styles.findDoctorBtnDisabled,
+                        ]}
+                        onPress={handleFindDoctor}
+                        disabled={isSearchingDoctor}
+                        activeOpacity={0.7}
+                      >
+                        {isSearchingDoctor ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={COLORS.white}
+                          />
+                        ) : (
+                          <View style={styles.findDoctorBtnContent}>
+                            <Image
+                              source={IMAGES.search}
+                              style={styles.findDoctorIcon}
+                            />
+                            <AppText
+                              size={getScaleSize(12)}
+                              font={FONTS.Inter.SemiBold}
+                              color={COLORS.white}
+                            >
+                              {t(STRING.find) || 'Find'}
+                            </AppText>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    }
                   />
 
-                  <Input
-                    label={t(STRING.headOfDepartmentFinessNumber)}
-                    isMandatory
-                    isNumberOnly
-                    maxLength={9}
-                    placeholder={`${t(STRING.enterFinessNumber)} (${t(
-                      STRING.nineDigit,
-                    )})`}
-                    leftIcon={IMAGES.hospital}
-                    value={finess}
-                    onChangeText={t => {
-                      setFiness(t);
-                      setErrors(e => ({ ...e, finess: '' }));
-                    }}
-                    keyboardType="number-pad"
-                    error={errors.finess}
-                    helper={
-                      errors.finess
-                        ? undefined
-                        : t(STRING.headOfDepartmentFinessHelper)
-                    }
-                    style={{
-                      marginBottom: getScaleSize(errors.finess ? 4 : 20),
-                    }}
-                    helperStyle={{ marginTop: getScaleSize(8) }}
-                  />
+                  {/* Found Doctor Preview Card */}
+                  {foundDoctor && !isDoctorConfirmed && (
+                    <View style={styles.doctorFoundCard}>
+                      <View style={styles.doctorFoundHeader}>
+                        <View style={styles.doctorAvatarContainer}>
+                          {foundDoctor?.profileImg && !doctorImageError ? (
+                            <Image
+                              source={{
+                                uri: foundDoctor.profileImg.startsWith('http')
+                                  ? foundDoctor.profileImg
+                                  : `${IMAGE_BASE_URL}${foundDoctor.profileImg}`,
+                              }}
+                              style={styles.doctorFoundAvatar}
+                              resizeMode="cover"
+                              onError={() => setDoctorImageError(true)}
+                            />
+                          ) : (
+                            <Image
+                              source={IMAGES.role_doctor}
+                              style={styles.doctorFoundAvatar}
+                              resizeMode="cover"
+                            />
+                          )}
+                        </View>
+                        <View style={styles.doctorFoundInfo}>
+                          <View style={styles.doctorFoundBadge}>
+                            <Image
+                              source={IMAGES.serviceCompletedCheck}
+                              style={styles.badgeCheckIcon}
+                            />
+                            <AppText
+                              size={getScaleSize(10)}
+                              font={FONTS.Inter.SemiBold}
+                              color="#16A34A"
+                            >
+                              {t(STRING.supervisingDoctorFound) ||
+                                'Supervising Doctor Found'}
+                            </AppText>
+                          </View>
+                          <AppText
+                            size={getScaleSize(15)}
+                            font={FONTS.Inter.Bold}
+                            color={COLORS.slate900}
+                            numberOfLines={1}
+                          >
+                            {foundDoctor?.fullName
+                              ? (foundDoctor.fullName.startsWith('Dr.')
+                                  ? foundDoctor.fullName
+                                  : `Dr. ${foundDoctor.fullName}`)
+                              : (foundDoctor?.fName || foundDoctor?.lName)
+                              ? `Dr. ${[foundDoctor?.fName, foundDoctor?.lName].filter(Boolean).join(' ')}`
+                              : ''}
+                          </AppText>
+                          {foundDoctor?.specialty ? (
+                            <AppText
+                              size={getScaleSize(12)}
+                              font={FONTS.Inter.Medium}
+                              color={COLORS._6F767E}
+                              numberOfLines={1}
+                            >
+                              {t(foundDoctor.specialty) ||
+                                foundDoctor.specialty}
+                            </AppText>
+                          ) : null}
+                        </View>
+                      </View>
+
+                      {(foundDoctor?.facilityName ||
+                        foundDoctor?.finessNumber) && (
+                        <View style={styles.doctorDetailsRow}>
+                          {foundDoctor?.facilityName ? (
+                            <View style={styles.doctorDetailItem}>
+                              <Image
+                                source={IMAGES.hospital}
+                                style={styles.doctorDetailIcon}
+                              />
+                              <AppText
+                                size={getScaleSize(11)}
+                                font={FONTS.Inter.Regular}
+                                color={COLORS._6F767E}
+                                numberOfLines={1}
+                              >
+                                {foundDoctor.facilityName}
+                              </AppText>
+                            </View>
+                          ) : null}
+                          {foundDoctor?.finessNumber ? (
+                            <View style={styles.doctorDetailItem}>
+                              <Image
+                                source={IMAGES.card}
+                                style={styles.doctorDetailIcon}
+                              />
+                              <AppText
+                                size={getScaleSize(11)}
+                                font={FONTS.Inter.Regular}
+                                color={COLORS._6F767E}
+                              >
+                                FINESS: {foundDoctor.finessNumber}
+                              </AppText>
+                            </View>
+                          ) : null}
+                        </View>
+                      )}
+
+                      <View style={styles.doctorActionRow}>
+                        <TouchableOpacity
+                          style={styles.doctorCancelBtn}
+                          onPress={() => {
+                            setFoundDoctor(null);
+                            setDoctorImageError(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <AppText
+                            size={getScaleSize(13)}
+                            font={FONTS.Inter.Medium}
+                            color={COLORS._6F767E}
+                          >
+                            {t(STRING.cancel) || 'Cancel'}
+                          </AppText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.doctorConfirmBtn}
+                          onPress={handleConfirmDoctor}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={IMAGES.serviceCompletedCheck}
+                            style={styles.confirmCheckIcon}
+                          />
+                          <AppText
+                            size={getScaleSize(13)}
+                            font={FONTS.Inter.SemiBold}
+                            color={COLORS.white}
+                          >
+                            {t(STRING.confirm) || 'Confirm'}
+                          </AppText>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Confirmed Doctor Banner */}
+                  {isDoctorConfirmed && (
+                    <View style={styles.confirmedDoctorBadge}>
+                      <View style={styles.confirmedDoctorLeft}>
+                        <Image
+                          source={IMAGES.serviceCompletedCheck}
+                          style={styles.confirmedCheckIcon}
+                        />
+                        <View style={{ flex: 1, marginLeft: getScaleSize(8) }}>
+                          <AppText
+                            size={getScaleSize(11)}
+                            font={FONTS.Inter.SemiBold}
+                            color="#16A34A"
+                          >
+                            {t(STRING.verifiedDoctor) ||
+                              'Verified Supervising Doctor'}
+                          </AppText>
+                          <AppText
+                            size={getScaleSize(13)}
+                            font={FONTS.Inter.Bold}
+                            color={COLORS.slate900}
+                          >
+                            {`Dr. ${[headOfDepartmentFirstName, headOfDepartmentLastName].filter(Boolean).join(' ')}`}
+                          </AppText>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setIsDoctorConfirmed(false);
+                          setHeadOfDepartmentFirstName('');
+                          setHeadOfDepartmentLastName('');
+                          setFiness('');
+                        }}
+                        style={styles.changeDoctorBtn}
+                        activeOpacity={0.7}
+                      >
+                        <AppText
+                          size={getScaleSize(11)}
+                          font={FONTS.Inter.SemiBold}
+                          color={COLORS.primary}
+                        >
+                          {t(STRING.changeDoctor) || 'Change'}
+                        </AppText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Auto-filled Head fields (only shown when doctor is confirmed) */}
+                  {isDoctorConfirmed && (
+                    <>
+                      <Input
+                        label={t(STRING.headOfDepartmentFirstName)}
+                        isMandatory
+                        isLocked={true}
+                        placeholder={t(STRING.enterFName)}
+                        leftIcon={IMAGES.person}
+                        value={headOfDepartmentFirstName}
+                        style={{
+                          marginBottom: getScaleSize(20),
+                        }}
+                      />
+
+                      <Input
+                        label={t(STRING.headOfDepartmentLastName)}
+                        isMandatory
+                        isLocked={true}
+                        placeholder={t(STRING.enterLName)}
+                        leftIcon={IMAGES.person}
+                        value={headOfDepartmentLastName}
+                        style={{
+                          marginBottom: getScaleSize(20),
+                        }}
+                      />
+
+                      <Input
+                        label={t(STRING.headOfDepartmentFinessNumber)}
+                        isMandatory
+                        isLocked={true}
+                        maxLength={9}
+                        placeholder={`${t(STRING.enterFinessNumber)} (${t(
+                          STRING.nineDigit,
+                        )})`}
+                        leftIcon={IMAGES.hospital}
+                        value={finess}
+                        helper={t(STRING.headOfDepartmentFinessHelper)}
+                        style={{
+                          marginBottom: getScaleSize(20),
+                        }}
+                        helperStyle={{ marginTop: getScaleSize(8) }}
+                      />
+                    </>
+                  )}
                 </>
               ) : isCareCoordinator ? null : (
                 <Input
@@ -1181,6 +1516,155 @@ const styles = StyleSheet.create({
     height: getScaleSize(9),
     borderRadius: getScaleSize(4.5),
     backgroundColor: COLORS.primary,
+  },
+  findDoctorBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(6),
+    borderRadius: getScaleSize(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: getScaleSize(64),
+    height: getScaleSize(34),
+  },
+  findDoctorBtnDisabled: {
+    opacity: 0.7,
+  },
+  findDoctorBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(4),
+  },
+  findDoctorIcon: {
+    width: getScaleSize(13),
+    height: getScaleSize(13),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
+  },
+  doctorFoundCard: {
+    marginHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(18),
+    padding: getScaleSize(14),
+    backgroundColor: '#F0FDF4',
+    borderRadius: getScaleSize(14),
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+  },
+  doctorFoundHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  doctorAvatarContainer: {
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(24),
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  doctorFoundAvatar: {
+    width: getScaleSize(48),
+    height: getScaleSize(48),
+    borderRadius: getScaleSize(24),
+    resizeMode: 'cover',
+  },
+  doctorFoundInfo: {
+    flex: 1,
+    marginLeft: getScaleSize(12),
+  },
+  doctorFoundBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(4),
+    marginBottom: getScaleSize(2),
+  },
+  badgeCheckIcon: {
+    width: getScaleSize(12),
+    height: getScaleSize(12),
+    tintColor: '#16A34A',
+    resizeMode: 'contain',
+  },
+  doctorDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: getScaleSize(12),
+    marginTop: getScaleSize(10),
+    paddingTop: getScaleSize(8),
+    borderTopWidth: 1,
+    borderTopColor: '#DCFCE7',
+  },
+  doctorDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(4),
+  },
+  doctorDetailIcon: {
+    width: getScaleSize(13),
+    height: getScaleSize(13),
+    tintColor: COLORS._6F767E,
+    resizeMode: 'contain',
+  },
+  doctorActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: getScaleSize(10),
+    marginTop: getScaleSize(12),
+  },
+  doctorCancelBtn: {
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(8),
+    backgroundColor: '#F1F5F9',
+  },
+  doctorConfirmBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(8),
+    backgroundColor: COLORS.primary,
+  },
+  confirmCheckIcon: {
+    width: getScaleSize(13),
+    height: getScaleSize(13),
+    tintColor: COLORS.white,
+    resizeMode: 'contain',
+  },
+  confirmedDoctorBadge: {
+    marginHorizontal: getScaleSize(24),
+    marginBottom: getScaleSize(16),
+    padding: getScaleSize(12),
+    backgroundColor: '#F8FAFC',
+    borderRadius: getScaleSize(12),
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  confirmedDoctorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  confirmedCheckIcon: {
+    width: getScaleSize(18),
+    height: getScaleSize(18),
+    tintColor: '#16A34A',
+    resizeMode: 'contain',
+  },
+  changeDoctorBtn: {
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(5),
+    borderRadius: getScaleSize(6),
+    backgroundColor: '#EFF6FF',
+    marginLeft: getScaleSize(8),
   },
 });
 

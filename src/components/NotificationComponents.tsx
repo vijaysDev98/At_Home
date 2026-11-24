@@ -39,6 +39,8 @@ interface NotificationItemProps {
   iconText?: string;
   unread?: boolean;
   action?: string;
+  actionDisabled?: boolean;
+  actionVariant?: 'default' | 'approved' | 'rejected';
   onPress?: () => void;
   onActionPress?: () => void;
 }
@@ -51,72 +53,102 @@ export const NotificationItem = ({
   iconText,
   unread,
   action,
+  actionDisabled = false,
+  actionVariant = 'default',
   onPress,
   onActionPress,
-}: NotificationItemProps) => (
-  <TouchableOpacity
-    style={[
-      styles.notificationRow,
-      unread
-        ? { backgroundColor: COLORS._EFF6FF4D }
-        : { backgroundColor: COLORS.white },
-      { flexDirection: 'row', alignItems: 'center' },
-    ]}
-    activeOpacity={onPress ? 0.7 : 1}
-    onPress={onPress}
-    disabled={!onPress}
-  >
-    <View style={[styles.iconWrap]}>
-      {iconSource ? (
-        <Image source={iconSource} style={[styles.iconImage]} />
-      ) : (
-        <AppText size={getScaleSize(20)}>{iconText}</AppText>
-      )}
-    </View>
-    <View style={styles.cardBody}>
-      <View style={styles.titleRow}>
-        <AppText
-          size={getScaleSize(15)}
-          font={FONTS.Inter.Bold}
-          color={COLORS._1A1D1F}
-          style={styles.cardTitle}
-        >
-          {title}
-        </AppText>
-        <View style={styles.timeRow}>
-          <AppText
-            size={getScaleSize(11)}
-            color={COLORS._6B7280}
-            align="right"
-            numberOfLines={2}
-            style={styles.timeText}
-          >
-            {time}
-          </AppText>
-          {unread && <View style={styles.unreadDot} />}
-        </View>
+}: NotificationItemProps) => {
+  const isApprovedVariant = actionVariant === 'approved';
+  const isRejectedVariant = actionVariant === 'rejected';
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.notificationRow,
+        unread
+          ? { backgroundColor: COLORS._EFF6FF4D }
+          : { backgroundColor: COLORS.white },
+        { flexDirection: 'row', alignItems: 'center' },
+      ]}
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <View style={[styles.iconWrap]}>
+        {iconSource ? (
+          <Image source={iconSource} style={[styles.iconImage]} />
+        ) : (
+          <AppText size={getScaleSize(20)}>{iconText}</AppText>
+        )}
       </View>
-      <AppText
-        size={getScaleSize(13)}
-        color={COLORS._6F767E}
-        style={styles.subtitle}
-      >
-        {subtitle}
-      </AppText>
-      {action ? (
-        <View style={styles.actionWrap}>
-          <AppButton
-            title={action}
-            onPress={onActionPress || (() => {})}
-            style={styles.actionBtn}
-            textSize={getScaleSize(12)}
-            textFont={FONTS.Inter.SemiBold}
-          />
+      <View style={styles.cardBody}>
+        <View style={styles.titleRow}>
+          <AppText
+            size={getScaleSize(15)}
+            font={FONTS.Inter.Bold}
+            color={COLORS._1A1D1F}
+            style={styles.cardTitle}
+          >
+            {title}
+          </AppText>
+          <View style={styles.timeRow}>
+            <AppText
+              size={getScaleSize(11)}
+              color={COLORS._6B7280}
+              align="right"
+              numberOfLines={2}
+              style={styles.timeText}
+            >
+              {time}
+            </AppText>
+            {unread && <View style={styles.unreadDot} />}
+          </View>
         </View>
-      ) : null}
-    </View>
-  </TouchableOpacity>
-);
+        <AppText
+          size={getScaleSize(13)}
+          color={COLORS._6F767E}
+          style={styles.subtitle}
+        >
+          {subtitle}
+        </AppText>
+        {action ? (
+          <View style={styles.actionWrap}>
+            <AppButton
+              title={action}
+              onPress={onActionPress || (() => {})}
+              disabled={actionDisabled}
+              style={[
+                styles.actionBtn,
+                isApprovedVariant && styles.approvedBtn,
+                isRejectedVariant && styles.rejectedBtn,
+              ]}
+              backgroundColor={
+                isApprovedVariant
+                  ? '#DEF7EC'
+                  : isRejectedVariant
+                    ? '#FDE8E8'
+                    : actionDisabled
+                      ? '#E5E7EB'
+                      : COLORS.primary
+              }
+              textColor={
+                isApprovedVariant
+                  ? '#03543F'
+                  : isRejectedVariant
+                    ? '#9B1C1C'
+                    : actionDisabled
+                      ? '#6B7280'
+                      : COLORS.white
+              }
+              textSize={getScaleSize(12)}
+              textFont={FONTS.Inter.SemiBold}
+            />
+          </View>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   sectionHeaderContainer: {
@@ -184,5 +216,15 @@ const styles = StyleSheet.create({
     borderRadius: getScaleSize(8),
     alignSelf: 'flex-start',
     paddingHorizontal: getScaleSize(16),
+  },
+  approvedBtn: {
+    borderWidth: 1,
+    borderColor: '#84E1BC',
+    opacity: 1,
+  },
+  rejectedBtn: {
+    borderWidth: 1,
+    borderColor: '#F8B4B4',
+    opacity: 1,
   },
 });

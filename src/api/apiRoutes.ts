@@ -76,7 +76,8 @@ const API_ROUTES = {
   chatUnreadCount: 'chat/unread-count',
   pharmacyAiChat: 'ai/pharmacy-chat',
   nearbyPlaces: 'common/nearby-places',
-  doctorInterns: 'user/doctor-interns',
+  doctorInterns: 'doctors/interns',
+  lookupDoctorByRpps: 'auth/lookup-doctor',
 };
 
 export { API_ROUTES, DISABLE_API_LOGS };

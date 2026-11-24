@@ -1170,5 +1170,19 @@
   "mySupervisedInterns": "My Supervised Interns",
   "pendingSupervisedInterns": "Pending Intern Validations",
   "noPendingInterns": "No pending intern requests.",
-  "roleCoordinatorTitle": "Care Coordinator"
+  "roleCoordinatorTitle": "Care Coordinator",
+  "find": "Find",
+  "supervisingDoctorFound": "Supervising Doctor Found",
+  "confirmDoctorPrompt": "Confirm this doctor to auto-fill registration details.",
+  "doctorConfirmedSuccess": "Supervising doctor confirmed successfully.",
+  "changeDoctor": "Change Doctor",
+  "doctorNotFoundWithRpps": "No licensed doctor found with this RPPS number.",
+  "pleaseEnter11DigitRpps": "Please enter an 11-digit RPPS number to find your doctor.",
+  "pleaseConfirmSupervisingDoctor": "Please find and confirm your supervising doctor.",
+  "verifiedDoctor": "Verified Supervising Doctor",
+  "rppsAuthorizationTitle": "Authorization to Use Your RPPS Number",
+  "rppsAuthorizationDesc1": "By approving this request, you authorize this medical resident to write and sign medical prescriptions on your behalf, using your RPPS number, through the ATHOME application.",
+  "rppsAuthorizationDesc2": "You acknowledge that these prescriptions will be issued under your professional identity and that this authorization may entail professional liability on your part.",
+  "rppsAuthorizationCheckbox": "I acknowledge that I have read and understood this information and authorize this medical resident to issue prescriptions on my behalf through ATHOME.",
+  "areYouSureYouWantToReject": "Are you sure you want to decline this medical intern request?"
 }

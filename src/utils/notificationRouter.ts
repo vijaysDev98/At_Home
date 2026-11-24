@@ -520,6 +520,18 @@ export async function navigateFromNotification(raw: any): Promise<boolean> {
       return true;
     }
 
+    // 8b. Intern Registration / Intern Validation
+    if (
+      info.type === 'internRegistration' ||
+      info.type === 'internValidation'
+    ) {
+      NavigationService.resetTo([
+        { name: SCREENS.DOCTOR_BOTTOM_TABS },
+        { name: SCREENS.DOCTOR_NOTIFICATION },
+      ]);
+      return true;
+    }
+
     // 9. Informative / General Notifications -> DoctorNotification
     NavigationService.resetTo([
       { name: SCREENS.DOCTOR_BOTTOM_TABS },

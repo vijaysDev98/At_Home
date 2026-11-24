@@ -1169,5 +1169,19 @@
   "mySupervisedInterns": "Mes internes supervisés",
   "pendingSupervisedInterns": "Internes en attente de validation",
   "noPendingInterns": "Aucune demande d'interne en attente.",
-  "roleCoordinatorTitle": "Coordonnateur de soins"
+  "roleCoordinatorTitle": "Coordonnateur de soins",
+  "find": "Trouver",
+  "supervisingDoctorFound": "Médecin superviseur trouvé",
+  "confirmDoctorPrompt": "Confirmez ce médecin pour pré-remplir les informations.",
+  "doctorConfirmedSuccess": "Médecin superviseur confirmé avec succès.",
+  "changeDoctor": "Changer de médecin",
+  "doctorNotFoundWithRpps": "Aucun médecin inscrit trouvé avec ce numéro RPPS.",
+  "pleaseEnter11DigitRpps": "Veuillez saisir un numéro RPPS à 11 chiffres pour trouver votre médecin.",
+  "pleaseConfirmSupervisingDoctor": "Veuillez rechercher et confirmer votre médecin superviseur.",
+  "verifiedDoctor": "Médecin superviseur vérifié",
+  "rppsAuthorizationTitle": "Autorisation d'utilisation de votre numéro RPPS",
+  "rppsAuthorizationDesc1": "En approuvant cette demande, vous autorisez cet interne en médecine à rédiger et signer des prescriptions médicales en votre nom, en utilisant votre numéro RPPS, via l'application ATHOME.",
+  "rppsAuthorizationDesc2": "Vous reconnaissez que ces prescriptions seront établies sous votre identité professionnelle et que cette autorisation peut engager votre responsabilité professionnelle.",
+  "rppsAuthorizationCheckbox": "Je reconnais avoir lu et compris ces informations et autorise cet interne en médecine à délivrer des prescriptions en mon nom via ATHOME.",
+  "areYouSureYouWantToReject": "Êtes-vous sûr de vouloir refuser cette demande d'interne en médecine ?"
 }

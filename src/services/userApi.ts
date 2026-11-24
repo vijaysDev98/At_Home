@@ -120,4 +120,40 @@ export const userApi = {
       return false;
     }
   },
+
+  /**
+   * Lookup supervising doctor by RPPS number (during intern registration)
+   */
+  lookupDoctorByRpps: async (rppsNumber: string): Promise<{ success: boolean; data?: any; message?: string }> => {
+    try {
+      const response: any = await API.Instance.get(
+        `${API.API_ROUTES.lookupDoctorByRpps}/${rppsNumber.trim()}`,
+      );
+      if (response?.status || response?.code === 200) {
+        // Unpack backend response payload: { status, message, data: { ...doctor } }
+        const backendPayload = response?.data;
+        const doctorData =
+          backendPayload?.data !== undefined ? backendPayload.data : backendPayload;
+
+        return {
+          success: true,
+          data: doctorData,
+          message: backendPayload?.message || response?.message,
+        };
+      }
+      return {
+        success: false,
+        message: response?.message || 'Doctor not found',
+      };
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Doctor not found with this RPPS';
+      return {
+        success: false,
+        message: msg,
+      };
+    }
+  },
 };

@@ -265,7 +265,11 @@ const Input: React.FC<InputProps> = ({
             />
           </TouchableOpacity>
         ) : resolvedTrailing ? (
-          <View style={styles.icon}>{resolvedTrailing}</View>
+          trailing ? (
+            <View style={styles.trailingContainer}>{trailing}</View>
+          ) : (
+            <View style={styles.icon}>{resolvedTrailing}</View>
+          )
         ) : null}
         {renderPicker && renderPicker()}
       </Pressable>
@@ -372,6 +376,10 @@ const styles = StyleSheet.create({
     width: getScaleSize(20),
     height: getScaleSize(20),
     resizeMode: 'contain',
+  },
+  trailingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   helperRow: {
     flexDirection: 'row',

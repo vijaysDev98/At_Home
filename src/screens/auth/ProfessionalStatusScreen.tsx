@@ -105,12 +105,13 @@ const ProfessionalStatusScreen: React.FC<ProfessionalStatusScreenProps> = () => 
       {/* Header bar with Back, Legal & Language */}
       <View style={styles.headerBar}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.backBtn}
           onPress={() => NavigationService.goBack()}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
+          hitSlop={20}
           accessibilityLabel="Back"
         >
-          <Image source={IMAGES.backIcon} style={styles.backIcon} />
+          <Image source={IMAGES.arrowLeft} style={styles.backIcon} />
         </TouchableOpacity>
 
         <View style={styles.topRightActions}>
@@ -265,24 +266,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: getScaleSize(20),
+    paddingHorizontal: getScaleSize(16),
     paddingTop: getScaleSize(10),
     paddingBottom: getScaleSize(6),
   },
-  backButton: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
-    backgroundColor: COLORS._F8F9FA,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.slate200,
+    backgroundColor: COLORS.backgroundAlt,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
   },
   backIcon: {
-    width: getScaleSize(18),
-    height: getScaleSize(18),
-    tintColor: COLORS._1A1D1F,
+    width: getScaleSize(17),
+    height: getScaleSize(15),
     resizeMode: 'contain',
   },
   topRightActions: {
@@ -291,14 +291,14 @@ const styles = StyleSheet.create({
     gap: getScaleSize(10),
   },
   headerIconButton: {
-    width: getScaleSize(40),
-    height: getScaleSize(40),
-    borderRadius: getScaleSize(20),
-    backgroundColor: COLORS._F8F9FA,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.slate200,
+    backgroundColor: COLORS.backgroundAlt,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS._E5E7EB,
   },
   headerIcon: {
     width: getScaleSize(20),

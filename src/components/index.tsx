@@ -34,3 +34,8 @@ export type { PatientChoiceAttestationModalProps } from './PatientChoiceAttestat
 export { default as DrugProfileCard } from './DrugProfileCard';
 export { default as RequestUnderReviewModal } from './RequestUnderReviewModal';
 export type { RequestUnderReviewModalProps } from './RequestUnderReviewModal';
+export { default as RppsAuthorizationModal } from './doctor/RppsAuthorizationModal';
+export type {
+  RppsAuthorizationModalProps,
+  InternReviewData,
+} from './doctor/RppsAuthorizationModal';

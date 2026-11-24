@@ -16,6 +16,8 @@ import {
   AppText,
   Header,
   AppLoader,
+  RppsAuthorizationModal,
+  InternReviewData,
 } from '../../../components';
 import { NotificationListSkeleton } from '../../../components/notifications/NotificationListSkeleton';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -49,6 +51,11 @@ const DoctorNotification: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [selectedInternData, setSelectedInternData] =
+    useState<InternReviewData | null>(null);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [isProcessingInternAction, setIsProcessingInternAction] =
+    useState(false);
 
   const fetchNotificationsData = async (
     p: number = 1,
@@ -149,9 +156,18 @@ const DoctorNotification: React.FC = () => {
   const handleNotificationPress = async (item: Notification) => {
     console.log('NOTIFICATION ITEM', item);
 
-    const action = getNotificationAction(item);
-    if (typeof action === 'object' && action?.onPress) {
-      action.onPress();
+    const isInternDecisionMade =
+      item?.type === 'internRegistration' &&
+      (item?.metadata?.approvalStatus === 'approved' ||
+        item?.metadata?.isApproved === true ||
+        item?.metadata?.approvalStatus === 'rejected' ||
+        item?.metadata?.isRejected === true);
+
+    if (!isInternDecisionMade) {
+      const action = getNotificationAction(item);
+      if (typeof action === 'object' && action?.onPress) {
+        action.onPress();
+      }
     }
     if (item.status === 'unread') {
       // Optimistically update the UI notification's status to 'read'
@@ -178,6 +194,9 @@ const DoctorNotification: React.FC = () => {
 
   const getNotificationIcon = (type: string, forReview: boolean = false) => {
     switch (type) {
+      case 'internRegistration':
+      case 'internValidation':
+        return IMAGES.role_intern || IMAGES.ic_register_done;
       case 'preRequestAccepted':
         return IMAGES.ic_approved_prerequest;
       case 'preRequestRejected':
@@ -284,47 +303,155 @@ const DoctorNotification: React.FC = () => {
 
   const handleReviewIntern = (item: any) => {
     const internId = item?.metadata?.internId || item?.referenceId;
-    const internName = item?.metadata?.internName || 'Medical Intern';
+    const internName =
+      item?.metadata?.internName ||
+      item?.metadata?.name ||
+      item?.metadata?.i18nParams?.internName ||
+      'Medical Intern';
+    const internEmail = item?.metadata?.internEmail || '';
+    const internPhone = item?.metadata?.internPhone || '';
+    const facilityName =
+      item?.metadata?.facilityName ||
+      item?.metadata?.i18nParams?.facilityName ||
+      '';
+    const profileImg = item?.metadata?.profileImg || null;
+
     if (!internId) return;
 
-    Alert.alert(
-      t(STRING.reviewIntern) || 'Review Intern Request',
-      `${internName}\n${item?.message || item?.title || ''}`,
-      [
-        {
-          text: t(STRING.cancel) || 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: t(STRING.rejectIntern) || 'Reject',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await userApi.rejectIntern(internId);
-            if (success) {
-              onRefresh();
+    setSelectedInternData({
+      internId,
+      internName,
+      internEmail,
+      internPhone,
+      facilityName,
+      profileImg,
+      notificationId: item?.id,
+    });
+    setReviewModalVisible(true);
+  };
+
+  const handleApproveIntern = async (internId: string) => {
+    if (!internId || isProcessingInternAction) return;
+    try {
+      setIsProcessingInternAction(true);
+      const success = await userApi.approveIntern(internId);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => {
+            const matchesIntern =
+              n.metadata?.internId === internId ||
+              n.referenceId === internId ||
+              n.id === selectedInternData?.notificationId;
+            if (matchesIntern && n.type === 'internRegistration') {
+              return {
+                ...n,
+                status: 'read' as const,
+                metadata: {
+                  ...n.metadata,
+                  approvalStatus: 'approved',
+                  isApproved: true,
+                },
+              };
             }
-          },
-        },
-        {
-          text: t(STRING.approveIntern) || 'Approve',
-          onPress: async () => {
-            const success = await userApi.approveIntern(internId);
-            if (success) {
-              onRefresh();
+            if (n.id === selectedInternData?.notificationId) {
+              return { ...n, status: 'read' as const };
             }
-          },
-        },
-      ],
-    );
+            return n;
+          }),
+        );
+        if (selectedInternData?.notificationId) {
+          await markNotificationAsReadService(selectedInternData.notificationId);
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+        setReviewModalVisible(false);
+        setSelectedInternData(null);
+        onRefresh();
+      }
+    } catch (error) {
+      console.log('Error approving intern:', error);
+    } finally {
+      setIsProcessingInternAction(false);
+    }
+  };
+
+  const handleRejectIntern = async (internId: string) => {
+    if (!internId || isProcessingInternAction) return;
+    try {
+      setIsProcessingInternAction(true);
+      const success = await userApi.rejectIntern(internId);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => {
+            const matchesIntern =
+              n.metadata?.internId === internId ||
+              n.referenceId === internId ||
+              n.id === selectedInternData?.notificationId;
+            if (matchesIntern && n.type === 'internRegistration') {
+              return {
+                ...n,
+                status: 'read' as const,
+                metadata: {
+                  ...n.metadata,
+                  approvalStatus: 'rejected',
+                  isRejected: true,
+                },
+              };
+            }
+            if (n.id === selectedInternData?.notificationId) {
+              return { ...n, status: 'read' as const };
+            }
+            return n;
+          }),
+        );
+        if (selectedInternData?.notificationId) {
+          await markNotificationAsReadService(selectedInternData.notificationId);
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+        setReviewModalVisible(false);
+        setSelectedInternData(null);
+        onRefresh();
+      }
+    } catch (error) {
+      console.log('Error rejecting intern:', error);
+    } finally {
+      setIsProcessingInternAction(false);
+    }
   };
 
   const getNotificationAction = (item: any) => {
     let label = {
       txt: '',
+      disabled: false,
+      variant: 'default' as 'default' | 'approved' | 'rejected',
       onPress: null as (() => void) | null,
     };
 
     if (item?.type === 'internRegistration') {
+      const isApproved =
+        item?.metadata?.approvalStatus === 'approved' ||
+        item?.metadata?.isApproved === true;
+      const isRejected =
+        item?.metadata?.approvalStatus === 'rejected' ||
+        item?.metadata?.isRejected === true;
+
+      if (isApproved) {
+        return {
+          txt: t(STRING.Approved) || 'Approved',
+          disabled: true,
+          variant: 'approved' as const,
+          onPress: null,
+        };
+      }
+
+      if (isRejected) {
+        return {
+          txt: t(STRING.Rejected) || 'Rejected',
+          disabled: true,
+          variant: 'rejected' as const,
+          onPress: null,
+        };
+      }
+
       label.txt = t(STRING.reviewIntern) || 'Review';
       label.onPress = () => handleReviewIntern(item);
       return label;
@@ -440,6 +567,7 @@ const DoctorNotification: React.FC = () => {
 
   const renderItem = ({ item }: { item: Notification }) => {
     const isUnread = item.status === 'unread';
+    const actionData = getNotificationAction(item);
     return (
       <NotificationItem
         title={item.title}
@@ -450,9 +578,15 @@ const DoctorNotification: React.FC = () => {
           item.metadata?.submitForReview || false,
         )}
         unread={isUnread}
-        action={getNotificationAction(item).txt}
+        action={actionData.txt}
+        actionDisabled={actionData.disabled}
+        actionVariant={actionData.variant}
         onPress={() => handleNotificationPress(item)}
-        onActionPress={() => handleNotificationPress(item)}
+        onActionPress={() => {
+          if (!actionData.disabled) {
+            handleNotificationPress(item);
+          }
+        }}
       />
     );
   };
@@ -548,6 +682,15 @@ const DoctorNotification: React.FC = () => {
         />
         )}
       </View>
+
+      <RppsAuthorizationModal
+        visible={reviewModalVisible}
+        internData={selectedInternData}
+        onClose={() => setReviewModalVisible(false)}
+        onApprove={handleApproveIntern}
+        onReject={handleRejectIntern}
+        isProcessing={isProcessingInternAction}
+      />
     </AppSafeAreaView>
   );
 };
