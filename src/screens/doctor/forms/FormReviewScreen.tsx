@@ -12,8 +12,11 @@ import {
   Header,
   FormSignature,
   RequestUnderReviewModal,
+  SelectDoctorSheet,
 } from '../../../components';
 import type { FormSignatureHandle } from '../../../components/FormSignature';
+import type { CoordinatorDoctor } from '../../../components/SelectDoctorSheet';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 
 import { getScaleSize } from '../../../utils/scaleSize';
 import { COLORS, FONTS } from '../../../utils';
@@ -33,10 +36,16 @@ import FormRequestHeader from '../../../components/FormRequestHeader';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
-import { STRING } from '../../../constant';
+import { STRING, SHOW_TOAST } from '../../../constant';
+import { setLoading } from '../../../actions/common/commonSlice';
+import {
+  isCareCoordinatorProfile,
+} from '../../../constant/getRole';
+
 const FormReviewScreen: React.FC = () => {
   const route = useRoute();
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const { request, fromCreate } = (route.params as any) || {};
 
   const requestId =
@@ -79,8 +88,13 @@ const FormReviewScreen: React.FC = () => {
   const profileData = useSelector(
     (state: RootState) => state.profile.profileData,
   );
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
   const formRef = useRef<any>(null);
   const formSignatureRef = useRef<FormSignatureHandle>(null);
+  const selectDoctorSheetRef = useRef<ActionSheetRef>(null);
   const hasLoadedRequestRef = useRef(false);
   const isReadOnly = useMemo(() => {
     return (
@@ -137,15 +151,78 @@ const FormReviewScreen: React.FC = () => {
     }, []),
   );
 
-  /** Backend allows signing when formStatus is submitted or awaitingSignature. */
-  const showSignInFooter = useMemo(() => {
-    if (isSigned) return false;
+  /** Doctor: DocuSign when submitted or awaiting signature. */
+  const showDoctorSignInFooter = useMemo(() => {
+    if (isCareCoordinator || isSigned) return false;
     const formStatus = requestData?.formStatus;
     return (
       formStatus === FORM_STATUS.AWAITING_SIGNATURE ||
       formStatus === FORM_STATUS.SUBMITTED
     );
-  }, [requestData?.formStatus, isSigned]);
+  }, [requestData?.formStatus, isSigned, isCareCoordinator]);
+
+  /** Coordinator: pick signing doctor when form is ready (not yet sent). */
+  const showCoordinatorSignInFooter = useMemo(() => {
+    if (!isCareCoordinator || isSigned) return false;
+    return requestData?.formStatus === FORM_STATUS.SUBMITTED;
+  }, [isCareCoordinator, isSigned, requestData?.formStatus]);
+
+  const showSignInFooter =
+    showDoctorSignInFooter || showCoordinatorSignInFooter;
+
+  const handleCoordinatorDoctorSelected = useCallback(
+    async (doctor: CoordinatorDoctor) => {
+      const targetRequestId =
+        requestId ||
+        requestData?.id ||
+        (requestData as any)?._id;
+      if (!targetRequestId) {
+        SHOW_TOAST(t(STRING.somethingWentWrong), 'error');
+        return;
+      }
+
+      dispatch(setLoading(true));
+      try {
+        const response = await serviceRequestApi.sendToDoctorForSignature(
+          String(targetRequestId),
+          doctor.id,
+        );
+        if (!response.success) {
+          SHOW_TOAST(
+            response.message || response.error || t(STRING.somethingWentWrong),
+            'error',
+          );
+          return;
+        }
+
+        try {
+          await serviceRequestApi.releaseFormLock(String(targetRequestId));
+        } catch {
+          // non-fatal
+        }
+
+        SHOW_TOAST(
+          response.message || t(STRING.formSentToDoctorForSignature),
+          'success',
+        );
+        if (fromCreate) {
+          NavigationService.navigate(SCREENS.DOCTOR_BOTTOM_TABS, {
+            screen: SCREENS.DOCTOR_REQUEST,
+          });
+        } else {
+          NavigationService.goBack();
+        }
+      } catch (error: any) {
+        SHOW_TOAST(
+          error?.message || t(STRING.somethingWentWrong),
+          'error',
+        );
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [requestId, requestData, dispatch, t, fromCreate],
+  );
 
   // Use custom hook for lock refresh
   const currentUserId = (profileData as any)?._id || (profileData as any)?.id;
@@ -327,7 +404,7 @@ const FormReviewScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            {showSignInFooter ? (
+            {showDoctorSignInFooter ? (
               <FormSignature
                 ref={formSignatureRef}
                 readOnly
@@ -348,6 +425,7 @@ const FormReviewScreen: React.FC = () => {
                   styles.footerBtn,
                   styles.saveBtn,
                   !showSignInFooter && styles.footerBtnFull,
+                  showCoordinatorSignInFooter && styles.saveBtnCoordinator,
                 ]}
                 onPress={handleLeftButtonPress}
               >
@@ -365,8 +443,18 @@ const FormReviewScreen: React.FC = () => {
               {showSignInFooter ? (
                 <TouchableOpacity
                   activeOpacity={0.9}
-                  style={[styles.footerBtn, styles.submitBtn]}
-                  onPress={() => formSignatureRef.current?.triggerSign()}
+                  style={[
+                    styles.footerBtn,
+                    styles.submitBtn,
+                    showCoordinatorSignInFooter && styles.submitBtnCoordinator,
+                  ]}
+                  onPress={() => {
+                    if (showCoordinatorSignInFooter) {
+                      selectDoctorSheetRef.current?.show();
+                    } else {
+                      formSignatureRef.current?.triggerSign();
+                    }
+                  }}
                 >
                   <AppText
                     size={getScaleSize(13)}
@@ -375,7 +463,11 @@ const FormReviewScreen: React.FC = () => {
                     align="center"
                     numberOfLines={1}
                   >
-                    {t(STRING.formReviewSignForm)}
+                    {t(
+                      showCoordinatorSignInFooter
+                        ? STRING.submitToDoctorForSign
+                        : STRING.formReviewSignForm,
+                    )}
                   </AppText>
                 </TouchableOpacity>
               ) : null}
@@ -389,6 +481,10 @@ const FormReviewScreen: React.FC = () => {
           hasDismissedReviewModalRef.current = true;
           setShowUnderReviewModal(false);
         }}
+      />
+      <SelectDoctorSheet
+        ref={selectDoctorSheetRef}
+        onSelectDoctor={handleCoordinatorDoctorSelected}
       />
     </AppSafeAreaView>
   );
@@ -472,6 +568,15 @@ const styles = StyleSheet.create({
   submitBtn: {
     flex: 1.05,
     backgroundColor: COLORS.primary,
+  },
+
+  saveBtnCoordinator: {
+    flex: 0.34,
+    maxWidth: '38%',
+  },
+
+  submitBtnCoordinator: {
+    flex: 1,
   },
 
   nextDisabled: {

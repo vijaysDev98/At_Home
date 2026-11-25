@@ -144,21 +144,19 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
     initialData?.status === REQUEST_STATUS.DRAFT ||
     initialData?.status === 'draft';
   const isDoctor =
-    role === ROLES.DOCTOR || (role !== ROLES.PROVIDER && !selectedDoctor);
-  const isCoordinator =
+    role === ROLES.DOCTOR ||
     role === ROLES.CARE_COORDINATOR ||
     role === 'careCoordinator' ||
-    Boolean(profileData?.isCareCoordinator);
+    Boolean(profileData?.isCareCoordinator) ||
+    (role !== ROLES.PROVIDER && !selectedDoctor);
   const isFirstTimeDoctorRequest =
-    !assignedProviderId && (isNewRequest || isDraftRequest) && isDoctor && !isCoordinator;
+    !assignedProviderId && (isNewRequest || isDraftRequest) && isDoctor;
   const isSubmitted = requestStatus === REQUEST_STATUS.SUBMITTED;
 
   const leftButtonLabel = isNewRequest
     ? t(STRING.saveAsDraft)
     : t(STRING.saveProgress);
-  const rightButtonLabel = isCoordinator
-    ? t(STRING.sendToDoctorForSignature)
-    : isSubmitted
+  const rightButtonLabel = isSubmitted
     ? t(STRING.updateAndSign)
     : isDoctor
     ? t(STRING.checkAndSignForm)
@@ -172,15 +170,6 @@ const CreateRequestStep3: React.FC<CreateRequestStep3Props> = ({ route }) => {
   };
 
   const handleRightButtonPress = async () => {
-    if (isCoordinator) {
-      if (formRef.current?.submitForReview) {
-        await formRef.current.submitForReview();
-      } else if (formRef.current?.validateAndSubmit) {
-        await formRef.current.validateAndSubmit();
-      }
-      return;
-    }
-
     if (preRequestId || assignedProviderId) {
       if (formRef.current?.validateAndSubmit) {
         await formRef.current.validateAndSubmit({

@@ -341,6 +341,49 @@ export const serviceRequestApi = {
   },
 
   /**
+   * Care Coordinator: Send form to a selected Doctor for signature
+   */
+  sendToDoctorForSignature: async (
+    requestId: string,
+    doctorId: string,
+  ): Promise<ServiceRequestResponse> => {
+    try {
+      const response: any = await API.Instance.post(
+        `/service-requests/${requestId}/send-to-doctor`,
+        { doctorId },
+      );
+
+      const nestedData = response.data?.data || response.data;
+      const nestedMessage = response.data?.message || response.message;
+
+      if (
+        response.status === true ||
+        response.code === 200 ||
+        response.status === 200
+      ) {
+        return {
+          success: true,
+          message: nestedMessage || 'Form sent to doctor for signature',
+          data: nestedData,
+        };
+      } else {
+        return {
+          success: false,
+          message: nestedMessage || 'Failed to send form to doctor',
+          error: nestedMessage,
+        };
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to send form to doctor';
+      return {
+        success: false,
+        message: errorMessage,
+        error: errorMessage,
+      };
+    }
+  },
+
+  /**
    * Acquire lock for a form
    */
   acquireFormLock: async (

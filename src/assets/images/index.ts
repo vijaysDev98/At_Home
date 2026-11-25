@@ -62,6 +62,7 @@ export const IMAGES = {
   ic_ServiceCompleted: require('./ic_serviceCompleted.png'),
   ic_profileDone: require('./ic_profileDone.png'),
   ic_summary: require('./ic_summary.png'),
+  ic_healthcare_impact_graph: require('./ic_healthcare_impact_graph.png'),
   alert_formUpdate: require('./alert_formUpdate.png'),
   alert_newPatient: require('./alert_newPatient.png'),
   alert_serviceCompleted: require('./alert_serviceCompleted.png'),

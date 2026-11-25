@@ -50,6 +50,7 @@ import ProviderPreRequestDetailScreen from '../screens/provider/request/Provider
 import ChatScreen from '../screens/chat/ChatScreen';
 import ChatListScreen from '../screens/chat/ChatListScreen';
 import PharmacyAiChatScreen from '../screens/doctor/ai/PharmacyAiChatScreen';
+import HealthcareImpactDetailScreen from '../screens/doctor/home/HealthcareImpactDetailScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -145,6 +146,7 @@ export type RootStackParamList = {
   };
   ChatList: undefined;
   PharmacyAiChat: undefined;
+  HealthcareImpact: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -366,6 +368,11 @@ export default function RootNavigation() {
               ? { androidKeyboardInputMode: 'adjustResize' as const }
               : {}),
           }}
+        />
+        <Stack.Screen
+          name={SCREENS.HEALTHCARE_IMPACT}
+          component={HealthcareImpactDetailScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

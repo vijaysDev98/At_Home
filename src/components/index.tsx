@@ -6,6 +6,8 @@ export { default as Header } from './HeaderDoctor';
 export { default as PrimaryButton } from './PrimaryButton';
 export { default as AppBottomSheet } from './AppBottomSheet';
 export * from './ActionSheets';
+export { SelectDoctorSheet } from './SelectDoctorSheet';
+export type { CoordinatorDoctor } from './SelectDoctorSheet';
 export { default as RequestSummaryCard } from './RequestSummaryCard';
 export { default as FormPatientSection } from './FormPatientSection';
 export { default as FormPrescriberSection } from './FormPrescriberSection';

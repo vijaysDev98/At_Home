@@ -71,6 +71,27 @@ export const getDoctorsService = async (
   });
 };
 
+export const getCoordinatorDoctorsService = async (
+  page: number,
+  size: number,
+  search?: string,
+  specialty?: string,
+) => {
+  const params: any = { page, size };
+
+  if (search && search.trim()) {
+    params.search = search.trim();
+  }
+
+  if (specialty) {
+    params.specialty = specialty;
+  }
+
+  return API.Instance.get(API.API_ROUTES.getCoordinatorDoctors, {
+    params,
+  });
+};
+
 export const getDepartmentListService = async () => {
   return API.Instance.get(API.API_ROUTES.departmentList);
 };

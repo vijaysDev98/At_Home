@@ -7,10 +7,11 @@ export const dashboardApi = {
    */
   getDashboardOverview: async (
     recentLimit: number = 20,
+    recentProvidersLimit: number = 500,
   ): Promise<ServiceRequestResponse> => {
     try {
       const response: any = await API.Instance.get(
-        `/doctor/dashboard/overview?recentLimit=${recentLimit}`,
+        `/doctor/dashboard/overview?recentLimit=${recentLimit}&recentProvidersLimit=${recentProvidersLimit}`,
       );
       const nestedData = response.data?.data ?? response.data;
       const nestedMessage = response.data?.msg ?? response.data?.message ?? response.message;

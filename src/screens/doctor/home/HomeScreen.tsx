@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Image,
   ScrollView,
@@ -16,6 +16,10 @@ import {
   ProfileAvatar,
   HomeChatNotificationActions,
 } from '../../../components';
+import {
+  RecentlyConnectedProvidersRow,
+  RecentConnectedProvider,
+} from '../../../components/doctor/RecentlyConnectedProvidersRow';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
 import { IMAGES } from '../../../assets/images';
@@ -35,6 +39,11 @@ import FastImage from 'react-native-fast-image';
 import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
 import { SHOW_TOAST } from '../../../constant';
 import { loadLastProcessedPatient } from '../../../actions/patient/patientAction';
+import { formatEuro } from '../../../services/healthcareImpactService';
+import { isCareCoordinatorProfile } from '../../../constant/getRole';
+
+/** Healthcare impact savings card — hidden until product rules are finalized. */
+const SHOW_HEALTHCARE_IMPACT_CARD_ON_HOME = false;
 
 // Dashboard interfaces
 interface DashboardRequestsOverview {
@@ -53,10 +62,19 @@ interface DashboardPatients {
   totalPatients: number;
 }
 
+interface DashboardHealthcareImpact {
+  cumulativeSavingsEuro?: number;
+  cumulativeEligibleDays?: number;
+  eventCount?: number;
+  lastContributionSavingsEuro?: number;
+}
+
 interface DashboardData {
   requestsOverview?: DashboardRequestsOverview;
   actionRequired?: DashboardActionRequired;
   patients?: DashboardPatients;
+  healthcareImpact?: DashboardHealthcareImpact;
+  recentConnectedProviders?: RecentConnectedProvider[];
   serviceWiseCount?: Record<string, number>;
   serviceCounts?: Record<string, number>;
   servicesOverview?: Record<string, number>;
@@ -101,6 +119,11 @@ const HomeScreen: React.FC = () => {
   const doctorName =
     (profileData?.fName || '') + ' ' + (profileData?.lName || '');
 
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
+
   const pendingSignatureCount =
     dashboardData?.actionRequired?.awaitingSignatureCount ?? 0;
 
@@ -108,6 +131,9 @@ const HomeScreen: React.FC = () => {
   const actionAlertText = hasPendingFormActions
     ? t(STRING.homeNewActionToComplete)
     : t(STRING.homeNoActionToComplete);
+  const showActionRequiredCard = Boolean(dashboardData) && !isCareCoordinator;
+  const cumulativeSavingsEuro =
+    dashboardData?.healthcareImpact?.cumulativeSavingsEuro ?? 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -120,7 +146,7 @@ const HomeScreen: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       const [response, count] = await Promise.all([
-        dashboardApi.getDashboardOverview(20),
+        dashboardApi.getDashboardOverview(20, 500),
         getUnreadCountService(),
       ]);
 
@@ -177,6 +203,13 @@ const HomeScreen: React.FC = () => {
   const openProfileTab = () => {
     NavigationService.navigate(DOCTOR_TAB_SCREENS.PROFILE);
   };
+
+  const openAllRecentProviders = () => {
+    NavigationService.navigate(SCREENS.PROVIDERS_CALL_LIST);
+  };
+
+  const recentConnectedProviders =
+    dashboardData?.recentConnectedProviders ?? [];
 
   return (
     <AppSafeAreaView edges={['top']} style={{ backgroundColor: COLORS.white }}>
@@ -250,7 +283,14 @@ const HomeScreen: React.FC = () => {
             resizeMode="contain"
           />
 
-          {dashboardData ? (
+          {recentConnectedProviders.length > 0 ? (
+            <RecentlyConnectedProvidersRow
+              providers={recentConnectedProviders}
+              onViewAll={openAllRecentProviders}
+            />
+          ) : null}
+
+          {showActionRequiredCard ? (
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleOpenActionServices}
@@ -525,7 +565,51 @@ const HomeScreen: React.FC = () => {
             />
           </TouchableOpacity>
 
-
+          {SHOW_HEALTHCARE_IMPACT_CARD_ON_HOME && !isCareCoordinator ? (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => NavigationService.navigate(SCREENS.HEALTHCARE_IMPACT)}
+              style={styles.healthcareImpactCard}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.healthcareImpactCardTitle)}
+            >
+              <View style={styles.healthcareImpactIconWrap}>
+                <Image
+                  source={IMAGES.ic_healthcare_impact_graph}
+                  style={styles.healthcareImpactIcon}
+                />
+              </View>
+              <View style={styles.healthcareImpactTextWrap}>
+                <AppText
+                  size={getScaleSize(13)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  numberOfLines={2}
+                >
+                  {t(STRING.healthcareImpactCardTitle)}
+                </AppText>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                  numberOfLines={2}
+                  style={{ marginTop: getScaleSize(4) }}
+                >
+                  {t(STRING.healthcareImpactCardSubtitle)}
+                </AppText>
+              </View>
+              <View style={styles.healthcareImpactBadge}>
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._48B02C}
+                >
+                  {formatEuro(cumulativeSavingsEuro)}
+                </AppText>
+              </View>
+              <Image source={IMAGES.arrow_right} style={styles.lastPatientChevron} />
+            </TouchableOpacity>
+          ) : null}
 
           {/* Centered Floating CALL Button */}
           <View style={styles.callButtonContainer}>
@@ -629,6 +713,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: getScaleSize(18),
+    marginTop: getScaleSize(5),
     marginBottom: 0,
     paddingHorizontal: getScaleSize(14),
     paddingVertical: getScaleSize(14),
@@ -891,6 +976,45 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS._6F767E,
+  },
+  healthcareImpactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: getScaleSize(18),
+    marginTop: getScaleSize(12),
+    marginBottom: getScaleSize(8),
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(12),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    backgroundColor: '#F0FDF4',
+    gap: getScaleSize(12),
+  },
+  healthcareImpactIconWrap: {
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    borderRadius: getScaleSize(12),
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  healthcareImpactIcon: {
+    width: getScaleSize(24),
+    height: getScaleSize(24),
+    resizeMode: 'contain',
+    tintColor: COLORS._48B02C,
+  },
+  healthcareImpactTextWrap: {
+    flex: 1,
+  },
+  healthcareImpactBadge: {
+    backgroundColor: COLORS.white,
+    borderRadius: getScaleSize(20),
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(6),
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
   },
 
 });

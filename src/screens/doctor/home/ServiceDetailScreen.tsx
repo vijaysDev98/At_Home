@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -28,6 +28,9 @@ import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { RequestListSkeleton } from '../../../components/requests/RequestListSkeleton';
 import { getButtonConfig } from '../../../constant';
 import { REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { isCareCoordinatorProfile } from '../../../constant/getRole';
 import { getServiceIcon } from '../createRequest/createRequestStep2';
 import {
   getServiceDetails,
@@ -42,6 +45,13 @@ export type ServiceDetailScreenProps = NativeStackScreenProps<
 
 const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
   const { t } = useTranslation();
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
   const initialParam = route?.params?.selectedService || route?.params?.serviceId;
   const initialServiceConfig = getServiceDetails(initialParam);
 
@@ -204,7 +214,11 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route }) => {
               }
               renderItem={({ item }) => {
                 const formStatus = item.formStatus || '';
-                const buttonConfig = getButtonConfig(formStatus, item.status || '');
+                const buttonConfig = getButtonConfig(
+                  formStatus,
+                  item.status || '',
+                  { isCareCoordinator },
+                );
                 return (
                   <View style={styles.cardItem}>
                     <RequestCardDoctor

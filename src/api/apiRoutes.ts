@@ -68,6 +68,7 @@ const API_ROUTES = {
   notifications: 'notifications',
   updateFcm: 'auth/update-fcm',
   getDoctors: 'providers/doctors',
+  getCoordinatorDoctors: 'care-coordinators/doctors',
   getProviders: 'doctors/providers',
   departmentList: 'common/department-list',
   chatAccess: 'chat/service-requests',

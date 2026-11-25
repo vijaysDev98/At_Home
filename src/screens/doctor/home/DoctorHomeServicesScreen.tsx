@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Image,
   RefreshControl,
@@ -25,6 +25,9 @@ import {
   MASTER_SERVICES_LIST,
   ServiceConfig,
 } from '../../../constant/services';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { isCareCoordinatorProfile } from '../../../constant/getRole';
 
 type DashboardActionRequired = {
   awaitingSignatureCount?: number;
@@ -33,12 +36,30 @@ type DashboardActionRequired = {
 
 const DoctorHomeServicesScreen: React.FC = () => {
   const { t } = useTranslation();
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
   const [awaitingSignatureByService, setAwaitingSignatureByService] = useState<
     Record<string, number> | undefined
   >(undefined);
   const [refreshing, setRefreshing] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (isCareCoordinator) {
+        NavigationService.goBack();
+      }
+    }, [isCareCoordinator]),
+  );
+
   const fetchDashboardData = useCallback(async () => {
+    if (isCareCoordinator) {
+      return;
+    }
     try {
       const response = await dashboardApi.getDashboardOverview(20);
       if (response.success && response.data?.actionRequired) {
@@ -54,12 +75,14 @@ const DoctorHomeServicesScreen: React.FC = () => {
       console.log('Error fetching dashboard data:', error);
       setAwaitingSignatureByService(undefined);
     }
-  }, []);
+  }, [isCareCoordinator]);
 
   useFocusEffect(
     useCallback(() => {
-      fetchDashboardData();
-    }, [fetchDashboardData]),
+      if (!isCareCoordinator) {
+        fetchDashboardData();
+      }
+    }, [fetchDashboardData, isCareCoordinator]),
   );
 
   const onRefresh = useCallback(async () => {

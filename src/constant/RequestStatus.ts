@@ -48,7 +48,13 @@ export const DISPLAY_FORM_STATUS: Record<string, string> = {
   unassigned: STRING.Pending,
 };
 
-export const getButtonConfig = (formStatus: string, status: string) => {
+export const getButtonConfig = (
+  formStatus: string,
+  status: string,
+  options?: { isCareCoordinator?: boolean },
+) => {
+  const isCareCoordinator = options?.isCareCoordinator === true;
+
   switch (status) {
     case REQUEST_STATUS.DRAFT:
       return {
@@ -58,6 +64,13 @@ export const getButtonConfig = (formStatus: string, status: string) => {
       };
     case REQUEST_STATUS.SUBMITTED:
       if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
+        if (isCareCoordinator) {
+          return {
+            show: false,
+            label: null,
+            action: null,
+          };
+        }
         return {
           show: true,
           label: STRING.continueSign,
@@ -72,8 +85,10 @@ export const getButtonConfig = (formStatus: string, status: string) => {
       } else {
         return {
           show: true,
-          label: STRING.updateAndSign,
-          action: 'edit',
+          label: isCareCoordinator
+            ? STRING.submitToDoctorForSign
+            : STRING.updateAndSign,
+          action: isCareCoordinator ? 'sign' : 'edit',
         };
       }
     case REQUEST_STATUS.RETURNED:
@@ -191,25 +206,12 @@ export const getFormScreenButtons = (
   action?: string,
   from?: string,
 ): FormScreenButtonConfig => {
-  // ── Care Coordinator flow (Cannot sign, delegates to Doctor) ───────────
-  if (role === ROLES.CARE_COORDINATOR || role === 'careCoordinator') {
-    if (action === 'view') return {};
-    return {
-      left: {
-        label: STRING.saveProgress,
-        variant: 'outline',
-        handler: 'saveAsDraft',
-      },
-      right: {
-        label: STRING.sendToDoctorForSignature,
-        variant: 'primary',
-        handler: 'submitForReview',
-      },
-    };
-  }
-
-  // ── Doctor flow ──────────────────────────────────────────────────────────
-  if (role === ROLES.DOCTOR) {
+  // ── Doctor / Care Coordinator flow ────────────────────────────────────────
+  if (
+    role === ROLES.DOCTOR ||
+    role === ROLES.CARE_COORDINATOR ||
+    role === 'careCoordinator'
+  ) {
     // View-only → no buttons
     if (action === 'view') return {};
     if (from == 'review') {

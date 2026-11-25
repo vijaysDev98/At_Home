@@ -248,9 +248,7 @@ const DoctorProfile: React.FC = () => {
                   style={{ marginVertical: getScaleSize(5) }}
                   color={COLORS._6B7280}
                 >
-                  {isCareCoordinator
-                    ? t(STRING.careCoordinator)
-                    : capitalizeFirstLetter(userSpecialty || '')}
+                  {capitalizeFirstLetter(userSpecialty || '')}
                 </AppText>
                 {profileData?.isMedicalResident && (
                   <View style={styles.residentTag}>

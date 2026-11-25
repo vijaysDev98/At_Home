@@ -39,6 +39,7 @@ import { useTranslation } from 'react-i18next';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import { userApi } from '../../../services/userApi';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
+import { isPositiveAdminAccountNotification } from '../../../utils/notificationHelpers';
 
 const DoctorNotification: React.FC = () => {
   const { t } = useTranslation();
@@ -192,7 +193,12 @@ const DoctorNotification: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: string, forReview: boolean = false) => {
+  const getNotificationIcon = (
+    type: string,
+    forReview: boolean = false,
+    metadata?: Record<string, unknown> | null,
+    title?: string,
+  ) => {
     switch (type) {
       case 'internRegistration':
       case 'internValidation':
@@ -224,7 +230,11 @@ const DoctorNotification: React.FC = () => {
       case 'serviceProviderAssignment':
         return IMAGES.alert_newPatient;
       case 'adminManual':
+        if (isPositiveAdminAccountNotification(type, metadata, title)) {
+          return IMAGES.ic_register_done;
+        }
         return IMAGES.ic_warning;
+      case 'doctorMorningReminder':
       case 'systemMaintenance':
         return IMAGES.ic_announcement;
       case 'securityAlert':
@@ -576,6 +586,8 @@ const DoctorNotification: React.FC = () => {
         iconSource={getNotificationIcon(
           item.type,
           item.metadata?.submitForReview || false,
+          item.metadata,
+          item.title,
         )}
         unread={isUnread}
         action={actionData.txt}

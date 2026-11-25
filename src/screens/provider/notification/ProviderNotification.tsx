@@ -29,6 +29,7 @@ import {
 import NavigationService from '../../../navigation/NavigationService';
 import { SCREENS } from '../../../navigation/routes';
 import { useTranslation } from 'react-i18next';
+import { isPositiveAdminAccountNotification } from '../../../utils/notificationHelpers';
 
 const ProviderNotification: React.FC = () => {
   const { t } = useTranslation();
@@ -149,7 +150,11 @@ const ProviderNotification: React.FC = () => {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (
+    type: string,
+    metadata?: Record<string, unknown> | null,
+    title?: string,
+  ) => {
     switch (type) {
       case 'requestCancelled':
         return IMAGES.serviceCancelled;
@@ -165,6 +170,9 @@ const ProviderNotification: React.FC = () => {
       case 'serviceProviderAssignment':
         return IMAGES.alert_formUpdate;
       case 'adminManual':
+        if (isPositiveAdminAccountNotification(type, metadata, title)) {
+          return IMAGES.ic_register_done;
+        }
         return IMAGES.ic_warning;
       case 'systemMaintenance':
         return IMAGES.ic_announcement;
@@ -261,7 +269,11 @@ const ProviderNotification: React.FC = () => {
         title={item.title}
         subtitle={item.message}
         time={formatNotificationTime(item.createdAt)}
-        iconSource={getNotificationIcon(item.type)}
+        iconSource={getNotificationIcon(
+          item.type,
+          item.metadata,
+          item.title,
+        )}
         unread={isUnread}
         action={getNotificationAction(item).txt}
         onPress={() => handleNotificationPress(item)}

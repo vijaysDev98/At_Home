@@ -42,6 +42,9 @@ import { getProviderSpecialty } from '../providers/providerDisplay';
 import { ActionSheetRef } from 'react-native-actions-sheet';
 import { PreRequestDetailSheet } from '../../../components/ActionSheets';
 import { isDelegatedToProvider } from '../../../constant/smallFunctions';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { isCareCoordinatorProfile } from '../../../constant/getRole';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -96,6 +99,13 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
   const route = useRoute();
   const isFocused = useIsFocused();
   const { t } = useTranslation();
+  const profileData = useSelector(
+    (state: RootState) => state.profile.profileData,
+  );
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
 
   const initialFilter = (route.params as any)?.formStatus || 'all';
 
@@ -295,7 +305,9 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           : { show: true, label: STRING.completeRequest, action: 'completeRequest' }
         : isPreReq
         ? { show: false }
-        : getButtonConfig(formStatus || '', item?.status);
+        : getButtonConfig(formStatus || '', item?.status, {
+            isCareCoordinator,
+          });
 
       const handleAcceptedPreRequestPress = () => {
         NavigationService.navigate(SCREENS.CREATE_DISCHARGE_REQUEST, {
@@ -374,7 +386,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         />
       );
     },
-    [t],
+    [t, isCareCoordinator],
   );
 
   const renderFooter = useCallback(

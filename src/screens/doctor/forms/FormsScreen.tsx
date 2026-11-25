@@ -71,7 +71,11 @@ import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import ServiceFormRenderer from './ServiceFormRenderer';
 import { useFormLockRefresh } from '../../../hooks/useFormLockRefresh';
 import { useTranslation } from 'react-i18next';
-import { ROLES } from '../../../constant/getRole';
+import {
+  ROLES,
+  resolveFormActorRole,
+  isDoctorOrCoordinatorProfile,
+} from '../../../constant/getRole';
 import { viewSignedPdf } from '../../../hooks/pdfDownloader';
 
 export type CreateRequestStep3Props = NativeStackScreenProps<
@@ -132,13 +136,10 @@ const FormsScreen: React.FC = () => {
   const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
   const hasDismissedReviewModalRef = useRef(false);
 
-  const isDoctor = useMemo(() => {
-    const roles = (profileData as any)?.roles;
-    if (Array.isArray(roles) && roles.length > 0) {
-      return roles.includes(ROLES.DOCTOR) || roles.includes('doctor');
-    }
-    return true;
-  }, [profileData]);
+  const isDoctor = useMemo(
+    () => isDoctorOrCoordinatorProfile(profileData),
+    [profileData],
+  );
 
   // Check condition: Doctor side, RequestStatus : submitted, FormStatus : signed, and unclaimed
   useEffect(() => {
@@ -354,8 +355,15 @@ const FormsScreen: React.FC = () => {
 
   // Derive which buttons to show — pure data, no JSX branching
   const buttonConfig: FormScreenButtonConfig = useMemo(
-    () => getFormScreenButtons(ROLES.DOCTOR, status, formStatus, action, from),
-    [status, formStatus, action, from],
+    () =>
+      getFormScreenButtons(
+        resolveFormActorRole(profileData),
+        status,
+        formStatus,
+        action,
+        from,
+      ),
+    [profileData, status, formStatus, action, from],
   );
 
   const renderBottomBar = () => {

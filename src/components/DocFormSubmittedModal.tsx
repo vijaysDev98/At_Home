@@ -20,7 +20,7 @@ import { STRING } from '../constant';
 import { COLORS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
 import { setDocFormSubmittedModal } from '../actions/common/commonSlice';
-import { ROLES } from '../constant/getRole';
+import { ROLES, isCareCoordinatorProfile } from '../constant/getRole';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = Math.min(SCREEN_WIDTH - getScaleSize(32), 440);
@@ -48,6 +48,12 @@ const DocFormSubmittedModal: React.FC = () => {
       state.login.userData?.roles?.[0] ||
       '',
   );
+  const profileData = useSelector(
+    (state: RootState) =>
+      state.profile.profileData || state.login.userData || null,
+  );
+  const isCareCoordinator = isCareCoordinatorProfile(profileData);
+
   const isProvider =
     userRole === ROLES.PROVIDER ||
     userRole === 'serviceProvider' ||
@@ -196,27 +202,32 @@ const DocFormSubmittedModal: React.FC = () => {
             />
           </View>
 
-          {/* Thank You Doctor Message */}
           <View style={styles.messageBox}>
             <Text style={styles.thankYouTitle}>
-              {t(STRING.thankYouDoctorTitle) || 'Thank you Doctor,'}
+              {t(
+                isCareCoordinator
+                  ? STRING.thankYouCoordinatorTitle
+                  : STRING.thankYouDoctorTitle,
+              )}
             </Text>
             <Text style={styles.thankYouBody}>
               {cleanPatientName ? (
                 <>
-                  {t(STRING.thankYouDoctorForChoosing) ||
-                    (isFrench
-                      ? "d'avoir choisi l'application AT-Home pour organiser les soins à domicile pour"
-                      : 'for choosing the AT-Home application to organize home care for')}{' '}
+                  {t(
+                    isCareCoordinator
+                      ? STRING.thankYouCoordinatorForChoosing
+                      : STRING.thankYouDoctorForChoosing,
+                  )}{' '}
                   <Text style={styles.patientNameHighlight}>
                     {cleanPatientName}
                   </Text>
                 </>
               ) : (
-                t(STRING.thankYouDoctorDefault) ||
-                (isFrench
-                  ? "d'avoir choisi l'application AT-Home pour organiser les soins à domicile de votre patient."
-                  : 'for choosing the AT-Home application to organize home care for your patient.')
+                t(
+                  isCareCoordinator
+                    ? STRING.thankYouCoordinatorDefault
+                    : STRING.thankYouDoctorDefault,
+                )
               )}
             </Text>
           </View>

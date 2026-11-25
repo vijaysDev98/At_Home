@@ -40,6 +40,7 @@ export const SCREENS = {
   CHAT: 'Chat',
   CHAT_LIST: 'ChatList',
   PHARMACY_AI_CHAT: 'PharmacyAiChat',
+  HEALTHCARE_IMPACT: 'HealthcareImpact',
 } as const;
 
 // Doctor Bottom Tab Screen Names

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   TouchableOpacity,
@@ -42,7 +42,7 @@ import {
 import RequestCardDoctor from '../../../components/RequestCardDoctor';
 import { useTranslation } from 'react-i18next';
 import { getCountryCode } from '../../../constant/getCountryCode';
-import { ROLES } from '../../../constant/getRole';
+import { ROLES, isCareCoordinatorProfile } from '../../../constant/getRole';
 import RequestCardProvider from '../../../components/RequestCardProvider';
 import { getButtonConfigProvider } from '../../../constant/RequestStatus';
 import { ServiceRequest } from '../../../services/serviceRequestListApi';
@@ -63,6 +63,10 @@ const PatientDetail: React.FC = () => {
     (state: RootState) => state.profile.profileData,
   );
   const isServiceProvider = profileData?.roles[0] == ROLES.PROVIDER;
+  const isCareCoordinator = useMemo(
+    () => isCareCoordinatorProfile(profileData),
+    [profileData],
+  );
 
   const patient = useSelector(
     (state: RootState) => state.patient.selectedPatient,
@@ -591,7 +595,9 @@ const PatientDetail: React.FC = () => {
           }
           renderItem={({ item }) => {
               const formStatus = item?.formStatus;
-              const buttonConfig = getButtonConfig(formStatus, item?.status);
+              const buttonConfig = getButtonConfig(formStatus, item?.status, {
+                isCareCoordinator,
+              });
               const buttonConfigProvider = getButtonConfigProvider(
                 formStatus,
                 item?.status,
