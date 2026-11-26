@@ -151,8 +151,9 @@ const DocFormSubmittedModal: React.FC = () => {
     outputRange: [0, 1],
   });
 
-  const imageSource =
-    isFrench && IMAGES.overlay_care_secured_fr
+  const imageSource = isCareCoordinator
+    ? IMAGES.overlay_care_coordinator_send_doctor
+    : isFrench && IMAGES.overlay_care_secured_fr
       ? IMAGES.overlay_care_secured_fr
       : IMAGES.overlay_care_secured;
 
@@ -232,25 +233,30 @@ const DocFormSubmittedModal: React.FC = () => {
             </Text>
           </View>
 
-          {/* Sign Now Primary CTA */}
+          {/* Primary CTA: Doctor -> Sign Now | Care Coordinator -> Send to Doctor for Signature */}
           <TouchableOpacity
             style={styles.signNowBtn}
             onPress={handleSignNow}
             activeOpacity={0.88}
           >
             <Text style={styles.signNowBtnText}>
-              {t(STRING.signNow) || 'Sign Now'}
+              {isCareCoordinator
+                ? t(STRING.sendToDoctorForSignature) ||
+                  'Send to Doctor for Signature'
+                : t(STRING.signNow) || 'Sign Now'}
             </Text>
           </TouchableOpacity>
 
-          {/* Sign Later Touchable Text */}
+          {/* Secondary CTA */}
           <TouchableOpacity
             style={styles.signLaterBtn}
             onPress={handleSignLater}
             activeOpacity={0.7}
           >
             <Text style={styles.signLaterText}>
-              {t(STRING.signLater) || 'Sign Later'}
+              {isCareCoordinator
+                ? t(STRING.sendLater) || 'Send Later'
+                : t(STRING.signLater) || 'Sign Later'}
             </Text>
           </TouchableOpacity>
         </Animated.View>

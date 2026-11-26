@@ -43,6 +43,11 @@ import {
 } from '../../components/chat/ChatPendingAttachments';
 import { COLORS, FONTS } from '../../utils';
 import { getScaleSize } from '../../utils/scaleSize';
+import {
+  getRoleVisualTheme,
+  ProfileLike,
+  ROLES,
+} from '../../constant/getRole';
 import { STRING, SHOW_TOAST } from '../../constant';
 import NavigationService from '../../navigation/NavigationService';
 import { SCREENS } from '../../navigation/routes';
@@ -211,6 +216,7 @@ const ChatScreen: React.FC = () => {
     null,
   );
   const [presenceLabel, setPresenceLabel] = useState<string | null>(null);
+  const [peerRoleProfile, setPeerRoleProfile] = useState<ProfileLike>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<
     string | null
   >(null);
@@ -599,9 +605,42 @@ const ChatScreen: React.FC = () => {
       if (presence.peerUserId) {
         setPeerUserId(presence.peerUserId);
       }
+      if (
+        presence.peerRoles ||
+        presence.peerIsMedicalResident !== undefined ||
+        presence.peerIsCareCoordinator !== undefined
+      ) {
+        setPeerRoleProfile({
+          roles: presence.peerRoles || [],
+          isMedicalResident: presence.peerIsMedicalResident,
+          isCareCoordinator: presence.peerIsCareCoordinator,
+        });
+      }
     },
     [t],
   );
+
+  const peerRoleBadge = useMemo(() => {
+    if (!peerRoleProfile) return null;
+    const isProviderPeer =
+      peerRoleProfile.roles?.includes(ROLES.PROVIDER) ||
+      peerRoleProfile.roles?.includes('serviceProvider');
+    if (isProviderPeer) {
+      return {
+        label: t(STRING.healthcareProvider),
+        bg: '#EFF6FF',
+        border: '#BFDBFE',
+        text: '#1D4ED8',
+      };
+    }
+    const theme = getRoleVisualTheme(peerRoleProfile);
+    return {
+      label: t(theme.labelKey),
+      bg: theme.badgeBg,
+      border: theme.badgeBorder,
+      text: theme.badgeText,
+    };
+  }, [peerRoleProfile, t]);
 
   const handleCallPeer = useCallback(() => {
     const phone = peerPhone?.trim();
@@ -1200,6 +1239,19 @@ const ChatScreen: React.FC = () => {
           peerName={peerName || t(STRING.chatNow)}
           peerProfileImg={peerProfileImg}
           presenceLabel={presenceLabel}
+          roleBadge={peerRoleBadge}
+          onPressProfile={() => {
+            const convId = resolveConversationId();
+            if (!convId && !peerName) return;
+            NavigationService.navigate(SCREENS.CHAT_PEER_PROFILE, {
+              conversationId: convId || undefined,
+              peerName: peerName || undefined,
+              peerProfileImg,
+              peerPhone,
+              peerCountry,
+              peerUserId: peerUserId || undefined,
+            });
+          }}
           onPressCall={handleCallPeer}
           callAccessibilityLabel={t(STRING.callNow)}
         />

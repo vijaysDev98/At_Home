@@ -19,6 +19,7 @@ interface FormRequestHeaderProps {
   requestIdLabel?: string;
   chatPeerName?: string | null;
   chatPeerProfileImg?: string | null;
+  hideChat?: boolean;
 }
 
 // ─── Shared status badges row ─────────────────────────────────────────────────
@@ -93,6 +94,7 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
   requestIdLabel,
   chatPeerName,
   chatPeerProfileImg,
+  hideChat = false,
 }) => {
   const { t } = useTranslation();
   const resolvedRequestId =
@@ -134,12 +136,14 @@ const FormRequestHeader: React.FC<FormRequestHeaderProps> = ({
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>
-        <HeaderChatIconButton
-          serviceRequestId={resolvedRequestId}
-          requestIdLabel={requestIdLabel || requestData?.requestId}
-          peerName={chatPeerName}
-          peerProfileImg={chatPeerProfileImg}
-        />
+        {!hideChat ? (
+          <HeaderChatIconButton
+            serviceRequestId={resolvedRequestId}
+            requestIdLabel={requestIdLabel || requestData?.requestId}
+            peerName={chatPeerName}
+            peerProfileImg={chatPeerProfileImg}
+          />
+        ) : null}
       </View>
     </View>
   );
@@ -155,6 +159,7 @@ const FormRequestHeaderForProvider: React.FC<FormRequestHeaderProps> = ({
   requestIdLabel,
   chatPeerName,
   chatPeerProfileImg,
+  hideChat = false,
 }) => {
   const { t } = useTranslation();
   const resolvedRequestId =
@@ -192,12 +197,14 @@ const FormRequestHeaderForProvider: React.FC<FormRequestHeaderProps> = ({
           </AppText>
           <StatusBadges requestData={requestData} fromReview={fromReview} />
         </View>
-        <HeaderChatIconButton
-          serviceRequestId={resolvedRequestId}
-          requestIdLabel={requestIdLabel || requestData?.requestId}
-          peerName={chatPeerName}
-          peerProfileImg={chatPeerProfileImg}
-        />
+        {!hideChat ? (
+          <HeaderChatIconButton
+            serviceRequestId={resolvedRequestId}
+            requestIdLabel={requestIdLabel || requestData?.requestId}
+            peerName={chatPeerName}
+            peerProfileImg={chatPeerProfileImg}
+          />
+        ) : null}
       </View>
     </View>
   );

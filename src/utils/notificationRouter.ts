@@ -457,7 +457,23 @@ export async function navigateFromNotification(raw: any): Promise<boolean> {
       }
     }
 
-    // 5. Form Submission / Update
+    // 5. Form Delegated by Care Coordinator for Doctor Signature
+    if (info.type === 'formDelegated' && info.requestId) {
+      NavigationService.resetTo([
+        { name: SCREENS.DOCTOR_BOTTOM_TABS },
+        {
+          name: SCREENS.FORM_REVIEW_SCREEN,
+          params: {
+            request: { id: info.requestId },
+            requestId: info.requestId,
+            action: 'edit',
+          },
+        },
+      ]);
+      return true;
+    }
+
+    // 6. Form Submission / Update
     if (info.type === 'formSubmission' || info.type === 'formUpdate') {
       if (info.requestId) {
         NavigationService.resetTo([

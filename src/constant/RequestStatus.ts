@@ -51,9 +51,10 @@ export const DISPLAY_FORM_STATUS: Record<string, string> = {
 export const getButtonConfig = (
   formStatus: string,
   status: string,
-  options?: { isCareCoordinator?: boolean },
+  options?: { isCareCoordinator?: boolean; hasAssignedDoctor?: boolean },
 ) => {
   const isCareCoordinator = options?.isCareCoordinator === true;
+  const hasAssignedDoctor = options?.hasAssignedDoctor === true;
 
   switch (status) {
     case REQUEST_STATUS.DRAFT:
@@ -65,6 +66,13 @@ export const getButtonConfig = (
     case REQUEST_STATUS.SUBMITTED:
       if (formStatus == FORM_STATUS.AWAITING_SIGNATURE) {
         if (isCareCoordinator) {
+          if (!hasAssignedDoctor) {
+            return {
+              show: true,
+              label: STRING.submitToDoctorForSign,
+              action: 'sign',
+            };
+          }
           return {
             show: false,
             label: null,
@@ -94,7 +102,9 @@ export const getButtonConfig = (
     case REQUEST_STATUS.RETURNED:
       return {
         show: true,
-        label: STRING.updateAndResign,
+        label: isCareCoordinator
+          ? STRING.updateAndSendToDoctor
+          : STRING.updateAndResign,
         action: 'edit',
       };
     case FORM_STATUS.COMPLETED:
@@ -212,6 +222,9 @@ export const getFormScreenButtons = (
     role === ROLES.CARE_COORDINATOR ||
     role === 'careCoordinator'
   ) {
+    const isCoordinatorRole =
+      role === ROLES.CARE_COORDINATOR || role === 'careCoordinator';
+
     // View-only → no buttons
     if (action === 'view') return {};
     if (from == 'review') {
@@ -222,7 +235,9 @@ export const getFormScreenButtons = (
           handler: 'updateFormData',
         },
         right: {
-          label: STRING.updateAndSign,
+          label: isCoordinatorRole
+            ? STRING.updateAndSendToDoctor
+            : STRING.updateAndSign,
           variant: 'primary',
           handler: 'updateAndSign',
         },
@@ -244,7 +259,7 @@ export const getFormScreenButtons = (
       };
     }
 
-    // Submitted request, submitted form → Save Progress + Update & Sign
+    // Submitted request, submitted form → Save Progress + Update & Sign (or Update & Send to Doctor)
     if (
       status === REQUEST_STATUS.SUBMITTED &&
       formStatus === FORM_STATUS.SUBMITTED
@@ -256,14 +271,16 @@ export const getFormScreenButtons = (
           handler: 'updateFormData',
         },
         right: {
-          label: STRING.updateAndSign,
+          label: isCoordinatorRole
+            ? STRING.updateAndSendToDoctor
+            : STRING.updateAndSign,
           variant: 'primary',
           handler: 'updateAndSign',
         },
       };
     }
 
-    // Returned request, returned form → Save Progress + Update & Re-sign
+    // Returned request, returned form → Save Progress + Update & Re-sign (or Update & Send to Doctor)
     if (
       status === REQUEST_STATUS.RETURNED &&
       formStatus === FORM_STATUS.SIGNED
@@ -275,7 +292,9 @@ export const getFormScreenButtons = (
           handler: 'saveProgress',
         },
         right: {
-          label: STRING.updateAndReSign,
+          label: isCoordinatorRole
+            ? STRING.updateAndSendToDoctor
+            : STRING.updateAndReSign,
           variant: 'primary',
           handler: 'updateAndResign',
         },

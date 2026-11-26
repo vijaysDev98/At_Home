@@ -315,6 +315,14 @@ export function resolveOverlayKey(data: any): string | null {
   const info = extractNotificationInfo(data);
   const typeLower = info.type.toLowerCase();
 
+  // Registration / intern approval notifications must never open the form-signature popup
+  if (
+    typeLower.includes('registration') ||
+    typeLower === 'internvalidation'
+  ) {
+    return null;
+  }
+
   // Match form signature notifications ("Sign Now" overlay):
   // When provider submits for review, or direct signing notification types:
   // e.g. 'formSignature', 'signForm', 'awaitingSignature', or when isSubmitForReview is true.

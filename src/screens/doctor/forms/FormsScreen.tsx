@@ -74,6 +74,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ROLES,
   resolveFormActorRole,
+  isCareCoordinatorProfile,
   isDoctorOrCoordinatorProfile,
 } from '../../../constant/getRole';
 import { viewSignedPdf } from '../../../hooks/pdfDownloader';
@@ -297,8 +298,12 @@ const FormsScreen: React.FC = () => {
           requestId || '',
         );
         if (reviewResponse.success) {
-          NavigationService.navigate(SCREENS.FORM_REVIEW_SCREEN, {
-            request: { ...request, ...reviewResponse.data },
+          NavigationService.replace(SCREENS.FORM_REVIEW_SCREEN, {
+            request: {
+              ...request,
+              ...reviewResponse.data,
+              digitalSignature: reviewResponse.data?.digitalSignature ?? null,
+            },
           });
         } else {
           SHOW_TOAST(reviewResponse.error, 'error');
@@ -482,6 +487,14 @@ const FormsScreen: React.FC = () => {
                     null
                   }
                   chatPeerProfileImg={assignedProvider?.profileImg || null}
+                  hideChat={
+                    !isCareCoordinatorProfile(profileData) &&
+                    Boolean(
+                      (requestData as any)?.createdBy &&
+                        typeof (requestData as any).createdBy === 'object' &&
+                        isCareCoordinatorProfile((requestData as any).createdBy),
+                    )
+                  }
                 />
                 {requestData?.status === REQUEST_STATUS.RETURNED &&
                   requestData?.returnReasons &&

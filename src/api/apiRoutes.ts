@@ -74,6 +74,7 @@ const API_ROUTES = {
   chatAccess: 'chat/service-requests',
   chatConversations: 'chat/conversations',
   chatProviders: 'chat/providers',
+  chatDoctors: 'chat/doctors',
   chatUnreadCount: 'chat/unread-count',
   pharmacyAiChat: 'ai/pharmacy-chat',
   nearbyPlaces: 'common/nearby-places',

@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
-  Modal,
   StyleSheet,
   View,
 } from 'react-native';
@@ -23,39 +21,31 @@ const AppLoader: React.FC<AppLoaderProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  return (
-    <Modal
-      transparent
-      animationType="fade"
-      visible={visible}
-      statusBarTranslucent={true}
-      navigationBarTranslucent={true}
-      hardwareAccelerated
-      // Required on Android, otherwise it throws a warning
-      // and the hardware back button won't be handled.
-      onRequestClose={() => { }}
-    >
-      <View
-        style={styles.container}
-        // Block touches behind the loader while it's visible,
-        // regardless of "signing" state.
-        pointerEvents="auto"
-      >
-        <View style={styles.loaderWrapper}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+  if (!visible) {
+    return null;
+  }
 
-          {signing && (
-            <AppText
-              style={styles.signingText}
-              font={FONTS.Inter.SemiBold}
-              color={COLORS.primary}
-            >
-              {t(STRING.signing)}
-            </AppText>
-          )}
-        </View>
+  return (
+    <View
+      style={styles.container}
+      // Block touches behind the loader while it's visible;
+      // rendered as a View overlay (not RN Modal) to avoid iOS touch-freeze bugs.
+      pointerEvents="auto"
+    >
+      <View style={styles.loaderWrapper}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+
+        {signing && (
+          <AppText
+            style={styles.signingText}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS.primary}
+          >
+            {t(STRING.signing)}
+          </AppText>
+        )}
       </View>
-    </Modal>
+    </View>
   );
 };
 
@@ -63,10 +53,9 @@ export default React.memo(AppLoader);
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    minHeight: Dimensions.get('screen').height,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+    elevation: 9999,
     backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'center',
     alignItems: 'center',

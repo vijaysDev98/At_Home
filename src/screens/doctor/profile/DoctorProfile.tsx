@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import NavigationService from '../../../navigation/NavigationService';
 import {
@@ -63,6 +63,36 @@ const DoctorProfile: React.FC = () => {
 
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [internsCount, setInternsCount] = useState(0);
+  const [pendingInternsCount, setPendingInternsCount] = useState(0);
+
+  const isCareCoordinator =
+    Boolean(profileData?.isCareCoordinator) ||
+    Boolean(profileData?.roles?.includes('careCoordinator')) ||
+    Boolean(profileData?.roles?.includes(ROLES.CARE_COORDINATOR));
+  const isMedicalResident = Boolean(profileData?.isMedicalResident);
+  const canManageInterns = !isCareCoordinator && !isMedicalResident;
+
+  const loadSupervisedInternCounts = useCallback(async () => {
+    if (!canManageInterns) {
+      setInternsCount(0);
+      setPendingInternsCount(0);
+      return;
+    }
+    const list = await userApi.getSupervisedInterns();
+    if (Array.isArray(list)) {
+      setInternsCount(list.length);
+      setPendingInternsCount(
+        list.filter((i: any) => i?.status === 'pendingApproval').length,
+      );
+    }
+  }, [canManageInterns]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadSupervisedInternCounts();
+    }, [loadSupervisedInternCounts]),
+  );
 
   const doctorSpecialities = [
     { label: t(STRING.generalPractitioner), value: 'generalPractice' },
@@ -90,13 +120,16 @@ const DoctorProfile: React.FC = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await dispatch(fetchProfile());
+      await Promise.all([
+        dispatch(fetchProfile()),
+        loadSupervisedInternCounts(),
+      ]);
     } catch (error) {
       console.log('Error refreshing profile:', error);
     } finally {
       setRefreshing(false);
     }
-  }, [dispatch]);
+  }, [dispatch, loadSupervisedInternCounts]);
 
   const logoutSheetRef = useRef<ActionSheetRef>(null);
   const deleteAccountSheetRef = useRef<ActionSheetRef>(null);
@@ -136,11 +169,6 @@ const DoctorProfile: React.FC = () => {
       SHOW_TOAST(errMsg, 'error');
     }
   };
-
-  const isCareCoordinator =
-    Boolean(profileData?.isCareCoordinator) ||
-    Boolean(profileData?.roles?.includes('careCoordinator')) ||
-    Boolean(profileData?.roles?.includes(ROLES.CARE_COORDINATOR));
 
   const handleEditProfile = () => {
     navigation.navigate(SCREENS.REGISTER, {
@@ -301,6 +329,69 @@ const DoctorProfile: React.FC = () => {
           </View>
 
           {/* Form card */}
+          {canManageInterns ? (
+            <View style={styles.card}>
+              <TouchableOpacity
+                style={styles.internSectionRow}
+                activeOpacity={0.78}
+                onPress={() => NavigationService.navigate(SCREENS.MY_INTERNS)}
+              >
+                <View style={styles.internRowLeft}>
+                  <View style={styles.internIconWrap}>
+                    <Image
+                      source={IMAGES.role_intern}
+                      style={styles.internIcon}
+                    />
+                  </View>
+                  <View style={styles.internRowText}>
+                    <AppText
+                      size={getScaleSize(15)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {t(STRING.mySupervisedInterns)}
+                    </AppText>
+                    <AppText
+                      size={getScaleSize(12)}
+                      font={FONTS.Inter.Regular}
+                      color={COLORS._6B7280}
+                      numberOfLines={2}
+                    >
+                      {t(STRING.manageSupervisedInternsDesc)}
+                    </AppText>
+                  </View>
+                </View>
+                <View style={styles.internRowRight}>
+                  {pendingInternsCount > 0 ? (
+                    <View style={styles.internPendingBadge}>
+                      <AppText
+                        size={getScaleSize(11)}
+                        font={FONTS.Inter.Bold}
+                        color="#B45309"
+                      >
+                        {pendingInternsCount}
+                      </AppText>
+                    </View>
+                  ) : internsCount > 0 ? (
+                    <View style={styles.internCountBadge}>
+                      <AppText
+                        size={getScaleSize(11)}
+                        font={FONTS.Inter.SemiBold}
+                        color="#4338CA"
+                      >
+                        {internsCount}
+                      </AppText>
+                    </View>
+                  ) : null}
+                  <Image
+                    source={IMAGES.arrow_right}
+                    style={styles.internChevron}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           <View style={styles.card}>
             <AppText
               size={getScaleSize(15)}
@@ -1069,6 +1160,71 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     marginTop: getScaleSize(2),
+  },
+  internSectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: getScaleSize(10),
+  },
+  internRowLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(12),
+  },
+  internIconWrap: {
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    borderRadius: getScaleSize(21),
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  internIcon: {
+    width: getScaleSize(42),
+    height: getScaleSize(42),
+    resizeMode: 'cover',
+  },
+  internRowText: {
+    flex: 1,
+    gap: getScaleSize(2),
+  },
+  internRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(8),
+  },
+  internPendingBadge: {
+    minWidth: getScaleSize(24),
+    height: getScaleSize(24),
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(7),
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  internCountBadge: {
+    minWidth: getScaleSize(24),
+    height: getScaleSize(24),
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(7),
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  internChevron: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
   },
 });
 

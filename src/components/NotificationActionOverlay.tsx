@@ -26,6 +26,7 @@ import { SCREENS } from '../navigation/routes';
 import { FORM_STATUS, REQUEST_STATUS } from '../constant/RequestStatus';
 import { ROLES, isCareCoordinatorProfile } from '../constant/getRole';
 import { STRING } from '../constant/strings';
+import { IMAGES } from '../assets/images';
 import { COLORS } from '../utils';
 import { getScaleSize } from '../utils/scaleSize';
 
@@ -77,6 +78,17 @@ const NotificationActionOverlay: React.FC = () => {
     ? NOTIFICATION_OVERLAY_CONFIG[type] ||
     NOTIFICATION_OVERLAY_CONFIG.formSignature
     : null;
+
+  const isFormSignatureOverlay =
+    type === 'formSignature' ||
+    type === 'formUpdate' ||
+    type === 'formSubmission' ||
+    type === 'awaitingSignature' ||
+    type === 'signForm' ||
+    (!!type && !NOTIFICATION_OVERLAY_CONFIG[type]);
+
+  const isCoordinatorFormReviewOverlay =
+    isCareCoordinator && isFormSignatureOverlay;
 
   useEffect(() => {
     if (visible && isProvider) {
@@ -356,7 +368,9 @@ const NotificationActionOverlay: React.FC = () => {
     })
     : 1;
 
-  const ctaButtonText = t(config.ctaLabel) || config.ctaLabel;
+  const ctaButtonText = isCoordinatorFormReviewOverlay
+    ? t(STRING.reviewAndSendToDoctor)
+    : t(config.ctaLabel) || config.ctaLabel;
   const isPortraitImage = false;
 
   const topInset = Math.max(
@@ -385,7 +399,14 @@ const NotificationActionOverlay: React.FC = () => {
     const isCareStarted = type === 'careStarted' || type === 'requestClaimed';
     const isCareSecured = type === 'careSecured' || type === 'docFormSubmitted';
 
-    if (!isCareAccepted && !isCareStarted && !isCareSecured) return null;
+    if (
+      !isCareAccepted &&
+      !isCareStarted &&
+      !isCareSecured &&
+      !isCoordinatorFormReviewOverlay
+    ) {
+      return null;
+    }
 
     const rawPatientName =
       payload?.patientName ||
@@ -488,6 +509,29 @@ const NotificationActionOverlay: React.FC = () => {
       );
     }
 
+    if (isCoordinatorFormReviewOverlay) {
+      return (
+        <View style={styles.messageBox}>
+          <Text style={styles.thankYouTitle}>
+            {t(STRING.coordinatorFormReviewTitle)}
+          </Text>
+          <Text style={styles.thankYouBody}>
+            {cleanPatientName ? (
+              <>
+                {t(STRING.coordinatorFormReviewPatientPrefix)}{' '}
+                <Text style={styles.patientNameHighlight}>
+                  {cleanPatientName}
+                </Text>
+                {t(STRING.coordinatorFormReviewPatientSuffix)}
+              </>
+            ) : (
+              t(STRING.coordinatorFormReviewMessage)
+            )}
+          </Text>
+        </View>
+      );
+    }
+
     return null;
   };
 
@@ -546,6 +590,8 @@ const NotificationActionOverlay: React.FC = () => {
               styles.careAcceptedImageContainer,
               (type === 'careSecured' || type === 'docFormSubmitted') &&
               styles.careSecuredImageContainer,
+              isCoordinatorFormReviewOverlay &&
+              styles.coordinatorFormReviewImageContainer,
               (type === 'profileUnderReview' ||
                 type === 'doctorRegistration') &&
               isFrench &&
@@ -554,7 +600,11 @@ const NotificationActionOverlay: React.FC = () => {
           >
             <Image
               source={
-                isFrench && config.imageFr ? config.imageFr : config.image
+                isCoordinatorFormReviewOverlay
+                  ? IMAGES.overlay_coordinator_forms_review
+                  : isFrench && config.imageFr
+                    ? config.imageFr
+                    : config.image
               }
               style={styles.illustrationImage}
               resizeMode="contain"
@@ -673,6 +723,10 @@ const styles = StyleSheet.create({
   },
   careSecuredImageContainer: {
     height: Math.round(IMAGE_WIDTH / (1024 / 467)),
+    marginBottom: getScaleSize(6),
+  },
+  coordinatorFormReviewImageContainer: {
+    height: Math.round(IMAGE_WIDTH / (1264 / 620)),
     marginBottom: getScaleSize(6),
   },
   profileReviewFrImageContainer: {

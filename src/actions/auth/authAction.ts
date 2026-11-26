@@ -151,7 +151,9 @@ export const userRegister = (data: any) => async (dispatch: AppDispatch) => {
       // Upload FCM token after successful registration (before admin approval)
       // await uploadFcmToken();
 
-      NavigationService.replace(SCREENS.REGISTER_SUCCESS);
+      NavigationService.replace(SCREENS.REGISTER_SUCCESS, {
+        isIntern: Boolean(data?.isMedicalResident),
+      });
     } else if (response?.code === 400 || response?.code === 409) {
       SHOW_TOAST(response?.data?.message || response?.message, 'error');
     } else {

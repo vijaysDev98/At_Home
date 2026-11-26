@@ -49,8 +49,10 @@ import CreateDischargeRequestScreen from '../screens/doctor/discharge/CreateDisc
 import ProviderPreRequestDetailScreen from '../screens/provider/request/ProviderPreRequestDetailScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatPeerProfileScreen from '../screens/chat/ChatPeerProfileScreen';
 import PharmacyAiChatScreen from '../screens/doctor/ai/PharmacyAiChatScreen';
 import HealthcareImpactDetailScreen from '../screens/doctor/home/HealthcareImpactDetailScreen';
+import MyInternsScreen from '../screens/doctor/profile/MyInternsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -66,7 +68,7 @@ export type RootStackParamList = {
       }
     | undefined;
   DoctorRegistered: undefined;
-  RegisterSuccess: undefined;
+  RegisterSuccess: { isIntern?: boolean } | undefined;
   ForgotPassword: undefined;
   Alerts: undefined;
   ProvidersCallList: undefined;
@@ -145,8 +147,17 @@ export type RootStackParamList = {
     peerUserId?: string;
   };
   ChatList: undefined;
+  ChatPeerProfile: {
+    conversationId?: string;
+    peerName?: string;
+    peerProfileImg?: string | null;
+    peerPhone?: string | null;
+    peerCountry?: string | null;
+    peerUserId?: string;
+  };
   PharmacyAiChat: undefined;
   HealthcareImpact: undefined;
+  MyInterns: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -360,6 +371,11 @@ export default function RootNavigation() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name={SCREENS.CHAT_PEER_PROFILE}
+          component={ChatPeerProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name={SCREENS.PHARMACY_AI_CHAT}
           component={PharmacyAiChatScreen}
           options={{
@@ -372,6 +388,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.HEALTHCARE_IMPACT}
           component={HealthcareImpactDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.MY_INTERNS}
+          component={MyInternsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -126,53 +126,57 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
   return (
     <View style={styles.container}>
       {/* Top Drug Profile Header Card */}
-      <LinearGradient
-        colors={['#EDF5FF', '#F8FAFF', '#FFFFFF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerCard}
-      >
-        <View style={styles.headerLeft}>
-          <View style={styles.badgeRow}>
+      <View style={styles.headerCardShadow}>
+        <LinearGradient
+          colors={['#EDF5FF', '#F8FAFF', '#FFFFFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerCard}
+        >
+          <View style={styles.headerInner}>
+            <View style={styles.headerLeft}>
+              <View style={styles.badgeRow}>
+                <Image
+                  source={IMAGES.ic_drug_badge_pill}
+                  style={styles.badgeIcon}
+                />
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.primary}
+                  style={styles.badgeText}
+                >
+                  {t(STRING.drugProfile)}
+                </AppText>
+              </View>
+
+              <AppText
+                size={getScaleSize(22)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={styles.medicineName}
+              >
+                {medicineName}
+              </AppText>
+
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Medium}
+                color={COLORS._6F767E}
+                style={styles.metaRow}
+              >
+                {t(STRING.inn)}: {inn}  |  {t(STRING.strength)}: {strength}  |  {t(STRING.route)}: {route}
+              </AppText>
+            </View>
+
             <Image
-              source={IMAGES.ic_drug_badge_pill}
-              style={styles.badgeIcon}
+              source={IMAGES.drug_profile_bottle}
+              style={styles.bottleImage}
+              resizeMode="contain"
             />
-            <AppText
-              size={getScaleSize(11)}
-              font={FONTS.Inter.Bold}
-              color={COLORS.primary}
-              style={styles.badgeText}
-            >
-              {t(STRING.drugProfile)}
-            </AppText>
           </View>
-
-          <AppText
-            size={getScaleSize(22)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-            style={styles.medicineName}
-          >
-            {medicineName}
-          </AppText>
-
-          <AppText
-            size={getScaleSize(12)}
-            font={FONTS.Inter.Medium}
-            color={COLORS._6F767E}
-            style={styles.metaRow}
-          >
-            {t(STRING.inn)}: {inn}  |  {t(STRING.strength)}: {strength}  |  {t(STRING.route)}: {route}
-          </AppText>
-        </View>
-
-        <Image
-          source={IMAGES.drug_profile_bottle}
-          style={styles.bottleImage}
-          resizeMode="contain"
-        />
-      </LinearGradient>
+        </LinearGradient>
+      </View>
 
       {/* 7 Accordion Sections */}
       <View style={styles.accordionList}>
@@ -275,23 +279,31 @@ const styles = StyleSheet.create({
     width: '100%',
     marginVertical: getScaleSize(6),
   },
-  headerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: getScaleSize(16),
-    paddingVertical: getScaleSize(18),
+  headerCardShadow: {
     borderRadius: getScaleSize(18),
-    borderWidth: 1,
-    borderColor: '#D8E8FE',
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 3,
   },
+  headerCard: {
+    borderRadius: getScaleSize(18),
+    borderWidth: 1,
+    borderColor: '#D8E8FE',
+    overflow: 'hidden',
+  },
+  headerInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: getScaleSize(16),
+    paddingVertical: getScaleSize(16),
+  },
   headerLeft: {
     flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
     paddingRight: getScaleSize(10),
   },
   badgeRow: {
@@ -314,16 +326,17 @@ const styles = StyleSheet.create({
   },
   medicineName: {
     marginTop: getScaleSize(8),
-    lineHeight: getScaleSize(26),
+    lineHeight: getScaleSize(28),
   },
   metaRow: {
     marginTop: getScaleSize(6),
     lineHeight: getScaleSize(18),
   },
   bottleImage: {
-    width: getScaleSize(85),
-    height: getScaleSize(85),
+    width: getScaleSize(76),
+    height: getScaleSize(76),
     borderRadius: getScaleSize(14),
+    flexShrink: 0,
   },
   accordionList: {
     marginTop: getScaleSize(12),

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,6 +17,7 @@ import { IMAGES } from '../../../assets/images';
 import { getScaleSize } from '../../../utils/scaleSize';
 import AppText from '../../../components/AppText';
 import NavigationService from '../../../navigation/NavigationService';
+import { SCREENS } from '../../../navigation/routes';
 import { serviceRequestApi } from '../../../services/serviceRequestApi';
 import HeaderProvider from '../../../components/HeaderProvider';
 import { AppLoader, ProfileAvatar } from '../../../components';
@@ -28,12 +29,16 @@ import { useTranslation } from 'react-i18next';
 import { STRING } from '../../../constant';
 import { capitalizeFirstLetter } from '../../../constant/smallFunctions';
 import { SHOW_TOAST } from '../../../constant/showToast';
-import { useSelector } from 'react-redux';
+import { isCareCoordinatorProfile } from '../../../constant/getRole';
+import { openDoctorChat } from '../../../services/chatService';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
 
 const ServiceCompletedScreen: React.FC = () => {
   const route = useRoute<any>();
   const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
   const profileData = useSelector((state: RootState) => state.profile.profileData);
   const currentUserId =
     (profileData as any)?._id?.toString?.() ||
@@ -148,6 +153,57 @@ const ServiceCompletedScreen: React.FC = () => {
     return { name: null, profileImg: null };
   }, [requestData, currentUserId]);
 
+  const creatorObj = useMemo(() => {
+    const raw =
+      (requestData as any)?.createdBy || route?.params?.request?.createdBy;
+    return raw && typeof raw === 'object' ? raw : null;
+  }, [requestData, route?.params?.request]);
+
+  const coordinatorCreatorId = useMemo(() => {
+    if (!creatorObj || !isCareCoordinatorProfile(creatorObj)) return null;
+    return creatorObj._id || creatorObj.id || null;
+  }, [creatorObj]);
+
+  const coordinatorCreatorName = useMemo(() => {
+    if (!coordinatorCreatorId || !creatorObj) return '';
+    return (
+      creatorObj.fullName ||
+      [creatorObj.fName, creatorObj.lName].filter(Boolean).join(' ').trim() ||
+      t(STRING.careCoordinator)
+    );
+  }, [coordinatorCreatorId, creatorObj, t]);
+
+  const isCoordinatorCreatedRequest = Boolean(coordinatorCreatorId);
+
+  const handleChatWithCoordinator = useCallback(async () => {
+    if (!coordinatorCreatorId) return;
+    dispatch(setGlobalLoading(true));
+    try {
+      const result = await openDoctorChat(String(coordinatorCreatorId));
+      if (!result?.conversationId) {
+        SHOW_TOAST(t(STRING.somethingWentWrong), 'error');
+        return;
+      }
+      NavigationService.navigate(SCREENS.CHAT, {
+        conversationId: result.conversationId,
+        peerName: result.peer?.name || coordinatorCreatorName,
+        peerProfileImg:
+          creatorObj?.profileImg || result.peer?.profileImg || undefined,
+        peerPhone: creatorObj?.phoneNumber || result.peer?.phoneNumber,
+        peerCountry: creatorObj?.country || result.peer?.country || undefined,
+        peerUserId: String(coordinatorCreatorId),
+      });
+    } finally {
+      dispatch(setGlobalLoading(false));
+    }
+  }, [
+    coordinatorCreatorId,
+    coordinatorCreatorName,
+    creatorObj,
+    dispatch,
+    t,
+  ]);
+
   const handleViewPdf = () => {
     if (!requestData?.signedPdfUrl) {
       SHOW_TOAST(t(STRING.failedToLoadPdf), 'error');
@@ -178,6 +234,7 @@ const ServiceCompletedScreen: React.FC = () => {
         requestIdLabel={pdfRequestId}
         chatPeerName={chatPeer.name}
         chatPeerProfileImg={chatPeer.profileImg}
+        hideChat={isCoordinatorCreatedRequest}
       />
 
       <ScrollView
@@ -242,6 +299,48 @@ const ServiceCompletedScreen: React.FC = () => {
             </View>
           </View>
         </View>
+
+        {/* Care Coordinator Banner */}
+        {isCoordinatorCreatedRequest ? (
+          <View style={styles.coordinatorBanner}>
+            <View style={styles.coordinatorBannerLeft}>
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.SemiBold}
+                color="#0F766E"
+              >
+                {t(STRING.careCoordinator)}
+              </AppText>
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                numberOfLines={1}
+              >
+                {t(STRING.preparedByCoordinator, {
+                  coordinatorName: coordinatorCreatorName,
+                })}
+              </AppText>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.coordinatorChatBtn}
+              onPress={handleChatWithCoordinator}
+            >
+              <Image
+                source={IMAGES.chat_conversation}
+                style={styles.coordinatorChatIcon}
+              />
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.chat)}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* Summary Card */}
         <View style={styles.summaryCard}>
@@ -744,5 +843,36 @@ const styles = StyleSheet.create({
     width: getScaleSize(16),
     height: getScaleSize(16),
     resizeMode: 'contain',
+  },
+  coordinatorBanner: {
+    backgroundColor: '#F0FDFA',
+    borderColor: '#99F6E4',
+    borderWidth: 1,
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: getScaleSize(10),
+  },
+  coordinatorBannerLeft: {
+    flex: 1,
+    gap: getScaleSize(2),
+  },
+  coordinatorChatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    backgroundColor: '#0D9488',
+    paddingHorizontal: getScaleSize(12),
+    paddingVertical: getScaleSize(8),
+    borderRadius: getScaleSize(10),
+  },
+  coordinatorChatIcon: {
+    width: getScaleSize(14),
+    height: getScaleSize(14),
+    resizeMode: 'contain',
+    tintColor: COLORS.white,
   },
 });

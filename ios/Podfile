@@ -1,3 +1,5 @@
+ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -6,8 +8,6 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
-
-use_modular_headers!
 
 prepare_react_native_project!
 
@@ -18,6 +18,10 @@ if linkage != nil
 end
 
 target 'HealthCare' do
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'GoogleDataTransport', :modular_headers => true
+  pod 'nanopb', :modular_headers => true
+
   config = use_native_modules!
 
   use_react_native!(

@@ -22,7 +22,6 @@ import {
 } from '../../../components';
 import { SHOW_TOAST } from '../../../constant/showToast';
 import { setLoading as setGlobalLoading } from '../../../actions/common/commonSlice';
-import LinearGradient from 'react-native-linear-gradient';
 import NavigationService from '../../../navigation/NavigationService';
 import { PROVIDER_TAB_SCREENS, SCREENS } from '../../../navigation/routes';
 import { useSelector, useDispatch } from 'react-redux';
@@ -183,6 +182,10 @@ const ProviderHome: React.FC = () => {
     NavigationService.navigate(SCREENS.ORDER_AMBULANCE);
   }, []);
 
+  const handleOpenPharmacyAssistant = useCallback(() => {
+    NavigationService.navigate(SCREENS.PHARMACY_AI_CHAT);
+  }, []);
+
   return (
     <AppSafeAreaView edges={['top']} style={styles.safe}>
       <AppLoader visible={isFocused && isLoading} />
@@ -245,144 +248,66 @@ const ProviderHome: React.FC = () => {
             />
           }
         >
-          {/* Overview Section */}
-          <View style={styles.sectionHeader}>
-            <AppText
-              size={getScaleSize(16)}
-              font={FONTS.Inter.Bold}
-              color={COLORS._1A1D1F}
+          {/* Quick Actions */}
+          <View style={styles.quickActionRow}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.quickFeatureCard, styles.quickFeatureCardBlue]}
+              onPress={handleOrderAmbulance}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeOrderAmbulance)}
             >
-              {t(STRING.overview)}
-            </AppText>
-          </View>
-
-          <View style={styles.kpiGrid}>
-            <View style={styles.kpiCard}>
-              <LinearGradient
-                colors={[COLORS.white, COLORS._3B82F6]}
-                start={{ x: -0.1, y: -0.7 }}
-                end={{ x: 2, y: -2 }}
-                style={styles.glowGradient}
-              />
-              <View style={styles.kpiTopRow}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                  numberOfLines={2}
-                  ellipsizeMode="tail"
-                  style={styles.kpiTitle}
-                >
-                  {t(STRING.available)}
-                </AppText>
-                <Image source={IMAGES.ic_submitted} style={styles.kpiIcon} />
-              </View>
-              <AppText
-                size={getScaleSize(24)}
-                font={FONTS.Inter.Bold}
-                color="#111827"
-                style={{ marginTop: getScaleSize(4) }}
-              >
-                {dashboardData?.overview?.submittedAvailableCount || '0'}
-              </AppText>
-            </View>
-
-            <View style={styles.kpiCard}>
-              <LinearGradient
-                colors={[COLORS.white, COLORS._F59E0B]}
-                start={{ x: -0.1, y: -0.7 }}
-                end={{ x: 2, y: -2 }}
-                style={styles.glowGradient}
-              />
-              <View style={styles.kpiTopRow}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                >
-                  {t(STRING.inProgress)}
-                </AppText>
-                <Image source={IMAGES.ic_inprogress} style={styles.kpiIcon} />
-              </View>
-              <AppText
-                size={getScaleSize(24)}
-                font={FONTS.Inter.Bold}
-                color="#111827"
-                style={{ marginTop: getScaleSize(4) }}
-              >
-                {dashboardData?.overview?.inProgressCount || '0'}
-              </AppText>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.kpiWide}
-            onPress={() =>
-              NavigationService.navigate(PROVIDER_TAB_SCREENS.REQUESTS, {
-                status: 'Completed',
-                refreshKey: Date.now(),
-              })
-            }
-          >
-            <View style={styles.kpiWideLeft}>
-              <Image
-                source={IMAGES.ic_completed}
-                style={[styles.completedIcon]}
-              />
-              <View style={{ marginLeft: getScaleSize(12) }}>
-                <AppText
-                  size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                >
-                  {t(STRING.completedToday)}
-                </AppText>
-                <AppText
-                  size={getScaleSize(18)}
-                  font={FONTS.Inter.Bold}
-                  color="#111827"
-                >
-                  {dashboardData?.overview?.completedTodayCount || '0'}{' '}
-                  {t(STRING.services)}
-                </AppText>
-              </View>
-            </View>
-            <Image source={IMAGES.arrow_right} style={styles.chevron} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.ambulanceQuickCard}
-            onPress={handleOrderAmbulance}
-            accessibilityRole="button"
-            accessibilityLabel={t(STRING.homeOrderAmbulance)}
-          >
-            <View style={styles.kpiWideLeft}>
               <Image
                 source={IMAGES.ic_home_card_ambulance}
-                style={styles.ambulanceQuickIcon}
+                style={styles.quickFeatureIcon}
               />
-              <View style={styles.ambulanceQuickText}>
+              <View style={styles.quickFeatureLabelWrap}>
                 <AppText
-                  size={getScaleSize(14)}
+                  size={getScaleSize(12)}
                   font={FONTS.Inter.Bold}
                   color={COLORS._1A1D1F}
+                  align="center"
+                  style={styles.quickFeatureLabel}
+                  numberOfLines={4}
                 >
                   {t(STRING.homeOrderAmbulance)}
                 </AppText>
+              </View>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.quickFeatureChevron}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={[styles.quickFeatureCard, styles.quickFeatureCardPurple]}
+              onPress={handleOpenPharmacyAssistant}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.homeCommunityPharmacies)}
+            >
+              <Image
+                source={IMAGES.ic_home_card_pharmacy}
+                style={styles.quickFeatureIcon}
+              />
+              <View style={styles.quickFeatureLabelWrap}>
                 <AppText
                   size={getScaleSize(12)}
-                  font={FONTS.Inter.Medium}
-                  color={COLORS._6F767E}
-                  numberOfLines={2}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS._1A1D1F}
+                  align="center"
+                  style={styles.quickFeatureLabel}
+                  numberOfLines={4}
                 >
-                  {t(STRING.nearbyAmbulancesTitle)}
+                  {t(STRING.homeCommunityPharmacies)}
                 </AppText>
               </View>
-            </View>
-            <Image source={IMAGES.arrow_right} style={styles.chevron} />
-          </TouchableOpacity>
+              <Image
+                source={IMAGES.arrow_right}
+                style={styles.quickFeatureChevron}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* Recent Queue Section */}
           <View style={[styles.sectionHeader, { marginTop: getScaleSize(24) }]}>
@@ -662,107 +587,53 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: getScaleSize(12),
   },
-  kpiGrid: {
+  quickActionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: getScaleSize(12),
+    alignItems: 'stretch',
+    gap: getScaleSize(10),
   },
-  kpiCard: {
+  quickFeatureCard: {
     flex: 1,
-    backgroundColor: COLORS.white,
-    height: getScaleSize(96),
-    borderRadius: getScaleSize(12),
-    paddingHorizontal: getScaleSize(16),
-    paddingVertical: getScaleSize(16),
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-    overflow: 'hidden',
-  },
-  glowGradient: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: getScaleSize(80),
-    height: getScaleSize(80),
-    zIndex: 0,
-  },
-  kpiTopRow: {
-    flexDirection: 'row',
+    borderRadius: getScaleSize(16),
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(12),
     alignItems: 'center',
-    justifyContent: 'space-between', // fine to keep
-  },
-  kpiTitle: {
-    flex: 1,
-    marginRight: getScaleSize(8),
-  },
-  kpiIcon: {
-    width: getScaleSize(24),
-    height: getScaleSize(24),
-    resizeMode: 'contain',
-    flexShrink: 0, // icon stays fixed size, never gets pushed/squeezed
-  },
-  kpiWide: {
-    marginTop: getScaleSize(12),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.white,
-    borderRadius: getScaleSize(12),
-    padding: getScaleSize(17),
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
+    justifyContent: 'flex-start',
+    minHeight: getScaleSize(164),
+    elevation: 4,
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
-  kpiWideLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: getScaleSize(8),
-  },
-  ambulanceQuickCard: {
-    marginTop: getScaleSize(12),
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  quickFeatureCardBlue: {
     backgroundColor: '#E8F2FE',
-    borderRadius: getScaleSize(12),
-    padding: getScaleSize(14),
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
   },
-  ambulanceQuickIcon: {
-    width: getScaleSize(52),
-    height: getScaleSize(52),
+  quickFeatureCardPurple: {
+    backgroundColor: '#F2F0FF',
+  },
+  quickFeatureIcon: {
+    width: getScaleSize(72),
+    height: getScaleSize(72),
     resizeMode: 'contain',
   },
-  ambulanceQuickText: {
+  quickFeatureLabelWrap: {
     flex: 1,
-    marginLeft: getScaleSize(12),
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: getScaleSize(4),
   },
-  completedIcon: {
-    height: getScaleSize(40),
-    width: getScaleSize(40),
-    resizeMode: 'contain',
+  quickFeatureLabel: {
+    width: '100%',
+    lineHeight: getScaleSize(16),
   },
-  chevron: {
-    width: getScaleSize(9),
-    height: getScaleSize(14),
+  quickFeatureChevron: {
+    width: getScaleSize(16),
+    height: getScaleSize(16),
     resizeMode: 'contain',
-    tintColor: '#CBD5E1',
+    tintColor: COLORS._6F767E,
+    alignSelf: 'center',
   },
   queueCard: {
     backgroundColor: COLORS.white,

@@ -244,9 +244,30 @@ const PharmacyAiChatScreen: React.FC = () => {
             stickToBottomRef.current = false;
           }}
           onContentSizeChange={() => {
-            if (stickToBottomRef.current) {
-              scrollToLatest(true);
+            if (!stickToBottomRef.current) return;
+            const lastIndex = messages.length - 1;
+            const lastMessage = lastIndex >= 0 ? messages[lastIndex] : null;
+            if (lastMessage?.type === 'drug_profile') {
+              stickToBottomRef.current = false;
+              requestAnimationFrame(() => {
+                listRef.current?.scrollToIndex({
+                  index: lastIndex,
+                  viewPosition: 0,
+                  animated: true,
+                });
+              });
+              return;
             }
+            scrollToLatest(true);
+          }}
+          onScrollToIndexFailed={({ index }) => {
+            setTimeout(() => {
+              listRef.current?.scrollToIndex({
+                index,
+                viewPosition: 0,
+                animated: true,
+              });
+            }, 100);
           }}
           ListFooterComponent={
             sending ? (

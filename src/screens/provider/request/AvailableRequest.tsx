@@ -6,6 +6,7 @@ import React, {
 } from 'react';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
+  ActivityIndicator,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -423,7 +424,7 @@ const AvailableRequest: React.FC = () => {
     if (!isLoading || requests.length === 0) return null;
     return (
       <View style={{ paddingVertical: getScaleSize(16), alignItems: 'center' }}>
-        <AppLoader visible={true} />
+        <ActivityIndicator size="small" color={COLORS.primary} />
       </View>
     );
   };

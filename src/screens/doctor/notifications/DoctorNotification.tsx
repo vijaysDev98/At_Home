@@ -213,6 +213,7 @@ const DoctorNotification: React.FC = () => {
       case 'requestClaimed':
         return IMAGES.serviceClaimed;
       case 'formSubmission':
+      case 'formDelegated':
         return IMAGES.alert_formUpdate;
       case 'formUpdate':
         if (forReview) {
@@ -508,6 +509,15 @@ const DoctorNotification: React.FC = () => {
         return label;
       case 'formSubmission':
         label.txt = t(STRING.viewForm);
+        label.onPress = () =>
+          handleServiceRequestNotificationNavigation(
+            targetRequestId,
+            item.type,
+            item.metadata,
+          );
+        return label;
+      case 'formDelegated':
+        label.txt = t(STRING.signForm);
         label.onPress = () =>
           handleServiceRequestNotificationNavigation(
             targetRequestId,

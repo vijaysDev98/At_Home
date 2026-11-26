@@ -14,10 +14,19 @@ import NavigationService from '../../navigation/NavigationService';
 import FastImage from 'react-native-fast-image';
 import { IMAGE_BASE_URL } from '../../api/apiRoutes';
 
+type RoleBadge = {
+  label: string;
+  bg: string;
+  border: string;
+  text: string;
+};
+
 type Props = {
   peerName: string;
   peerProfileImg?: string | null;
   presenceLabel?: string | null;
+  roleBadge?: RoleBadge | null;
+  onPressProfile?: () => void;
   onPressCall?: () => void;
   callAccessibilityLabel?: string;
 };
@@ -26,6 +35,8 @@ export const ChatDetailHeader: React.FC<Props> = ({
   peerName,
   peerProfileImg,
   presenceLabel,
+  roleBadge,
+  onPressProfile,
   onPressCall,
   callAccessibilityLabel,
 }) => {
@@ -41,35 +52,67 @@ export const ChatDetailHeader: React.FC<Props> = ({
           <Image source={IMAGES.arrowLeft} style={styles.backIcon} />
         </TouchableOpacity>
 
-        {peerProfileImg ? (
-          <FastImage
-            source={{ uri: IMAGE_BASE_URL + peerProfileImg }}
-            style={styles.avatar}
-          />
-        ) : (
-          <ProfileAvatar name={peerName || '?'} size="small" />
-        )}
-
-        <View style={styles.nameBlock}>
-          <AppText
-            size={getScaleSize(16)}
-            font={FONTS.Inter.SemiBold}
-            color={COLORS._1A1D1F}
-            numberOfLines={1}
-          >
-            {peerName}
-          </AppText>
-          {!!presenceLabel && (
-            <AppText
-              size={getScaleSize(12)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._6F767E}
-              numberOfLines={1}
-            >
-              {presenceLabel}
-            </AppText>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={onPressProfile}
+          disabled={!onPressProfile}
+          accessibilityRole={onPressProfile ? 'button' : undefined}
+          accessibilityLabel={peerName}
+          style={styles.peerTouchable}
+        >
+          {peerProfileImg ? (
+            <FastImage
+              source={{ uri: IMAGE_BASE_URL + peerProfileImg }}
+              style={styles.avatar}
+            />
+          ) : (
+            <ProfileAvatar name={peerName || '?'} size="small" />
           )}
-        </View>
+
+          <View style={styles.nameBlock}>
+            <View style={styles.nameRoleRow}>
+              <AppText
+                size={getScaleSize(16)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS._1A1D1F}
+                numberOfLines={1}
+                style={styles.nameText}
+              >
+                {peerName}
+              </AppText>
+              {roleBadge ? (
+                <View
+                  style={[
+                    styles.roleTagPill,
+                    {
+                      backgroundColor: roleBadge.bg,
+                      borderColor: roleBadge.border,
+                    },
+                  ]}
+                >
+                  <AppText
+                    size={getScaleSize(10)}
+                    font={FONTS.Inter.SemiBold}
+                    color={roleBadge.text}
+                    numberOfLines={1}
+                  >
+                    {roleBadge.label}
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
+            {!!presenceLabel && (
+              <AppText
+                size={getScaleSize(12)}
+                font={FONTS.Inter.Regular}
+                color={COLORS._6F767E}
+                numberOfLines={1}
+              >
+                {presenceLabel}
+              </AppText>
+            )}
+          </View>
+        </TouchableOpacity>
       </View>
 
       {onPressCall ? (
@@ -129,6 +172,29 @@ const styles = StyleSheet.create({
   nameBlock: {
     flex: 1,
     minWidth: 0,
+  },
+  nameRoleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(6),
+    minWidth: 0,
+  },
+  nameText: {
+    flexShrink: 1,
+  },
+  roleTagPill: {
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(2),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  peerTouchable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    gap: getScaleSize(10),
   },
   callBtn: {
     width: getScaleSize(40),

@@ -43,6 +43,50 @@ export interface ChatPeerPresence {
   lastSeenAt?: string | null;
   peerPhone?: string | null;
   peerCountry?: string | null;
+  peerRoles?: string[];
+  peerIsMedicalResident?: boolean;
+  peerIsCareCoordinator?: boolean;
+}
+
+export interface ChatPeerProfile {
+  id: string;
+  name: string;
+  fName?: string;
+  lName?: string;
+  fullName?: string;
+  providerName?: string;
+  profileImg?: string | null;
+  role?: string;
+  roles?: string[];
+  isMedicalResident?: boolean;
+  isCareCoordinator?: boolean;
+  supervisingDoctorName?: string;
+  specialty?: string;
+  email?: string;
+  phoneNumber?: string;
+  professionalPhoneNumber?: string;
+  country?: string;
+  facilityName?: string;
+  businessAddress?: string;
+  practiceType?: string;
+  rppsNumber?: string;
+  finessNumber?: string;
+  registrationId?: string;
+  operatingDepartments?: string[];
+  assignedServices?: Array<{
+    id: string;
+    serviceName: string;
+    description?: string;
+    category?: string;
+  }>;
+  serviceDetails?: Array<{
+    id: string;
+    _id?: string;
+    serviceName: string;
+    name?: string;
+    description?: string;
+    category?: string;
+  }>;
 }
 
 export interface ChatMessageAttachment {
@@ -144,6 +188,22 @@ export const openProviderChat = async (
   try {
     const response: any = await API.Instance.post(
       `${API.API_ROUTES.chatProviders}/${providerId}/conversation`,
+    );
+    if (response?.status && response?.data?.data?.conversationId) {
+      return response.data.data as OpenProviderChatResult;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const openDoctorChat = async (
+  doctorId: string,
+): Promise<OpenProviderChatResult | null> => {
+  try {
+    const response: any = await API.Instance.post(
+      `${API.API_ROUTES.chatDoctors}/${doctorId}/conversation`,
     );
     if (response?.status && response?.data?.data?.conversationId) {
       return response.data.data as OpenProviderChatResult;
@@ -303,6 +363,22 @@ export const fetchChatPeerPresence = async (
     );
     if (response?.status && response?.data?.data) {
       return response.data.data as ChatPeerPresence;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const fetchChatPeerProfile = async (
+  conversationId: string,
+): Promise<ChatPeerProfile | null> => {
+  try {
+    const response: any = await API.Instance.get(
+      `${API.API_ROUTES.chatConversations}/${conversationId}/peer-profile`,
+    );
+    if (response?.status && response?.data?.data) {
+      return response.data.data as ChatPeerProfile;
     }
     return null;
   } catch {

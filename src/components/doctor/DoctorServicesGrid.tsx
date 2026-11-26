@@ -46,7 +46,7 @@ const FORM_CATEGORIES: CategoryGroupConfig[] = [
     forms: [
       {
         id: '69ef359fd1c1c4252d4b8d4f',
-        title: 'Antibiotherapy\nInfusion',
+        title: 'Antibiotherapy Infusion',
         icon: IMAGES.injectionIcon,
       },
       {
@@ -56,12 +56,12 @@ const FORM_CATEGORIES: CategoryGroupConfig[] = [
       },
       {
         id: '69ef3592d1c1c4252d4b8d4a',
-        title: 'Hydration\nInfusion',
+        title: 'Hydration Infusion',
         icon: IMAGES.ic_hydration,
       },
       {
         id: '69ef3563d1c1c4252d4b8d31',
-        title: 'Personal\nHygiene Care',
+        title: 'Personal Hygiene Care',
         icon: IMAGES.hygiene,
       },
     ],
@@ -97,13 +97,13 @@ const FORM_CATEGORIES: CategoryGroupConfig[] = [
       },
       {
         id: '69ef357cd1c1c4252d4b8d40',
-        title: 'Parenteral\nNutrition',
+        title: 'Parenteral Nutrition',
         subtitle: STRING.parenteralSubtitle,
         icon: IMAGES.parenteral,
       },
       {
         id: '69ef3557d1c1c4252d4b8d2c',
-        title: 'Artificial\nNutrition',
+        title: 'Artificial Nutrition',
         subtitle: STRING.artificialNutritionSubtitle,
         icon: IMAGES.testTubeIcon,
       },
@@ -135,7 +135,7 @@ const FORM_CATEGORIES: CategoryGroupConfig[] = [
     forms: [
       {
         id: '69ef3575d1c1c4252d4b8d3b',
-        title: 'Pregnancy-\nRelated Care',
+        title: 'Pregnancy Related Care',
         icon: IMAGES.pregnancy,
       },
       {

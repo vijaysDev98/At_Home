@@ -39,8 +39,10 @@ export const SCREENS = {
   PROVIDER_PRE_REQUEST_DETAIL: 'ProviderPreRequestDetail',
   CHAT: 'Chat',
   CHAT_LIST: 'ChatList',
+  CHAT_PEER_PROFILE: 'ChatPeerProfile',
   PHARMACY_AI_CHAT: 'PharmacyAiChat',
   HEALTHCARE_IMPACT: 'HealthcareImpact',
+  MY_INTERNS: 'MyInterns',
 } as const;
 
 // Doctor Bottom Tab Screen Names

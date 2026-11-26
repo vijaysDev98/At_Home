@@ -8,7 +8,7 @@ import NavigationService from '../navigation/NavigationService';
 import { SCREENS } from '../navigation/routes';
 import { createNotificationChannels } from '../services/notificationChannels';
 import { uploadFcmToken } from '../utils/fcmTokenHelper';
-import { ROLES } from '../constant/getRole';
+import { ROLES, isCareCoordinatorProfile } from '../constant/getRole';
 import store from '../redux/store';
 import { showNotificationOverlay } from '../actions/common/notificationOverlaySlice';
 import {
@@ -118,8 +118,13 @@ export function setupForegroundHandler(): () => void {
       const isDoctor =
         userRoles.includes(ROLES.DOCTOR) ||
         userRoles.includes('doctor') ||
+        userRoles.includes(ROLES.CARE_COORDINATOR) ||
         storedRole === ROLES.DOCTOR ||
-        storedRole === 'doctor';
+        storedRole === 'doctor' ||
+        storedRole === ROLES.CARE_COORDINATOR ||
+        isCareCoordinatorProfile(
+          state.profile?.profileData || state.login?.userData,
+        );
 
       // Extract parsed info from notification data payload
       const info = extractNotificationInfo(data);

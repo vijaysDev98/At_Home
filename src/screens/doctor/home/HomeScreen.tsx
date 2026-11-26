@@ -40,7 +40,10 @@ import { useChatUnreadBadge } from '../../../hooks/useChatUnreadBadge';
 import { SHOW_TOAST } from '../../../constant';
 import { loadLastProcessedPatient } from '../../../actions/patient/patientAction';
 import { formatEuro } from '../../../services/healthcareImpactService';
-import { isCareCoordinatorProfile } from '../../../constant/getRole';
+import {
+  getRoleVisualTheme,
+  isCareCoordinatorProfile,
+} from '../../../constant/getRole';
 
 /** Healthcare impact savings card — hidden until product rules are finalized. */
 const SHOW_HEALTHCARE_IMPACT_CARD_ON_HOME = false;
@@ -123,6 +126,15 @@ const HomeScreen: React.FC = () => {
     () => isCareCoordinatorProfile(profileData),
     [profileData],
   );
+  const roleTheme = useMemo(
+    () => getRoleVisualTheme(profileData),
+    [profileData],
+  );
+  const supervisorLastName = (
+    profileData?.headOfDepartmentLastName ||
+    profileData?.headOfDepartmentFirstName ||
+    ''
+  ).trim();
 
   const pendingSignatureCount =
     dashboardData?.actionRequired?.awaitingSignatureCount ?? 0;
@@ -223,33 +235,75 @@ const HomeScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel={t(STRING.profile)}
           >
-            {profileData?.profileImg ? (
-              <FastImage
-                source={{ uri: IMAGE_BASE_URL + profileData.profileImg }}
-                style={styles.avatar}
+            <View style={styles.avatarRing}>
+              {profileData?.profileImg ? (
+                <FastImage
+                  source={{ uri: IMAGE_BASE_URL + profileData.profileImg }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <ProfileAvatar
+                  size="medium"
+                  name={`${profileData?.fName || ''} ${profileData?.lName || ''
+                    }`.trim()}
+                />
+              )}
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.avatarRingOverlay,
+                  { borderColor: roleTheme.accentColor },
+                ]}
               />
-            ) : (
-              <ProfileAvatar
-                size="medium"
-                name={`${profileData?.fName || ''} ${profileData?.lName || ''
-                  }`.trim()}
-              />
-            )}
-            <View>
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Regular}
-                color={COLORS._1A1D1F}
-              >
-                {t(STRING.welcome)}
-              </AppText>
+            </View>
+            <View style={{ flexShrink: 1 }}>
+              <View style={styles.welcomeRoleRow}>
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Regular}
+                  color={COLORS._1A1D1F}
+                >
+                  {t(STRING.welcome)}
+                </AppText>
+                <View
+                  style={[
+                    styles.roleTagPill,
+                    {
+                      backgroundColor: roleTheme.badgeBg,
+                      borderColor: roleTheme.badgeBorder,
+                    },
+                  ]}
+                >
+                  <AppText
+                    size={getScaleSize(10)}
+                    font={FONTS.Inter.SemiBold}
+                    color={roleTheme.badgeText}
+                    numberOfLines={1}
+                  >
+                    {t(roleTheme.labelKey)}
+                  </AppText>
+                </View>
+              </View>
               <AppText
                 size={getScaleSize(18)}
                 font={FONTS.Inter.Bold}
                 color={COLORS.black}
+                numberOfLines={1}
               >
-                Dr. {capitalizeFirstLetter(doctorName)}
+                {roleTheme.showDrPrefix
+                  ? `Dr. ${capitalizeFirstLetter(doctorName)}`
+                  : capitalizeFirstLetter(doctorName)}
               </AppText>
+              {roleTheme.roleKey === 'intern' && !!supervisorLastName ? (
+                <AppText
+                  size={getScaleSize(11)}
+                  font={FONTS.Inter.Medium}
+                  color={roleTheme.badgeText}
+                  numberOfLines={1}
+                >
+                  Dr. {capitalizeFirstLetter(supervisorLastName)}
+                </AppText>
+              ) : null}
             </View>
           </TouchableOpacity>
 
@@ -654,11 +708,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: getScaleSize(12),
+    flex: 1,
+    paddingRight: getScaleSize(8),
+  },
+  avatarRing: {
+    width: getScaleSize(50),
+    height: getScaleSize(50),
+    borderRadius: getScaleSize(25),
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  avatarRingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: getScaleSize(25),
+    borderWidth: 2.5,
+  },
+  welcomeRoleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: getScaleSize(6),
+  },
+  roleTagPill: {
+    paddingHorizontal: getScaleSize(8),
+    paddingVertical: getScaleSize(2),
+    borderRadius: getScaleSize(10),
+    borderWidth: 1,
   },
   avatar: {
-    width: getScaleSize(44),
-    height: getScaleSize(44),
-    borderRadius: getScaleSize(22),
+    width: getScaleSize(50),
+    height: getScaleSize(50),
+    borderRadius: getScaleSize(25),
   },
   notificationBtn: {
     width: getScaleSize(40),

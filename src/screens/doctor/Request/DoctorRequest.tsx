@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -11,7 +12,6 @@ import {
   AppText,
   Header,
   Input,
-  AppLoader,
 } from '../../../components';
 import { COLORS, FONTS } from '../../../utils';
 import { getScaleSize } from '../../../utils/scaleSize';
@@ -34,7 +34,7 @@ import {
   ServiceRequest,
   PaginationInfo,
 } from '../../../services/serviceRequestListApi';
-import { getButtonConfig, STRING } from '../../../constant';
+import { getButtonConfig, SHOW_TOAST, STRING } from '../../../constant';
 import { FORM_STATUS, REQUEST_STATUS } from '../../../constant/RequestStatus';
 import { useRoute, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +45,7 @@ import { isDelegatedToProvider } from '../../../constant/smallFunctions';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { isCareCoordinatorProfile } from '../../../constant/getRole';
+import { openDoctorChat } from '../../../services/chatService';
 
 export type DoctorRequestProps = NativeStackScreenProps<
   RootStackParamList,
@@ -271,6 +272,32 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     });
   }, [requests, filter]);
 
+  const handleChatWithDoctor = useCallback(
+    async (doctorObj: any) => {
+      const doctorId = doctorObj?._id || doctorObj?.id;
+      if (!doctorId) return;
+      const result = await openDoctorChat(String(doctorId));
+      if (!result?.conversationId) {
+        SHOW_TOAST(t(STRING.somethingWentWrong), 'error');
+        return;
+      }
+      const fallbackName =
+        doctorObj?.fullName ||
+        [doctorObj?.fName, doctorObj?.lName].filter(Boolean).join(' ').trim() ||
+        'Doctor';
+      NavigationService.navigate(SCREENS.CHAT, {
+        conversationId: result.conversationId,
+        peerName: result.peer?.name || fallbackName,
+        peerProfileImg:
+          doctorObj?.profileImg || result.peer?.profileImg || undefined,
+        peerPhone: doctorObj?.phoneNumber || result.peer?.phoneNumber,
+        peerCountry: doctorObj?.country || result.peer?.country || undefined,
+        peerUserId: String(doctorId),
+      });
+    },
+    [t],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: ServiceRequest }) => {
       const isPreReq = Boolean(
@@ -299,6 +326,45 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           ? `${provider.fName} ${provider.lName || ''}`.trim()
           : null);
 
+      const rawAssignedDoctor =
+        (item as any)?.doctor ||
+        (typeof (item as any)?.doctorId === 'object' ? (item as any).doctorId : null);
+      const rawDoctorId =
+        rawAssignedDoctor?._id ||
+        rawAssignedDoctor?.id ||
+        (typeof (item as any)?.doctorId === 'string' &&
+        (item as any).doctorId.trim()
+          ? (item as any).doctorId.trim()
+          : null);
+      const currentUserId =
+        (profileData as any)?._id || (profileData as any)?.id || null;
+      const isSelfOrCoordinatorDoctor =
+        (rawAssignedDoctor && isCareCoordinatorProfile(rawAssignedDoctor)) ||
+        (!!rawDoctorId &&
+          !!currentUserId &&
+          String(rawDoctorId) === String(currentUserId));
+      const hasDoctorFieldFromApi =
+        (item as any)?.doctor !== undefined ||
+        (item as any)?.doctorId !== undefined;
+      const assignedDoctor = isSelfOrCoordinatorDoctor ? null : rawAssignedDoctor;
+      const isAwaitingDoctorSign = formStatus === FORM_STATUS.AWAITING_SIGNATURE;
+      const hasAssignedDoctor =
+        isAwaitingDoctorSign &&
+        (hasDoctorFieldFromApi
+          ? Boolean(rawDoctorId) && !isSelfOrCoordinatorDoctor
+          : !provider);
+
+      const rawDoctorName =
+        assignedDoctor?.fullName ||
+        [assignedDoctor?.fName, assignedDoctor?.lName].filter(Boolean).join(' ').trim() ||
+        '';
+      const assignedDoctorName =
+        hasAssignedDoctor && rawDoctorName
+          ? rawDoctorName.toLowerCase().startsWith('dr')
+            ? rawDoctorName
+            : `Dr. ${rawDoctorName}`
+          : null;
+
       const buttonConfig: { show: boolean; label?: string | null; action?: string | null } = isAcceptedPreReq
         ? isDelegated
           ? { show: false }
@@ -307,6 +373,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
         ? { show: false }
         : getButtonConfig(formStatus || '', item?.status, {
             isCareCoordinator,
+            hasAssignedDoctor,
           });
 
       const handleAcceptedPreRequestPress = () => {
@@ -339,6 +406,12 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
           providerName={providerName}
           providerSpecialty={
             provider ? getProviderSpecialty(provider, t) : undefined
+          }
+          assignedDoctorName={isCareCoordinator ? assignedDoctorName : null}
+          onChatWithDoctor={
+            isCareCoordinator && (assignedDoctor?._id || assignedDoctor?.id)
+              ? () => handleChatWithDoctor(assignedDoctor)
+              : undefined
           }
           buttonText={
             buttonConfig.show
@@ -393,7 +466,7 @@ const DoctorRequest: React.FC<DoctorRequestProps> = ({ navigation }) => {
     () =>
       isLoadingMore ? (
         <View style={styles.footerLoader}>
-          <AppLoader visible={true} />
+          <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       ) : null,
     [isLoadingMore],

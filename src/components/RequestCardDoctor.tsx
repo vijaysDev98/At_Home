@@ -41,6 +41,8 @@ interface RequestCardProps {
   delegateFormToProvider?: boolean;
   providerName?: string | null;
   providerSpecialty?: string | null;
+  assignedDoctorName?: string | null;
+  onChatWithDoctor?: () => void;
   request?: any;
 }
 
@@ -61,6 +63,8 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   delegateFormToProvider,
   providerName,
   providerSpecialty,
+  assignedDoctorName,
+  onChatWithDoctor,
   request,
 }) => {
   const { t } = useTranslation();
@@ -312,6 +316,40 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
           </View>
         )}
 
+      {/* Assigned to Doctor for Signature Banner (Care Coordinator) */}
+      {!isPreRequest && !!assignedDoctorName && formStatus !== 'signed' && (
+        <View style={styles.delegatedBanner}>
+          <Image source={IMAGES.info} style={styles.delegatedIcon} />
+          <AppText
+            size={getScaleSize(12)}
+            font={FONTS.Inter.Medium}
+            color={COLORS._2563EB}
+            style={{ flex: 1, lineHeight: getScaleSize(16) }}
+          >
+            {t(STRING.assignedToDoctorForSignature, {
+              doctorName: assignedDoctorName,
+            })}
+          </AppText>
+          {onChatWithDoctor ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={onChatWithDoctor}
+              style={styles.chatDoctorPill}
+              accessibilityRole="button"
+              accessibilityLabel={t(STRING.chatWithDoctor)}
+            >
+              <AppText
+                size={getScaleSize(11)}
+                font={FONTS.Inter.SemiBold}
+                color={COLORS.white}
+              >
+                {t(STRING.chat) || 'Chat'}
+              </AppText>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      )}
+
       {!isDelegated && !!buttonText && (
         <AppButton
           title={buttonText}
@@ -421,5 +459,11 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS._2563EB,
+  },
+  chatDoctorPill: {
+    backgroundColor: COLORS._0072CE,
+    paddingHorizontal: getScaleSize(10),
+    paddingVertical: getScaleSize(5),
+    borderRadius: getScaleSize(8),
   },
 });

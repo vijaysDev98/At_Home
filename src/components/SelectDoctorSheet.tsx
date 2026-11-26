@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Platform,
   Keyboard,
+  Image,
 } from 'react-native';
 import { FlatList as GestureFlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,6 +36,7 @@ export type CoordinatorDoctor = {
 
 interface SelectDoctorSheetProps {
   onSelectDoctor: (doctor: CoordinatorDoctor) => void;
+  previousDoctor?: CoordinatorDoctor | null;
 }
 
 const normalizeDoctor = (raw: any): CoordinatorDoctor | null => {
@@ -54,11 +56,12 @@ const normalizeDoctor = (raw: any): CoordinatorDoctor | null => {
 export const SelectDoctorSheet = React.forwardRef<
   ActionSheetRef,
   SelectDoctorSheetProps
->(({ onSelectDoctor }, ref) => {
+>(({ onSelectDoctor, previousDoctor }, ref) => {
   const sheetRef = React.useRef<ActionSheetRef>(null);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
+  const [mode, setMode] = React.useState<'previous' | 'list'>('list');
   const [doctors, setDoctors] = React.useState<CoordinatorDoctor[]>([]);
   const [selectedDoctor, setSelectedDoctor] =
     React.useState<CoordinatorDoctor | null>(null);
@@ -130,8 +133,14 @@ export const SelectDoctorSheet = React.forwardRef<
         show: () => {
           setSearch('');
           setSelectedDoctor(null);
-          sheetRef.current?.show();
-          fetchDoctors(1, '', false);
+          if (previousDoctor?.id) {
+            setMode('previous');
+            sheetRef.current?.show();
+          } else {
+            setMode('list');
+            sheetRef.current?.show();
+            fetchDoctors(1, '', false);
+          }
         },
         hide: () => sheetRef.current?.hide(),
         snapToOffset: (offset: number) =>
@@ -141,11 +150,17 @@ export const SelectDoctorSheet = React.forwardRef<
   );
 
   React.useEffect(() => {
+    if (mode !== 'list') return;
     const timer = setTimeout(() => {
       fetchDoctors(1, search, true);
     }, 350);
     return () => clearTimeout(timer);
-  }, [search, fetchDoctors]);
+  }, [search, mode, fetchDoctors]);
+
+  const handleSelect = (item: CoordinatorDoctor) => {
+    Keyboard.dismiss();
+    setSelectedDoctor(item);
+  };
 
   const handleConfirm = () => {
     if (!selectedDoctor) {
@@ -171,9 +186,12 @@ export const SelectDoctorSheet = React.forwardRef<
 
     return (
       <TouchableOpacity
-        activeOpacity={0.9}
-        style={[styles.card, isSelected && styles.cardActive]}
-        onPress={() => setSelectedDoctor(item)}
+        activeOpacity={0.8}
+        style={[
+          styles.providerItemCard,
+          isSelected && styles.providerItemCardSelected,
+        ]}
+        onPress={() => handleSelect(item)}
       >
         <ProfileAvatar
           name={displayName}
@@ -182,19 +200,22 @@ export const SelectDoctorSheet = React.forwardRef<
           }
           size="medium"
         />
-        <View style={styles.cardInfo}>
+        <View style={styles.providerItemInfo}>
           <AppText
-            size={getScaleSize(16)}
+            size={getScaleSize(15)}
             font={FONTS.Inter.Bold}
             color={COLORS._1A1D1F}
+            numberOfLines={1}
           >
             {displayName}
           </AppText>
           {specialtyLabel ? (
             <AppText
               size={getScaleSize(12)}
-              font={FONTS.Inter.Regular}
-              color={COLORS._6F767E}
+              font={FONTS.Inter.Medium}
+              color={COLORS.primary}
+              style={{ marginTop: 2 }}
+              numberOfLines={1}
             >
               {specialtyLabel}
             </AppText>
@@ -204,15 +225,20 @@ export const SelectDoctorSheet = React.forwardRef<
               size={getScaleSize(12)}
               font={FONTS.Inter.Regular}
               color={COLORS._6F767E}
+              style={{ marginTop: 2 }}
+              numberOfLines={1}
             >
               {item.email}
             </AppText>
           ) : null}
         </View>
         <View
-          style={[styles.radioOuter, isSelected && styles.radioOuterActive]}
+          style={[
+            styles.providerRadioOuter,
+            isSelected && styles.providerRadioOuterSelected,
+          ]}
         >
-          {isSelected ? <View style={styles.radioInner} /> : null}
+          {isSelected ? <View style={styles.providerRadioInner} /> : null}
         </View>
       </TouchableOpacity>
     );
@@ -222,118 +248,295 @@ export const SelectDoctorSheet = React.forwardRef<
     <ActionSheet
       ref={sheetRef}
       gestureEnabled={false}
-      closeOnTouchBackdrop
-      closeOnPressBack
+      closeOnTouchBackdrop={true}
+      closeOnPressBack={true}
       keyboardHandlerEnabled={
         Platform.OS === 'android' ? Number(Platform.Version) >= 35 : true
       }
       containerStyle={[
         styles.sheetContainer,
         {
-          height: '84%',
-          paddingBottom: insets.bottom + 5,
+          backgroundColor: COLORS.white,
+          height: mode === 'previous' ? '52%' : '84%',
+          paddingBottom: Math.max(insets.bottom, getScaleSize(20)),
         },
       ]}
       indicatorStyle={styles.indicator}
     >
       <View style={styles.sheetContent}>
-        <View style={styles.headerBlock}>
-          <AppText
-            size={getScaleSize(18)}
-            font={FONTS.Inter.Bold}
-            color={COLORS._1A1D1F}
-          >
-            {t(STRING.selectDoctor)}
-          </AppText>
-          <AppText
-            size={getScaleSize(13)}
-            color={COLORS._6B7280}
-            style={{ marginTop: getScaleSize(4) }}
-          >
-            {t(STRING.selectDoctorSignSubtitle)}
-          </AppText>
-        </View>
+        {mode === 'previous' && previousDoctor ? (
+          <>
+            <View style={styles.headerBlock}>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={{ marginBottom: getScaleSize(4) }}
+              >
+                {t(STRING.previouslySelectedDoctor)}
+              </AppText>
+              <AppText size={getScaleSize(13)} color={COLORS._6B7280}>
+                {t(STRING.sendToPreviousDoctorPrompt)}
+              </AppText>
+            </View>
 
-        <Input
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={() => Keyboard.dismiss()}
-          returnKeyType="search"
-          placeholder={t(STRING.searchProviderPlaceholder)}
-          placeholderTextColor={COLORS._6F767E}
-          leftIcon={IMAGES.search}
-          style={styles.searchInputOuter}
-          inputWrapperStyle={styles.searchInputWrapper}
-        />
+            <View style={styles.previousCardWrap}>
+              {(() => {
+                const prevName =
+                  previousDoctor.fullName?.trim() ||
+                  `${previousDoctor.fName || ''} ${previousDoctor.lName || ''}`.trim() ||
+                  t(STRING.doctor);
+                const formattedPrevName = prevName
+                  .toLowerCase()
+                  .startsWith('dr')
+                  ? prevName
+                  : `Dr. ${prevName}`;
+                const prevSpec = previousDoctor.specialty
+                  ? t(
+                      doctorSpecialities.find(
+                        s => s.value === previousDoctor.specialty,
+                      )?.label || previousDoctor.specialty,
+                    )
+                  : null;
+                return (
+                  <View
+                    style={[
+                      styles.providerItemCard,
+                      styles.providerItemCardSelected,
+                    ]}
+                  >
+                    <ProfileAvatar
+                      name={formattedPrevName}
+                      imageUrl={
+                        previousDoctor.profileImg
+                          ? `${IMAGE_BASE_URL}${previousDoctor.profileImg}`
+                          : undefined
+                      }
+                      size="medium"
+                    />
+                    <View style={styles.providerItemInfo}>
+                      <AppText
+                        size={getScaleSize(15)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                        numberOfLines={1}
+                      >
+                        {formattedPrevName}
+                      </AppText>
+                      {prevSpec ? (
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.Medium}
+                          color={COLORS.primary}
+                          style={{ marginTop: 2 }}
+                          numberOfLines={1}
+                        >
+                          {prevSpec}
+                        </AppText>
+                      ) : null}
+                      {previousDoctor.email ? (
+                        <AppText
+                          size={getScaleSize(12)}
+                          font={FONTS.Inter.Regular}
+                          color={COLORS._6F767E}
+                          style={{ marginTop: 2 }}
+                          numberOfLines={1}
+                        >
+                          {previousDoctor.email}
+                        </AppText>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
 
-        {isLoading && doctors.length === 0 ? (
-          <View style={styles.loaderWrap}>
-            <ActivityIndicator color={COLORS.primary} />
-          </View>
-        ) : (
-          <GestureFlatList
-            data={doctors}
-            keyExtractor={item => item.id}
-            renderItem={renderItem}
-            style={{ flex: 1, marginTop: getScaleSize(12) }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={() => {
-                  setIsRefreshing(true);
-                  fetchDoctors(1, search, true);
+            <View style={styles.previousActionsCol}>
+              <TouchableOpacity
+                style={styles.previousPrimaryBtn}
+                onPress={() => {
+                  sheetRef.current?.hide();
+                  onSelectDoctor(previousDoctor);
                 }}
-              />
-            }
-            onEndReached={() => {
-              if (!hasMore || isMoreLoading || isLoading) return;
-              const next = page + 1;
-              setPage(next);
-              fetchDoctors(next, search, false);
-            }}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={
-              isMoreLoading ? (
-                <ActivityIndicator
-                  color={COLORS.primary}
-                  style={{ marginVertical: getScaleSize(12) }}
-                />
-              ) : null
-            }
-            ListEmptyComponent={
-              !isLoading ? (
+                activeOpacity={0.85}
+              >
                 <AppText
-                  align="center"
-                  color={COLORS._6F767E}
-                  style={{ marginTop: getScaleSize(24) }}
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.white}
                 >
-                  {t(STRING.noDoctorsFound)}
+                  {t(STRING.sendToThisDoctor)}
                 </AppText>
-              ) : null
-            }
-          />
-        )}
+              </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={[
-            styles.confirmBtn,
-            !selectedDoctor && styles.confirmBtnDisabled,
-          ]}
-          disabled={!selectedDoctor}
-          onPress={handleConfirm}
-        >
-          <AppText
-            size={getScaleSize(14)}
-            font={FONTS.Inter.Bold}
-            color={COLORS.white}
-            align="center"
-          >
-            {t(STRING.continue)}
-          </AppText>
-        </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.previousSecondaryBtn}
+                onPress={() => {
+                  setMode('list');
+                  fetchDoctors(1, '', false);
+                }}
+                activeOpacity={0.8}
+              >
+                <AppText
+                  size={getScaleSize(14)}
+                  font={FONTS.Inter.Bold}
+                  color={COLORS.primary}
+                >
+                  {t(STRING.sendToAnotherDoctor)}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Header */}
+            <View style={styles.headerBlock}>
+              <AppText
+                size={getScaleSize(18)}
+                font={FONTS.Inter.Bold}
+                color={COLORS._1A1D1F}
+                style={{ marginBottom: getScaleSize(4) }}
+              >
+                {t(STRING.selectDoctor)}
+              </AppText>
+              <AppText size={getScaleSize(13)} color={COLORS._6B7280}>
+                {t(STRING.selectDoctorSignSubtitle)}
+              </AppText>
+            </View>
+
+            {/* Search Input */}
+            <View
+              style={{
+                marginTop: getScaleSize(12),
+                marginBottom: getScaleSize(8),
+              }}
+            >
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                onSubmitEditing={() => Keyboard.dismiss()}
+                returnKeyType="search"
+                placeholder={t(STRING.searchDoctorPlaceholder)}
+                placeholderTextColor={COLORS._6F767E}
+                leftIcon={IMAGES.search}
+                style={styles.providerSearchInputContainer}
+                inputWrapperStyle={styles.providerSearchInputWrapper}
+                inputStyle={styles.providerSearchInput}
+              />
+            </View>
+
+            {isLoading && page === 1 && doctors.length === 0 ? (
+              <View style={styles.providerLoaderContainer}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+              </View>
+            ) : (
+              <GestureFlatList
+                data={doctors}
+                keyExtractor={item => item.id}
+                renderItem={renderItem}
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                contentContainerStyle={styles.providerListContent}
+                style={{ flex: 1 }}
+                showsVerticalScrollIndicator={true}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={() => {
+                      setIsRefreshing(true);
+                      fetchDoctors(1, search, true);
+                    }}
+                    colors={[COLORS.primary]}
+                    tintColor={COLORS.primary}
+                  />
+                }
+                onEndReached={() => {
+                  if (!hasMore || isMoreLoading || isLoading) return;
+                  const next = page + 1;
+                  setPage(next);
+                  fetchDoctors(next, search, false);
+                }}
+                onEndReachedThreshold={0.3}
+                ListFooterComponent={
+                  isMoreLoading ? (
+                    <View style={{ paddingVertical: 12 }}>
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    </View>
+                  ) : null
+                }
+                ListEmptyComponent={
+                  !isLoading ? (
+                    <View style={styles.providerEmptyContainer}>
+                      <Image
+                        source={IMAGES.role_doctor}
+                        style={styles.providerEmptyIcon}
+                      />
+                      <AppText
+                        size={getScaleSize(15)}
+                        font={FONTS.Inter.Bold}
+                        color={COLORS._1A1D1F}
+                        align="center"
+                        style={{ marginTop: 8 }}
+                      >
+                        {t(STRING.noDoctorsFound)}
+                      </AppText>
+                    </View>
+                  ) : null
+                }
+              />
+            )}
+
+            {/* Bottom Actions with Safe Area Inset Protection */}
+            <View style={styles.providerButtonContainer}>
+              {selectedDoctor ? (
+                <View style={styles.providerButtonRow}>
+                  <TouchableOpacity
+                    style={styles.providerCancelBtnRow}
+                    onPress={() => sheetRef.current?.hide()}
+                    activeOpacity={0.7}
+                  >
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS._1A1D1F}
+                    >
+                      {t(STRING.cancel)}
+                    </AppText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.providerSubmitBtnRow}
+                    onPress={handleConfirm}
+                    activeOpacity={0.8}
+                  >
+                    <AppText
+                      size={getScaleSize(14)}
+                      font={FONTS.Inter.Bold}
+                      color={COLORS.white}
+                    >
+                      {t(STRING.continue)}
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.providerCancelBtnFull}
+                  onPress={() => sheetRef.current?.hide()}
+                  activeOpacity={0.7}
+                >
+                  <AppText
+                    size={getScaleSize(14)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS._1A1D1F}
+                  >
+                    {t(STRING.cancel)}
+                  </AppText>
+                </TouchableOpacity>
+              )}
+            </View>
+          </>
+        )}
       </View>
     </ActionSheet>
   );
@@ -342,8 +545,8 @@ export const SelectDoctorSheet = React.forwardRef<
 const styles = StyleSheet.create({
   sheetContainer: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: getScaleSize(20),
-    borderTopRightRadius: getScaleSize(20),
+    borderTopLeftRadius: getScaleSize(24),
+    borderTopRightRadius: getScaleSize(24),
   },
   indicator: {
     width: getScaleSize(48),
@@ -353,74 +556,148 @@ const styles = StyleSheet.create({
   },
   sheetContent: {
     flex: 1,
-    paddingHorizontal: getScaleSize(16),
-    paddingTop: getScaleSize(8),
+    paddingHorizontal: getScaleSize(20),
+    paddingBottom: 0,
   },
   headerBlock: {
     borderBottomWidth: 1,
     borderColor: COLORS._F3F4F6,
-    paddingBottom: getScaleSize(12),
+    paddingVertical: getScaleSize(12),
   },
-  searchInputOuter: {
-    marginTop: getScaleSize(12),
-    marginHorizontal: getScaleSize(-8),
+  providerSearchInputContainer: {
     paddingHorizontal: 0,
   },
-  searchInputWrapper: {
+  providerSearchInputWrapper: {
     borderRadius: getScaleSize(12),
     backgroundColor: COLORS._F9FAFB,
     borderWidth: 1,
     borderColor: COLORS._E5E7EB,
   },
-  loaderWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  providerSearchInput: {
+    fontSize: getScaleSize(14),
+    fontFamily: FONTS.Inter.Regular,
+    color: COLORS._1A1D1F,
   },
-  card: {
+  providerLoaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providerListContent: {
+    gap: getScaleSize(10),
+    paddingBottom: getScaleSize(10),
+  },
+  providerEmptyContainer: {
+    paddingVertical: getScaleSize(36),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providerEmptyIcon: {
+    width: getScaleSize(40),
+    height: getScaleSize(40),
+    resizeMode: 'contain',
+    tintColor: COLORS._6F767E,
+    opacity: 0.5,
+  },
+  providerItemCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: getScaleSize(12),
-    borderRadius: getScaleSize(12),
-    borderWidth: 1,
-    borderColor: COLORS._F3F4F6,
-    marginBottom: getScaleSize(10),
+    borderRadius: getScaleSize(14),
     backgroundColor: COLORS.white,
+    borderWidth: 1.5,
+    borderColor: COLORS._E5E7EB,
+    gap: getScaleSize(12),
   },
-  cardActive: {
+  providerItemCardSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS._F9FAFB,
+    backgroundColor: COLORS.primary + '0D',
   },
-  cardInfo: {
+  providerItemInfo: {
     flex: 1,
-    marginLeft: getScaleSize(12),
   },
-  radioOuter: {
-    width: getScaleSize(22),
-    height: getScaleSize(22),
-    borderRadius: getScaleSize(11),
+  providerRadioOuter: {
+    width: getScaleSize(20),
+    height: getScaleSize(20),
+    borderRadius: getScaleSize(10),
     borderWidth: 2,
-    borderColor: COLORS._D1D5DB,
+    borderColor: COLORS._E5E7EB,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioOuterActive: {
+  providerRadioOuterSelected: {
     borderColor: COLORS.primary,
   },
-  radioInner: {
+  providerRadioInner: {
     width: getScaleSize(10),
     height: getScaleSize(10),
     borderRadius: getScaleSize(5),
     backgroundColor: COLORS.primary,
   },
-  confirmBtn: {
-    marginTop: getScaleSize(12),
-    backgroundColor: COLORS.primary,
-    borderRadius: getScaleSize(12),
-    paddingVertical: getScaleSize(14),
+  providerButtonContainer: {
+    paddingVertical: getScaleSize(12),
+    borderTopWidth: 1,
+    borderColor: COLORS._F3F4F6,
   },
-  confirmBtnDisabled: {
-    opacity: 0.5,
+  providerButtonRow: {
+    flexDirection: 'row',
+    gap: getScaleSize(12),
+  },
+  providerCancelBtnRow: {
+    flex: 1,
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  providerSubmitBtnRow: {
+    flex: 1.4,
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providerCancelBtnFull: {
+    width: '100%',
+    height: getScaleSize(56),
+    borderRadius: getScaleSize(14),
+    borderWidth: 1,
+    borderColor: COLORS._E5E7EB,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  previousCardWrap: {
+    marginTop: getScaleSize(16),
+    flex: 1,
+  },
+  previousActionsCol: {
+    gap: getScaleSize(10),
+    paddingTop: getScaleSize(12),
+    borderTopWidth: 1,
+    borderColor: COLORS._F3F4F6,
+  },
+  previousPrimaryBtn: {
+    width: '100%',
+    height: getScaleSize(52),
+    borderRadius: getScaleSize(14),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previousSecondaryBtn: {
+    width: '100%',
+    height: getScaleSize(50),
+    borderRadius: getScaleSize(14),
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

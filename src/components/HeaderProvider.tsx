@@ -43,6 +43,7 @@ const HeaderProvider = ({
   requestIdLabel,
   chatPeerName,
   chatPeerProfileImg,
+  hideChat = false,
 }: {
   isBack?: boolean;
   title?: string;
@@ -61,6 +62,7 @@ const HeaderProvider = ({
   requestIdLabel?: string;
   chatPeerName?: string | null;
   chatPeerProfileImg?: string | null;
+  hideChat?: boolean;
 }) => {
   const { t } = useTranslation();
   return (
@@ -161,12 +163,14 @@ const HeaderProvider = ({
       </View>
 
       <View style={styles.trailing}>
-        <HeaderChatIconButton
-          serviceRequestId={serviceRequestId}
-          requestIdLabel={requestIdLabel}
-          peerName={chatPeerName}
-          peerProfileImg={chatPeerProfileImg}
-        />
+        {!hideChat ? (
+          <HeaderChatIconButton
+            serviceRequestId={serviceRequestId}
+            requestIdLabel={requestIdLabel}
+            peerName={chatPeerName}
+            peerProfileImg={chatPeerProfileImg}
+          />
+        ) : null}
         {leftContent ? leftContent() : null}
       </View>
     </View>

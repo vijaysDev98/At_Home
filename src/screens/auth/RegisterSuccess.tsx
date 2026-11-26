@@ -18,14 +18,19 @@ export type RegisterSuccessProps = NativeStackScreenProps<
   'RegisterSuccess'
 >;
 
-const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
+const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ route }) => {
   const { t, i18n } = useTranslation();
   const { currentLanguage } = useSelector((state: RootState) => state.language);
+  const isIntern = Boolean(route?.params?.isIntern);
 
   const isFrench = (currentLanguage || i18n.language)?.startsWith('fr');
-  const imageSource = isFrench
-    ? IMAGES.overlay_profile_review_fr
-    : IMAGES.overlay_profile_review_en;
+  const imageSource = isIntern
+    ? isFrench
+      ? IMAGES.overlay_profile_review_intern_fr
+      : IMAGES.overlay_profile_review_intern_en
+    : isFrench
+      ? IMAGES.overlay_profile_review_fr
+      : IMAGES.overlay_profile_review_en;
 
   const handleBackToLogin = () => {
     NavigationService.reset(SCREENS.LOGIN);
@@ -79,7 +84,7 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = () => {
                 color={COLORS.slate700}
                 style={styles.infoSubtext}
               >
-                {t(STRING.yourRegDes)}
+                {t(isIntern ? STRING.yourInternRegDes : STRING.yourRegDes)}
               </AppText>
             </View>
           </View>
