@@ -114,14 +114,21 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
 
   const medicineName =
     data.medicineName || (isFrench ? 'Médicament' : 'Medicine');
-  const inn = data.inn || '—';
-  const strength = data.strength || '—';
-  const route = data.route || '—';
+  const inn = data.inn?.trim() || '';
+  const strength = data.strength?.trim() || '';
+  const route = data.route?.trim() || '';
+  const metaParts = [
+    inn ? `${t(STRING.inn)}: ${inn}` : '',
+    strength ? `${t(STRING.strength)}: ${strength}` : '',
+    route ? `${t(STRING.route)}: ${route}` : '',
+  ].filter(Boolean);
   const sources = data.sources
     ? t(data.sources) || data.sources
     : t(STRING.sourcesLabel);
-  const lastUpdated =
-    data.lastUpdated || (isFrench ? 'Janvier 2025' : 'Jan 2025');
+  const lastUpdated = data.lastUpdated?.trim() || '';
+  const visibleSections = SECTIONS.filter(
+    sec => Boolean(data.sections?.[sec.key]?.trim()),
+  );
 
   return (
     <View style={styles.container}>
@@ -159,14 +166,16 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
                 {medicineName}
               </AppText>
 
-              <AppText
-                size={getScaleSize(12)}
-                font={FONTS.Inter.Medium}
-                color={COLORS._6F767E}
-                style={styles.metaRow}
-              >
-                {t(STRING.inn)}: {inn}  |  {t(STRING.strength)}: {strength}  |  {t(STRING.route)}: {route}
-              </AppText>
+              {metaParts.length > 0 ? (
+                <AppText
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS._6F767E}
+                  style={styles.metaRow}
+                >
+                  {metaParts.join('  |  ')}
+                </AppText>
+              ) : null}
             </View>
 
             <Image
@@ -178,9 +187,10 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
         </LinearGradient>
       </View>
 
-      {/* 7 Accordion Sections */}
-      <View style={styles.accordionList}>
-        {SECTIONS.map(sec => {
+      {/* Non-empty Accordion Sections */}
+      {visibleSections.length > 0 ? (
+        <View style={styles.accordionList}>
+          {visibleSections.map(sec => {
           const content = data.sections?.[sec.key];
           const isExpanded = !!expandedKeys[sec.key];
 
@@ -246,8 +256,9 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
               )}
             </View>
           );
-        })}
-      </View>
+          })}
+        </View>
+      ) : null}
 
       {/* Sources Box */}
       <View style={styles.sourcesBox}>
@@ -261,13 +272,15 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
           >
             {sources}
           </AppText>
-          <AppText
-            size={getScaleSize(11)}
-            font={FONTS.Inter.Regular}
-            color={COLORS._6F767E}
-          >
-            {t(STRING.lastUpdatedLabel)}: {lastUpdated}
-          </AppText>
+          {lastUpdated ? (
+            <AppText
+              size={getScaleSize(11)}
+              font={FONTS.Inter.Regular}
+              color={COLORS._6F767E}
+            >
+              {t(STRING.lastUpdatedLabel)}: {lastUpdated}
+            </AppText>
+          ) : null}
         </View>
       </View>
     </View>
