@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Image,
   LayoutAnimation,
+  Linking,
   Platform,
   StyleSheet,
   TouchableOpacity,
@@ -270,7 +271,24 @@ export const DrugProfileCard: React.FC<DrugProfileCardProps> = ({ data }) => {
             color={COLORS._1A1D1F}
             style={styles.sourcesTitle}
           >
-            {sources}
+            {sources.split(/(https?:\/\/[^\s]+)/g).map((part, idx) =>
+              /^https?:\/\//i.test(part) ? (
+                <AppText
+                  key={`${part}-${idx}`}
+                  size={getScaleSize(12)}
+                  font={FONTS.Inter.Medium}
+                  color={COLORS.primary}
+                  style={{ textDecorationLine: 'underline' }}
+                  onPress={() => {
+                    Linking.openURL(part).catch(() => {});
+                  }}
+                >
+                  {part}
+                </AppText>
+              ) : (
+                part
+              ),
+            )}
           </AppText>
           {lastUpdated ? (
             <AppText
