@@ -430,15 +430,15 @@ const NotificationActionOverlay: React.FC = () => {
           <Text style={styles.dynamicMessageText}>
             {isFrench ? (
               <>
-                Le professionnel de santé{' '}
-                <Text style={styles.dynamicAcceptedHighlight}>a accepté</Text>{' '}
-                la prise en charge du patient
+                {t(STRING.theHealthcareProvider)}{' '}
+                <Text style={styles.dynamicAcceptedHighlight}>{t(STRING.aAccepte)}</Text>{' '}
+                {t(STRING.theCareOfThePatient)}
               </>
             ) : (
               <>
-                The healthcare provider{' '}
-                <Text style={styles.dynamicAcceptedHighlight}>has accepted</Text>{' '}
-                the care of the patient
+                {t(STRING.theHealthcareProvider)}{' '}
+                <Text style={styles.dynamicAcceptedHighlight}>{t(STRING.hasAccepted)}</Text>{' '}
+                {t(STRING.theCareOfThePatient)}
               </>
             )}
           </Text>

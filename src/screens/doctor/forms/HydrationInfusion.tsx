@@ -1060,7 +1060,7 @@ const HydrationInfusionForm = forwardRef<
                   onPress={() => {
                     if (readOnly || !product.start_date) {
                       if (!product.start_date) {
-                        SHOW_TOAST('Please select start date first', 'error');
+                        SHOW_TOAST(t(STRING.pleaseSelectStartDateFirst), 'error');
                       }
                       return;
                     }

@@ -1062,7 +1062,7 @@ const AntibiotherapyInfusionForm = forwardRef<
                     }
                     setOpen(true);
                   } else if (!product.start_date) {
-                    SHOW_TOAST('Please select start date first', 'error');
+                    SHOW_TOAST(t(STRING.pleaseSelectStartDateFirst), 'error');
                   }
                 }}
                 numberOfLines={1}

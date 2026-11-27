@@ -4,6 +4,8 @@ import { API_ROUTES } from '../api/apiRoutes';
 import store from '../redux/store';
 import { setLoading } from '../actions/common/commonSlice';
 import { SHOW_TOAST } from '../constant/showToast';
+import { i18nLocale } from '../localization/translatation';
+import { STRING } from '../constant';
 
 export interface CreateServiceRequestPayload {
   serviceId?: string;
@@ -33,6 +35,36 @@ export interface ServiceRequestResponse {
 }
 
 export const serviceRequestApi = {
+  /**
+   * Supervising doctor: get service requests/forms created by a supervised intern
+   */
+  getInternServiceRequests: async (
+    internId: string,
+    params?: {
+      page?: number;
+      size?: number;
+      status?: string;
+      search?: string;
+    },
+  ): Promise<{ requests: any[]; pagination: any } | null> => {
+    try {
+      const response: any = await API.Instance.get(
+        `/service-requests/intern/${internId}`,
+        { params },
+      );
+      if (response?.status) {
+        return response?.data?.data || { requests: [], pagination: null };
+      }
+      return null;
+    } catch (error: any) {
+      SHOW_TOAST(
+        error?.message || i18nLocale.t(STRING.somethingWentWrong),
+        'error',
+      );
+      return null;
+    }
+  },
+
   /**
    * Get service request details by ID
    * Handles loader and error toasts internally. Returns data or null.
@@ -85,12 +117,12 @@ export const serviceRequestApi = {
       if (response?.data?.status) {
         return response.data.data;
       } else {
-        SHOW_TOAST('Failed to fetch pre-claim details', 'error');
+        SHOW_TOAST(i18nLocale.t(STRING.failedToFetchPreClaimDetails), 'error');
         return null;
       }
     } catch (error: any) {
       SHOW_TOAST(
-        error?.message || 'Failed to fetch pre-claim details',
+        error?.message || i18nLocale.t(STRING.failedToFetchPreClaimDetails),
         'error',
       );
       return null;

@@ -76,7 +76,7 @@ export const MediaFilePickerSheet = React.forwardRef<
               color={COLORS._6F767E}
               style={styles.optionSubtitle}
             >
-              {t('Use camera to capture document') ||
+              {t(STRING.useCameraToCapture) ||
                 'Use camera to capture document'}
             </AppText>
           </View>

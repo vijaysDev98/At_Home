@@ -170,7 +170,7 @@ export const ProviderPreRequestDetailScreen: React.FC<
     } catch (err: any) {
       console.warn('Audio playback toggle error:', err);
       setIsPlaying(false);
-      SHOW_TOAST(t('Failed to play audio') || 'Failed to play audio', 'error');
+      SHOW_TOAST(t(STRING.failedToPlayAudio) || 'Failed to play audio', 'error');
     }
   };
 

@@ -2,6 +2,8 @@ import { Platform } from 'react-native';
 import { API } from '../api';
 import { IMAGE_BASE_URL } from '../api/apiRoutes';
 import { SHOW_TOAST } from '../constant';
+import { i18nLocale } from '../localization/translatation';
+import { STRING } from '../constant';
 
 /** Turn API-relative paths (e.g. uploads/images/chat/x.jpg) into full URLs. */
 export const toAbsoluteUploadUrl = (filePath: string): string => {
@@ -72,7 +74,7 @@ export const uploadImageToS3 = async (
   fileName?: string,
 ): Promise<UploadResponse> => {
   if (!uri) {
-    SHOW_TOAST('Invalid image file', 'error');
+    SHOW_TOAST(i18nLocale.t(STRING.invalidImageFile), 'error');
     throw new Error('Invalid image file');
   }
 
@@ -137,7 +139,7 @@ export const uploadAudioDirectToS3 = async (
   model = 'serviceRequest',
 ): Promise<{ fileUrl: string; uploadUrl?: string }> => {
   if (!fileUri) {
-    SHOW_TOAST('Invalid audio file', 'error');
+    SHOW_TOAST(i18nLocale.t(STRING.invalidAudioFile), 'error');
     throw new Error('Invalid audio file');
   }
 
@@ -255,7 +257,7 @@ export const uploadPrescriptionDirectToS3 = async (
   model = 'serviceRequest',
 ): Promise<{ fileUrl: string; uploadUrl?: string }> => {
   if (!fileUri) {
-    SHOW_TOAST('Invalid prescription file', 'error');
+    SHOW_TOAST(i18nLocale.t(STRING.invalidPrescriptionFile), 'error');
     throw new Error('Invalid prescription file');
   }
 

@@ -53,6 +53,7 @@ import ChatPeerProfileScreen from '../screens/chat/ChatPeerProfileScreen';
 import PharmacyAiChatScreen from '../screens/doctor/ai/PharmacyAiChatScreen';
 import HealthcareImpactDetailScreen from '../screens/doctor/home/HealthcareImpactDetailScreen';
 import MyInternsScreen from '../screens/doctor/profile/MyInternsScreen';
+import InternFormsScreen from '../screens/doctor/profile/InternFormsScreen';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -158,6 +159,10 @@ export type RootStackParamList = {
   PharmacyAiChat: undefined;
   HealthcareImpact: undefined;
   MyInterns: undefined;
+  InternForms: {
+    internId: string;
+    internName?: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -393,6 +398,11 @@ export default function RootNavigation() {
         <Stack.Screen
           name={SCREENS.MY_INTERNS}
           component={MyInternsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name={SCREENS.INTERN_FORMS}
+          component={InternFormsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

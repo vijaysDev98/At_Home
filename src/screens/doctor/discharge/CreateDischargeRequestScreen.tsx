@@ -395,7 +395,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
           setIsPlaying(true);
           await sound.startPlayer(recordedAudioUri);
         } else {
-          SHOW_TOAST('Audio file not found', 'error');
+          SHOW_TOAST(t(STRING.audioFileNotFound), 'error');
         }
       }
     } catch (error: any) {
@@ -664,7 +664,7 @@ const CreateDischargeRequestScreen: React.FC<CreateDischargeRequestScreenProps> 
     const targetRequestId =
       editRequest?.id || editRequest?._id || editRequest?.requestId;
     if (!targetRequestId) {
-      SHOW_TOAST('Request ID not found', 'error');
+      SHOW_TOAST(t(STRING.requestIdNotFound), 'error');
       return;
     }
 

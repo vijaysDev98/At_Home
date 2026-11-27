@@ -43,6 +43,7 @@ interface RequestCardProps {
   providerSpecialty?: string | null;
   assignedDoctorName?: string | null;
   onChatWithDoctor?: () => void;
+  showAssignedProvider?: boolean;
   request?: any;
 }
 
@@ -65,6 +66,7 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
   providerSpecialty,
   assignedDoctorName,
   onChatWithDoctor,
+  showAssignedProvider = false,
   request,
 }) => {
   const { t } = useTranslation();
@@ -296,6 +298,27 @@ const RequestCardDoctor: React.FC<RequestCardProps> = ({
         </View>
       </View>
 
+      {showAssignedProvider && !isPreRequest ? (
+        <View style={styles.assignedProviderRow}>
+          <AppText
+            size={getScaleSize(11)}
+            font={FONTS.Inter.SemiBold}
+            color={COLORS._6F767E}
+          >
+            {t(STRING.assignedProvider)}
+          </AppText>
+          <AppText
+            size={getScaleSize(12.5)}
+            font={FONTS.Inter.Medium}
+            color={providerName ? COLORS._1A1D1F : COLORS._6F767E}
+            numberOfLines={1}
+            style={{ flex: 1, textAlign: 'right' }}
+          >
+            {providerName || t(STRING.notAssignedYet)}
+          </AppText>
+        </View>
+      ) : null}
+
       {/* Delegated to Provider Banner for Accepted Pre-Requests */}
       {isPreRequest &&
         (effectiveStatus === 'accepted' ||
@@ -465,5 +488,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: getScaleSize(10),
     paddingVertical: getScaleSize(5),
     borderRadius: getScaleSize(8),
+  },
+  assignedProviderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: getScaleSize(8),
+    marginTop: getScaleSize(10),
+    paddingTop: getScaleSize(10),
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COLORS._E5E7EB,
   },
 });

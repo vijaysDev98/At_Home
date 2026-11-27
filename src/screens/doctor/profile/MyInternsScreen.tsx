@@ -213,6 +213,21 @@ const MyInternsScreen: React.FC = () => {
     }
   };
 
+  const handleOpenInternForms = (intern: SupervisedIntern) => {
+    const internId = getInternId(intern);
+    if (!internId) return;
+    const fullName =
+      intern.fullName ||
+      `${capitalizeFirstLetter(intern.fName || '')} ${capitalizeFirstLetter(
+        intern.lName || '',
+      )}`.trim() ||
+      'Intern';
+    NavigationService.navigate(SCREENS.INTERN_FORMS, {
+      internId,
+      internName: fullName,
+    });
+  };
+
   const renderInternCard = ({ item }: { item: SupervisedIntern }) => {
     const internId = getInternId(item);
     const fullName =
@@ -227,7 +242,12 @@ const MyInternsScreen: React.FC = () => {
     const isOpeningChat = chatLoadingId === internId;
 
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={styles.card}
+        disabled={!internId}
+        onPress={() => handleOpenInternForms(item)}
+      >
         <View style={styles.cardTop}>
           {item.profileImg ? (
             <FastImage
@@ -330,32 +350,48 @@ const MyInternsScreen: React.FC = () => {
             </AppText>
           </TouchableOpacity>
         ) : canChat ? (
-          <TouchableOpacity
-            style={styles.chatBtn}
-            activeOpacity={0.85}
-            disabled={isOpeningChat}
-            onPress={() => handleChatWithIntern(item)}
-          >
-            {isOpeningChat ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            ) : (
-              <>
-                <Image
-                  source={IMAGES.chat_conversation}
-                  style={styles.chatIcon}
-                />
-                <AppText
-                  size={getScaleSize(13)}
-                  font={FONTS.Inter.Bold}
-                  color={COLORS.primary}
-                >
-                  {t(STRING.chat)}
-                </AppText>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.chatBtn, styles.actionFlexBtn]}
+              activeOpacity={0.85}
+              disabled={isOpeningChat}
+              onPress={() => handleChatWithIntern(item)}
+            >
+              {isOpeningChat ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <>
+                  <Image
+                    source={IMAGES.chat_conversation}
+                    style={styles.chatIcon}
+                  />
+                  <AppText
+                    size={getScaleSize(13)}
+                    font={FONTS.Inter.Bold}
+                    color={COLORS.primary}
+                  >
+                    {t(STRING.chat)}
+                  </AppText>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.viewFormsBtn, styles.actionFlexBtn]}
+              activeOpacity={0.85}
+              onPress={() => handleOpenInternForms(item)}
+            >
+              <AppText
+                size={getScaleSize(13)}
+                font={FONTS.Inter.Bold}
+                color={COLORS.white}
+              >
+                {t(STRING.viewForms)}
+              </AppText>
+            </TouchableOpacity>
+          </View>
         ) : null}
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -585,5 +621,22 @@ const styles = StyleSheet.create({
     height: getScaleSize(16),
     resizeMode: 'contain',
     tintColor: COLORS.primary,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getScaleSize(10),
+    marginTop: getScaleSize(2),
+  },
+  actionFlexBtn: {
+    flex: 1,
+    marginTop: 0,
+  },
+  viewFormsBtn: {
+    height: getScaleSize(40),
+    borderRadius: getScaleSize(10),
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

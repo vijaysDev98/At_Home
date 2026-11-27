@@ -1,6 +1,8 @@
 import { API } from '../api';
 import { SHOW_TOAST } from '../constant';
 import { ChatDeliveryStatus } from '../constant/chatConstants';
+import { i18nLocale } from '../localization/translatation';
+import { STRING } from '../constant';
 
 export interface ChatAccess {
   canChat: boolean;
@@ -320,7 +322,7 @@ export const sendChatMessage = async (
 
   try {
     if (!conversationId) {
-      SHOW_TOAST('Failed to send message', 'error');
+      SHOW_TOAST(i18nLocale.t(STRING.failedToSendMessage), 'error');
       return null;
     }
     const url = `${API.API_ROUTES.chatConversations}/${conversationId}/messages`;
@@ -334,10 +336,10 @@ export const sendChatMessage = async (
     if (response?.status && response?.data?.data) {
       return response.data.data as ChatMessage;
     }
-    SHOW_TOAST(response?.message || 'Failed to send message', 'error');
+    SHOW_TOAST(response?.message || i18nLocale.t(STRING.failedToSendMessage), 'error');
     return null;
   } catch (error: any) {
-    SHOW_TOAST(error?.message || 'Failed to send message', 'error');
+    SHOW_TOAST(error?.message || i18nLocale.t(STRING.failedToSendMessage), 'error');
     return null;
   }
 };

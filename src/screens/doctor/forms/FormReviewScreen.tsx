@@ -48,7 +48,8 @@ const FormReviewScreen: React.FC = () => {
   const route = useRoute();
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { request, fromCreate } = (route.params as any) || {};
+  const { request, fromCreate, viewOnly } = (route.params as any) || {};
+  const isViewOnlyMode = Boolean(viewOnly);
 
   const requestId =
     request?.id || (request as any)?._id || (route.params as any)?.requestId;
@@ -67,7 +68,7 @@ const FormReviewScreen: React.FC = () => {
       requestId || requestData?.id || (requestData as any)?._id;
     console.log('targetRequestId', `test-${targetRequestId}, -${requestId}`);
 
-    if (targetRequestId) {
+    if (!isViewOnlyMode && targetRequestId) {
       try {
         await serviceRequestApi.releaseFormLock(targetRequestId);
       } catch (e) {
@@ -99,6 +100,7 @@ const FormReviewScreen: React.FC = () => {
   const selectDoctorSheetRef = useRef<ActionSheetRef>(null);
   const hasLoadedRequestRef = useRef(false);
   const isReadOnly = useMemo(() => {
+    if (isViewOnlyMode) return true;
     return (
       requestData?.status === REQUEST_STATUS.SUBMITTED ||
       requestData?.status === REQUEST_STATUS.IN_PROGRESS ||
@@ -106,7 +108,7 @@ const FormReviewScreen: React.FC = () => {
       requestData?.status === REQUEST_STATUS.RETURNED ||
       requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE
     );
-  }, [requestData]);
+  }, [isViewOnlyMode, requestData]);
 
   const isSigned = requestData?.formStatus
     ? requestData.formStatus === FORM_STATUS.SIGNED
@@ -263,7 +265,7 @@ const FormReviewScreen: React.FC = () => {
   const hasDismissedReviewModalRef = useRef(false);
 
   useEffect(() => {
-    if (!isFetched || hasDismissedReviewModalRef.current) return;
+    if (isViewOnlyMode || !isFetched || hasDismissedReviewModalRef.current) return;
 
     const currentStatus = (requestData?.status || request?.status || '')
       .toString()
@@ -291,6 +293,7 @@ const FormReviewScreen: React.FC = () => {
       setShowUnderReviewModal(false);
     }
   }, [
+    isViewOnlyMode,
     isFetched,
     isSigned,
     requestData?.status,
@@ -390,8 +393,8 @@ const FormReviewScreen: React.FC = () => {
     lockedBy: requestData?.formLock?.lockedBy || undefined,
     expiresAt: requestData?.formLock?.expiresAt || undefined,
     currentUserId,
-    readOnly: false,
-    enabled: !isLeaving && isFetched && !!requestData && !hasError,
+    readOnly: isViewOnlyMode,
+    enabled: !isViewOnlyMode && !isLeaving && isFetched && !!requestData && !hasError,
     onLockConflict: () => {
       // warningSheetRef.current?.show();
     },
@@ -486,7 +489,7 @@ const FormReviewScreen: React.FC = () => {
       <AppLoader visible={isLoading} signing={isSigning} />
       <View style={styles.container}>
         <Header
-          title={t(STRING.reviewAndSign)}
+          title={isViewOnlyMode ? t(STRING.viewForm) : t(STRING.reviewAndSign)}
           isBack={true}
           onBackPress={handleGoBack}
           style={styles.header}
@@ -496,7 +499,7 @@ const FormReviewScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>Loading...</AppText>
+            <AppText color={COLORS.primary}>{t(STRING.loadingDots)}</AppText>
           </View>
         ) : isFetched && hasError ? (
           <View
@@ -510,7 +513,9 @@ const FormReviewScreen: React.FC = () => {
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <AppText color={COLORS.primary}>No data available</AppText>
+            <AppText color={COLORS.primary}>
+              {t(STRING.noDataAvailable)}
+            </AppText>
           </View>
         ) : (
           <>
@@ -581,6 +586,34 @@ const FormReviewScreen: React.FC = () => {
                   </View>
                 ) : null}
 
+                {isViewOnlyMode ? (
+                  <View style={styles.viewOnlyBanner}>
+                    <View style={styles.viewOnlyRow}>
+                      <AppText
+                        size={getScaleSize(12)}
+                        font={FONTS.Inter.SemiBold}
+                        color={COLORS._6F767E}
+                      >
+                        {t(STRING.assignedProvider)}
+                      </AppText>
+                      <AppText
+                        size={getScaleSize(12.5)}
+                        font={FONTS.Inter.SemiBold}
+                        color={assignedProvider ? COLORS._1A1D1F : COLORS._6F767E}
+                        numberOfLines={1}
+                        style={{ flex: 1, textAlign: 'right' }}
+                      >
+                        {assignedProvider?.fullName ||
+                          assignedProvider?.providerName ||
+                          (assignedProvider?.fName
+                            ? `${assignedProvider.fName} ${assignedProvider.lName || ''}`.trim()
+                            : null) ||
+                          t(STRING.notAssignedYet)}
+                      </AppText>
+                    </View>
+                  </View>
+                ) : null}
+
                 {isCareCoordinator &&
                 assignedDoctorName &&
                 requestData?.formStatus === FORM_STATUS.AWAITING_SIGNATURE ? (
@@ -621,7 +654,7 @@ const FormReviewScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            {showDoctorSignInFooter ? (
+            {!isViewOnlyMode && showDoctorSignInFooter ? (
               <FormSignature
                 ref={formSignatureRef}
                 readOnly
@@ -635,7 +668,8 @@ const FormReviewScreen: React.FC = () => {
               />
             ) : null}
 
-            <View style={styles.bottomBar}>
+            {!isViewOnlyMode ? (
+              <View style={styles.bottomBar}>
               <TouchableOpacity
                 activeOpacity={0.9}
                 style={[
@@ -705,7 +739,8 @@ const FormReviewScreen: React.FC = () => {
                   </AppText>
                 </TouchableOpacity>
               ) : null}
-            </View>
+              </View>
+            ) : null}
           </>
         )}
       </View>
@@ -861,6 +896,22 @@ const styles = StyleSheet.create({
     height: getScaleSize(14),
     resizeMode: 'contain',
     tintColor: COLORS.white,
+  },
+  viewOnlyBanner: {
+    marginHorizontal: getScaleSize(16),
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderRadius: getScaleSize(12),
+    paddingHorizontal: getScaleSize(14),
+    paddingVertical: getScaleSize(10),
+    gap: getScaleSize(8),
+  },
+  viewOnlyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: getScaleSize(12),
   },
 });
 
